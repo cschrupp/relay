@@ -13,9 +13,7 @@ This document answers:
 
 > What is authoritative now?
 
-This starter has not yet been committed into the user's Relay repository, so there is no authoritative Git baseline SHA yet.
-
-The first Codex/repository action should be to inspect the starter, run the quality checks in a Python 3.14 environment, commit the foundation, and record the resulting SHA before beginning any later implementation slice.
+The starter has been extracted, locked, validated under Python 3.14, and published to the user's public GitHub repository on `main`. The exact validated foundation commit is recorded in Section 7 and is submitted for independent evaluation. No accepted Git baseline has been established yet.
 
 ---
 
@@ -100,19 +98,25 @@ Their presence does not authorize implementation.
 
 ---
 
-# 6. Required First Repository Baseline Action
+# 6. Repository Bootstrap Status
 
-After importing this starter into Git:
+The public GitHub repository is `https://github.com/cschrupp/relay.git`, with `main` as its default branch. Commit `493043c8185b23c37fb192897ae6b9b3a436bdba` seeded the empty repository with the supplied README. Commit `f1ca0379fb54c2d4c29c7000e4c43942062638db` contains the complete validated starter and generated lock file. The validated snapshot remains pending independent evaluation.
 
-1. create/confirm the repository;
-2. run the canonical quality checks under Python 3.14;
-3. resolve any foundation-only issues without entering Slice 0.2 semantics;
-4. commit the starter;
-5. record the exact resulting SHA here;
-6. only then authorize the next implementation slice.
-
-Until that occurs:
+Until an independent evaluation and acceptance decision occur:
 
 ```text
-Accepted SHA: NONE — starter is uncommitted handoff material
+Accepted SHA: NONE — no acceptance decision recorded
 ```
+
+# 7. Validated Bootstrap Snapshot
+
+The complete starter plus generated `uv.lock` was committed after the required
+Python 3.14 quality checks passed:
+
+```text
+Validated bootstrap snapshot: f1ca0379fb54c2d4c29c7000e4c43942062638db
+Status: published on main; submitted for independent evaluation; not accepted
+```
+
+This SHA identifies the validated starter snapshot before this provenance entry
+was added. It is not an acceptance decision or authorization for a later slice.
