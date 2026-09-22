@@ -1,6 +1,6 @@
 # ADR-0001 — Runtime and Tooling Baseline
 
-**Status:** PROPOSED / STARTER IMPLEMENTED FOR VALIDATION  
+**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
 **Date:** September 2026
 
 ## Context

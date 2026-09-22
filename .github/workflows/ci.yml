@@ -22,14 +22,7 @@ jobs:
         run: uv python install 3.14
 
       - name: Sync environment
-        shell: bash
-        run: |
-          if [[ -f uv.lock ]]; then
-            uv sync --frozen --group dev
-          else
-            echo "::warning::uv.lock is not committed yet; bootstrapping dependency resolution."
-            uv sync --group dev
-          fi
+        run: uv sync --frozen --group dev
 
       - name: Ruff format
         run: uv run ruff format --check .
