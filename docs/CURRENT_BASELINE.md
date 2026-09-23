@@ -15,7 +15,7 @@ Accepted implementation result SHA: 7a8d2ad37ef6816335175ca0ccdc37e9c1b13612
 Accepted technical implementation commit: 26e6c300f6b266f811e09084402fe2182d693f0f
 Accepted Design Revision 4 SHA: 6c49a90aa819d66db2a44d0b933e9c40ceb9e320
 Independent evaluation: RLY-S03-EVAL-002 — ACCEPT
-Human acceptance: Explicit instruction “authorized proceed” after evaluation
+Human acceptance: RLY-S03-ACCEPT-001 — explicit instruction “proceed”
 Repository branch: main
 Visibility: public — human-authorized deviation
 ```
@@ -74,9 +74,12 @@ The accepted project still has no authorization model, handover gates, traffic l
 ```text
 Accepted design: docs/slices/SLICE_0_3_STATE_MACHINE_AND_LIFECYCLE.md — Revision 4
 Accepted development memory: docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY.md — LOCKED
+Accepted memory amendment: docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY_AMENDMENT_001.md — LOCKED / ACCEPTED CORRECTION
 Accepted decision: docs/decisions/ADR-0003-lifecycle-state-decomposition.md — LOCKED / ACCEPTED
 Architecture: docs/architecture/LIFECYCLE_STATE_MACHINE.md
 ```
+
+The acceptance-record commit is `cad415cebdd0972d429567558d79a8c1f31514d4`. The amendment clarifies the exact Human Authority instruction and is read together with the locked memory.
 
 # 5. Next Slice and Hard Stop
 
