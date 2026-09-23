@@ -171,12 +171,12 @@ def test_every_public_model_is_schema_versioned_and_generates_json_schema() -> N
 def test_prefixed_ids_are_validated_and_created_explicitly() -> None:
     generated = [
         new_id(prefix)
-        for prefix in ("prj_", "repo_", "slc_", "base_", "art_", "dec_", "evd_", "act_")
+        for prefix in ("prj_", "repo_", "slc_", "base_", "art_", "dec_", "evd_", "act_", "evt_")
     ]
     assert len(set(generated)) == len(generated)
     for value in generated:
         prefix, uuid_text = value.split("_", maxsplit=1)
-        assert prefix in {"prj", "repo", "slc", "base", "art", "dec", "evd", "act"}
+        assert prefix in {"prj", "repo", "slc", "base", "art", "dec", "evd", "act", "evt"}
         assert UUID(uuid_text).version == 7
 
     with pytest.raises(ValueError, match="unsupported domain identifier prefix"):

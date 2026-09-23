@@ -14,6 +14,7 @@ type IdPrefix = Literal[
     "dec_",
     "evd_",
     "act_",
+    "evt_",
 ]
 
 _UUID_TEXT = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -26,11 +27,22 @@ type ArtifactId = Annotated[str, Field(pattern=rf"^art_{_UUID_TEXT}$")]
 type DecisionId = Annotated[str, Field(pattern=rf"^dec_{_UUID_TEXT}$")]
 type EvidenceId = Annotated[str, Field(pattern=rf"^evd_{_UUID_TEXT}$")]
 type ActorId = Annotated[str, Field(pattern=rf"^act_{_UUID_TEXT}$")]
+type EventId = Annotated[str, Field(pattern=rf"^evt_{_UUID_TEXT}$")]
 
 
 def new_id(prefix: IdPrefix) -> str:
     """Create a type-readable UUIDv7 identifier explicitly at the call site."""
 
-    if prefix not in ("prj_", "repo_", "slc_", "base_", "art_", "dec_", "evd_", "act_"):
+    if prefix not in (
+        "prj_",
+        "repo_",
+        "slc_",
+        "base_",
+        "art_",
+        "dec_",
+        "evd_",
+        "act_",
+        "evt_",
+    ):
         raise ValueError("unsupported domain identifier prefix")
     return f"{prefix}{uuid7()}"
