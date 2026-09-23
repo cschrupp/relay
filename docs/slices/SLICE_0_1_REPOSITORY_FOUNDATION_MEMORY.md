@@ -1,10 +1,15 @@
 # Slice 0.1 — Repository Foundation and Engineering Baseline — Development Memory
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING REEVALUATION
-**Baseline:** NONE
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
+**Accepted implementation SHA:** `e8598ae5ffb046d4131e04655a0c063ff1e41ccc`
+**Evaluation:** `RLY-S01-EVAL-002` — ACCEPT
+**Human acceptance:** `RLY-S01-ACCEPT-001`
+**Repository:** `cschrupp/relay`
+**Visibility:** public — human-authorized deviation
+**Acceptance-record commit SHA:** Recorded by Git and the implementation handover; not embedded in this commit.
 **Validated implementation snapshot:** `f1ca0379fb54c2d4c29c7000e4c43942062638db`
 **Previous evaluated repository head:** `f58eac7360de9bde41946c7e079b82c42a7991ca`
-**Resulting SHA:** Carried by the implementation handover and Git; not recorded inside its own commit.
 
 ---
 
@@ -80,11 +85,11 @@ uv run pytest — PASS, 7 tests
 uv build — PASS
 ```
 
-GitHub Actions CI passed for previous evaluated repository head `f58eac7360de9bde41946c7e079b82c42a7991ca` (run 35794516758, event `push`, conclusion `success`). The new result commit's Actions outcome is reported in its implementation handover.
+GitHub Actions CI passed for the accepted implementation SHA `e8598ae5ffb046d4131e04655a0c063ff1e41ccc` (run 35800014816, event `push`, conclusion `success`).
 
 ## Evaluation findings
 
-The independent evaluator requested three bounded corrections: make CI always use frozen dependency resolution; update this memory to current implementation and validation state; and update ADR-0001's status. All three are addressed in this rework. Required local validation is recorded in the implementation handover.
+The independent evaluator's rework findings were addressed in the accepted implementation result. Independent evaluation `RLY-S01-EVAL-002` returned ACCEPT. Human acceptance `RLY-S01-ACCEPT-001` accepts implementation SHA `e8598ae5ffb046d4131e04655a0c063ff1e41ccc`.
 
 ## Deviations from contract
 
@@ -93,7 +98,6 @@ The independent evaluator requested three bounded corrections: make CI always us
 
 ## Known limitations
 
-- Human acceptance remains pending; this memory and Slice 0.1 are not marked accepted or locked.
 - No Relay product-domain capability is implemented.
 
 ## Deferred work
@@ -102,8 +106,8 @@ Core domain behavior, lifecycle/state machine, handover gates, persistence, `.re
 
 ## Hard stop
 
-Slice 0.2 and later implementation has not started. Stop after submitting this rework for independent reevaluation and await new explicit authorization before any further implementation.
+Slice 0.2 and later implementation has not started. Slice 0.1 is accepted and this memory is locked. Stop here and await new explicit authorization before any further implementation.
 
 ## Next slice status
 
-Not started; not authorized by this handover.
+NOT AUTHORIZED. The presence of accepted Slice 0.2 design documentation does not authorize implementation.
