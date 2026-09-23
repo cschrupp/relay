@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** SLICE 0.3 — COMPLETE / ACCEPTED
+**Status:** Slice 0.3 accepted baseline; Slice 0.4 implementation candidate pending evaluation
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -81,12 +81,36 @@ Architecture: docs/architecture/LIFECYCLE_STATE_MACHINE.md
 
 The acceptance-record commit is `cad415cebdd0972d429567558d79a8c1f31514d4`. The amendment clarifies the exact Human Authority instruction and is read together with the locked memory.
 
-# 5. Next Slice and Hard Stop
+# 5. Slice 0.4 Candidate and Authority
 
 ```text
-Next implementation slice: NOT AUTHORIZED
-Slice 0.4: IMPLEMENTATION NOT AUTHORIZED
-Hard stop: ACTIVE
+Accepted Slice 0.4 design: Revision 2
+Accepted design SHA: 09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd
+Implementation authorization: RLY-S04-IMPLEMENT-SCOPE-001
+Candidate branch: slice/0.4-handover-gates
+Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Candidate result SHA: recorded in the implementation handover
 ```
 
-Do not begin Slice 0.4 or later work without new explicit Human Authority authorization. The presence of future design documents does not grant implementation authority.
+The candidate is not yet an accepted project baseline. The accepted baseline remains Slice 0.3 on `main` at the accepted provenance commit below. Slice 0.4 is being implemented under explicit Human Authority authorization against the exact accepted Revision 2 design.
+
+Slice 0.4 candidate records:
+
+```text
+Design: docs/slices/SLICE_0_4_HANDOVER_GATES_AND_TRAFFIC_LIGHTS.md — Revision 2
+Architecture: docs/architecture/HANDOVER_GOVERNANCE.md — candidate
+Development memory: docs/slices/SLICE_0_4_HANDOVER_GATES_MEMORY.md — pending evaluation, not locked
+ADR-0004: docs/decisions/ADR-0004-handover-governance-separation.md — pending acceptance, not locked
+```
+
+The accepted Slice 0.3 capability statement above describes `main`; candidate governance code is not promoted or accepted by this living projection.
+
+# 6. Next Slice and Hard Stop
+
+```text
+Slice 0.4: IMPLEMENTATION AUTHORIZED — candidate pending evaluation
+Next implementation slice: Slice 0.5 NOT AUTHORIZED
+Post-Slice-0.4 hard stop: ACTIVE after submission
+```
+
+Do not begin Slice 0.5 or later work without new explicit Human Authority authorization. The presence of future design documents does not grant implementation authority.

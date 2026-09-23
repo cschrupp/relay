@@ -231,6 +231,16 @@ def transition_phase(
     return updated, event
 
 
+def validate_phase_transition(
+    current: SliceLifecycle,
+    target_phase: LifecyclePhase,
+    superseded_by_slice_id: SliceId | None = None,
+) -> None:
+    """Validate a phase movement without creating an event or changing state."""
+
+    _validate_phase_change(current, target_phase, superseded_by_slice_id)
+
+
 def set_blocked(
     current: SliceLifecycle,
     reasons: tuple[BlockReason, ...],

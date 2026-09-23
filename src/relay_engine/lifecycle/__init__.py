@@ -8,6 +8,7 @@ from relay_engine.lifecycle.engine import (
     revalidate,
     set_blocked,
     transition_phase,
+    validate_phase_transition,
 )
 from relay_engine.lifecycle.errors import (
     InvalidLifecycleOperation,
@@ -54,4 +55,5 @@ __all__ = [
     "revalidate",
     "set_blocked",
     "transition_phase",
+    "validate_phase_transition",
 ]
