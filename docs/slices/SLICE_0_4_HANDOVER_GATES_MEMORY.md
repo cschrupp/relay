@@ -4,6 +4,7 @@
 **Record state:** WORKING — NOT LOCKED
 **Accepted project baseline:** Slice 0.3, `e3a8501e0e2a410d04e2e95fd566b01622535016`
 **Authorized design:** Slice 0.4 Revision 2, `09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd`
+**Independent design review:** `RLY-S04-DESIGN-EVAL-003` — ACCEPT
 **Implementation authorization:** `RLY-S04-IMPLEMENT-SCOPE-001`
 **Candidate branch:** `slice/0.4-handover-gates`
 
@@ -15,7 +16,9 @@ Implement the accepted Rev 2 contract for immutable handover gates, durable auth
 
 The implementation follows S0.4-D01 through S0.4-D43 in the accepted Revision 2 design. The key separations are `Slice` = intended work, `SliceLifecycle` = structural state, `HandoverGate` = movement policy, `HandoverContext` = current explicit facts, `AuthorizationGrant` = durable permission, human decisions = execution-time authority, and `GateEvaluation` = deterministic derived evidence.
 
-Revision 2 review findings `RLY-S04-DREV1-F001` through `F006` are handled: gate baseline rules short-circuit; output order is canonical; `governance_revision` binds human decisions; choices bind the exact gate set; reason mapping/subjects/cardinality/order are enforced; execution cannot predate authority used.
+Design lineage: Revision 1 was `4d9bbcfe34bcdab0675b6047008cceaed8af56d7`; independent review `RLY-S04-DESIGN-EVAL-002` returned REVISE with findings F001–F006. Revision 2 (`09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd`) resolved them and was accepted by independent review `RLY-S04-DESIGN-EVAL-003`.
+
+Revision 2 resolves the findings: gate baseline rules short-circuit; output order is canonical; `governance_revision` binds human decisions; choices bind the exact gate set; reason mapping/subjects/cardinality/order are enforced; execution cannot predate authority used.
 
 ## Implementation summary
 
@@ -41,10 +44,9 @@ pyright                          PASS — 0 errors, 0 warnings, 0 information
 pytest                           PASS — 293 passed
 uv build                         PASS — sdist and wheel built
 git diff --check                 PASS
-GitHub Actions                   PENDING PUBLICATION
 ```
 
-This memory does not claim independent acceptance. GitHub Actions evidence will be recorded in the implementation handover after the pushed candidate run completes.
+GitHub Actions is verified on the exact submitted result SHA; the run ID, conclusion, and head SHA are recorded in the RHP-1 implementation handover. This memory does not claim independent acceptance.
 
 ## Acceptance matrix evidence
 
