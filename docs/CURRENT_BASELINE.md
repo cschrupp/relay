@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** SLICE 0.1 — COMPLETE / ACCEPTED
+**Status:** SLICE 0.2 CANDIDATE — PENDING INDEPENDENT EVALUATION
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -89,11 +89,23 @@ Slice 0.2 design documentation is present, but its presence does not authorize i
 
 ---
 
-# 5. Next Slice and Hard Stop
+# 5. Candidate Implementation
 
 ```text
-Next slice: NOT AUTHORIZED
-Hard stop: ACTIVE
+Candidate slice: 0.2 — Core Domain Model
+Candidate branch: slice/0.2-core-domain-model
+Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Authorized baseline: 8d24039f982139ea76c9651abfc8c06b6ed58bb3
 ```
 
-No Slice 0.2 or later implementation may begin without new explicit authorization from the human authority.
+The candidate branch is being implemented against the accepted Slice 0.1 project baseline. It does not replace the accepted implementation SHA or the accepted project state on `main`. Slice 0.2 remains pending independent evaluation and human acceptance.
+
+# 6. Next Slice and Hard Stop
+
+```text
+Next slice after 0.2: NOT AUTHORIZED
+Slice 0.3: NOT AUTHORIZED
+Hard stop: ACTIVE after Slice 0.2 submission
+```
+
+The authorization for Slice 0.2 does not authorize Slice 0.3 or later implementation. Do not merge the candidate branch before independent evaluation and explicit human acceptance.

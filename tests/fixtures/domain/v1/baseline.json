@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "base_018f47c1-7b2c-7abc-8def-123456789003",
+  "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+  "commit": {
+    "schema_version": 1,
+    "repository": {
+      "schema_version": 1,
+      "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+      "host": "github.com",
+      "path": "cschrupp/relay"
+    },
+    "sha": "e8598ae5ffb046d4131e04655a0c063ff1e41ccc"
+  },
+  "artifact_ids": [
+    "art_018f47c1-7b2c-7abc-8def-123456789004"
+  ],
+  "decision_ids": [
+    "dec_018f47c1-7b2c-7abc-8def-123456789005"
+  ]
+}

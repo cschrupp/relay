@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "art_018f47c1-7b2c-7abc-8def-123456789004",
+  "artifact_type": "slice_memory",
+  "path": "docs/slices/SLICE_0_1_REPOSITORY_FOUNDATION_MEMORY.md",
+  "commit": {
+    "schema_version": 1,
+    "repository": {
+      "schema_version": 1,
+      "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+      "host": "github.com",
+      "path": "cschrupp/relay"
+    },
+    "sha": "e8598ae5ffb046d4131e04655a0c063ff1e41ccc"
+  },
+  "content_digest": "sha256:c9ec0ddfa56778c368a3d03a06b0b3a7d8f930020ab639b603a5ab095f4750e3"
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "slc_018f47c1-7b2c-7abc-8def-123456789006",
+  "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+  "title": "Core domain model",
+  "scope": {
+    "schema_version": 1,
+    "in_scope": [
+      "Define immutable domain vocabulary"
+    ],
+    "out_of_scope": [
+      "Implement lifecycle transitions"
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "schema_version": 1,
+      "key": "A01",
+      "statement": "Core models are immutable",
+      "required": true
+    }
+  ],
+  "parent_slice_id": null,
+  "dependency_ids": []
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+  "name": "Relay",
+  "primary_repository": {
+    "schema_version": 1,
+    "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+    "host": "github.com",
+    "path": "cschrupp/relay"
+  }
+}

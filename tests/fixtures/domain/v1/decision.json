@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "id": "dec_018f47c1-7b2c-7abc-8def-123456789005",
+  "title": "Runtime and tooling",
+  "statement": "Use Python 3.14 and uv for the engineering baseline.",
+  "status": "LOCKED",
+  "supersedes_id": null,
+  "superseded_by_id": null
+}

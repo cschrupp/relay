@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "evd_018f47c1-7b2c-7abc-8def-123456789007",
+  "claim": "The accepted baseline commit is present in the repository.",
+  "recorded_by": {
+    "schema_version": 1,
+    "id": "act_018f47c1-7b2c-7abc-8def-123456789008",
+    "kind": "HUMAN",
+    "display_name": "Project authority"
+  },
+  "recorded_at": "2026-09-23T12:00:00Z",
+  "source_commit": {
+    "schema_version": 1,
+    "repository": {
+      "schema_version": 1,
+      "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+      "host": "github.com",
+      "path": "cschrupp/relay"
+    },
+    "sha": "e8598ae5ffb046d4131e04655a0c063ff1e41ccc"
+  }
+}
