@@ -5,18 +5,19 @@
 **Status:** PROPOSED FOR DESIGN REVIEW  
 **Document class:** Lockable record  
 **Artifact state:** REVIEW  
-**Document revision:** 3  
+**Document revision:** 4  
 **Parent:** *Relay — Build Plan and Development Roadmap v0.1*  
 **Depends on:** Slice 0.2 — Core Domain Model  
-**Implementation authorization:** NOT YET GRANTED
+**Prior implementation authorization:** `RLY-S03-AUTH-001` — GRANTED AGAINST REVISION 3  
+**Execution state:** BLOCKED pending Revision 4 design acceptance and authorization revalidation
 
 ---
 
 # 1. Objective
 
-Define Relay's authoritative lifecycle semantics for a development slice.
+Define Relay's authoritative structural lifecycle semantics for a development slice.
 
-Slice 0.3 must answer:
+Slice 0.3 answers:
 
 > Where is the work in its engineering lifecycle?
 
@@ -30,17 +31,19 @@ while deliberately separating that question from:
 
 > Is an outgoing handover behind a hard stop?
 
-The exit condition is:
+The deterministic exit condition is:
 
-> Given the same lifecycle snapshot and the same requested operation, Relay deterministically produces the same valid next snapshot and immutable lifecycle event—or rejects the operation.
+> Given the same lifecycle snapshot and the same complete operation inputs, Relay produces the same valid next snapshot and the same immutable lifecycle event—or rejects the operation with the same lifecycle error category.
 
-No LLM participates in this process.
+A **complete operation input** includes every value that appears in the resulting event, including `event_id`, `actor`, `occurred_at`, and `reason`.
+
+No LLM participates in lifecycle execution.
 
 ---
 
 # 2. Central Design Decision
 
-Relay will **not** use one flat status enum containing:
+Relay does not use a flat status enum containing unrelated concepts such as:
 
 ```text
 READY
@@ -49,18 +52,14 @@ BLOCKED
 STALE
 HARD_STOP
 IMPLEMENTING
-...
 ```
 
-because these terms describe different dimensions.
-
-Instead:
+Lifecycle truth is decomposed as:
 
 ```text
                  Slice lifecycle
 
                       PHASE
-                        │
                         │
              ┌──────────┴─────────┐
              │                    │
@@ -69,47 +68,24 @@ Instead:
        CURRENT / STALE       CLEAR / BLOCKED
 ```
 
-while:
+Separate governance owns:
 
 ```text
 AUTHORIZATION
-```
-
-belongs to transition authority, and:
-
-```text
+HANDOVER POLICY
 HARD STOP
+TRAFFIC LIGHT
 ```
 
-belongs to handover policy.
+The governing invariant remains:
 
-This distinction is foundational.
+> **Lifecycle truth and transition permission are different things.**
 
 ---
 
-# 3. Why a Flat State Model Fails
+# 3. S0.3-D01 — Lifecycle Phase
 
-A slice may be both `IMPLEMENTING` and `BLOCKED`. Replacing `IMPLEMENTING → BLOCKED` loses information about where work was occurring.
-
-Likewise, `ACCEPTED` and `STALE` can both be true. An implementation may have been historically accepted but no longer validated against a newly changed upstream contract.
-
-And `READY` and `AUTHORIZED` represent different facts:
-
-```text
-READY
-= technically prepared to execute
-
-AUTHORIZED
-= permission exists to execute
-```
-
-Relay must preserve these distinctions.
-
----
-
-# 4. S0.3-D01 — Lifecycle Phase
-
-The authoritative primary lifecycle enum is:
+The authoritative lifecycle phase enum is:
 
 ```text
 PROPOSED
@@ -127,135 +103,64 @@ SUPERSEDED
 CANCELLED
 ```
 
-These represent **where the slice is in its engineering lifecycle**.
+Meanings:
+
+- `PROPOSED` — work exists but is not yet sufficiently defined.
+- `DEFINING` — objective, boundaries, value, success criteria, and non-goals are being established or revised.
+- `RESEARCHING` — evidence needed for the current engineering question is being gathered.
+- `DESIGNING` — architecture or technical design is being developed or revised.
+- `CONTRACTING` — APIs, invariants, failure semantics, implementation boundaries, and acceptance expectations are being made explicit.
+- `PLANNING` — accepted engineering intent is being decomposed into executable work.
+- `READY` — required preparation is complete and the slice is waiting to proceed toward implementation.
+- `IMPLEMENTING` — an implementation attempt is active.
+- `EVALUATING` — an implementation result is under independent assessment.
+- `REWORK` — an implementation-level correction is active without invalidating accepted upstream architecture or contract.
+- `ACCEPTED` — the slice historically satisfied its acceptance process.
+- `SUPERSEDED` — the accepted result has been explicitly replaced by later authoritative work.
+- `CANCELLED` — work was deliberately terminated without acceptance.
 
 ---
 
-# 5. Phase Meanings
+# 4. S0.3-D02 — READY Is a Real Phase
 
-## PROPOSED
-
-The work exists but has not yet acquired enough engineering definition to proceed.
-
-## DEFINING
-
-Objective, boundaries, value, success criteria, and non-goals are being established.
-
-## RESEARCHING
-
-External or internal evidence required for the current engineering question is being gathered.
-
-Dedicated sidecar research objects come later.
-
-## DESIGNING
-
-Architecture or technical design is being developed or revised.
-
-## CONTRACTING
-
-Implementation boundaries, APIs, invariants, failure semantics, and acceptance expectations are being made explicit.
-
-## PLANNING
-
-Accepted engineering intent is being decomposed into executable work.
-
-## READY
-
-The slice has completed the preparation required by its configured workflow and is waiting to proceed toward implementation.
-
-`READY` does **not** imply authorization.
-
-## IMPLEMENTING
-
-An implementation attempt is active.
-
-## EVALUATING
-
-An implementation result is under independent assessment.
-
-## REWORK
-
-An implementation-level correction is being performed without invalidating accepted upstream architecture or contract.
-
-## ACCEPTED
-
-The slice has historically satisfied its acceptance process.
-
-Acceptance is a historical engineering fact.
-
-## SUPERSEDED
-
-The accepted result has been explicitly replaced by later authoritative work.
-
-## CANCELLED
-
-Work has been deliberately terminated without acceptance.
-
----
-
-# 6. S0.3-D02 — READY Is a Real Phase
-
-`READY` remains a primary lifecycle phase.
-
-It represents a stable queue boundary:
+`READY` is a primary lifecycle phase:
 
 ```text
 engineering preparation complete
         ↓
 READY
         ↓
-waiting for permission/execution capacity
+waiting for permission / execution capacity
 ```
 
-This state is useful even before authorization exists.
+`READY` does not imply authorization.
 
 ---
 
-# 7. S0.3-D03 — AUTHORIZED Is Not a Phase
+# 5. S0.3-D03 — AUTHORIZED Is Not a Phase
 
-There will be no `LifecyclePhase.AUTHORIZED`.
+There is no `LifecyclePhase.AUTHORIZED`.
 
 Authorization is a permission relationship, not engineering progress.
 
-The authoritative future representation will conceptually be:
+A future governance layer may observe:
 
 ```text
-Slice lifecycle:
 phase = READY
-
-Authorization:
-GRANTED
+authorization = GRANTED
 ```
 
-The slice remains `READY` until implementation actually starts.
+but the lifecycle remains `READY` until implementation actually starts.
 
-At that point:
-
-```text
-READY
-  ↓
-IMPLEMENTING
-```
+The future board may project this combination as an `AUTHORIZED` lane. That projection does not alter the underlying phase.
 
 ---
 
-# 8. Board Consequence
+# 6. S0.3-D04 — BLOCKED Is Orthogonal
 
-The future board may choose to display:
+`BLOCKED` is not a lifecycle phase.
 
-```text
-READY + valid authorization
-```
-
-as an `AUTHORIZED` column or visual lane.
-
-That is a **projection**, not the underlying lifecycle phase.
-
----
-
-# 9. S0.3-D04 — BLOCKED Is Orthogonal
-
-A slice may be blocked while:
+A slice may be blocked while in:
 
 ```text
 DEFINING
@@ -269,173 +174,51 @@ EVALUATING
 REWORK
 ```
 
-Therefore `BLOCKED` is not a lifecycle phase.
-
-The lifecycle snapshot carries a blockage condition independently.
+`PROPOSED`, `ACCEPTED`, `SUPERSEDED`, and `CANCELLED` cannot carry `BLOCKED` blockage.
 
 ---
 
-# 10. Blockage Model
+# 7. S0.3-D05 — STALE Is Orthogonal
 
-Proposed:
-
-```text
-BlockageStatus
-
-CLEAR
-BLOCKED
-```
-
-with `BlockReason` containing:
-
-```text
-code
-summary
-```
-
-A blocked snapshot must contain at least one reason.
-
-A clear snapshot contains no blocker reasons.
-
-Example:
-
-```text
-phase: IMPLEMENTING
-
-blockage:
-    status: BLOCKED
-    reasons:
-      - code: CONTRACT_CONFLICT
-        summary: Current API contract does not define failure behavior.
-```
-
----
-
-# 11. Multiple Blockers
-
-Multiple active blocker reasons are allowed.
-
-Reason codes are extensible validated slugs rather than a permanently closed enum.
-
----
-
-# 12. S0.3-D05 — STALE Is Orthogonal
-
-`STALE` does not mean wrong.
-
-It means:
-
-> Validity against the currently authoritative upstream context has not been established.
-
-Lifecycle validity:
+Lifecycle validity is:
 
 ```text
 CURRENT
 STALE
 ```
 
-is separate from lifecycle phase.
+`STALE` means:
+
+> Validity against the currently authoritative upstream context has not been established.
+
+It does not mean the historical result was wrong.
+
+Therefore:
+
+```text
+phase = ACCEPTED
+validity = STALE
+```
+
+is valid.
 
 ---
 
-# 13. Why ACCEPTED + STALE Must Be Possible
+# 8. S0.3-D06 — HARD STOP Is Not Lifecycle State
 
-Suppose:
+There is no `LifecyclePhase.HARD_STOP`.
 
-```text
-Contract C3
-    ↓
-Slice S12 implemented
-    ↓
-S12 ACCEPTED
-```
+A Hard Stop governs an outgoing handover. It belongs to Slice 0.4.
 
-Later:
-
-```text
-Contract C4 supersedes C3
-```
-
-The historical fact remains:
-
-```text
-S12 was accepted against C3.
-```
-
-But its current validity may become `STALE`.
-
-Therefore the correct representation is:
-
-```text
-phase: ACCEPTED
-validity: STALE
-```
+An accepted slice remains `ACCEPTED` while an outgoing handover may independently be under a hard stop.
 
 ---
 
-# 14. S0.3-D06 — HARD STOP Is Not Lifecycle State
+# 9. S0.3-D07 — Separate Lifecycle Snapshot
 
-There will be no `LifecyclePhase.HARD_STOP`.
+Slice 0.2 deliberately keeps workflow state out of `Slice`.
 
-A Hard Stop controls an **outgoing handover**.
-
-The accepted slice itself remains `ACCEPTED`.
-
-Hard Stop semantics therefore belong to Slice 0.4: Handover Gates and Traffic Lights.
-
----
-
-# 15. Resulting State Decomposition
-
-```text
-Slice lifecycle
-│
-├── Phase
-│   ├── PROPOSED
-│   ├── DEFINING
-│   ├── RESEARCHING
-│   ├── DESIGNING
-│   ├── CONTRACTING
-│   ├── PLANNING
-│   ├── READY
-│   ├── IMPLEMENTING
-│   ├── EVALUATING
-│   ├── REWORK
-│   ├── ACCEPTED
-│   ├── SUPERSEDED
-│   └── CANCELLED
-│
-├── Validity
-│   ├── CURRENT
-│   └── STALE
-│
-└── Blockage
-    ├── CLEAR
-    └── BLOCKED
-```
-
-Separate future governance:
-
-```text
-Authorization
-Handover policy
-Hard Stop
-Traffic light
-```
-
----
-
-# 16. S0.3-D07 — Separate Lifecycle Snapshot
-
-Slice 0.2 deliberately kept workflow state out of `Slice`.
-
-Slice 0.3 introduces a separate immutable object:
-
-```text
-SliceLifecycle
-```
-
-Conceptually:
+Slice 0.3 introduces a separate immutable serialized model:
 
 ```python
 SliceLifecycle(
@@ -446,60 +229,464 @@ SliceLifecycle(
     blockage,
     revision,
     updated_at,
+    superseded_by_slice_id,
 )
 ```
 
-This allows `Slice` to describe what the work is while `SliceLifecycle` describes where the work currently is.
+Normative field semantics:
+
+```text
+schema_version = 1
+slice_id = existing SliceId
+revision >= 0
+updated_at = timezone-aware and UTC-normalized
+superseded_by_slice_id = SliceId | None
+```
+
+`SliceLifecycle` follows the established Slice 0.2 serialized-model discipline:
+
+```text
+immutable
+extra fields forbidden
+schema_version fixed at 1
+JSON-compatible serialization
+JSON round trip
+JSON Schema generation
+```
+
+Structural model invariants:
+
+```text
+blockage == BLOCKED
+    → phase is one of DEFINING..REWORK allowed blockage phases
+
+phase in {PROPOSED, ACCEPTED, SUPERSEDED, CANCELLED}
+    → blockage == CLEAR
+
+phase == SUPERSEDED
+    → superseded_by_slice_id is required
+
+phase != SUPERSEDED
+    → superseded_by_slice_id must be None
+
+superseded_by_slice_id != slice_id
+```
+
+The model enforces structural validity. The state engine additionally enforces legal movement between valid snapshots.
 
 ---
 
-# 17. S0.3-D08 — Lifecycle Is Immutable
+# 10. S0.3-D08 — Lifecycle Is Immutable
 
-A transition does not mutate the existing lifecycle object.
-
-Instead:
+Lifecycle operations never mutate an existing snapshot.
 
 ```text
 old snapshot
      ↓
-state engine
+pure state engine
      ↓
 new snapshot
 +
 immutable event
 ```
 
----
+Every successful state-changing operation after initialization increments `revision` by exactly one.
 
-# 18. Lifecycle Revision
-
-Every lifecycle snapshot carries `revision`, initially `0`.
-
-Every accepted lifecycle operation increments revision by exactly one.
+Initialization creates revision `0`.
 
 ---
 
-# 19. No Hidden Clock
+# 11. S0.3-D09 — Explicit Phase Transition Matrix
 
-State transitions receive:
+Legal phase transitions are represented by an explicit transition table. Legality must never be inferred from enum ordering.
+
+The authoritative matrix is:
+
+| From | Allowed targets |
+|---|---|
+| `PROPOSED` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `READY`, `CANCELLED` |
+| `DEFINING` | `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `READY`, `CANCELLED` |
+| `RESEARCHING` | `DEFINING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `READY`, `CANCELLED` |
+| `DESIGNING` | `DEFINING`, `RESEARCHING`, `CONTRACTING`, `PLANNING`, `READY`, `CANCELLED` |
+| `CONTRACTING` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `PLANNING`, `READY`, `CANCELLED` |
+| `PLANNING` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `READY`, `CANCELLED` |
+| `READY` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `IMPLEMENTING`, `CANCELLED` |
+| `IMPLEMENTING` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `EVALUATING`, `CANCELLED` |
+| `EVALUATING` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `REWORK`, `ACCEPTED`, `CANCELLED` |
+| `REWORK` | `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, `PLANNING`, `EVALUATING`, `CANCELLED` |
+| `ACCEPTED` | `SUPERSEDED` |
+| `SUPERSEDED` | none |
+| `CANCELLED` | none |
+
+Definition-level escalation is deliberately direct. Relay must not fabricate a false `RESEARCHING` event merely to route later work back to `DEFINING`.
+
+Structural consequences:
 
 ```text
-actor
-occurred_at
-reason
+READY is the only source of IMPLEMENTING.
+
+IMPLEMENTING and REWORK are the only sources of EVALUATING.
+
+EVALUATING is the only source of ACCEPTED.
+
+IMPLEMENTING → ACCEPTED is invalid.
+
+REWORK → ACCEPTED is invalid.
+
+ACCEPTED never returns to REWORK or an active phase.
+
+ACCEPTED is replaced only through explicit supersession.
 ```
-
-explicitly.
-
-The lifecycle engine does not call the clock internally.
 
 ---
 
-# 20. Lifecycle Events
+# 12. S0.3-D10 — Every Operation Requires an Explicit Reason
 
-Every accepted lifecycle operation produces an immutable event.
+Every successful event-producing lifecycle operation receives an explicit non-empty, non-whitespace `reason`.
 
-Initial event categories:
+This applies to:
+
+```text
+initialization
+phase transition
+set blocked
+clear blockage
+mark stale
+revalidate
+```
+
+Relay never relies only on transition direction to explain engineering history.
+
+---
+
+# 13. S0.3-D11 — State Engine Is Pure
+
+The lifecycle engine performs no:
+
+```text
+database access
+Git access
+GitHub calls
+HTTP calls
+model/LLM calls
+filesystem access
+clock access
+randomness / UUID generation
+```
+
+The caller supplies all nondeterministic/external values before invoking the engine.
+
+Conceptually:
+
+```text
+current lifecycle
++
+complete operation input
+        ↓
+pure lifecycle engine
+        ↓
+new lifecycle
++
+event
+```
+
+or a typed lifecycle error.
+
+---
+
+# 14. S0.3-D12 — Explicit Event Identity and Determinism
+
+Lifecycle events use:
+
+```text
+evt_<uuid7>
+```
+
+through the existing Slice 0.2 identifier mechanism.
+
+Slice 0.3 narrowly extends the accepted ID vocabulary with:
+
+```text
+EventId
+evt_
+```
+
+and extends `new_id()` to allow `new_id("evt_")`.
+
+This is an authorized narrow extension of the existing ID mechanism, not a new ID framework.
+
+Critically:
+
+> The lifecycle engine does not generate event IDs.
+
+Every event-producing operation receives `event_id` explicitly.
+
+Thus identical snapshots plus identical complete operation inputs—including the same `event_id`—produce identical output.
+
+---
+
+# 15. S0.3-D13 — Operation Context and Time
+
+Every event-producing operation receives:
+
+```text
+event_id: EventId
+actor: ActorRef
+occurred_at: timezone-aware datetime
+reason: non-empty string
+```
+
+`occurred_at` is UTC-normalized.
+
+Initialization:
+
+```text
+updated_at = occurred_at
+revision = 0
+```
+
+Every successful later operation:
+
+```text
+updated_at = occurred_at
+revision = prior revision + 1
+```
+
+Timestamp regression is invalid:
+
+```text
+occurred_at < current.updated_at
+    → InvalidLifecycleOperation
+```
+
+Equal timestamps are allowed. Revision establishes authoritative event ordering.
+
+Rejected operations do not change revision or `updated_at` and produce no event.
+
+---
+
+# 16. S0.3-D14 — Blockage Model
+
+```text
+BlockageStatus
+
+CLEAR
+BLOCKED
+```
+
+`BlockReason` contains:
+
+```text
+code
+summary
+```
+
+Normative validation:
+
+```text
+code pattern: ^[A-Z][A-Z0-9_]*$
+summary: non-empty / non-whitespace
+```
+
+`Blockage` contains:
+
+```text
+status: BlockageStatus
+reasons: ordered immutable tuple[BlockReason, ...]
+```
+
+Invariants:
+
+```text
+CLEAR   → zero reasons
+BLOCKED → one or more reasons
+```
+
+Duplicate identical `BlockReason` values are rejected.
+
+Caller order is preserved.
+
+Blockage equality is structural ordered equality.
+
+No blocker registry is introduced.
+
+## set_blocked
+
+`set_blocked(reasons, ...)` is allowed only while phase is one of:
+
+```text
+DEFINING
+RESEARCHING
+DESIGNING
+CONTRACTING
+PLANNING
+READY
+IMPLEMENTING
+EVALUATING
+REWORK
+```
+
+It may change:
+
+```text
+CLEAR → BLOCKED
+BLOCKED → BLOCKED with different reasons
+```
+
+Supplying the identical current ordered blockage is a semantic no-op and is rejected.
+
+## clear_blockage
+
+`clear_blockage(...)` requires current blockage `BLOCKED`.
+
+`CLEAR → CLEAR` is a semantic no-op and is rejected.
+
+## Blocked phase restrictions
+
+While blocked, phase transition into:
+
+```text
+IMPLEMENTING
+EVALUATING
+ACCEPTED
+```
+
+is rejected until blockage is cleared.
+
+Blocked work may move to a structurally legal remediation phase such as `DEFINING`, `RESEARCHING`, `DESIGNING`, `CONTRACTING`, or `PLANNING`, preserving its blockage.
+
+---
+
+# 17. S0.3-D15 — Cancellation Normalizes Blockage
+
+A blocked active slice may transition to `CANCELLED`.
+
+Cancellation is terminal and atomically produces:
+
+```text
+phase = CANCELLED
+blockage = CLEAR
+```
+
+The prior blocker history remains represented by preceding lifecycle events.
+
+Cancellation emits exactly one `PhaseChanged` event and increments revision exactly once.
+
+No synthetic `BlockageChanged` event is emitted for cancellation normalization.
+
+Validity is preserved unchanged by cancellation.
+
+Replay applies this same deterministic normalization.
+
+---
+
+# 18. S0.3-D16 — Validity Operations
+
+Lifecycle supports:
+
+```text
+mark_stale(...)
+revalidate(...)
+```
+
+Allowed state changes:
+
+```text
+CURRENT → STALE
+STALE → CURRENT
+```
+
+`mark_stale` and `revalidate` preserve phase and blockage.
+
+Semantic no-ops are rejected:
+
+```text
+STALE → STALE
+CURRENT → CURRENT
+```
+
+`SUPERSEDED` and `CANCELLED` reject validity operations.
+
+`ACCEPTED` permits validity operations, so both are valid:
+
+```text
+ACCEPTED / CURRENT
+ACCEPTED / STALE
+```
+
+When validity is `STALE`, transition into:
+
+```text
+IMPLEMENTING
+ACCEPTED
+```
+
+is rejected until revalidation.
+
+Other structurally legal transitions remain possible while stale.
+
+---
+
+# 19. S0.3-D17 — Supersession Successor Is Part of Lifecycle State
+
+`ACCEPTED → SUPERSEDED` requires explicit:
+
+```text
+superseded_by_slice_id: SliceId
+```
+
+The successor must not equal the current `slice_id`.
+
+The resulting snapshot stores that reference:
+
+```text
+phase = SUPERSEDED
+superseded_by_slice_id = <successor>
+```
+
+All non-`SUPERSEDED` snapshots require:
+
+```text
+superseded_by_slice_id = None
+```
+
+Cross-record existence, project membership, and acceptance of the successor are not checked in Slice 0.3; those require higher-level governance/context.
+
+Supersession preserves current validity and requires clear blockage because `ACCEPTED` cannot be blocked.
+
+---
+
+# 20. S0.3-D18 — No Silent No-Ops
+
+Every semantic no-op is rejected with:
+
+```text
+InvalidLifecycleOperation
+```
+
+No event is produced.
+
+Revision and `updated_at` remain unchanged.
+
+This includes at minimum:
+
+```text
+phase X → phase X
+CURRENT → CURRENT
+STALE → STALE
+CLEAR → CLEAR
+set_blocked(existing identical ordered blockage)
+```
+
+Silent successful no-ops are forbidden.
+
+---
+
+# 21. S0.3-D19 — Lifecycle Events
+
+Every successful lifecycle operation produces exactly one immutable event.
+
+Event categories are:
 
 ```text
 LifecycleInitialized
@@ -508,15 +695,21 @@ BlockageChanged
 ValidityChanged
 ```
 
-No event is persisted yet.
-
----
-
-# 21. Common Event Fields
-
-Every lifecycle event contains at minimum:
+All event models follow the accepted serialized-model discipline:
 
 ```text
+immutable
+schema_version = 1
+extra fields forbidden
+JSON-compatible serialization
+JSON round trip
+JSON Schema generation
+```
+
+Common event fields:
+
+```text
+schema_version
 event_id
 slice_id
 actor
@@ -525,622 +718,400 @@ reason
 resulting_revision
 ```
 
-Specific events include their before/after values.
-
----
-
-# 22. Event Identifier
-
-Introduce:
+Common validation:
 
 ```text
-evt_<uuid7>
+event_id is EventId
+event_id supplied explicitly
+actor is ActorRef
+occurred_at timezone-aware and UTC-normalized
+reason non-empty / non-whitespace
+resulting_revision >= 0
 ```
 
-following Slice 0.2's ID convention.
+## LifecycleInitialized
 
----
-
-# 23. Actor Does Not Imply Authority
-
-Events identify who requested or caused the operation.
-
-Slice 0.3 does not answer whether that actor was allowed to do it.
-
-Authority belongs to governance.
-
----
-
-# 24. Initialization
-
-A newly initialized lifecycle begins:
+Initialization event has:
 
 ```text
-phase: PROPOSED
-validity: CURRENT
-blockage: CLEAR
-revision: 0
-```
-
-Initialization produces `LifecycleInitialized` with explicit actor and timestamp.
-
----
-
-# 25. S0.3-D09 — Explicit Transition Matrix
-
-Legal phase transitions are represented by an explicit transition table.
-
-Do not infer legality from enum ordering.
-
----
-
-# 26. Allowed Phase Transitions
-
-## PROPOSED
-
-```text
-DEFINING
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-READY
-CANCELLED
-```
-
-## DEFINING
-
-```text
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-READY
-CANCELLED
-```
-
-## RESEARCHING
-
-```text
-DEFINING
-DESIGNING
-CONTRACTING
-PLANNING
-READY
-CANCELLED
-```
-
-## DESIGNING
-
-```text
-RESEARCHING
-CONTRACTING
-PLANNING
-READY
-CANCELLED
-```
-
-## CONTRACTING
-
-```text
-RESEARCHING
-DESIGNING
-PLANNING
-READY
-CANCELLED
-```
-
-## PLANNING
-
-```text
-RESEARCHING
-DESIGNING
-CONTRACTING
-READY
-CANCELLED
-```
-
-## READY
-
-```text
-DEFINING
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-IMPLEMENTING
-CANCELLED
-```
-
-## IMPLEMENTING
-
-```text
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-EVALUATING
-CANCELLED
-```
-
-## EVALUATING
-
-```text
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-REWORK
-ACCEPTED
-CANCELLED
-```
-
-## REWORK
-
-```text
-RESEARCHING
-DESIGNING
-CONTRACTING
-PLANNING
-EVALUATING
-CANCELLED
-```
-
-## ACCEPTED
-
-```text
-SUPERSEDED
-```
-
-## SUPERSEDED
-
-Terminal.
-
-## CANCELLED
-
-Terminal.
-
----
-
-# 27. Structural Transition Rules
-
-Implementation cannot transition directly to `ACCEPTED`.
-
-Rework cannot transition directly to `ACCEPTED`.
-
-Only `EVALUATING → ACCEPTED` is structurally valid.
-
-Implementation always passes through `READY`.
-
-Evaluation requires either `IMPLEMENTING` or `REWORK` as its source.
-
-Accepted work never returns to rework.
-
-Accepted work is superseded by new authoritative work rather than historically rewritten.
-
----
-
-# 28. Supersession Reference
-
-Transitioning:
-
-```text
-ACCEPTED → SUPERSEDED
-```
-
-must identify `superseded_by_slice_id` or equivalent explicit successor reference.
-
----
-
-# 29. S0.3-D10 — Transition Reason
-
-Every phase transition requires a non-empty reason.
-
-Relay should not rely on transition direction alone to explain engineering history.
-
----
-
-# 30. Blockage Operations
-
-Lifecycle supports:
-
-```text
-set_blocked(reasons)
-clear_blockage(reason)
-```
-
-No state change means no event.
-
-Terminal phases `ACCEPTED`, `SUPERSEDED`, and `CANCELLED` cannot become blocked.
-
----
-
-# 31. Blocked Phase Restrictions
-
-While blocked, normal forward progression into:
-
-```text
-IMPLEMENTING
-EVALUATING
-ACCEPTED
-```
-
-is rejected unless blockage has first been cleared.
-
-Blocked work may still transition toward remediation where structurally legal.
-
----
-
-# 32. Validity Operations
-
-Lifecycle supports:
-
-```text
-mark_stale(reason)
-revalidate(reason)
-```
-
-Allowed:
-
-```text
-CURRENT → STALE
-STALE → CURRENT
-```
-
-When stale, transition into `IMPLEMENTING` or `ACCEPTED` is prohibited without revalidation.
-
-`ACCEPTED + STALE` is valid.
-
-`CANCELLED` and `SUPERSEDED` reject validity operations.
-
----
-
-# 33. S0.3-D11 — State Engine Is Pure
-
-The state engine performs no:
-
-```text
-database access
-Git access
-GitHub calls
-HTTP calls
-model calls
-filesystem access
-clock access
-```
-
-Conceptually:
-
-```text
-current lifecycle
-+
-requested operation
-        ↓
-pure state engine
-        ↓
-new lifecycle
-+
-event
-```
-
-or a typed error.
-
----
-
-# 34. Proposed Package Structure
-
-```text
-src/
-└── relay_engine/
-    ├── domain/
-    │   └── ...
-    │
-    └── lifecycle/
-        ├── __init__.py
-        ├── models.py
-        ├── events.py
-        ├── transitions.py
-        ├── engine.py
-        └── errors.py
-```
-
----
-
-# 35. Proposed Public Lifecycle Surface
-
-Conceptually:
-
-```python
-initialize_lifecycle(...)
-
-transition_phase(...)
-
-set_blocked(...)
-
-clear_blockage(...)
-
-mark_stale(...)
-
-revalidate(...)
-
-replay_lifecycle(...)
-```
-
----
-
-# 36. Lifecycle Errors
-
-Narrow typed exceptions may include:
-
-```text
-InvalidPhaseTransition
-InvalidLifecycleOperation
-LifecycleReplayError
-```
-
----
-
-# 37. No Silent No-Ops
-
-Requests such as:
-
-```text
-READY → READY
-CURRENT → CURRENT
-CLEAR → CLEAR
-```
-
-should not create fake history.
-
-Recommended behavior: reject as no-op with a typed lifecycle error.
-
----
-
-# 38. Event Replay
-
-Relay must be able to reconstruct lifecycle state from ordered lifecycle events.
-
-Replay must reject malformed history such as:
-
-```text
-revision gap
-event for wrong slice
-event from unexpected prior phase
-duplicate initialization
-inconsistent blockage event
-inconsistent validity event
-```
-
-Persistence is not required.
-
-Replay semantics are.
-
----
-
-# 39. Revision Semantics
-
-Recommended:
-
-```text
-LifecycleInitialized
 resulting_revision = 0
 ```
 
-Then:
+It deterministically represents initialization to:
 
 ```text
-first change = revision 1
-second change = revision 2
-...
+phase = PROPOSED
+validity = CURRENT
+blockage = CLEAR
+revision = 0
+updated_at = occurred_at
+superseded_by_slice_id = None
 ```
 
-Every state-changing event increments exactly once.
+## PhaseChanged
+
+Additional fields:
+
+```text
+from_phase
+to_phase
+superseded_by_slice_id: SliceId | None
+```
+
+Rules:
+
+```text
+to_phase == SUPERSEDED
+    → superseded_by_slice_id required
+
+otherwise
+    → superseded_by_slice_id must be None
+```
+
+Cancellation blockage normalization is derived deterministically from `to_phase == CANCELLED` and the prior snapshot; it does not require a second event.
+
+## BlockageChanged
+
+Additional fields:
+
+```text
+before: Blockage
+after: Blockage
+```
+
+`before != after` is required.
+
+## ValidityChanged
+
+Additional fields:
+
+```text
+before: LifecycleValidity
+after: LifecycleValidity
+```
+
+`before != after` is required.
 
 ---
 
-# 40. Required Lifecycle Fixtures
+# 22. S0.3-D20 — Initialization
+
+Public initialization operation:
+
+```text
+initialize_lifecycle(
+    slice_id,
+    event_id,
+    actor,
+    occurred_at,
+    reason,
+)
+```
+
+produces:
+
+```text
+SliceLifecycle(
+    slice_id = slice_id,
+    phase = PROPOSED,
+    validity = CURRENT,
+    blockage = CLEAR,
+    revision = 0,
+    updated_at = occurred_at,
+    superseded_by_slice_id = None,
+)
+```
+
+plus one `LifecycleInitialized` event.
+
+Initialization performs no external lookup and does not check whether `slice_id` exists in storage.
+
+---
+
+# 23. Public Lifecycle Operations
+
+The required public capability is conceptually:
+
+```python
+initialize_lifecycle(...)
+transition_phase(...)
+set_blocked(...)
+clear_blockage(...)
+mark_stale(...)
+revalidate(...)
+replay_lifecycle(...)
+```
+
+Exact private helper/module decomposition is implementation discretion.
+
+Every event-producing operation other than replay receives explicit:
+
+```text
+event_id
+actor
+occurred_at
+reason
+```
+
+`transition_phase()` additionally receives:
+
+```text
+target_phase
+superseded_by_slice_id when target is SUPERSEDED
+```
+
+`set_blocked()` additionally receives the ordered blocker reasons.
+
+The engine validates structural lifecycle rules only. It does not validate authorization or external prerequisites.
+
+---
+
+# 24. Lifecycle Errors
+
+The public error family is:
+
+```text
+LifecycleError
+├── InvalidPhaseTransition
+├── InvalidLifecycleOperation
+└── LifecycleReplayError
+```
+
+Semantics:
+
+- `InvalidPhaseTransition` — requested source/target phase movement is not structurally legal or is forbidden by current blockage/validity constraints.
+- `InvalidLifecycleOperation` — non-phase operation is invalid, operation context is invalid, or the request is a semantic no-op.
+- `LifecycleReplayError` — recorded history is internally inconsistent or cannot be deterministically replayed.
+
+Pydantic/schema validation remains responsible for malformed individual serialized model values. The lifecycle errors govern validly shaped values used in invalid lifecycle operations/history.
+
+No broader exception hierarchy is required in this slice.
+
+---
+
+# 25. S0.3-D21 — Strict Event Replay
+
+`replay_lifecycle(events)` reconstructs a lifecycle snapshot from an ordered non-empty sequence of lifecycle events.
+
+Replay is pure. It does not generate IDs, timestamps, events, or external data.
+
+The first event must be exactly one `LifecycleInitialized` event with:
+
+```text
+resulting_revision = 0
+```
+
+All later events must use the same `slice_id` and increment resulting revision exactly once.
+
+Replay must reject at minimum:
+
+```text
+empty history
+missing initialization
+duplicate initialization
+duplicate event_id
+event for wrong slice
+revision gap
+duplicate / non-advancing revision
+timestamp regression
+unexpected from_phase
+illegal phase transition
+blocked transition into IMPLEMENTING / EVALUATING / ACCEPTED
+stale transition into IMPLEMENTING / ACCEPTED
+inconsistent blockage before value
+invalid blockage after value
+inconsistent validity before value
+invalid validity after value
+invalid supersession payload
+event after CANCELLED
+event after SUPERSEDED
+```
+
+Replay maintains a set of previously observed event IDs and rejects reuse.
+
+For each event:
+
+```text
+event.occurred_at >= current.updated_at
+```
+
+is required. Equal timestamps are valid.
+
+Replay applies the same normative structural rules as live operations, including cancellation blockage normalization and supersession storage.
+
+After a successful replay, the reconstructed snapshot must be identical to the snapshot produced by applying the corresponding live operations with the same complete inputs.
+
+---
+
+# 26. Required Lifecycle Scenarios
+
+Implementation tests and fixtures must cover at least:
 
 ## Full happy path
 
 ```text
 PROPOSED
-↓
-DEFINING
-↓
-RESEARCHING
-↓
-DESIGNING
-↓
-CONTRACTING
-↓
-PLANNING
-↓
-READY
-↓
-IMPLEMENTING
-↓
-EVALUATING
-↓
-ACCEPTED
+→ DEFINING
+→ RESEARCHING
+→ DESIGNING
+→ CONTRACTING
+→ PLANNING
+→ READY
+→ IMPLEMENTING
+→ EVALUATING
+→ ACCEPTED
 ```
 
 ## Short path
 
 ```text
 PROPOSED
-↓
-READY
-↓
-IMPLEMENTING
-↓
-EVALUATING
-↓
-ACCEPTED
+→ READY
+→ IMPLEMENTING
+→ EVALUATING
+→ ACCEPTED
 ```
 
 ## Rework
 
 ```text
 READY
-↓
-IMPLEMENTING
-↓
-EVALUATING
-↓
-REWORK
-↓
-EVALUATING
-↓
-ACCEPTED
+→ IMPLEMENTING
+→ EVALUATING
+→ REWORK
+→ EVALUATING
+→ ACCEPTED
 ```
 
 ## Contract escalation
 
 ```text
 IMPLEMENTING
-↓
-EVALUATING
-↓
-CONTRACTING
-↓
-PLANNING
-↓
-READY
-↓
-IMPLEMENTING
-↓
-EVALUATING
+→ EVALUATING
+→ CONTRACTING
+→ PLANNING
+→ READY
+→ IMPLEMENTING
+→ EVALUATING
 ```
 
 ## Architecture escalation
 
 ```text
 EVALUATING
-↓
-DESIGNING
-↓
-CONTRACTING
-↓
-PLANNING
-↓
-READY
+→ DESIGNING
+→ CONTRACTING
+→ PLANNING
+→ READY
 ```
 
-## Blocker
+## Definition escalation
+
+```text
+EVALUATING
+→ DEFINING
+→ DESIGNING
+→ CONTRACTING
+→ PLANNING
+→ READY
+```
+
+## Blocker remediation
 
 ```text
 IMPLEMENTING / CLEAR
-↓
+→ IMPLEMENTING / BLOCKED
+→ CONTRACTING / BLOCKED
+→ CONTRACTING / CLEAR
+```
+
+## Blocked cancellation
+
+```text
 IMPLEMENTING / BLOCKED
-↓
-CONTRACTING / BLOCKED
-↓
-CONTRACTING / CLEAR
+→ CANCELLED / CLEAR
 ```
 
 ## Staleness
 
 ```text
 ACCEPTED / CURRENT
-↓
-ACCEPTED / STALE
-↓
-ACCEPTED / CURRENT
+→ ACCEPTED / STALE
+→ ACCEPTED / CURRENT
 ```
 
 ## Supersession
 
 ```text
 ACCEPTED
-↓
-SUPERSEDED
+→ SUPERSEDED(successor)
 ```
 
-with explicit successor reference.
+## Replay
+
+Every scenario above must replay to the identical final snapshot from its event sequence.
 
 ---
 
-# 41. Relationship to Authorization
+# 27. Relationship to Authorization
 
-Slice 0.3 deliberately does not implement `Authorization`.
+Slice 0.3 does not implement `Authorization`.
 
-It creates the boundary authorization will control:
+It creates the structural boundary authorization will later control:
 
 ```text
 READY
    │
-   │ future authorization/gate
+   │ future authorization / gate
    ▼
 IMPLEMENTING
 ```
 
+`ActorRef` on a lifecycle event records who requested or caused the operation. It does not prove that actor had authority.
+
 ---
 
-# 42. Relationship to Handover Gates
+# 28. Relationship to Handover Gates
 
-Slice 0.4 will wrap structural lifecycle transitions with governance:
+Slice 0.4 will wrap structural lifecycle operations with governance:
 
 ```text
 requested transition
         ↓
 Handover Gate
         ↓
-validity
-authority
-autonomy
+validity / authority / autonomy / prerequisites
         ↓
-🔴 / 🟡 / 🟢
+red / yellow / green
         ↓
 if permitted
         ↓
-Slice 0.3 state engine
+Slice 0.3 lifecycle engine
 ```
 
-The state engine defines what is structurally possible.
+The lifecycle engine defines what is structurally possible.
 
 The gate engine defines what is currently permissible.
 
 ---
 
-# 43. State Engine Exclusions
+# 29. State Engine Exclusions
 
 The state engine must not:
 
 - produce traffic lights;
-- validate artifacts;
+- validate engineering artifacts;
 - check whether tests passed;
 - decide whether dependencies are complete;
 - validate actor permissions;
 - evaluate authorization;
 - enforce hard stops;
+- perform persistence;
 - call external systems.
 
 ---
 
-# 44. Required Documentation
-
-Implementation should create:
-
-```text
-docs/architecture/LIFECYCLE_STATE_MACHINE.md
-docs/decisions/ADR-0003-lifecycle-state-decomposition.md
-docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY.md
-```
-
-ADR-0003 records that:
-
-1. READY is a phase.
-2. AUTHORIZED is not a phase.
-3. BLOCKED is orthogonal.
-4. STALE is orthogonal.
-5. HARD STOP belongs to handover governance.
-6. lifecycle is separate from Slice definition.
-7. lifecycle transitions are event-producing and deterministic.
-8. accepted history is immutable except explicit supersession.
-
----
-
-# 44A. Documentation-Lifecycle Boundary
+# 30. Documentation-Lifecycle Boundary
 
 Document/artifact maturity is distinct from slice lifecycle.
 
@@ -1156,11 +1127,9 @@ while its architecture artifact is:
 artifact state = REVIEW
 ```
 
-Likewise, a slice may become `ACCEPTED`, causing designated acceptance records such as its final slice memory to become `LOCKED`.
+Slice 0.3 does not implement artifact locking or a canonical artifact registry.
 
-Slice 0.3 does not implement artifact locking. It only establishes the boundary.
-
-For the documents produced by this slice:
+Documents produced by Slice 0.3 have these intended classes:
 
 ```text
 LIFECYCLE_STATE_MACHINE.md
@@ -1170,24 +1139,18 @@ ADR-0003-lifecycle-state-decomposition.md
     → lockable historical record
 
 SLICE_0_3_STATE_MACHINE_MEMORY.md
-    → mutable while active; LOCKED at slice acceptance
+    → working while active; locked at slice acceptance
 ```
 
-Lifecycle events themselves are immutable records immediately upon occurrence.
+Lifecycle events themselves are immutable immediately upon occurrence.
 
-The exact repository metadata and canonical registry are deferred to Slice 0.6 and governed by `DOCUMENTATION_GOVERNANCE.md`.
+Exact repository metadata and canonical registry semantics remain deferred to Slice 0.6 under `DOCUMENTATION_GOVERNANCE.md`.
 
 ---
 
-# 44B. Scope, Simplicity, and Quality Are Not Lifecycle States
+# 31. Scope, Simplicity, and Quality Are Not Lifecycle States
 
-Relay's cross-cutting policy:
-
-```text
-ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md
-```
-
-does not add lifecycle phases such as:
+Cross-cutting findings do not create lifecycle phases such as:
 
 ```text
 OVERENGINEERED
@@ -1195,7 +1158,7 @@ OUT_OF_SCOPE
 QUALITY_FAILED
 ```
 
-These are findings, prerequisite conditions, or governance concerns.
+They remain findings, prerequisite conditions, or governance concerns.
 
 Examples:
 
@@ -1210,46 +1173,44 @@ phase = READY
 required quality evidence = missing
 ```
 
-The lifecycle remains structural.
-
-Slice 0.4 will determine how such conditions affect handover traffic lights.
-
-Later evaluation slices will determine how semantic simplicity/clarity findings route to `REWORK`.
-
-This preserves the principle:
-
-> **Lifecycle truth and engineering permission/evaluation are different things.**
+Slice 0.4 may later use such conditions as handover-gate inputs.
 
 ---
 
-# 45. Explicit In Scope
+# 32. Explicit In Scope
 
-Slice 0.3 authorizes design/implementation of:
+Slice 0.3 authorizes implementation of:
 
-1. LifecyclePhase;
-2. LifecycleValidity;
-3. BlockageStatus;
-4. BlockReason;
-5. Blockage;
-6. SliceLifecycle;
-7. lifecycle event models;
-8. explicit phase transition table;
-9. pure state engine;
-10. phase transition validation;
-11. blocker operations;
-12. staleness operations;
-13. event replay;
-14. lifecycle revision semantics;
-15. narrow lifecycle errors;
-16. lifecycle documentation;
-17. ADR-0003;
-18. lifecycle tests;
-19. Slice 0.3 memory;
-20. current-baseline update.
+1. `LifecyclePhase`;
+2. `LifecycleValidity`;
+3. `BlockageStatus`;
+4. `BlockReason`;
+5. `Blockage`;
+6. `SliceLifecycle`;
+7. `EventId` / `evt_` as a narrow extension of the accepted ID mechanism;
+8. lifecycle event models;
+9. explicit phase transition table;
+10. pure lifecycle engine;
+11. phase transition validation;
+12. direct definition-level backward escalation;
+13. blocker operations;
+14. deterministic blocked-cancellation normalization;
+15. staleness operations;
+16. supersession successor storage;
+17. explicit operation-context validation;
+18. strict no-op rejection;
+19. event replay;
+20. lifecycle revision/time semantics;
+21. narrow lifecycle errors;
+22. lifecycle documentation;
+23. ADR-0003;
+24. lifecycle tests/fixtures;
+25. Slice 0.3 memory;
+26. current-baseline candidate update.
 
 ---
 
-# 46. Explicit Out of Scope
+# 33. Explicit Out of Scope
 
 Forbidden in Slice 0.3:
 
@@ -1264,68 +1225,174 @@ dependency readiness checks
 evaluation model
 database
 event persistence
-GitHub
-provider integration
+GitHub integration
+provider/model integration
 agents
 research execution
 experiments
 board UI
 REST/API layer
+canonical artifact registry
 ```
 
----
-
-# 47. Acceptance Matrix
-
-| ID | Requirement | Evidence | Required |
-|---|---|---|---:|
-| A01 | Lifecycle is separate from Slice | inspection | Yes |
-| A02 | READY is a lifecycle phase | unit test/schema | Yes |
-| A03 | AUTHORIZED absent from phase enum | inspection | Yes |
-| A04 | BLOCKED absent from phase enum | inspection | Yes |
-| A05 | STALE absent from phase enum | inspection | Yes |
-| A06 | HARD_STOP absent from phase enum | inspection | Yes |
-| A07 | Blockage modeled orthogonally | unit tests | Yes |
-| A08 | Validity modeled orthogonally | unit tests | Yes |
-| A09 | Full transition matrix explicit | inspection | Yes |
-| A10 | Every phase pair tested | parametrized tests | Yes |
-| A11 | Direct IMPLEMENTING→ACCEPTED rejected | unit test | Yes |
-| A12 | Direct REWORK→ACCEPTED rejected | unit test | Yes |
-| A13 | READY required before IMPLEMENTING | unit tests | Yes |
-| A14 | IMPLEMENTING/REWORK required before EVALUATING | unit tests | Yes |
-| A15 | ACCEPTED only reachable from EVALUATING | unit tests | Yes |
-| A16 | ACCEPTED→SUPERSEDED supported | unit test | Yes |
-| A17 | ACCEPTED→CANCELLED rejected | unit test | Yes |
-| A18 | SUPERSEDED terminal | unit test | Yes |
-| A19 | CANCELLED terminal | unit test | Yes |
-| A20 | Rework loop supported | fixture test | Yes |
-| A21 | Architecture escalation supported | fixture test | Yes |
-| A22 | Contract escalation supported | fixture test | Yes |
-| A23 | Blocked forward execution rejected | unit tests | Yes |
-| A24 | Blocked remediation transitions possible | unit tests | Yes |
-| A25 | Stale implementation rejected | unit test | Yes |
-| A26 | Stale acceptance rejected | unit test | Yes |
-| A27 | ACCEPTED + STALE supported | unit test | Yes |
-| A28 | Revalidation preserves phase | unit test | Yes |
-| A29 | Every successful operation emits one event | unit tests | Yes |
-| A30 | No-op requests emit no event | unit tests | Yes |
-| A31 | Revisions increment exactly once | unit tests | Yes |
-| A32 | Event replay reconstructs lifecycle | unit tests | Yes |
-| A33 | Malformed replay rejected | unit tests | Yes |
-| A34 | Event actor/time/reason explicit | schema tests | Yes |
-| A35 | State engine performs no I/O | inspection | Yes |
-| A36 | No authorization semantics introduced | inspection | Yes |
-| A37 | No traffic-light logic introduced | inspection | Yes |
-| A38 | No persistence dependency introduced | dependency inspection | Yes |
-| A39 | LIFECYCLE_STATE_MACHINE.md completed | review | Yes |
-| A40 | ADR-0003 completed | review | Yes |
-| A41 | Slice memory completed | review | Yes |
-| A42 | CURRENT_BASELINE updated | review | Yes |
-| A43 | All prior quality gates remain green | CI | Yes |
+Do not create placeholder implementations for these future concepts.
 
 ---
 
-# 48. Named Regression Tests
+# 34. Expected Implementation Change Surface
+
+The design expects one small lifecycle package and a narrow extension of the accepted ID vocabulary.
+
+Expected existing production files touched:
+
+```text
+src/relay_engine/domain/ids.py
+src/relay_engine/domain/__init__.py   # only if needed to expose EventId consistently
+```
+
+Expected new production area:
+
+```text
+src/relay_engine/lifecycle/
+```
+
+A reasonable implementation may use cohesive modules such as:
+
+```text
+__init__.py
+models.py
+events.py
+engine.py
+errors.py
+```
+
+A separate `transitions.py` is optional, not required. The implementation agent should not create one merely to match an illustrative tree if the transition table is clearer inside `engine.py`.
+
+Expected dependencies:
+
+```text
+new runtime dependencies: 0
+new development dependencies: 0
+```
+
+Forbidden architectural expansion:
+
+```text
+event bus
+repository pattern
+persistence abstraction
+service layer
+plugin registry
+state-machine framework dependency
+dependency-injection framework
+```
+
+Use direct Python/Pydantic constructs and the existing Relay domain values.
+
+---
+
+# 35. Required Documentation
+
+Implementation creates:
+
+```text
+docs/architecture/LIFECYCLE_STATE_MACHINE.md
+docs/decisions/ADR-0003-lifecycle-state-decomposition.md
+docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY.md
+```
+
+ADR-0003 must record at minimum:
+
+1. READY is a phase.
+2. AUTHORIZED is not a phase.
+3. BLOCKED is orthogonal.
+4. STALE is orthogonal.
+5. HARD STOP belongs to handover governance.
+6. lifecycle is separate from Slice definition.
+7. lifecycle operations are deterministic and event-producing.
+8. event IDs and time are explicit operation inputs.
+9. accepted history is immutable except explicit supersession.
+10. supersession successor is retained in lifecycle state.
+
+Before human acceptance:
+
+```text
+ADR-0003 status = PROPOSED / VALIDATED / PENDING ACCEPTANCE
+Slice 0.3 memory = IMPLEMENTATION COMPLETE / PENDING EVALUATION
+```
+
+Neither is locked before acceptance.
+
+---
+
+# 36. Acceptance Matrix
+
+All requirements are mandatory.
+
+| ID | Requirement | Evidence |
+|---|---|---|
+| A01 | Lifecycle is separate from `Slice` | inspection |
+| A02 | READY is a lifecycle phase | unit test/schema |
+| A03 | AUTHORIZED absent from phase enum | inspection |
+| A04 | BLOCKED absent from phase enum | inspection |
+| A05 | STALE absent from phase enum | inspection |
+| A06 | HARD_STOP absent from phase enum | inspection |
+| A07 | Blockage modeled orthogonally | unit tests |
+| A08 | Validity modeled orthogonally | unit tests |
+| A09 | Full transition matrix explicit | inspection |
+| A10 | Every phase pair tested | parametrized tests |
+| A11 | Direct IMPLEMENTING→ACCEPTED rejected | unit test |
+| A12 | Direct REWORK→ACCEPTED rejected | unit test |
+| A13 | READY required before IMPLEMENTING | unit tests |
+| A14 | IMPLEMENTING/REWORK required before EVALUATING | unit tests |
+| A15 | ACCEPTED only reachable from EVALUATING | unit tests |
+| A16 | ACCEPTED→SUPERSEDED supported | unit test |
+| A17 | ACCEPTED→CANCELLED rejected | unit test |
+| A18 | SUPERSEDED terminal | unit test |
+| A19 | CANCELLED terminal | unit test |
+| A20 | Rework loop supported | fixture test |
+| A21 | Architecture escalation supported | fixture test |
+| A22 | Contract escalation supported | fixture test |
+| A23 | Blocked forward execution rejected | unit tests |
+| A24 | Blocked remediation transitions possible | unit tests |
+| A25 | Stale implementation rejected | unit test |
+| A26 | Stale acceptance rejected | unit test |
+| A27 | ACCEPTED + STALE supported | unit test |
+| A28 | Revalidation preserves phase | unit test |
+| A29 | Every successful operation emits exactly one event | unit tests |
+| A30 | No-op requests raise typed error and emit no event | unit tests |
+| A31 | Revisions increment exactly once | unit tests |
+| A32 | Event replay reconstructs lifecycle | unit tests |
+| A33 | Malformed replay rejected | unit tests |
+| A34 | Event actor/time/reason explicit | schema tests |
+| A35 | State engine performs no I/O, clock, or randomness | inspection |
+| A36 | No authorization semantics introduced | inspection |
+| A37 | No traffic-light logic introduced | inspection |
+| A38 | No persistence dependency introduced | dependency inspection |
+| A39 | `LIFECYCLE_STATE_MACHINE.md` completed | review |
+| A40 | ADR-0003 completed | review |
+| A41 | Slice memory completed | review |
+| A42 | `CURRENT_BASELINE.md` distinguishes accepted baseline from candidate | review |
+| A43 | All prior quality gates remain green | CI |
+| A44 | Event ID supplied explicitly; engine generates no ID | unit test/inspection |
+| A45 | EventId uses `evt_<uuid7>` through accepted ID mechanism | unit test/schema |
+| A46 | Blocked→CANCELLED deterministically yields CANCELLED/CLEAR | unit/replay test |
+| A47 | Supersession successor preserved in snapshot and replay | unit/replay test |
+| A48 | Semantic no-ops preserve revision/time and emit nothing | unit tests |
+| A49 | BlockReason syntax/order/equality/duplicate semantics enforced | unit tests |
+| A50 | All successful operations require explicit nonblank reason | unit/schema tests |
+| A51 | Lifecycle/event timestamps are aware and UTC-normalized | unit/schema tests |
+| A52 | `updated_at` equals successful operation `occurred_at` | unit tests |
+| A53 | Timestamp regression rejected; equal timestamp allowed | unit tests |
+| A54 | Lifecycle and event models immutable/versioned/extra-forbid | schema tests |
+| A55 | Duplicate event IDs rejected during replay | replay test |
+| A56 | Replay rejects malformed terminal history | replay tests |
+| A57 | Direct definition-level backward escalation supported | transition tests |
+| A58 | Identical snapshot + identical complete operation input yields identical result | determinism test |
+
+---
+
+# 37. Named Regression Tests
 
 At minimum:
 
@@ -1334,35 +1401,61 @@ test_ready_does_not_mean_authorized
 test_implementation_cannot_accept_itself
 test_rework_requires_reevaluation
 test_accepted_history_cannot_return_to_rework
-test_blocked_preserves_phase
+test_blocked_preserves_phase_during_remediation
+test_blocked_cancellation_clears_blockage_once
 test_stale_preserves_phase
 test_accepted_can_be_stale
 test_supersession_requires_successor
+test_supersession_preserves_successor_in_snapshot
 test_terminal_states_have_no_normal_outgoing_transition
+test_noop_is_rejected_without_event_or_revision_change
+test_event_id_is_explicit_and_engine_generates_no_id
+test_timestamp_regression_is_rejected
+test_equal_timestamp_is_allowed
+test_definition_escalation_is_direct
 test_replay_reconstructs_identical_snapshot
+test_replay_rejects_duplicate_event_id
+test_replay_rejects_terminal_history_extension
+test_identical_inputs_are_deterministic
 ```
 
 ---
 
-# 49. Resulting Authority
+# 38. Design Review Findings Resolved in Revision 4
 
-After acceptance, Relay will authoritatively know:
+Revision 4 resolves `RLY-S03-DESIGN-EVAL-001` findings as follows:
+
+| Finding | Resolution |
+|---|---|
+| `RLY-S03-D001` | Event IDs are explicit operation inputs; engine performs no UUID generation. |
+| `RLY-S03-D002` | Blocked cancellation is legal and atomically normalizes blockage to CLEAR with one PhaseChanged event. |
+| `RLY-S03-D003` | `superseded_by_slice_id` is stored in `SliceLifecycle` and replayed. |
+| `RLY-S03-D004` | All semantic no-ops raise `InvalidLifecycleOperation`; no event/revision/time change. |
+| `RLY-S03-D005` | BlockReason syntax, ordered tuple semantics, duplicate handling, and structural equality are normative. |
+| `RLY-S03-D006` | All operations require explicit event ID/actor/time/reason; UTC/update/timestamp rules are locked. |
+| `RLY-S03-D007` | Event payloads and strict replay rejection rules are explicit. |
+| `RLY-S03-D008` | Direct backward escalation to DEFINING is supported from later active phases. |
+| `RLY-S03-D009` | Externally observable semantics are normative; public lifecycle error family is locked. |
+| `RLY-S03-D010` | Authorization metadata records `RLY-S03-AUTH-001` as Revision-3 authorization requiring revalidation for Revision 4. |
+
+---
+
+# 39. Resulting Authority After Acceptance
+
+After Revision 4 design acceptance and successful Slice 0.3 implementation/acceptance, Relay will know:
 
 ```text
 what a slice is
-+
 where that slice is
-+
 whether its current validity is established
-+
 whether it is presently blocked
-+
 which structural lifecycle movements are legal
-+
 what lifecycle events occurred
+how to replay those events deterministically
+which slice superseded an accepted slice
 ```
 
-Relay still will **not** know:
+Relay still will not know:
 
 ```text
 whether a transition is authorized
@@ -1370,43 +1463,64 @@ whether required artifacts exist
 whether a human must approve
 whether a transition should run automatically
 whether a hard stop applies
-whether an evaluator has approved the work
+whether an evaluator approved the work
 ```
 
-Those are deliberately next-layer concerns.
+Those are next-layer governance concerns.
 
 ---
 
-# 50. Hard Stop
+# 40. Design-State and Authorization Gate
 
-After acceptance:
+Current state of this document:
+
+```text
+Revision 4
+Artifact state: REVIEW
+Design acceptance: PENDING
+```
+
+Prior implementation authorization:
+
+```text
+RLY-S03-AUTH-001
+```
+
+was granted against Revision 3.
+
+Because Revision 4 materially changes the public contract, implementation may begin only after both:
+
+```text
+1. Human acceptance of Design Revision 4
+2. Explicit revalidation of RLY-S03-AUTH-001 against Revision 4
+```
+
+Until then:
+
+```text
+AUTHORIZATION HISTORY: PRESENT
+EXECUTION: BLOCKED
+```
+
+No Slice 0.3 production code may be started from this review branch.
+
+---
+
+# 41. Hard Stop
+
+After eventual Slice 0.3 acceptance:
 
 ```text
 HARD STOP
 ```
 
-Review specifically:
+Do not begin Slice 0.4 automatically.
 
-- whether READY is correctly placed;
-- whether authorization is sufficiently separated;
-- whether blockage belongs outside phase;
-- whether staleness semantics preserve accepted history;
-- whether the transition matrix is too permissive;
-- whether backward transitions are expressive enough;
-- whether lifecycle events are sufficient for later persistence;
-- whether any governance logic leaked prematurely into the state engine.
-
-Do not begin Handover Gate implementation automatically.
-
----
-
-# 51. Candidate Next Slice
-
-Expected:
+The next design candidate remains:
 
 > **Slice 0.4 — Handover Gates and Traffic Lights**
 
-It will answer:
+which will answer:
 
 ```text
 A structural transition is possible.
@@ -1420,13 +1534,11 @@ Can Relay execute it automatically?
 What makes the handover red, yellow, or green?
 ```
 
-This is where authorization, human approval, hard stops, prerequisite artifacts, and traffic lights begin to enter the executable governance model.
-
 ---
 
-# 52. Slice 0.3 Summary
+# 42. Summary
 
-The core model becomes:
+The authoritative decomposition remains:
 
 ```text
                  WHAT THE WORK IS
@@ -1449,15 +1561,13 @@ The core model becomes:
                        ▼
                   Handover Gate
                        │
-                🔴     🟡     🟢
+                red / yellow / green
                        │
                        ▼
                  State Engine
 ```
 
-The central invariant is:
-
-> **Lifecycle truth and transition permission are different things.**
+The lifecycle engine is deterministic because all external/nondeterministic values are explicit inputs.
 
 A slice can be ready without being authorized.
 
@@ -1465,6 +1575,8 @@ A slice can be implementing while blocked.
 
 A slice can be accepted while stale.
 
-A slice can be accepted while its outgoing handover is under a hard stop.
+A blocked slice can be cancelled without creating contradictory terminal blockage.
 
-Those distinctions give Relay enough semantic precision to build its traffic-light governance system cleanly in Slice 0.4.
+A superseded lifecycle retains its explicit successor.
+
+Those distinctions provide the semantic precision required for Slice 0.4 without leaking governance into the state engine.
