@@ -1,6 +1,6 @@
 # ADR-0002 — Core Domain Boundaries
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
+**Status:** LOCKED / ACCEPTED
 **Date:** September 2026
 
 ## Context

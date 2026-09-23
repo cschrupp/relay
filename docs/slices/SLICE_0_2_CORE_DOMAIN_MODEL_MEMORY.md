@@ -1,11 +1,15 @@
 # Slice 0.2 — Core Domain Model — Development Memory
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING EVALUATION
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
 **Authorization:** `RLY-S02-IMPLEMENT-001`
 **Authorized repository baseline:** `8d24039f982139ea76c9651abfc8c06b6ed58bb3`
 **Accepted Slice 0.1 technical SHA:** `e8598ae5ffb046d4131e04655a0c063ff1e41ccc`
 **Candidate branch:** `slice/0.2-core-domain-model`
-**Candidate result SHA:** Reported in the handover and Git; not embedded in its own commit.
+**Accepted implementation SHA:** `cdf5b1fedc92762095f38d684d4655aaa6bf57f0`
+**Independent evaluation:** `RLY-S02-EVAL-001 — ACCEPT`
+**Human acceptance:** `RLY-S02-ACCEPT-001`
+**Acceptance-record commit:** Recorded by Git and the implementation handover; not embedded in its own commit.
 
 ## Objective and implemented scope
 
@@ -42,7 +46,7 @@ uv build: PASS — sdist and wheel built
 git diff --check: PASS
 ```
 
-GitHub Actions result for the candidate branch is reported in the handover if available before submission.
+GitHub Actions on the candidate result passed (run `35820282020`). The acceptance-record commit is validated below and its Actions result is reported in the final handover.
 
 ## Acceptance-matrix self-check
 
@@ -79,10 +83,10 @@ A27: no persistence dependency — unchanged `pyproject.toml`; dependency inspec
 A28: no GitHub/provider dependency — imports and dependencies inspected.
 A29: no future subsystem placeholders — changed-file review.
 A30: `CORE_DOMAIN_MODEL.md` completed — document review.
-A31: ADR-0002 completed and pending acceptance — document review.
-A32: Slice 0.2 memory completed — this working record.
-A33: `CURRENT_BASELINE.md` distinguishes accepted Slice 0.1 and candidate Slice 0.2 — document review.
-A34: Slice 0.1 quality gates remain green — local suite above; candidate Actions result reported in handover.
+A31: ADR-0002 completed, accepted, and locked — document review.
+A32: Slice 0.2 memory finalized and locked — this record.
+A33: `CURRENT_BASELINE.md` records accepted Slice 0.2 and retains Slice 0.1 history — document review.
+A34: Slice 0.1 quality gates remain green — local suite above; candidate Actions run `35820282020` passed.
 ```
 
 ## Deviations, limitations, and discovered work
@@ -93,4 +97,6 @@ Cross-record graph validation and registry-level canonical document governance r
 
 ## Hard stop and next-slice status
 
-Stop after the candidate is published and submitted for independent evaluation. Do not merge the branch. Slice 0.3 implementation and all later implementation remain unauthorized.
+Slice 0.2 is COMPLETE / ACCEPTED. Its technical implementation SHA remains `cdf5b1fedc92762095f38d684d4655aaa6bf57f0`; promotion to `main` was a fast-forward, and the acceptance-record commit is separate provenance. This memory is LOCKED and must not be edited in place; corrections require a governance amendment or supersession.
+
+Hard stop: ACTIVE. Slice 0.3 design is present, but implementation is NOT AUTHORIZED. Do not begin Slice 0.3 or any later implementation.
