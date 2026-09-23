@@ -5,11 +5,11 @@
 **Status:** PROPOSED FOR DESIGN REVIEW  
 **Document class:** Lockable record  
 **Artifact state:** REVIEW  
-**Document revision:** 1  
+**Document revision:** 2  
 **Parent:** *Relay — Build Plan and Development Roadmap v0.3*  
 **Depends on:** Slice 0.3 — State Machine and Lifecycle Semantics — COMPLETE / ACCEPTED  
 **Accepted project baseline:** `e3a8501e0e2a410d04e2e95fd566b01622535016`  
-**Design authorization:** Explicit Human Authority request to define Slice 0.4 in detail  
+**Design authorization:** Human Authority authorized detailed Slice 0.4 design and Revision 2 correction  
 **Implementation authorization:** NOT GRANTED  
 **Execution state:** DESIGN ONLY — post-Slice-0.3 hard stop remains active
 
@@ -19,7 +19,7 @@
 
 Define Relay's deterministic handover-governance layer.
 
-Slice 0.3 answered:
+Slice 0.3 answers:
 
 > Is this lifecycle movement structurally possible?
 
@@ -27,13 +27,13 @@ Slice 0.4 answers:
 
 > Is that movement permissible now?
 
-> Are the required engineering prerequisites present?
+> Are required engineering prerequisites present?
 
-> Does authority exist?
+> Does durable permission exist?
 
-> Does a human have to act before Relay may execute it?
+> Does a human need to act now?
 
-> Is the handover red, yellow, or green?
+> Is the handover RED, YELLOW, or GREEN?
 
 The governing composition is:
 
@@ -54,7 +54,7 @@ requested lifecycle movement
 
 The deterministic exit condition is:
 
-> Given the same immutable gate definitions, the same baseline, the same lifecycle snapshot, the same prerequisite context, and the same current authorization/human-decision projection, Relay produces the same gate evaluations and the same executable path—or rejects execution with the same governance error category.
+> Given the same immutable gate set, the same baseline, the same lifecycle snapshot, the same governance-decision basis, and the same explicit current facts, Relay produces the same canonically ordered gate evaluations and the same executable path—or rejects execution with the same governance error category.
 
 No LLM participates in gate evaluation or handover execution.
 
@@ -69,7 +69,7 @@ SliceLifecycle
     = Phase + Validity + Blockage
 ```
 
-Slice 0.4 must not redefine that model.
+Slice 0.4 does not redefine that model.
 
 Governance remains separate:
 
@@ -81,11 +81,11 @@ Handover Gate
     answers WHETHER A MOVEMENT MAY HAPPEN NOW
 ```
 
-The key invariant remains:
+The invariant remains:
 
 > **Lifecycle truth and transition permission are different things.**
 
-`READY` therefore remains a lifecycle phase.
+`READY` remains a lifecycle phase.
 
 `AUTHORIZED` remains absent from `LifecyclePhase`.
 
@@ -95,22 +95,22 @@ Traffic lights belong to handovers, not slices, agents, or lifecycle phases.
 
 ---
 
-# 3. S0.4-D01 — A Handover Gate Evaluates Three Independent Concerns
+# 3. S0.4-D01 — Gates Evaluate Validity, Authority, and Autonomy Separately
 
 Every gate evaluates:
 
 ```text
 VALIDITY
-    Are the structural and engineering prerequisites satisfied?
+    Are structural and engineering prerequisites satisfied?
 
 AUTHORITY
-    Does explicit permission exist where permission is required?
+    Does explicit durable permission exist when required?
 
 AUTONOMY
-    May Relay perform the handover without another human action?
+    May Relay perform the handover without another current human decision?
 ```
 
-These dimensions must not collapse into one boolean.
+These dimensions do not collapse into one boolean.
 
 Examples:
 
@@ -121,8 +121,6 @@ autonomy = automatic
 → RED
 ```
 
-because permission cannot override missing engineering prerequisites.
-
 ```text
 validity = true
 authorization = missing
@@ -130,13 +128,11 @@ autonomy = automatic
 → YELLOW
 ```
 
-because the engineering path is valid but a human-remediable authority action is still required.
-
 ```text
 validity = true
 authorization = granted
 autonomy = HUMAN_APPROVAL
-→ YELLOW until current approval exists
+→ YELLOW until a current approval exists
 ```
 
 ```text
@@ -148,7 +144,7 @@ autonomy = AUTO
 
 ---
 
-# 4. S0.4-D02 — Traffic-Light Semantics Are Normative
+# 4. S0.4-D02 — Traffic-Light Semantics
 
 The only traffic-light values are:
 
@@ -158,17 +154,15 @@ YELLOW
 RED
 ```
 
-Semantics:
-
 ## GREEN
 
 The gate is currently executable through the governance API.
 
-All blocking validity conditions are satisfied, required authorization exists, and no unresolved human-action requirement remains.
+All blocking validity conditions are satisfied, required authorization exists, and no unresolved current human-action requirement remains.
 
 ## YELLOW
 
-No non-overridable validity failure prevents the handover, but at least one required human-remediable authority/autonomy action remains.
+No non-overridable validity failure prevents the handover, but at least one human-remediable authority/autonomy action remains.
 
 Examples:
 
@@ -185,7 +179,7 @@ risk review required
 
 The handover is currently prohibited.
 
-A human approval must never override a red validity condition.
+Human approval never overrides a RED validity condition.
 
 Examples:
 
@@ -201,10 +195,11 @@ unauthorized toolchain change
 risk policy = BLOCK with flagged risk
 change-surface policy = BLOCK with material deviation
 explicit current human rejection
+not selected by current human choice
 multiple simultaneously executable paths
 ```
 
-Precedence is:
+Precedence:
 
 ```text
 RED > YELLOW > GREEN
@@ -212,34 +207,21 @@ RED > YELLOW > GREEN
 
 There is no `UNKNOWN` light in Slice 0.4.
 
-Missing information that is required by a gate is represented by a specific RED or YELLOW reason according to its semantics.
-
 ---
 
 # 5. S0.4-D03 — Traffic Lights Belong to Gates
 
 A slice does not become globally GREEN, YELLOW, or RED.
 
-A single lifecycle snapshot may expose multiple outgoing gates with different lights:
+One lifecycle snapshot may expose several outgoing gates with different lights.
 
-```text
-EVALUATING
-
-accept                  RED
-automatic rework        GREEN
-contract escalation     YELLOW
-architecture escalation RED
-```
-
-The same actor may therefore have access to one green handover and one red handover simultaneously.
-
-No traffic-light field is added to `SliceLifecycle`.
+No traffic-light field is added to `Slice` or `SliceLifecycle`.
 
 ---
 
-# 6. S0.4-D04 — HandoverGate Is an Immutable, Revisioned Specification
+# 6. S0.4-D04 — HandoverGate Is Immutable and Revisioned
 
-Slice 0.4 introduces an immutable serialized `HandoverGate` model.
+Slice 0.4 introduces an immutable serialized `HandoverGate`.
 
 Conceptually:
 
@@ -274,11 +256,11 @@ schema_version = 1
 revision >= 1
 key = validated stable slug
 source_phase != target_phase
-required reference tuples contain no duplicates
+reference tuples contain no duplicates
 required_dependency_slice_ids must not contain slice_id
 ```
 
-Supersession rule:
+Supersession:
 
 ```text
 target_phase == SUPERSEDED
@@ -288,9 +270,7 @@ otherwise
     → superseded_by_slice_id must be None
 ```
 
-The successor must not equal `slice_id`.
-
-The gate is configuration/policy, not runtime mutable state.
+The successor must differ from `slice_id`.
 
 A substantive gate-policy change creates a new gate revision.
 
@@ -300,35 +280,31 @@ A substantive gate-policy change creates a new gate revision.
 
 `gate_id` identifies the logical gate.
 
-`revision` identifies the exact policy definition being evaluated.
+`revision` identifies the exact policy definition.
 
-An authorization granted against:
+Authorization or human decisions for:
 
 ```text
 gate_id = G
 revision = 1
 ```
 
-must not authorize:
+do not apply to:
 
 ```text
 gate_id = G
 revision = 2
 ```
 
-without an explicit new authorization.
+without new authority appropriate to that new revision.
 
-Human approvals and choices are likewise bound to the exact gate revision.
-
-Slice 0.4 does not implement a gate revision history store. It defines the immutable values and binding semantics only.
-
-Persistence and historical reconstruction belong to Slice 0.5.
+Persistence of revision history remains deferred to Slice 0.5.
 
 ---
 
-# 8. S0.4-D06 — Gate, Authorization, Decisions, and Context Bind to an Exact Baseline
+# 8. S0.4-D06 — Exact Baseline Binding
 
-Relay's exact-baseline discipline applies to governance.
+Relay governance binds to an exact `BaselineId`.
 
 `HandoverGate` includes:
 
@@ -336,27 +312,50 @@ Relay's exact-baseline discipline applies to governance.
 baseline_id: BaselineId
 ```
 
-The evaluation context also supplies the current:
+`HandoverContext` supplies the current:
 
 ```text
-baseline_id
+baseline_id: BaselineId
 ```
 
-A baseline mismatch is RED.
+`AuthorizationGrant`, `HumanApprovalDecision`, and `HumanChoiceDecision` also bind to the applicable baseline.
 
-`AuthorizationGrant`, `HumanApprovalDecision`, and `HumanChoiceDecision` also bind to the relevant `baseline_id`.
+A moving branch name is never authority.
 
-This prevents permission or approval created for an earlier accepted baseline from silently becoming valid after project authority changes.
+Slice 0.4 performs no Git/database lookup to resolve the baseline.
 
-Baseline identity is used rather than a moving branch name.
+## Gate-set baseline rules
 
-Slice 0.4 does not resolve `BaselineId` from Git or a database; the exact baseline is an explicit input.
+The public behavior is normative:
+
+```text
+mixed gate baseline IDs in one supplied gate set
+    → InvalidGateSet
+```
+
+If all supplied gates use one baseline but it differs from `context.baseline_id`:
+
+```text
+return every gate as:
+RED / BASELINE_MISMATCH
+```
+
+For that uniform non-current-baseline case:
+
+```text
+do not continue ordinary prerequisite evaluation
+do not consult authorization
+do not consult human decisions
+do not derive YELLOW or GREEN
+```
+
+This resolves `RLY-S04-DREV1-F001`.
 
 ---
 
-# 9. S0.4-D07 — New Governance IDs Extend the Existing ID Mechanism Narrowly
+# 9. S0.4-D07 — Governance IDs Extend the Existing Mechanism Narrowly
 
-Slice 0.4 extends the accepted UUIDv7 ID vocabulary with:
+Slice 0.4 adds:
 
 ```text
 HandoverGateId     gate_<uuid7>
@@ -364,23 +363,19 @@ AuthorizationId    auth_<uuid7>
 HumanDecisionId    hdec_<uuid7>
 ```
 
-These use the existing `new_id()` mechanism.
+These extend the existing `new_id()` mechanism.
 
-ID generation occurs explicitly at the caller boundary.
-
-The gate engine itself performs no UUID generation.
+ID generation occurs outside the gate engine.
 
 No second identifier framework is introduced.
 
 ---
 
-# 10. S0.4-D08 — Slice 0.4 Adds an Eventless Lifecycle Validation Query
+# 10. S0.4-D08 — Eventless Lifecycle Validation Query
 
-Slice 0.3 already contains the authoritative structural phase-transition validator internally.
+Governance must consume the authoritative Slice 0.3 transition rules without manufacturing an event.
 
-Governance must consult the same logic without manufacturing a fake lifecycle event.
-
-Slice 0.4 therefore authorizes one narrow, backward-compatible public lifecycle query:
+Slice 0.4 authorizes:
 
 ```python
 validate_phase_transition(
@@ -392,28 +387,27 @@ validate_phase_transition(
 
 Semantics:
 
-- pure;
-- no state mutation;
-- no event creation;
-- no IDs;
-- no timestamps;
-- no I/O;
-- same structural transition rules as `transition_phase()`;
-- raises the existing lifecycle error family on structural invalidity.
+```text
+pure
+no mutation
+no event
+no ID
+no timestamp
+no I/O
+same structural rules as transition_phase()
+```
 
-`transition_phase()` must reuse the same underlying validation logic.
+`transition_phase()` and `validate_phase_transition()` must reuse the same underlying structural validation logic.
 
-The governance engine must not duplicate Slice 0.3's transition matrix.
+The governance engine must not duplicate the Slice 0.3 transition matrix.
 
 ---
 
-# 11. S0.4-D09 — Slice 0.4 Gates Lifecycle Transitions, Not Agent Assignment
+# 11. S0.4-D09 — Gates Govern Lifecycle Movement, Not Agent Assignment
 
-A Slice 0.4 gate governs one proposed lifecycle movement for one slice.
+A Slice 0.4 gate governs one possible lifecycle movement for one slice.
 
-It does not yet assign work to an AgentRole or AgentAssignment.
-
-Therefore a gate binds:
+It binds:
 
 ```text
 slice_id
@@ -421,25 +415,13 @@ source_phase
 target_phase
 ```
 
-and may contain prerequisites and policy.
-
-Role-only handovers with no lifecycle movement are out of scope in Slice 0.4.
-
-Agent assignment and structured agent execution arrive in later phases.
-
-This keeps Phase 0 focused on deterministic governance rather than orchestration.
+Role-only handovers, AgentRole, AgentAssignment, prompt construction, and agent execution remain out of scope.
 
 ---
 
-# 12. S0.4-D10 — Authorization Is Durable Permission, Not Execution-Time Approval
+# 12. S0.4-D10 — Authorization Is Durable Permission
 
 Slice 0.4 introduces:
-
-```text
-AuthorizationGrant
-```
-
-Conceptually:
 
 ```python
 AuthorizationGrant(
@@ -461,7 +443,7 @@ Rules:
 schema_version = 1
 actor.kind = HUMAN in Slice 0.4
 granted_at timezone-aware and UTC-normalized
-reason non-empty / non-whitespace
+reason nonblank
 ```
 
 Authorization binds to:
@@ -473,60 +455,40 @@ gate identity
 gate revision
 ```
 
-Authorization deliberately does **not** bind to lifecycle revision.
+Authorization deliberately does not bind to lifecycle revision or governance revision.
 
-This allows permission to be granted before other prerequisites become valid.
+It is durable permission.
 
-Example:
-
-```text
-implementation authorization GRANTED
-+
-design acceptance missing
-→ gate remains RED
-
-later design acceptance appears
-+
-same exact authorization remains valid
-→ gate may become GREEN without requiring a second authorization
-```
-
-This is the intended difference between durable permission and execution-time approval.
+Therefore an authorization may be granted while another prerequisite is still RED and remain usable when that prerequisite later becomes satisfied, provided baseline and gate revision remain unchanged.
 
 Slice 0.4 models active grants only.
 
-Revocation, expiry, authorization history, and permission administration are deferred to persistence/identity work.
-
-A caller representing current project state omits grants that are no longer active.
+Revocation, expiry, and authorization history remain deferred.
 
 ---
 
-# 13. S0.4-D11 — Missing Authorization Is YELLOW, Not RED
+# 13. S0.4-D11 — Missing or Stale Authorization Is YELLOW
 
-When a gate declares:
+When:
 
 ```text
 authorization_required = True
 ```
 
-and every validity prerequisite is otherwise satisfied, absence of a matching current authorization produces:
+and validity otherwise passes:
 
 ```text
-YELLOW
-AUTHORIZATION_REQUIRED
+no matching current grant
+→ YELLOW / AUTHORIZATION_REQUIRED
 ```
 
-because obtaining authorization is a human-remediable authority action.
-
-If an authorization exists for the same logical gate but the baseline or gate revision no longer matches, the reason is:
+If the current projection contains one grant for the same logical gate but baseline or gate revision no longer matches:
 
 ```text
-AUTHORIZATION_STALE
+→ YELLOW / AUTHORIZATION_STALE
 ```
 
-and the gate remains YELLOW unless a RED condition also exists.
-
-Authorization never overrides a RED validity reason.
+Authorization never overrides RED validity.
 
 ---
 
@@ -534,9 +496,24 @@ Authorization never overrides a RED validity reason.
 
 Human decisions are distinct from authorization.
 
-They bind to the exact current lifecycle revision so that an approval cannot silently survive a state change.
+They must not silently survive either:
 
-Slice 0.4 introduces two immutable decision types.
+```text
+lifecycle state changes
+```
+
+or:
+
+```text
+non-lifecycle governance-fact changes
+```
+
+Slice 0.4 therefore binds human decisions to both:
+
+```text
+lifecycle_revision
+governance_revision
+```
 
 ## HumanApprovalDecision
 
@@ -549,6 +526,7 @@ HumanApprovalDecision(
     gate_id,
     gate_revision,
     lifecycle_revision,
+    governance_revision,
     actor,
     occurred_at,
     decision,
@@ -573,7 +551,9 @@ HumanChoiceDecision(
     baseline_id,
     selected_gate_id,
     selected_gate_revision,
+    choice_gate_refs,
     lifecycle_revision,
+    governance_revision,
     actor,
     occurred_at,
     reason,
@@ -586,420 +566,72 @@ where:
 actor.kind = HUMAN
 ```
 
-Both timestamps are explicit, timezone-aware, and UTC-normalized.
+Decision timestamps are explicit, timezone-aware, and UTC-normalized.
 
-Human decisions do not mutate lifecycle state by themselves.
+Human decisions do not mutate lifecycle state.
 
----
-
-# 15. S0.4-D13 — Current Context Is a Projection, Not Decision History
-
-`HandoverContext` represents the current facts used for one deterministic evaluation.
-
-It is not the audit/event history.
-
-The context may contain at most one current approval decision for an exact:
-
-```text
-baseline_id + gate_id + gate_revision + lifecycle_revision
-```
-
-and at most one current human choice for the current:
-
-```text
-baseline_id + lifecycle_revision
-```
-
-Historical superseded approvals/choices belong to Slice 0.5 persistence/event history, not the current evaluation projection.
-
-This avoids hidden "latest decision wins" logic and clock-based arbitration inside Slice 0.4.
+This resolves the core of `RLY-S04-DREV1-F003`.
 
 ---
 
-# 16. S0.4-D14 — Handover Policies
+# 15. S0.4-D13 — governance_revision Defines the Human-Decision Basis
 
-The autonomy policy enum is:
-
-```text
-AUTO
-AUTO_NOTIFY
-HUMAN_APPROVAL
-HUMAN_CHOICE
-```
-
-## AUTO
-
-No policy-level human action is required.
-
-If validity and authority pass, the gate may be GREEN.
-
-## AUTO_NOTIFY
-
-Same traffic-light semantics as AUTO.
-
-If validity and authority pass, the gate may be GREEN.
-
-Notification delivery is explicitly out of scope.
-
-The future caller can inspect the gate policy and issue notification after execution.
-
-## HUMAN_APPROVAL
-
-A current matching `HumanApprovalDecision(APPROVE)` is required.
-
-Without it:
+`HandoverContext` includes:
 
 ```text
-YELLOW
-HUMAN_APPROVAL_REQUIRED
+governance_revision: int
 ```
 
-A current matching `REJECT` produces RED.
-
-## HUMAN_CHOICE
-
-A current `HumanChoiceDecision` must select this exact gate/revision at the current lifecycle revision.
-
-Without a current valid choice:
+with:
 
 ```text
-YELLOW
-HUMAN_CHOICE_REQUIRED
+governance_revision >= 0
 ```
 
-Human choice is evaluated over the full outgoing gate set, not one gate in isolation.
+It is a caller-maintained monotonic revision of the current non-human-decision facts relevant to gate evaluation for the supplied lifecycle snapshot.
+
+It is not a database revision and does not introduce persistence.
+
+The caller must advance `governance_revision` whenever a gate-relevant fact capable of changing evaluation changes without a lifecycle revision change.
+
+At minimum this includes changes to:
+
+```text
+available artifact IDs
+available evidence IDs
+dependency lifecycle projection
+evaluation outcome
+authorization projection
+quality-check results
+change-surface status
+risk status
+toolchain-change status
+```
+
+A lifecycle revision change already invalidates old human decisions independently.
+
+Adding, replacing, or removing a human decision does not itself advance `governance_revision`; otherwise a new decision would immediately stale itself.
+
+A human decision is current only when its:
+
+```text
+baseline binding
+gate binding where applicable
+lifecycle_revision
+governance_revision
+```
+
+all match the current evaluation basis.
+
+If only an older otherwise-relevant decision is supplied, the gate may report `HUMAN_DECISION_STALE` together with the current human-action requirement.
+
+The governance engine does not increment `governance_revision`; it validates and consumes it.
 
 ---
 
-# 17. S0.4-D15 — Hard Stop Is Gate Policy, Not Lifecycle State
+# 16. S0.4-D14 — HandoverContext Is Current Explicit Data
 
-`HandoverGate` contains:
-
-```text
-hard_stop: bool
-```
-
-When `hard_stop = True`, the gate cannot become GREEN without a current positive human decision that directly names the gate.
-
-A positive decision is:
-
-- `HumanApprovalDecision(APPROVE)` for the exact gate; or
-- `HumanChoiceDecision` selecting the exact gate when the gate policy is `HUMAN_CHOICE`.
-
-If no such decision exists:
-
-```text
-YELLOW
-HARD_STOP_REQUIRES_HUMAN
-```
-
-Hard stop dominates AUTO and AUTO_NOTIFY.
-
-Examples:
-
-```text
-policy = AUTO
-hard_stop = True
-validity = pass
-authorization = present
-human approval = absent
-→ YELLOW
-```
-
-```text
-policy = AUTO
-hard_stop = True
-validity = pass
-authorization = present
-human approval = APPROVE
-→ GREEN
-```
-
-A human decision cannot turn a structurally RED gate green.
-
----
-
-# 18. S0.4-D16 — Evaluation Outcome Is a Typed Gate Input
-
-Slice 0.4 introduces the minimal typed evaluation-outcome vocabulary needed for routing:
-
-```text
-ACCEPT
-REWORK
-ESCALATE_CONTRACT
-ESCALATE_ARCHITECTURE
-BLOCKED
-EXPERIMENT_REQUIRED
-```
-
-This is an input fact, not a full persisted `Evaluation` domain object.
-
-A gate may declare:
-
-```text
-required_evaluation_outcomes: tuple[EvaluationOutcome, ...]
-```
-
-Rules:
-
-```text
-empty tuple
-    → no evaluation outcome required
-
-non-empty tuple + no current outcome
-    → RED / EVALUATION_REQUIRED
-
-current outcome not in allowed tuple
-    → RED / EVALUATION_OUTCOME_NOT_ALLOWED
-```
-
-Examples:
-
-```text
-EVALUATING → ACCEPTED
-required outcome = ACCEPT
-```
-
-```text
-EVALUATING → REWORK
-required outcome = REWORK
-```
-
-```text
-EVALUATING → CONTRACTING
-required outcome = ESCALATE_CONTRACT
-```
-
-```text
-EVALUATING → DESIGNING
-required outcome = ESCALATE_ARCHITECTURE
-```
-
-The full Evaluation record, findings model, and evaluator execution workflow are deferred.
-
----
-
-# 19. S0.4-D17 — Exact Artifact and Evidence Prerequisites
-
-A gate may require exact existing domain IDs:
-
-```text
-required_artifact_ids: tuple[ArtifactId, ...]
-required_evidence_ids: tuple[EvidenceId, ...]
-```
-
-`HandoverContext` supplies the exact currently available IDs.
-
-Missing required IDs are RED:
-
-```text
-MISSING_REQUIRED_ARTIFACT
-MISSING_REQUIRED_EVIDENCE
-```
-
-Slice 0.4 does not resolve file names, canonical keys, Git paths, artifact maturity, or supersession chains.
-
-Those repository/canonical-registry semantics remain deferred to Slice 0.6.
-
-Using exact IDs prevents the gate engine from guessing authority from file names or repository recency.
-
----
-
-# 20. S0.4-D18 — Dependency Readiness Means ACCEPTED + CURRENT
-
-A gate may require:
-
-```text
-required_dependency_slice_ids: tuple[SliceId, ...]
-```
-
-For each required dependency, `HandoverContext` supplies its `SliceLifecycle` snapshot.
-
-The dependency requirement passes only when:
-
-```text
-phase = ACCEPTED
-validity = CURRENT
-```
-
-Failure reasons:
-
-```text
-dependency lifecycle absent
-    → DEPENDENCY_MISSING
-
-phase != ACCEPTED
-    → DEPENDENCY_NOT_ACCEPTED
-
-phase == ACCEPTED and validity == STALE
-    → DEPENDENCY_STALE
-```
-
-`SUPERSEDED` does not satisfy an `ACCEPTED` dependency requirement; the consuming work should reference the appropriate current successor explicitly.
-
-Cross-project lookup is out of scope because no persistence layer exists yet.
-
----
-
-# 21. S0.4-D19 — Required Quality Checks Are Explicit Named Facts
-
-Slice 0.4 introduces:
-
-```text
-QualityCheckStatus
-    PASS
-    FAIL
-```
-
-and:
-
-```python
-QualityCheckResult(
-    key,
-    status,
-)
-```
-
-Quality keys are validated stable slugs.
-
-A gate declares:
-
-```text
-required_quality_checks: tuple[str, ...]
-```
-
-The context supplies current check results.
-
-Semantics:
-
-```text
-required key absent
-    → RED / QUALITY_CHECK_MISSING
-
-required key present with FAIL
-    → RED / QUALITY_CHECK_FAILED
-
-required key present with PASS
-    → satisfied
-```
-
-Slice 0.4 does not execute the tools that produce these facts.
-
-It only consumes the declared results deterministically.
-
----
-
-# 22. S0.4-D20 — Change-Surface Policy Is Deterministic
-
-The current change-surface status is:
-
-```text
-WITHIN_DECLARED
-MATERIAL_DEVIATION
-```
-
-Each gate declares:
-
-```text
-change_surface_policy:
-    ALLOW
-    HUMAN_REVIEW
-    BLOCK
-```
-
-Semantics when status is `MATERIAL_DEVIATION`:
-
-```text
-ALLOW
-    → no gate effect
-
-HUMAN_REVIEW
-    → YELLOW / CHANGE_SURFACE_REVIEW_REQUIRED
-       until current HumanApprovalDecision(APPROVE)
-
-BLOCK
-    → RED / CHANGE_SURFACE_BLOCKED
-```
-
-A current human rejection remains RED.
-
-This operationalizes the accepted scope/simplicity policy without creating a new lifecycle state.
-
----
-
-# 23. S0.4-D21 — Risk Policy Consumes a Flag, It Does Not Calculate Risk
-
-Slice 0.4 does not implement a risk-scoring engine.
-
-The context provides:
-
-```text
-RiskStatus
-    CLEAR
-    FLAGGED
-```
-
-Each gate declares:
-
-```text
-risk_policy:
-    ALLOW
-    HUMAN_REVIEW
-    BLOCK
-```
-
-When risk is `FLAGGED`:
-
-```text
-ALLOW
-    → no gate effect
-
-HUMAN_REVIEW
-    → YELLOW / RISK_REVIEW_REQUIRED
-       until current HumanApprovalDecision(APPROVE)
-
-BLOCK
-    → RED / RISK_BLOCKED
-```
-
-The origin of the risk flag is outside Slice 0.4.
-
-This keeps risk calculation separable from deterministic gate enforcement.
-
----
-
-# 24. S0.4-D22 — Unauthorized Toolchain Change Is Always RED
-
-The current toolchain-change status is:
-
-```text
-NONE
-AUTHORIZED
-UNAUTHORIZED
-```
-
-Semantics:
-
-```text
-NONE
-    → no gate effect
-
-AUTHORIZED
-    → no gate effect
-
-UNAUTHORIZED
-    → RED / UNAUTHORIZED_TOOLCHAIN_CHANGE
-```
-
-A human approval decision does not override an unauthorized toolchain change.
-
-The proper remediation is to obtain authority and update the context, not to bypass the finding.
-
----
-
-# 25. S0.4-D23 — HandoverContext
-
-Slice 0.4 introduces one immutable current-context model.
+`HandoverContext` is a current-facts projection, not history.
 
 Conceptually:
 
@@ -1007,6 +639,7 @@ Conceptually:
 HandoverContext(
     schema_version,
     baseline_id,
+    governance_revision,
     lifecycle,
     available_artifact_ids,
     available_evidence_ids,
@@ -1021,7 +654,7 @@ HandoverContext(
 )
 ```
 
-All public models follow existing Relay model discipline:
+All public models follow existing Relay discipline:
 
 ```text
 immutable
@@ -1032,7 +665,7 @@ JSON round trip
 JSON Schema generation
 ```
 
-Uniqueness requirements:
+Set-like/current-projection fields have deterministic uniqueness rules:
 
 ```text
 artifact IDs unique
@@ -1043,31 +676,387 @@ authorization IDs unique
 human decision IDs unique
 ```
 
-The context is explicit data.
+Additional projection unambiguity:
 
-The gate engine performs no repository, database, GitHub, filesystem, CI, model, or network lookup.
+```text
+at most one AuthorizationGrant per logical gate_id in the current context
+at most one HumanApprovalDecision per logical gate_id in the current context
+at most one HumanChoiceDecision for the current outgoing handover set
+```
+
+A caller needing historical grant/decision chronology must use the future persistence/event layer.
+
+The gate engine performs no external lookup.
+
+---
+
+# 17. S0.4-D15 — Handover Policies
+
+The autonomy policy enum is:
+
+```text
+AUTO
+AUTO_NOTIFY
+HUMAN_APPROVAL
+HUMAN_CHOICE
+```
+
+## AUTO
+
+No policy-level human decision is required.
+
+If validity and authority pass, the gate may be GREEN.
+
+## AUTO_NOTIFY
+
+Same light semantics as AUTO.
+
+Notification side effects remain out of scope.
+
+## HUMAN_APPROVAL
+
+A current matching `HumanApprovalDecision(APPROVE)` is required.
+
+Without it:
+
+```text
+YELLOW / HUMAN_APPROVAL_REQUIRED
+```
+
+A current matching REJECT is RED.
+
+## HUMAN_CHOICE
+
+A current matching `HumanChoiceDecision` must select the gate as part of the exact current HUMAN_CHOICE alternative set.
+
+Without a current choice:
+
+```text
+YELLOW / HUMAN_CHOICE_REQUIRED
+```
+
+HUMAN_CHOICE is evaluated over the outgoing gate set, not gate-locally.
+
+---
+
+# 18. S0.4-D16 — Hard Stop Is Gate Policy
+
+`HandoverGate` contains:
+
+```text
+hard_stop: bool
+```
+
+When true, the gate cannot become GREEN without a current positive human decision directly naming/selecting the gate.
+
+Positive decisions are:
+
+```text
+HumanApprovalDecision(APPROVE)
+```
+
+or, for HUMAN_CHOICE:
+
+```text
+HumanChoiceDecision selecting the gate
+```
+
+Without one:
+
+```text
+YELLOW / HARD_STOP_REQUIRES_HUMAN
+```
+
+Hard stop dominates AUTO and AUTO_NOTIFY.
+
+Human action never overrides RED validity.
+
+---
+
+# 19. S0.4-D17 — Evaluation Outcome Is a Typed Routing Input
+
+Minimal routing vocabulary:
+
+```text
+ACCEPT
+REWORK
+ESCALATE_CONTRACT
+ESCALATE_ARCHITECTURE
+BLOCKED
+EXPERIMENT_REQUIRED
+```
+
+A gate may declare:
+
+```text
+required_evaluation_outcomes: tuple[EvaluationOutcome, ...]
+```
+
+Rules:
+
+```text
+empty tuple
+→ no evaluation outcome required
+
+non-empty + no current outcome
+→ RED / EVALUATION_REQUIRED
+
+current outcome not allowed
+→ RED / EVALUATION_OUTCOME_NOT_ALLOWED
+```
+
+The full persisted Evaluation model is deferred.
+
+---
+
+# 20. S0.4-D18 — Exact Artifact and Evidence Prerequisites
+
+A gate may require exact existing IDs:
+
+```text
+required_artifact_ids
+required_evidence_ids
+```
+
+The context supplies exact currently available IDs.
+
+Each missing required artifact produces one:
+
+```text
+MISSING_REQUIRED_ARTIFACT / subject=<artifact_id>
+```
+
+Each missing required evidence item produces one:
+
+```text
+MISSING_REQUIRED_EVIDENCE / subject=<evidence_id>
+```
+
+No file-name, path, canonical-key, or recency inference occurs.
+
+Canonical artifact discovery remains deferred to Slice 0.6.
+
+---
+
+# 21. S0.4-D19 — Dependency Readiness Means ACCEPTED + CURRENT
+
+A required dependency passes only when its supplied `SliceLifecycle` is:
+
+```text
+phase = ACCEPTED
+validity = CURRENT
+```
+
+Per dependency:
+
+```text
+absent
+→ DEPENDENCY_MISSING / subject=<slice_id>
+
+phase != ACCEPTED
+→ DEPENDENCY_NOT_ACCEPTED / subject=<slice_id>
+
+ACCEPTED + STALE
+→ DEPENDENCY_STALE / subject=<slice_id>
+```
+
+`SUPERSEDED` does not satisfy an ACCEPTED dependency requirement.
+
+---
+
+# 22. S0.4-D20 — Required Quality Checks Are Explicit Facts
+
+```text
+QualityCheckStatus
+    PASS
+    FAIL
+```
+
+```python
+QualityCheckResult(
+    key,
+    status,
+)
+```
+
+Required quality keys are explicit stable slugs.
+
+For each required key:
+
+```text
+absent
+→ QUALITY_CHECK_MISSING / subject=<key>
+
+FAIL
+→ QUALITY_CHECK_FAILED / subject=<key>
+
+PASS
+→ satisfied
+```
+
+Slice 0.4 consumes results; it does not execute quality tools.
+
+---
+
+# 23. S0.4-D21 — Change-Surface Policy
+
+Current fact:
+
+```text
+WITHIN_DECLARED
+MATERIAL_DEVIATION
+```
+
+Gate policy:
+
+```text
+ALLOW
+HUMAN_REVIEW
+BLOCK
+```
+
+When status is MATERIAL_DEVIATION:
+
+```text
+ALLOW
+→ no effect
+
+HUMAN_REVIEW
+→ YELLOW / CHANGE_SURFACE_REVIEW_REQUIRED
+  until a current APPROVE exists
+
+BLOCK
+→ RED / CHANGE_SURFACE_BLOCKED
+```
+
+A current rejection remains RED.
+
+---
+
+# 24. S0.4-D22 — Risk Policy Consumes a Flag
+
+Current fact:
+
+```text
+RiskStatus
+    CLEAR
+    FLAGGED
+```
+
+Gate policy:
+
+```text
+ALLOW
+HUMAN_REVIEW
+BLOCK
+```
+
+When FLAGGED:
+
+```text
+ALLOW
+→ no effect
+
+HUMAN_REVIEW
+→ YELLOW / RISK_REVIEW_REQUIRED
+  until a current APPROVE exists
+
+BLOCK
+→ RED / RISK_BLOCKED
+```
+
+Risk calculation remains outside this slice.
+
+---
+
+# 25. S0.4-D23 — Unauthorized Toolchain Change Is Always RED
+
+Current fact:
+
+```text
+NONE
+AUTHORIZED
+UNAUTHORIZED
+```
+
+Semantics:
+
+```text
+NONE or AUTHORIZED
+→ no effect
+
+UNAUTHORIZED
+→ RED / UNAUTHORIZED_TOOLCHAIN_CHANGE
+```
+
+Human approval cannot bypass it.
 
 ---
 
 # 26. S0.4-D24 — Current Authorization Projection Must Be Unambiguous
 
-`HandoverContext` may contain authorization grants for several gates.
+The context may carry grants for several gates, but at most one grant for a logical `gate_id` may appear in the current projection.
 
-For one exact:
+A grant matches a gate only when all are equal:
 
 ```text
-baseline_id + gate_id + gate_revision
+slice_id
+baseline_id
+gate_id
+gate_revision
 ```
 
-at most one active authorization grant may be present in the current projection.
+A grant with the same logical gate ID but wrong baseline/revision is stale evidence and may produce:
 
-Slice 0.4 does not choose among duplicate grants by timestamp.
+```text
+AUTHORIZATION_STALE / subject=<authorization_id>
+```
 
-A caller needing historical grant/revoke chronology must use the future persistence/event layer.
+The engine never chooses grants by timestamp.
 
 ---
 
-# 27. S0.4-D25 — GateEvaluation Is an Immutable Derived Result
+# 27. S0.4-D25 — GateRevisionRef and Exact HUMAN_CHOICE Set Binding
+
+Revision 2 introduces one small inspectable value:
+
+```python
+GateRevisionRef(
+    gate_id,
+    gate_revision,
+)
+```
+
+It is immutable/versioned under normal Relay model discipline and exists only to identify exact gate definitions compactly.
+
+For one evaluation call, the current HUMAN_CHOICE alternative set is:
+
+```text
+all supplied gates whose policy == HUMAN_CHOICE
+```
+
+represented as a canonical tuple of `GateRevisionRef` sorted ascending by `gate_id`.
+
+`HumanChoiceDecision.choice_gate_refs` must:
+
+```text
+be non-empty
+contain no duplicate gate_id
+be stored in canonical ascending gate_id order
+contain selected_gate_id + selected_gate_revision
+```
+
+A choice is current only when its `choice_gate_refs` exactly equal the current canonical HUMAN_CHOICE alternative set and its baseline/lifecycle/governance revisions match.
+
+Adding, removing, or revising a HUMAN_CHOICE alternative invalidates the old choice.
+
+The engine does not hash the choice set; the explicit tuple is the authority record.
+
+This resolves `RLY-S04-DREV1-F004`.
+
+---
+
+# 28. S0.4-D26 — GateEvaluation Is a Deterministic Derived Result
 
 Each gate evaluation returns:
 
@@ -1079,70 +1068,78 @@ GateEvaluation(
     slice_id,
     baseline_id,
     lifecycle_revision,
+    governance_revision,
     target_phase,
     light,
     reasons,
 )
 ```
 
-`GateEvaluation` does not contain generated IDs or timestamps.
+`baseline_id` is the current `context.baseline_id` used for that evaluation.
 
-It is a deterministic derivation of explicit inputs.
+`GateEvaluation` contains no generated ID or timestamp.
 
-A GREEN evaluation has:
+GREEN requires:
 
 ```text
 reasons = ()
 ```
 
-A YELLOW or RED evaluation contains one or more typed reasons.
+YELLOW/RED require one or more typed reasons.
 
-The evaluation is bound to the lifecycle revision and gate revision that produced it.
+Evaluation is bound to the exact lifecycle and governance decision basis that produced it.
 
 ---
 
-# 28. S0.4-D26 — Gate Reasons Are Typed and Deterministically Ordered
+# 29. S0.4-D27 — Gate Reason Codes, Kinds, and Canonical Order Are Normative
 
-Slice 0.4 introduces:
-
-```text
-GateReasonKind
-    BLOCKING
-    HUMAN_ACTION
-```
-
-and a closed initial `GateReasonCode` enum.
-
-Required codes:
+`GateReasonKind`:
 
 ```text
-BASELINE_MISMATCH
-SOURCE_PHASE_MISMATCH
-INVALID_LIFECYCLE_TRANSITION
-MISSING_REQUIRED_ARTIFACT
-MISSING_REQUIRED_EVIDENCE
-DEPENDENCY_MISSING
-DEPENDENCY_NOT_ACCEPTED
-DEPENDENCY_STALE
-EVALUATION_REQUIRED
-EVALUATION_OUTCOME_NOT_ALLOWED
-QUALITY_CHECK_MISSING
-QUALITY_CHECK_FAILED
-CHANGE_SURFACE_BLOCKED
-CHANGE_SURFACE_REVIEW_REQUIRED
-RISK_BLOCKED
-RISK_REVIEW_REQUIRED
-UNAUTHORIZED_TOOLCHAIN_CHANGE
-AUTHORIZATION_REQUIRED
-AUTHORIZATION_STALE
-HUMAN_APPROVAL_REQUIRED
-HUMAN_CHOICE_REQUIRED
-HUMAN_DECISION_STALE
-HARD_STOP_REQUIRES_HUMAN
-HUMAN_REJECTED
-NOT_SELECTED_BY_HUMAN
-MULTIPLE_EXECUTABLE_PATHS
+BLOCKING
+HUMAN_ACTION
 ```
+
+`GateReasonCode` declaration order is the canonical primary reason order:
+
+```text
+01 BASELINE_MISMATCH                  BLOCKING
+02 SOURCE_PHASE_MISMATCH              BLOCKING
+03 INVALID_LIFECYCLE_TRANSITION       BLOCKING
+04 MISSING_REQUIRED_ARTIFACT          BLOCKING
+05 MISSING_REQUIRED_EVIDENCE          BLOCKING
+06 DEPENDENCY_MISSING                 BLOCKING
+07 DEPENDENCY_NOT_ACCEPTED            BLOCKING
+08 DEPENDENCY_STALE                   BLOCKING
+09 EVALUATION_REQUIRED                BLOCKING
+10 EVALUATION_OUTCOME_NOT_ALLOWED     BLOCKING
+11 QUALITY_CHECK_MISSING              BLOCKING
+12 QUALITY_CHECK_FAILED               BLOCKING
+13 CHANGE_SURFACE_BLOCKED             BLOCKING
+14 CHANGE_SURFACE_REVIEW_REQUIRED     HUMAN_ACTION
+15 RISK_BLOCKED                       BLOCKING
+16 RISK_REVIEW_REQUIRED               HUMAN_ACTION
+17 UNAUTHORIZED_TOOLCHAIN_CHANGE      BLOCKING
+18 AUTHORIZATION_REQUIRED             HUMAN_ACTION
+19 AUTHORIZATION_STALE                HUMAN_ACTION
+20 HUMAN_APPROVAL_REQUIRED            HUMAN_ACTION
+21 HUMAN_CHOICE_REQUIRED              HUMAN_ACTION
+22 HUMAN_DECISION_STALE               HUMAN_ACTION
+23 HARD_STOP_REQUIRES_HUMAN           HUMAN_ACTION
+24 HUMAN_REJECTED                     BLOCKING
+25 NOT_SELECTED_BY_HUMAN              BLOCKING
+26 MULTIPLE_EXECUTABLE_PATHS          BLOCKING
+```
+
+The code→kind mapping is fixed.
+
+Within the same code, reasons are ordered lexicographically by `subject`, with `None` before non-`None` only for codes where both are legally possible; Revision 2 avoids mixed subject cardinality for one code whenever possible.
+
+This resolves part of `RLY-S04-DREV1-F005`.
+
+---
+
+# 30. S0.4-D28 — GateReason Subject and Cardinality Are Normative
 
 Conceptually:
 
@@ -1154,21 +1151,59 @@ GateReason(
 )
 ```
 
-`subject` may identify the relevant artifact ID, evidence ID, dependency slice ID, quality-check key, or gate ID where useful.
+`subject` is one scalar string or `None`. There is no metadata dictionary.
 
-It is a scalar string or `None`; there is no generic metadata dictionary.
+Subject rules:
 
-Reasons are returned in a fixed canonical order defined by the engine, with same-code subjects ordered lexicographically.
+| Code | Subject |
+|---|---|
+| BASELINE_MISMATCH | `None` |
+| SOURCE_PHASE_MISMATCH | `None` |
+| INVALID_LIFECYCLE_TRANSITION | `None` |
+| MISSING_REQUIRED_ARTIFACT | required `ArtifactId` |
+| MISSING_REQUIRED_EVIDENCE | required `EvidenceId` |
+| DEPENDENCY_MISSING | required `SliceId` |
+| DEPENDENCY_NOT_ACCEPTED | required `SliceId` |
+| DEPENDENCY_STALE | required `SliceId` |
+| EVALUATION_REQUIRED | `None` |
+| EVALUATION_OUTCOME_NOT_ALLOWED | `None` |
+| QUALITY_CHECK_MISSING | required quality-check key |
+| QUALITY_CHECK_FAILED | required quality-check key |
+| CHANGE_SURFACE_BLOCKED | `None` |
+| CHANGE_SURFACE_REVIEW_REQUIRED | `None` |
+| RISK_BLOCKED | `None` |
+| RISK_REVIEW_REQUIRED | `None` |
+| UNAUTHORIZED_TOOLCHAIN_CHANGE | `None` |
+| AUTHORIZATION_REQUIRED | `None` |
+| AUTHORIZATION_STALE | required `AuthorizationId` |
+| HUMAN_APPROVAL_REQUIRED | `None` |
+| HUMAN_CHOICE_REQUIRED | `None` |
+| HUMAN_DECISION_STALE | required `HumanDecisionId` |
+| HARD_STOP_REQUIRES_HUMAN | `None` |
+| HUMAN_REJECTED | required `HumanDecisionId` |
+| NOT_SELECTED_BY_HUMAN | required selected `HandoverGateId` |
+| MULTIPLE_EXECUTABLE_PATHS | required conflicting `HandoverGateId` |
 
-Input tuple order must not change semantic reason ordering.
+Cardinality rules:
+
+```text
+one missing/failing subject
+→ one reason
+```
+
+Therefore three missing artifacts produce three reasons, one per artifact.
+
+For `MULTIPLE_EXECUTABLE_PATHS`, each provisional GREEN gate receives one reason for every other provisional GREEN gate, subject to that other gate's ID.
+
+For `NOT_SELECTED_BY_HUMAN`, each otherwise viable non-selected HUMAN_CHOICE gate receives one reason whose subject is the currently selected gate ID.
+
+These rules complete `RLY-S04-DREV1-F005`.
 
 ---
 
-# 29. S0.4-D27 — Human Decisions Cannot Override Blocking Reasons
+# 31. S0.4-D29 — Human Decisions Cannot Override Blocking Reasons
 
-Gate evaluation collects independent reasons.
-
-A current human approval may satisfy only requirements explicitly classified as human-remediable:
+Current approval may satisfy only human-remediable requirements:
 
 ```text
 HUMAN_APPROVAL_REQUIRED
@@ -1177,14 +1212,18 @@ CHANGE_SURFACE_REVIEW_REQUIRED
 RISK_REVIEW_REQUIRED
 ```
 
-A human choice may satisfy `HUMAN_CHOICE_REQUIRED` for the selected gate.
-
-Neither approval nor choice can remove:
+Current choice may satisfy:
 
 ```text
-BASELINE_MISMATCH
-INVALID_LIFECYCLE_TRANSITION
-missing required artifact/evidence
+HUMAN_CHOICE_REQUIRED
+```
+
+Neither can remove blocking conditions such as:
+
+```text
+baseline mismatch
+structural transition failure
+missing artifact/evidence
 dependency failure
 evaluation mismatch
 quality failure
@@ -1192,45 +1231,29 @@ BLOCK policy result
 unauthorized toolchain change
 ```
 
-This prevents "approve anyway" from bypassing deterministic engineering constraints.
-
 ---
 
-# 30. S0.4-D28 — Current Human Rejection Is Explicitly Blocking
+# 32. S0.4-D30 — Current Human Rejection Is Blocking
 
 A current matching:
 
 ```text
-HumanApprovalDecision(decision = REJECT)
+HumanApprovalDecision(REJECT)
 ```
 
 produces:
 
 ```text
-RED / HUMAN_REJECTED
+RED / HUMAN_REJECTED / subject=<decision_id>
 ```
 
-Rejection is bound to the same:
-
-```text
-baseline
-gate revision
-lifecycle revision
-```
-
-A rejection from an older lifecycle revision is stale and does not block the new state.
-
-Slice 0.4 does not mutate or delete the historical rejected decision; the current context simply does not treat it as current after lifecycle revision changes.
+A rejection whose lifecycle or governance revision is stale does not block the current basis.
 
 ---
 
-# 31. S0.4-D29 — Stale Authorization and Stale Human Decisions Are Different
+# 33. S0.4-D31 — Authorization Staleness and Human-Decision Staleness Differ
 
-Authorization is durable permission and is not bound to lifecycle revision.
-
-Therefore a lifecycle revision change does not by itself stale a matching authorization grant.
-
-Authorization becomes stale when its:
+Authorization is durable and becomes stale only when its relevant durable binding no longer matches:
 
 ```text
 baseline_id
@@ -1238,25 +1261,29 @@ gate_id
 gate_revision
 ```
 
-no longer match.
-
-Human approval/choice is execution-time authority and binds to lifecycle revision.
-
-Therefore a lifecycle revision change invalidates the previous decision for execution.
-
-If the gate currently requires human action and only an older matching decision exists, evaluation includes:
+Human decisions are execution-time authority and become stale when any applicable decision-basis binding changes:
 
 ```text
-HUMAN_DECISION_STALE
+baseline
+gate revision where applicable
+lifecycle revision
+governance revision
+choice set for HumanChoiceDecision
 ```
 
-plus the applicable current human-action requirement.
+If a stale otherwise-relevant human decision is supplied while current human action is required, emit:
+
+```text
+HUMAN_DECISION_STALE / subject=<decision_id>
+```
+
+plus the current applicable human-action reason.
 
 ---
 
-# 32. S0.4-D30 — HUMAN_CHOICE Is Evaluated Across the Outgoing Gate Set
+# 34. S0.4-D32 — HUMAN_CHOICE Is Set-Level
 
-Public gate evaluation operates on the full current outbound gate set:
+Public evaluation operates on the full outgoing gate set:
 
 ```python
 evaluate_handover_gates(
@@ -1265,111 +1292,155 @@ evaluate_handover_gates(
 ) -> tuple[GateEvaluation, ...]
 ```
 
-All gates in one call must target the same:
+A current HumanChoiceDecision must match:
 
 ```text
-slice_id
 baseline_id
+lifecycle_revision
+governance_revision
+exact canonical HUMAN_CHOICE GateRevisionRef set
+selected gate identity/revision
 ```
 
-and are evaluated against the same lifecycle snapshot.
+If current and the selected gate is otherwise valid, it satisfies `HUMAN_CHOICE_REQUIRED` for the selected gate.
 
-A current `HumanChoiceDecision` selects one exact gate/revision at the current lifecycle revision.
-
-If the selected gate is currently structurally/prerequisite valid, that choice satisfies `HUMAN_CHOICE_REQUIRED` for the selected gate.
-
-Other currently viable `HUMAN_CHOICE` gates receive:
+An otherwise viable non-selected HUMAN_CHOICE gate becomes:
 
 ```text
-RED / NOT_SELECTED_BY_HUMAN
+RED / NOT_SELECTED_BY_HUMAN / subject=<selected_gate_id>
 ```
 
-for that current choice projection.
+A selected gate that is independently RED remains RED.
 
-A choice cannot make an otherwise RED selected gate executable.
-
-If a choice refers to a missing gate, wrong gate revision, wrong baseline, or old lifecycle revision, it is stale and does not satisfy the current choice requirement.
+A stale or mismatched choice satisfies nothing.
 
 ---
 
-# 33. S0.4-D31 — Relay Never Arbitrarily Chooses Between Multiple Executable Paths
+# 35. S0.4-D33 — Relay Never Arbitrarily Chooses Among Executable Paths
 
-After all gate-local validity, authority, and autonomy conditions are evaluated, Relay checks the set-level result.
+After gate-local evaluation and HUMAN_CHOICE processing, Relay checks the set-level result.
 
-The engine must never return more than one GREEN gate for the same lifecycle snapshot.
+The engine must never return more than one GREEN gate.
 
-If two or more gates would otherwise be GREEN, each provisional GREEN gate becomes:
+If two or more gates would otherwise be GREEN, every provisional GREEN gate becomes RED and receives one:
 
 ```text
-RED / MULTIPLE_EXECUTABLE_PATHS
+MULTIPLE_EXECUTABLE_PATHS / subject=<other_green_gate_id>
 ```
 
-This is a governance/configuration conflict.
+for each other provisional GREEN gate.
 
-Relay must not select:
+Relay must not choose using:
 
-- the first gate in tuple order;
-- the lexicographically smallest gate;
-- the newest gate;
-- a random gate;
-- an LLM-preferred gate.
+```text
+input order
+canonical sort order
+recency
+randomness
+LLM judgment
+```
 
-Expected alternatives must instead be disambiguated by mutually exclusive prerequisites or explicit `HUMAN_CHOICE` policy/current choice.
+Canonical ordering is presentation/determinism only, never arbitration.
 
 ---
 
-# 34. S0.4-D32 — Gate Evaluation Algorithm
+# 36. S0.4-D34 — Gate-Set Structural Validation and Baseline Handling
 
-For each call to `evaluate_handover_gates()`:
+Before gate-local evaluation, validate the supplied gate set.
 
-## Step 1 — Validate the gate set
-
-Reject malformed set structure such as:
+Raise `InvalidGateSet` for:
 
 ```text
 empty gate set
 duplicate gate_id
 mixed slice_id
 mixed baseline_id
-gate slice does not match context lifecycle slice
-gate baseline does not match context baseline at the structural set level
+gate slice_id different from context.lifecycle.slice_id
 ```
 
-Baseline mismatch may alternatively be represented per gate when all gates consistently reference one other baseline; implementation must follow one documented behavior consistently. Revision 1 recommends rejecting mixed gate baselines structurally and returning per-gate `BASELINE_MISMATCH` for a uniform set targeting a non-current baseline.
+Do not raise `InvalidGateSet` merely because a uniform gate-set baseline differs from `context.baseline_id`.
 
-## Step 2 — Evaluate structural lifecycle validity
-
-Check:
+That case deterministically returns all gates RED with only:
 
 ```text
-source_phase matches current lifecycle phase
-validate_phase_transition() passes
+BASELINE_MISMATCH
 ```
 
-## Step 3 — Evaluate engineering prerequisites
+before ordinary gate evaluation.
 
-Check:
+---
+
+# 37. S0.4-D35 — Gate Evaluation Algorithm
+
+For each `evaluate_handover_gates()` call:
+
+## Step 1 — Validate set structure
+
+Apply Section 36.
+
+## Step 2 — Handle uniform non-current baseline
+
+If the uniform gate baseline differs from `context.baseline_id`:
 
 ```text
-required artifact IDs
-required evidence IDs
+build RED / BASELINE_MISMATCH evaluation for every gate
+skip Steps 3–10
+return in canonical gate_id order
+```
+
+## Step 3 — Evaluate structural lifecycle validity
+
+Per gate:
+
+```text
+source_phase must match current lifecycle phase
+validate_phase_transition() must pass
+```
+
+Failures:
+
+```text
+SOURCE_PHASE_MISMATCH
+INVALID_LIFECYCLE_TRANSITION
+```
+
+## Step 4 — Evaluate engineering prerequisites
+
+Per gate:
+
+```text
+required artifacts
+required evidence
 required dependencies
 required evaluation outcome
 required quality checks
-change-surface BLOCK policy
-risk BLOCK policy
+change-surface BLOCK
+risk BLOCK
 unauthorized toolchain change
 ```
 
-## Step 4 — Evaluate explicit current rejection
+Emit one subject-specific reason per failed subject where Section 30 requires it.
 
-Matching current `REJECT` is blocking.
+## Step 5 — Evaluate current rejection
 
-## Step 5 — Evaluate authorization
+A current matching REJECT is blocking.
 
-If required and no current matching authorization exists, add YELLOW authority reason.
+## Step 6 — Evaluate authorization
 
-## Step 6 — Evaluate human-remediable review conditions
+If required:
+
+```text
+matching grant present
+→ satisfied
+
+none present
+→ AUTHORIZATION_REQUIRED
+
+one logical-gate grant present but stale by baseline/revision
+→ AUTHORIZATION_STALE / authorization_id
+```
+
+## Step 7 — Evaluate approval-type human requirements
 
 Check:
 
@@ -1380,43 +1451,59 @@ hard stop
 HUMAN_APPROVAL policy
 ```
 
-A single exact current APPROVE decision may satisfy all approval-type requirements for that gate at that lifecycle revision.
+One exact current APPROVE decision may satisfy all approval-type requirements for that one gate and exact current decision basis.
 
-## Step 7 — Evaluate HUMAN_CHOICE across the gate set
+An old lifecycle/governance-basis decision satisfies none.
 
-Apply current valid selection, stale-choice semantics, and non-selected reasons.
+## Step 8 — Evaluate HUMAN_CHOICE across the gate set
 
-## Step 8 — Derive provisional light
+Construct canonical HUMAN_CHOICE `GateRevisionRef` set and apply Section 34.
+
+## Step 9 — Derive provisional light
 
 ```text
 any BLOCKING reason
-    → RED
+→ RED
+
 else any HUMAN_ACTION reason
-    → YELLOW
+→ YELLOW
+
 else
-    → GREEN
+→ GREEN
 ```
 
-## Step 9 — Enforce unique executable path
+## Step 10 — Enforce unique executable path
 
-If more than one provisional GREEN remains:
+If more than one provisional GREEN exists, apply `MULTIPLE_EXECUTABLE_PATHS` as specified in Section 35.
+
+## Step 11 — Canonicalize reasons
+
+Order by:
 
 ```text
-all provisional GREEN gates
-    → RED / MULTIPLE_EXECUTABLE_PATHS
+GateReasonCode declaration order
+then subject lexicographically
 ```
 
-## Step 10 — Canonicalize reason order
+## Step 12 — Canonicalize evaluations
 
-Return evaluations in the same order as the input gate tuple.
+Return evaluations sorted ascending by:
 
-Within each evaluation, reasons use canonical engine ordering.
+```text
+gate_id
+```
+
+Input gate tuple order has no semantic meaning.
+
+Therefore any permutation of the same exact gate set with the same context yields the identical GateEvaluation tuple.
+
+This resolves `RLY-S04-DREV1-F002`.
 
 ---
 
-# 35. S0.4-D33 — Handover Execution Re-Evaluates Governance
+# 38. S0.4-D36 — Governed Execution Re-Evaluates Governance
 
-Slice 0.4 introduces a governed execution operation conceptually equivalent to:
+Slice 0.4 introduces conceptually:
 
 ```python
 execute_handover(
@@ -1430,61 +1517,84 @@ execute_handover(
 ) -> tuple[SliceLifecycle, PhaseChanged, GateEvaluation]
 ```
 
-Execution rules:
+Execution:
 
-1. call `evaluate_handover_gates(gates, context)` internally;
-2. locate `selected_gate_id`;
-3. require its light to be GREEN;
-4. call Slice 0.3 `transition_phase()` with the gate target and successor reference;
-5. return the resulting lifecycle snapshot, `PhaseChanged` event, and the exact gate evaluation used.
+1. re-run `evaluate_handover_gates(gates, context)`;
+2. locate selected gate by ID;
+3. require it GREEN;
+4. enforce authority temporal causality from Section 39;
+5. call Slice 0.3 `transition_phase()` exactly once;
+6. return new lifecycle, `PhaseChanged`, and the exact evaluation used.
 
-The function must not accept a caller-constructed GREEN `GateEvaluation` as sufficient authority.
+A caller-constructed GREEN evaluation is never sufficient authority.
 
-It re-evaluates from gate definitions and context so a forged or stale evaluation cannot bypass governance.
+If selected gate is absent, RED, or YELLOW:
 
-`event_id`, `actor`, `occurred_at`, and `reason` remain explicit Slice 0.3 lifecycle-operation inputs.
-
-The lifecycle event actor records who caused execution; it does not itself prove authority.
-
-If the selected gate is RED or YELLOW, execution raises a typed governance error and produces no lifecycle event.
+```text
+raise HandoverNotExecutable
+produce no lifecycle event
+```
 
 ---
 
-# 36. S0.4-D34 — GateEvaluation Is Evidence, Not Persistence
+# 39. S0.4-D37 — Governed Execution Preserves Authority Causality
 
-A `GateEvaluation` is an immutable deterministic value returned by the engine.
+Authority records have explicit timestamps and the lifecycle event has explicit `occurred_at`.
+
+Execution must not create an event that historically predates the authority used to permit it.
+
+For every matching authorization required and used by the GREEN gate:
+
+```text
+execution occurred_at >= AuthorizationGrant.granted_at
+```
+
+For every current human approval/choice required and used by the GREEN gate:
+
+```text
+execution occurred_at >= HumanDecision.occurred_at
+```
+
+If either rule fails:
+
+```text
+raise HandoverNotExecutable
+produce no lifecycle event
+```
+
+No new governance exception type is required.
+
+Slice 0.3 continues to enforce lifecycle timestamp monotonicity against `current.updated_at`.
+
+Gate evaluation itself remains a timeless deterministic current-projection operation; the causality check is required when creating the governed lifecycle event.
+
+This resolves `RLY-S04-DREV1-F006`.
+
+---
+
+# 40. S0.4-D38 — GateEvaluation Is Evidence, Not Persistence
+
+A GateEvaluation is immutable deterministic evidence of one evaluation basis.
 
 Slice 0.4 does not persist it.
 
-`execute_handover()` returns the evaluation used so later persistence can preserve the decision context.
+`execute_handover()` returns the evaluation used so a future persistence layer can preserve decision context.
 
-Slice 0.5 will decide how gate evaluations, authorizations, human decisions, and handover executions become durable event/history records.
+Slice 0.5 decides how gate evaluations, authorizations, human decisions, and executions become durable records.
 
-Slice 0.4 must not add a database, event store, repository layer, or transaction abstraction in anticipation of that work.
-
----
-
-# 37. S0.4-D35 — AUTO_NOTIFY Has No Notification Side Effect in Slice 0.4
-
-`AUTO_NOTIFY` differs from `AUTO` only as policy metadata for a future orchestrator.
-
-It has the same traffic-light calculation as AUTO.
-
-Slice 0.4 does not:
-
-```text
-send email
-send Slack messages
-create GitHub notifications
-invoke webhooks
-queue notification jobs
-```
-
-No notification interface or provider abstraction is introduced.
+No database/event-store abstraction is introduced here.
 
 ---
 
-# 38. S0.4-D36 — The Gate Engine Is Pure and Provider-Neutral
+# 41. S0.4-D39 — AUTO_NOTIFY Has No Side Effect
+
+AUTO_NOTIFY and AUTO have the same light calculation.
+
+Slice 0.4 sends no notification and introduces no notification abstraction.
+
+---
+
+# 42. S0.4-D40 — Gate Evaluation Is Pure and Provider-Neutral
 
 The gate engine performs no:
 
@@ -1493,8 +1603,7 @@ clock reads
 UUID generation
 randomness
 filesystem access
-Git access
-GitHub access
+Git/GitHub access
 database access
 HTTP/network access
 LLM/model calls
@@ -1504,82 +1613,64 @@ quality-tool execution
 artifact discovery
 ```
 
-All relevant facts are explicit immutable inputs.
+All facts are explicit immutable inputs.
 
-Therefore:
+Determinism invariant:
 
 ```text
-same gates
+same exact gate set
+regardless of input permutation
 +
-same context
+same HandoverContext
 =
-same GateEvaluation tuple
+same canonically ordered GateEvaluation tuple
 ```
 
-and:
-
-```text
-same executable handover inputs
-=
-same lifecycle result + PhaseChanged event + GateEvaluation
-```
-
-subject to the already accepted deterministic Slice 0.3 lifecycle contract.
+Governed execution is deterministic over all complete explicit inputs subject to accepted Slice 0.3 semantics.
 
 ---
 
-# 39. S0.4-D37 — Handover Packets Are Not Implemented Yet
+# 43. S0.4-D41 — Handover Packets Are Deferred
 
-The Product Proposal describes structured handover packets containing accepted authority, scope, memory, repository context, and risks.
-
-Packet construction requires repository artifact discovery and later agent/role context.
-
-Slice 0.4 therefore does not implement:
+Slice 0.4 does not implement:
 
 ```text
 HandoverPacket
 context assembly
 role prompt construction
 repository file selection
-agent conversation transfer
+conversation transfer
 ```
 
-The gate engine establishes whether a handover is permissible.
-
-A later slice will construct the receiving agent's context when agent execution exists.
+Gate evaluation answers whether movement is permissible; later agent-execution work constructs receiving context.
 
 ---
 
-# 40. S0.4-D38 — Authorization Is Not Identity/RBAC
+# 44. S0.4-D42 — Authorization Is Not Identity/RBAC
 
-Slice 0.4 models an explicit active authorization grant supplied as current governance context.
-
-It does not implement:
+Slice 0.4 does not implement:
 
 ```text
 user accounts
 organizations
-roles/permissions
+RBAC
 OAuth
 ACLs
 policy administration
-who is allowed to create an AuthorizationGrant
 cryptographic signatures
 ```
 
-For the Phase 0 implementation, an `AuthorizationGrant` must identify a HUMAN actor.
+Phase-0 AuthorizationGrant requires a HUMAN actor.
 
-The application layer is responsible for ensuring only a legitimate human authority can create the grant.
-
-A later production identity/permissions system may broaden or harden grant authority without changing the core distinction between authorization and lifecycle state.
+The application layer remains responsible for ensuring the supplied actor legitimately represents Human Authority.
 
 ---
 
-# 41. S0.4-D39 — Governance Models Are Separate from Slice Definition
+# 45. S0.4-D43 — Governance Models Remain Separate from Slice Definition
 
-Do not add authorization, gates, traffic lights, quality status, risk status, or human decisions to the Slice 0.2 `Slice` model.
+Do not add governance fields to the accepted Slice model.
 
-The domain boundaries remain:
+Boundaries:
 
 ```text
 Slice
@@ -1589,26 +1680,27 @@ SliceLifecycle
     structural work state
 
 HandoverGate
-    governance policy for one possible movement
+    policy for one possible movement
 
 HandoverContext
-    current facts used to evaluate that policy
+    current explicit facts and decision basis
 
 AuthorizationGrant
-    active durable permission
+    durable permission
 
-HumanGateDecision
-    current execution-time human authority
+HumanApprovalDecision
+    execution-time gate approval/rejection
+
+HumanChoiceDecision
+    execution-time set-level choice
 
 GateEvaluation
     deterministic derived decision
 ```
 
-This separation avoids turning `Slice` into a mutable workflow aggregate.
-
 ---
 
-# 42. Public Governance Types
+# 46. Public Governance Types
 
 Required public vocabulary:
 
@@ -1629,6 +1721,7 @@ HumanApprovalValue
 GateReasonKind
 GateReasonCode
 
+GateRevisionRef
 HandoverGate
 AuthorizationGrant
 HumanApprovalDecision
@@ -1640,22 +1733,20 @@ GateReason
 GateEvaluation
 ```
 
-A materially different public vocabulary requires design review before implementation.
-
-Private helper decomposition remains implementation discretion.
+A materially different public vocabulary requires design review.
 
 ---
 
-# 43. Public Governance Operations
+# 47. Public Governance Operations
 
-Required public capability:
+Required public operations:
 
 ```python
 evaluate_handover_gates(...)
 execute_handover(...)
 ```
 
-and the narrow Slice 0.3 query:
+plus the narrow lifecycle query:
 
 ```python
 validate_phase_transition(...)
@@ -1665,9 +1756,9 @@ No public repository/service/provider abstraction is required.
 
 ---
 
-# 44. Governance Error Family
+# 48. Governance Error Family
 
-The public governance error family is:
+Public errors:
 
 ```text
 GovernanceError
@@ -1678,250 +1769,261 @@ GovernanceError
 
 Semantics:
 
-- `InvalidGateSet` — the supplied outgoing gate set is structurally inconsistent for evaluation.
-- `InvalidHandoverContext` — a validly shaped context contains mutually ambiguous current-projection facts that cannot be interpreted deterministically.
-- `HandoverNotExecutable` — `execute_handover()` was asked to execute a gate that is absent, RED, or YELLOW.
+- `InvalidGateSet`: supplied gate set is structurally inconsistent.
+- `InvalidHandoverContext`: validly shaped context contains mutually ambiguous current-projection facts that cannot be interpreted deterministically.
+- `HandoverNotExecutable`: selected gate is absent/RED/YELLOW, or governed execution violates required authority temporal causality.
 
-Normal missing prerequisites are not exceptions during evaluation. They produce gate reasons and traffic lights.
+Ordinary missing prerequisites are evaluation results, not exceptions.
 
-Pydantic/schema validation remains responsible for malformed individual serialized models.
+Pydantic/schema validation owns malformed individual values.
 
-Lifecycle structural errors remain owned by the Slice 0.3 lifecycle error family.
+Lifecycle structural errors remain owned by Slice 0.3.
 
 ---
 
-# 45. Required Gate Scenarios
+# 49. Required Gate Scenarios
 
-Implementation tests must cover at least the following scenarios.
+Implementation must cover at least:
 
-## Valid and automatically authorized
+## Automatic valid path
 
 ```text
 READY / CURRENT / CLEAR
-required prerequisites present
+prerequisites present
 authorization present
-policy AUTO
+AUTO
 → GREEN
 ```
 
-## Authorization pre-granted before prerequisite completion
+## Authorization granted while validity is RED
 
 ```text
 authorization present
-required design artifact missing
+required artifact missing
 → RED
 
-same authorization
 artifact later present
-→ GREEN
+same baseline + gate revision
+→ durable authorization still matches
 ```
 
-No second authorization is required because gate/baseline revision did not change.
+Any prior human approval must be revalidated through current lifecycle/governance revision rules.
 
 ## Missing authorization
 
 ```text
-all validity checks pass
-authorization required but absent
+otherwise valid + authorization required + absent
 → YELLOW / AUTHORIZATION_REQUIRED
 ```
 
 ## Stale authorization
 
 ```text
-matching logical gate ID
-old gate revision authorization only
+same logical gate ID
+old baseline or gate revision grant
 → YELLOW / AUTHORIZATION_STALE
 ```
 
-## HUMAN_APPROVAL
+## Human approval
 
 ```text
-valid + authorized + no decision
+valid + authorized + no current approval
 → YELLOW
 
 current APPROVE
-→ GREEN
+→ GREEN unless set-level conflict
 
 current REJECT
 → RED
 ```
 
-## Hard stop with AUTO
+## Governance-basis change after approval
 
 ```text
-valid + authorized + AUTO + hard_stop
-no human approval
+approval at governance_revision N
+non-human gate fact changes
+governance_revision N+1
+→ old approval stale
+```
+
+## Hard stop
+
+```text
+AUTO + hard_stop + no current approval
 → YELLOW
 
-current APPROVE
-→ GREEN
+current approval
+→ may become GREEN
 ```
 
 ## HUMAN_CHOICE
 
 ```text
-two currently valid HUMAN_CHOICE gates
-no choice
-→ both YELLOW
-
-human selects one
-→ selected gate eligible to become GREEN
-→ other viable choice gate RED / NOT_SELECTED_BY_HUMAN
+G1 and G2 HUMAN_CHOICE
+choice_gate_refs = [G1@r, G2@r]
+select G1
+→ G1 may become GREEN
+→ otherwise viable G2 RED / NOT_SELECTED_BY_HUMAN
 ```
 
-## Invalid chosen path
+## Choice-set change
 
 ```text
-human choice selects a gate whose prerequisites are now RED
-→ selected gate remains RED
-→ human choice does not override validity
+old choice set [G1, G2]
+current set [G1, G3]
+→ old choice stale
+```
+
+## Invalid selected path
+
+Human choice selects a gate that is independently RED:
+
+```text
+→ remains RED
 ```
 
 ## Multiple executable paths
 
+Two provisional GREEN gates:
+
 ```text
-two gates provisionally GREEN
 → both RED / MULTIPLE_EXECUTABLE_PATHS
 ```
 
-## Dependency accepted/current
+## Baseline set rules
 
 ```text
-required dependency = ACCEPTED + CURRENT
-→ passes
+mixed gate baselines
+→ InvalidGateSet
 ```
 
-## Dependency stale
+```text
+uniform non-current gate baseline
+→ all RED / BASELINE_MISMATCH
+```
+
+## Canonical output
+
+Permuting input gates:
 
 ```text
-required dependency = ACCEPTED + STALE
+→ identical GateEvaluation tuple ordered by gate_id
+```
+
+## Dependency
+
+```text
+ACCEPTED + CURRENT
+→ satisfies
+
+ACCEPTED + STALE
 → RED / DEPENDENCY_STALE
 ```
 
 ## Evaluation routing
 
-```text
-outcome ACCEPT
-→ acceptance gate can pass outcome check
-→ rework/escalation gates fail outcome check
-```
-
-Equivalent cases required for REWORK, ESCALATE_CONTRACT, and ESCALATE_ARCHITECTURE.
+ACCEPT, REWORK, ESCALATE_CONTRACT, and ESCALATE_ARCHITECTURE each enable only appropriately configured gates.
 
 ## Quality evidence
 
 ```text
-required check absent
-→ RED
-
-required check FAIL
-→ RED
-
-required check PASS
-→ passes
+missing → RED per key
+FAIL    → RED per key
+PASS    → satisfied
 ```
 
-## Material change-surface review
+## Change-surface and risk review
 
-```text
-MATERIAL_DEVIATION + HUMAN_REVIEW + no approval
-→ YELLOW
-
-current approval
-→ passes
-
-MATERIAL_DEVIATION + BLOCK
-→ RED
-```
-
-## Risk review
-
-Equivalent ALLOW / HUMAN_REVIEW / BLOCK behavior.
+ALLOW/HUMAN_REVIEW/BLOCK semantics must be covered.
 
 ## Unauthorized toolchain change
 
 ```text
 UNAUTHORIZED
-→ RED regardless of human approval
+→ RED regardless of approval
 ```
 
-## Stale human approval
+## Reason cardinality
+
+Several missing artifacts/checks/dependencies produce one typed reason per failed subject in canonical order.
+
+## Temporal authority
 
 ```text
-approval lifecycle_revision = N
-current lifecycle_revision = N + 1
-→ approval does not satisfy gate
+execution time < required grant time
+→ HandoverNotExecutable
+
+execution time < required human-decision time
+→ HandoverNotExecutable
 ```
 
 ## Governed execution
 
 ```text
 GREEN selected gate
-→ one Slice 0.3 PhaseChanged event
-→ resulting snapshot matches direct structural transition
+→ exactly one Slice 0.3 PhaseChanged event
 ```
 
 ```text
-YELLOW or RED selected gate
+RED/YELLOW selected gate
 → HandoverNotExecutable
 → no lifecycle event
 ```
 
 ---
 
-# 46. Explicit In Scope
+# 50. Explicit In Scope
 
-Slice 0.4 design authorizes a future implementation, only after separate Human Authority implementation authorization, of:
+After separate implementation authorization, Slice 0.4 permits implementation of:
 
-1. governance ID types `gate_`, `auth_`, `hdec_`;
-2. `TrafficLight`;
-3. `HandoverPolicy`;
-4. `ReviewPolicy`;
-5. minimal `EvaluationOutcome` routing enum;
-6. quality/change-surface/risk/toolchain current-fact enums;
-7. `HandoverGate` immutable revisioned specification;
-8. exact baseline binding;
-9. `AuthorizationGrant`;
-10. `HumanApprovalDecision`;
-11. `HumanChoiceDecision`;
-12. current-projection `HandoverContext`;
-13. exact artifact/evidence prerequisite checks;
-14. dependency `ACCEPTED + CURRENT` checks;
-15. required evaluation-outcome checks;
-16. required quality-check checks;
-17. change-surface review policy;
-18. risk review policy;
-19. unauthorized toolchain-change blocking;
-20. hard-stop enforcement;
-21. set-level HUMAN_CHOICE semantics;
-22. typed gate reasons;
-23. deterministic traffic-light derivation;
-24. no-more-than-one-GREEN invariant;
-25. `GateEvaluation`;
-26. `evaluate_handover_gates()`;
-27. `execute_handover()` governance wrapper;
-28. narrow eventless `validate_phase_transition()` lifecycle query;
-29. governance unit/schema tests;
-30. governance architecture documentation;
+1. `gate_`, `auth_`, `hdec_` IDs;
+2. traffic-light and policy enums;
+3. minimal evaluation/quality/scope/risk/toolchain fact enums;
+4. `GateRevisionRef`;
+5. immutable revisioned `HandoverGate`;
+6. exact baseline binding;
+7. `AuthorizationGrant`;
+8. lifecycle/governance-revision-bound human approval;
+9. lifecycle/governance/choice-set-bound human choice;
+10. `HandoverContext` and `governance_revision`;
+11. exact artifact/evidence prerequisite checks;
+12. dependency ACCEPTED+CURRENT checks;
+13. evaluation-outcome checks;
+14. quality checks;
+15. change-surface review policy;
+16. risk review policy;
+17. unauthorized toolchain blocking;
+18. hard-stop enforcement;
+19. set-level HUMAN_CHOICE;
+20. typed reason code/kind/subject/cardinality contract;
+21. deterministic canonical reason ordering;
+22. canonical gate-evaluation ordering;
+23. no-more-than-one-GREEN invariant;
+24. `GateEvaluation`;
+25. `evaluate_handover_gates()`;
+26. `execute_handover()`;
+27. authority temporal-causality validation;
+28. eventless `validate_phase_transition()`;
+29. governance tests and schema tests;
+30. governance architecture document;
 31. ADR-0004;
-32. Slice 0.4 development memory;
-33. `CURRENT_BASELINE.md` candidate projection update during implementation.
+32. Slice 0.4 memory;
+33. candidate CURRENT_BASELINE update during implementation only.
 
 ---
 
-# 47. Explicit Out of Scope
+# 51. Explicit Out of Scope
 
-Forbidden in Slice 0.4 implementation unless separately authorized:
+Forbidden unless separately authorized:
 
 ```text
 agent execution
 AgentRole / AgentAssignment
 handover packet assembly
 prompt/context assembly
-notifications or notification providers
+notifications
 UI / board
-REST/API layer
+REST/API
 database
 persistence repositories
 event store
@@ -1930,27 +2032,28 @@ schema migrations
 Git/GitHub integration
 artifact registry
 canonical document discovery
-file/path-based artifact discovery
+file/path artifact discovery
 RBAC / identity / organizations
 authorization expiry/revocation history
-risk scoring engine
-quality command execution
+risk scoring
+quality-command execution
 CI provider integration
 change-surface computation
 evaluator agent execution
-full Evaluation domain record
+full Evaluation aggregate
 research execution
 experiments
 provider/model integration
 background queues
 webhooks
+generic rules/policy DSL
 ```
 
-Do not create placeholder implementations for these concepts.
+Do not create placeholders for future concepts.
 
 ---
 
-# 48. Expected Implementation Change Surface
+# 52. Expected Implementation Change Surface
 
 Expected existing production files touched:
 
@@ -1961,24 +2064,17 @@ src/relay_engine/lifecycle/engine.py
 src/relay_engine/lifecycle/__init__.py
 ```
 
-Lifecycle modification is limited to exposing the eventless structural validation query without changing existing transition semantics.
+Lifecycle modification is limited to exposing the eventless structural validation query without changing accepted transition semantics.
 
-Expected new production area:
+Expected new package:
 
 ```text
 src/relay_engine/governance/
+    __init__.py
+    models.py
+    engine.py
+    errors.py
 ```
-
-A reasonable minimum-sufficient package is:
-
-```text
-__init__.py
-models.py
-engine.py
-errors.py
-```
-
-No additional module is required merely to separate enums or reasons if the code remains clearer in these files.
 
 Expected tests:
 
@@ -1986,25 +2082,20 @@ Expected tests:
 tests/unit/test_governance.py
 ```
 
-Existing domain/lifecycle tests may be modified narrowly for new IDs and the validation query.
+Existing domain/lifecycle tests may be changed narrowly for IDs and the validation query.
 
-Expected new runtime dependencies:
-
-```text
-0
-```
-
-Expected new development dependencies:
+Expected dependencies:
 
 ```text
-0
+runtime: 0 new
+development: 0 new
 ```
 
 Forbidden architectural expansion:
 
 ```text
-generic policy language
 rules DSL
+generic policy language
 expression parser
 plugin policy engine
 event bus
@@ -2022,7 +2113,7 @@ Use direct Python/Pydantic models and explicit deterministic logic.
 
 ---
 
-# 49. Required Documentation During Implementation
+# 53. Required Documentation During Implementation
 
 Implementation should create:
 
@@ -2034,20 +2125,23 @@ docs/slices/SLICE_0_4_HANDOVER_GATES_MEMORY.md
 
 ADR-0004 must record at minimum:
 
-1. gates evaluate validity, authority, and autonomy separately;
+1. validity/authority/autonomy separation;
 2. traffic lights belong to handovers;
-3. authorization is durable permission, not lifecycle phase or execution-time approval;
-4. human decisions bind lifecycle revision;
-5. gates and authorizations bind exact baseline and gate revision;
-6. hard stop is gate policy, not lifecycle state;
-7. human decisions cannot override RED validity;
-8. HUMAN_CHOICE is evaluated across outgoing gates;
-9. Relay never arbitrarily chooses among multiple executable paths;
-10. gate evaluation is pure and provider-neutral;
-11. governed execution re-evaluates context and then delegates to Slice 0.3 lifecycle transition;
-12. persistence/notifications/agents remain deferred.
+3. authorization is durable permission;
+4. human decisions are execution-time decisions;
+5. human decisions bind lifecycle and governance revision;
+6. human choice also binds exact choice set;
+7. gates/authorization bind exact baseline and gate revision;
+8. hard stop is gate policy;
+9. human decisions cannot override RED validity;
+10. HUMAN_CHOICE is set-level;
+11. Relay never arbitrarily chooses among multiple executable paths;
+12. result/reason ordering is canonical and not selection authority;
+13. governed execution re-evaluates context and enforces temporal authority causality;
+14. gate evaluation is pure/provider-neutral;
+15. persistence/notifications/agents remain deferred.
 
-Before Slice 0.4 human acceptance:
+Before human acceptance:
 
 ```text
 ADR-0004 = PROPOSED / VALIDATED / PENDING ACCEPTANCE
@@ -2058,89 +2152,101 @@ Neither is locked before acceptance.
 
 ---
 
-# 50. Acceptance Matrix
+# 54. Acceptance Matrix
 
-All criteria are mandatory unless the accepted design is explicitly revised.
+All criteria are mandatory unless design is explicitly revised.
 
 | ID | Requirement | Evidence |
 |---|---|---|
 | A01 | Governance remains separate from `Slice` and `SliceLifecycle` | inspection |
-| A02 | Traffic light enum is exactly GREEN/YELLOW/RED | schema/unit test |
-| A03 | Gate evaluates validity, authority, and autonomy separately | scenario tests |
-| A04 | RED dominates YELLOW and GREEN | unit tests |
-| A05 | Human approval cannot override RED prerequisite failures | unit tests |
-| A06 | Traffic lights are per-gate, not stored on lifecycle | inspection |
-| A07 | `HandoverGate` immutable/versioned/extra-forbid | schema tests |
-| A08 | Gate revision starts at >=1 | schema test |
-| A09 | Gate source and target phases differ | schema test |
-| A10 | Supersession gate requires distinct successor | schema/unit test |
-| A11 | Gates bind exact `BaselineId` | schema/unit test |
-| A12 | `gate_`, `auth_`, `hdec_` extend existing UUIDv7 mechanism | ID tests |
-| A13 | Governance engine generates no IDs | inspection |
-| A14 | Eventless `validate_phase_transition()` exposed | unit test/API inspection |
-| A15 | Validation query and live transition use same structural rules | regression tests |
+| A02 | Traffic-light enum exactly GREEN/YELLOW/RED | schema/unit |
+| A03 | Validity, authority, autonomy evaluated distinctly | scenarios |
+| A04 | RED dominates YELLOW/GREEN | unit |
+| A05 | Human action cannot override RED validity | unit |
+| A06 | Traffic lights are per gate | inspection |
+| A07 | HandoverGate immutable/versioned/extra-forbid | schema |
+| A08 | Gate revision >=1 | schema |
+| A09 | Gate source != target | schema |
+| A10 | Supersession gate requires distinct successor | schema/unit |
+| A11 | Gates bind exact BaselineId | schema/unit |
+| A12 | `gate_`, `auth_`, `hdec_` extend existing ID mechanism | ID tests |
+| A13 | Gate engine generates no IDs | inspection |
+| A14 | Eventless validate_phase_transition exposed | API/unit |
+| A15 | Validation query/live transition share structural logic | regression |
 | A16 | Governance does not duplicate lifecycle transition table | inspection |
-| A17 | Authorization grant immutable and baseline/gate-revision bound | schema tests |
-| A18 | Authorization grant requires HUMAN actor in Slice 0.4 | schema test |
-| A19 | Authorization does not bind lifecycle revision | schema/inspection |
-| A20 | Missing required authorization produces YELLOW | unit test |
-| A21 | Old baseline/gate-revision authorization is stale | unit tests |
-| A22 | Human approval binds lifecycle revision | schema/unit tests |
-| A23 | Human choice binds lifecycle revision | schema/unit tests |
-| A24 | Current matching REJECT produces RED | unit test |
-| A25 | Old lifecycle-revision decision cannot authorize current handover | unit test |
-| A26 | AUTO can become GREEN without policy-level human decision | unit test |
-| A27 | AUTO_NOTIFY has AUTO light semantics and no notification side effect | test/inspection |
-| A28 | HUMAN_APPROVAL requires current APPROVE | unit tests |
-| A29 | HUMAN_CHOICE evaluated across gate set | scenario tests |
-| A30 | Hard stop overrides automatic policy | unit tests |
-| A31 | Positive current human decision can satisfy hard stop | unit tests |
-| A32 | Hard stop remains unable to override RED validity | unit test |
-| A33 | Evaluation outcomes typed and routed deterministically | unit tests |
-| A34 | Missing required evaluation outcome produces RED | unit test |
-| A35 | Exact artifact prerequisites enforced | unit tests |
-| A36 | Exact evidence prerequisites enforced | unit tests |
-| A37 | Dependency absent produces RED | unit test |
-| A38 | Dependency not ACCEPTED produces RED | unit test |
-| A39 | ACCEPTED + STALE dependency produces RED | unit test |
-| A40 | ACCEPTED + CURRENT dependency satisfies dependency gate | unit test |
-| A41 | Required quality check missing produces RED | unit test |
-| A42 | Required quality check FAIL produces RED | unit test |
-| A43 | Required quality check PASS satisfies quality prerequisite | unit test |
-| A44 | Change-surface ALLOW/HUMAN_REVIEW/BLOCK semantics enforced | parametrized tests |
-| A45 | Risk ALLOW/HUMAN_REVIEW/BLOCK semantics enforced | parametrized tests |
-| A46 | Unauthorized toolchain change always RED | unit test |
-| A47 | Human approval cannot bypass unauthorized toolchain change | unit test |
-| A48 | Gate reasons typed and canonically ordered | unit tests |
-| A49 | GREEN evaluation has no reasons | unit test |
-| A50 | `GateEvaluation` binds gate/baseline/lifecycle revisions | schema tests |
-| A51 | Current context rejects duplicate ambiguous projections | schema/unit tests |
-| A52 | Human choice selects one exact current gate/revision | unit test |
-| A53 | Non-selected viable choice gate becomes RED | unit test |
-| A54 | Choice cannot make invalid selected gate executable | unit test |
-| A55 | Engine never returns more than one GREEN gate | set-level tests |
-| A56 | Multiple provisional GREEN gates become RED with typed reason | unit test |
-| A57 | `execute_handover()` internally re-evaluates governance | inspection/unit test |
-| A58 | RED/YELLOW selected gate cannot execute | unit tests |
-| A59 | GREEN selected gate delegates to Slice 0.3 transition exactly once | unit test |
-| A60 | Governed execution returns lifecycle snapshot, PhaseChanged, and evaluation | unit test |
-| A61 | Gate evaluation performs no I/O, clock read, UUID generation, randomness, or LLM call | inspection |
-| A62 | Same gate set + same context gives identical evaluation tuple | determinism test |
-| A63 | Same complete GREEN execution inputs give identical result | determinism test |
-| A64 | No agent, persistence, notification, UI, provider, or GitHub integration introduced | inspection |
-| A65 | No generic policy DSL/metadata escape hatch introduced | inspection |
-| A66 | No new runtime/development dependency introduced | dependency inspection |
-| A67 | `HANDOVER_GOVERNANCE.md` completed | review |
+| A17 | Authorization immutable and baseline/gate-revision bound | schema |
+| A18 | Authorization requires HUMAN actor in Slice 0.4 | schema |
+| A19 | Authorization not bound to lifecycle/governance revision | schema/inspection |
+| A20 | Missing required authorization produces YELLOW | unit |
+| A21 | Wrong baseline/gate-revision authorization is stale | unit |
+| A22 | Human approval binds lifecycle revision | schema/unit |
+| A23 | Human choice binds lifecycle revision | schema/unit |
+| A24 | Current matching REJECT produces RED | unit |
+| A25 | Old lifecycle revision decision cannot authorize current handover | unit |
+| A26 | AUTO may become GREEN without policy-level human decision | unit |
+| A27 | AUTO_NOTIFY has AUTO light semantics and no side effect | test/inspection |
+| A28 | HUMAN_APPROVAL requires current APPROVE | unit |
+| A29 | HUMAN_CHOICE evaluated across gate set | scenarios |
+| A30 | Hard stop overrides AUTO/AUTO_NOTIFY | unit |
+| A31 | Current positive human decision may satisfy hard stop | unit |
+| A32 | Hard stop cannot override RED validity | unit |
+| A33 | Evaluation outcomes typed/routed deterministically | unit |
+| A34 | Missing required evaluation outcome produces RED | unit |
+| A35 | Exact artifact prerequisites enforced | unit |
+| A36 | Exact evidence prerequisites enforced | unit |
+| A37 | Dependency absent produces RED | unit |
+| A38 | Dependency not ACCEPTED produces RED | unit |
+| A39 | ACCEPTED+STALE dependency produces RED | unit |
+| A40 | ACCEPTED+CURRENT dependency satisfies requirement | unit |
+| A41 | Required quality check missing produces RED | unit |
+| A42 | Required quality check FAIL produces RED | unit |
+| A43 | Required quality check PASS satisfies requirement | unit |
+| A44 | Change-surface ALLOW/HUMAN_REVIEW/BLOCK semantics | parametrized |
+| A45 | Risk ALLOW/HUMAN_REVIEW/BLOCK semantics | parametrized |
+| A46 | Unauthorized toolchain change always RED | unit |
+| A47 | Approval cannot bypass unauthorized toolchain change | unit |
+| A48 | Reasons typed and canonically ordered | unit |
+| A49 | GREEN evaluation has no reasons | unit |
+| A50 | Evaluation binds gate/baseline/lifecycle/governance revisions | schema |
+| A51 | Current context rejects ambiguous duplicate projections | schema/unit |
+| A52 | Human choice selects exact current gate/revision | unit |
+| A53 | Non-selected viable choice gate becomes RED | unit |
+| A54 | Choice cannot make invalid selected gate executable | unit |
+| A55 | Engine never returns >1 GREEN | set-level |
+| A56 | Multiple provisional GREEN gates become RED with typed conflict reasons | unit |
+| A57 | execute_handover re-evaluates governance | inspection/unit |
+| A58 | RED/YELLOW selected gate cannot execute | unit |
+| A59 | GREEN selected gate delegates to Slice 0.3 exactly once | unit |
+| A60 | Governed execution returns lifecycle, PhaseChanged, evaluation | unit |
+| A61 | Gate evaluation performs no I/O/clock/UUID/randomness/LLM | inspection |
+| A62 | Same exact gate set regardless of input permutation + same context gives identical canonically ordered evaluation tuple | determinism |
+| A63 | Same complete GREEN execution inputs give identical result | determinism |
+| A64 | No agent/persistence/notification/UI/provider/GitHub integration | inspection |
+| A65 | No generic policy DSL/metadata escape hatch | inspection |
+| A66 | No new runtime/development dependency | dependency inspection |
+| A67 | HANDOVER_GOVERNANCE.md completed | review |
 | A68 | ADR-0004 completed | review |
 | A69 | Slice 0.4 memory completed | review |
-| A70 | `CURRENT_BASELINE.md` distinguishes accepted baseline from 0.4 candidate before acceptance | review |
-| A71 | All prior Slice 0.1–0.3 quality gates remain green | CI |
+| A70 | CURRENT_BASELINE distinguishes accepted baseline from candidate pre-acceptance | review |
+| A71 | Prior quality gates remain green | CI |
+| A72 | Mixed gate baseline IDs raise InvalidGateSet | unit |
+| A73 | Uniform non-current baseline returns every gate RED/BASELINE_MISMATCH | unit |
+| A74 | Evaluation output order canonical by gate_id and independent of input tuple order | unit |
+| A75 | Human approval binds current governance decision basis | schema/unit |
+| A76 | Human choice binds current governance decision basis | schema/unit |
+| A77 | Human choice binds exact canonical HUMAN_CHOICE alternative set | schema/unit |
+| A78 | Added/removed/revised HUMAN_CHOICE candidate invalidates prior choice | unit |
+| A79 | GateReasonCode→GateReasonKind mapping is fixed | unit/schema |
+| A80 | Reason subject requirements and per-subject cardinality are fixed | unit |
+| A81 | Reason-code canonical ordering equals declared normative order | unit |
+| A82 | Governed execution cannot predate required authorization | unit |
+| A83 | Governed execution cannot predate required human decision | unit |
 
 ---
 
-# 51. Named Regression Tests
+# 55. Named Regression Tests
 
-At minimum, implementation should include tests equivalent to:
+At minimum:
 
 ```text
 test_ready_does_not_become_authorized_phase
@@ -2148,30 +2254,43 @@ test_gate_light_belongs_to_handover_not_lifecycle
 test_authorization_can_exist_while_gate_is_red
 test_missing_authorization_is_yellow_after_validity_passes
 test_authorization_survives_lifecycle_revision_change
+test_authorization_survives_governance_revision_change
 test_authorization_does_not_survive_gate_revision_change
 test_authorization_does_not_survive_baseline_change
 test_human_approval_is_bound_to_lifecycle_revision
+test_human_approval_is_bound_to_governance_revision
 test_current_rejection_is_red
 test_hard_stop_overrides_auto_policy
 test_hard_stop_cannot_override_red_validity
 test_human_choice_selects_one_current_gate
 test_human_choice_cannot_select_through_red_prerequisites
 test_nonselected_choice_gate_is_red
+test_choice_stales_when_candidate_gate_set_changes
 test_multiple_executable_paths_are_rejected
 test_dependency_must_be_accepted_and_current
 test_required_evaluation_outcome_routes_gate
 test_required_quality_check_must_be_present_and_pass
-test_change_surface_human_review_requires_approval
+test_change_surface_human_review_requires_current_approval
 test_change_surface_block_is_red
-test_risk_human_review_requires_approval
+test_risk_human_review_requires_current_approval
 test_risk_block_is_red
 test_unauthorized_toolchain_change_is_red
 test_approval_cannot_bypass_unauthorized_toolchain_change
 test_gate_reasons_have_canonical_order
+test_gate_reason_code_to_kind_mapping_is_locked
+test_multiple_missing_artifacts_emit_one_reason_per_artifact
+test_multiple_failed_quality_checks_emit_one_reason_per_check
 test_green_gate_has_no_reasons
 test_validate_phase_transition_is_eventless
-test_governance_uses_lifecycle_validator_without_transition_matrix_duplication
+test_governance_uses_lifecycle_validator_without_matrix_duplication
+test_mixed_gate_baselines_raise_invalid_gate_set
+test_uniform_noncurrent_baseline_returns_red_evaluations
+test_gate_evaluation_order_is_canonical_across_input_permutations
+test_approval_stales_when_governance_fact_revision_changes
+test_choice_stales_when_governance_fact_revision_changes
 test_execute_handover_rechecks_gate_context
+test_execution_cannot_predate_required_authorization
+test_execution_cannot_predate_required_human_decision
 test_red_or_yellow_gate_cannot_execute
 test_green_gate_executes_exactly_one_lifecycle_transition
 test_auto_notify_performs_no_notification_side_effect
@@ -2181,108 +2300,102 @@ test_governed_execution_is_deterministic
 
 ---
 
-# 52. Resulting Authority After Acceptance
+# 56. Revision-1 Review Findings Resolved in Revision 2
+
+Revision 2 resolves `RLY-S04-DESIGN-EVAL-002`:
+
+| Finding | Resolution |
+|---|---|
+| `RLY-S04-DREV1-F001` | Mixed gate baselines are InvalidGateSet; a uniform gate baseline different from context returns every gate RED/BASELINE_MISMATCH and short-circuits ordinary evaluation. |
+| `RLY-S04-DREV1-F002` | Evaluations are returned in canonical ascending gate_id order; input permutation has no semantic effect and ordering never selects a path. |
+| `RLY-S04-DREV1-F003` | `governance_revision` binds execution-time human decisions to non-lifecycle gate-fact changes; authorization remains durable and unbound to it. |
+| `RLY-S04-DREV1-F004` | HumanChoiceDecision carries the exact canonical HUMAN_CHOICE `GateRevisionRef` set; added/removed/revised choice alternatives stale the prior choice. |
+| `RLY-S04-DREV1-F005` | Reason code→kind mapping, subject rules, per-subject cardinality, conflict cardinality, and canonical code order are normative. |
+| `RLY-S04-DREV1-F006` | Governed execution may not predate required authorization or human decisions; violation raises HandoverNotExecutable before lifecycle mutation. |
+
+The foundational Revision-1 architecture is unchanged.
+
+---
+
+# 57. Resulting Authority After Acceptance
 
 After eventual Slice 0.4 implementation and acceptance, Relay will know:
 
 ```text
 what a slice is
-where the slice is structurally
-whether the slice is stale or blocked
+where it is structurally
+whether it is stale or blocked
 which structural transitions are legal
 
-AND
+and
 
-which outgoing handovers are currently valid
-which exact prerequisites are missing
-whether permission exists
-whether a human must act
+which outgoing handovers are valid
+which prerequisites are missing
+whether durable permission exists
+whether a current human decision is required
+whether an existing human decision is stale
 whether a hard stop applies
-whether a quality/dependency/evaluation requirement blocks progress
-whether change-surface/risk review is required
-which handover is red, yellow, or green
-whether one exact GREEN handover may execute
+whether quality/dependency/evaluation conditions block progress
+whether scope/risk review is required
+which handover is RED/YELLOW/GREEN
+whether exactly one GREEN handover may execute
 ```
 
 Relay still will not know how to:
 
 ```text
-persist governance state
-reconstruct authorization/decision history after restart
+persist governance history
 connect to GitHub product APIs
 resolve canonical artifacts from repository files
-assign agents
-run agents
+assign/run agents
 construct handover packets
 send notifications
 render a board UI
 ```
 
-Those remain future slices.
-
 ---
 
-# 53. Design-State and Authorization Gate
+# 58. Design State and Hard Stop
 
 Current design state:
 
 ```text
-Slice 0.4 Design Revision 1
+Slice 0.4 Design Revision 2
 Artifact state: REVIEW
 Design acceptance: PENDING
 ```
 
-Human Authority has authorized **design definition** by requesting a formal detailed Slice 0.4.
+Human Authority authorized design correction only.
 
-That instruction does not constitute implementation authorization.
-
-Implementation state remains:
+Implementation remains:
 
 ```text
 NOT AUTHORIZED
 ```
 
-The Slice 0.3 post-acceptance hard stop remains active throughout design review.
+The post-Slice-0.3 hard stop remains:
+
+```text
+ACTIVE
+```
 
 Implementation may begin only after:
 
 ```text
-1. independent design review of this revision
+1. independent design review of Revision 2
 2. explicit Human Authority design acceptance
 3. explicit Human Authority Slice 0.4 implementation authorization
 ```
 
-A design-acceptance statement may also explicitly grant implementation authorization, but the two decisions must remain semantically distinguishable in the record.
+Design acceptance and implementation authorization may be expressed together only if both decisions are explicit and semantically distinguishable.
+
+Do not begin Slice 0.5.
 
 ---
 
-# 54. Hard Stop
+# 59. Summary
 
-Until implementation authorization is explicitly granted:
-
-```text
-HARD STOP — ACTIVE
-```
-
-Do not:
-
-```text
-create governance production code
-extend IDs for gate/auth/hdec
-modify lifecycle public API
-create governance tests as implementation
-create ADR-0004 as if accepted implementation exists
-modify CURRENT_BASELINE to claim Slice 0.4 capability
-begin Slice 0.5
-```
-
-Design review and design-document correction are permitted under the current design authorization.
-
----
-
-# 55. Summary
-
-The resulting governance model is:
+The governance model is:
 
 ```text
                     Slice
@@ -2301,24 +2414,28 @@ The resulting governance model is:
         │             │             │
  artifacts        authorization    policy
  evidence         baseline/gate    approval
- dependencies     revision          choice
+ dependencies     revision          choice-set
  evaluation                         hard stop
- quality                            review
+ quality                            decision basis
  scope/risk/toolchain
         └─────────────┬─────────────┘
                       ▼
               GateEvaluation
             RED / YELLOW / GREEN
                       │
-                  if GREEN
+              at most one GREEN
+                      │
+                  if selected
                       ▼
               execute_handover
+                      │
+          temporal authority check
                       │
                       ▼
         Slice 0.3 transition_phase
 ```
 
-The design deliberately keeps:
+The design deliberately preserves:
 
 ```text
 authorization ≠ lifecycle state
@@ -2329,10 +2446,11 @@ gate evaluation ≠ persistence
 risk flag ≠ risk engine
 quality evidence ≠ quality execution
 handover gate ≠ agent assignment
+canonical ordering ≠ path selection
 ```
 
 The central invariant is:
 
 > **A structurally possible transition is not necessarily permissible, and a permissible transition is not necessarily autonomous.**
 
-Slice 0.4 makes that distinction deterministic.
+Revision 2 additionally guarantees that execution-time human authority applies only to the exact current decision basis and, for human choice, the exact choice set the human was presented.
