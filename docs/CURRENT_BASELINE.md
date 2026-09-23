@@ -75,7 +75,17 @@ policies/DOCUMENTATION_GOVERNANCE.md
 policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md
 ```
 
-The Slice 0.1 development memory and ADR-0001 are locked accepted records. Slice 0.2 design documentation is present, but its presence does not authorize implementation. Slice 0.3 remains a design record and is not implemented product behavior.
+Slice 0.1 locked records:
+
+```text
+docs/slices/SLICE_0_1_REPOSITORY_FOUNDATION_MEMORY.md
+docs/slices/SLICE_0_1_REPOSITORY_FOUNDATION_MEMORY_AMENDMENT_001.md
+docs/decisions/ADR-0001-runtime-and-tooling-baseline.md
+```
+
+The amendment is to be understood together with the original locked memory. It corrects only the stated decision range and does not change the accepted implementation SHA.
+
+Slice 0.2 design documentation is present, but its presence does not authorize implementation. Slice 0.3 remains a design record and is not implemented product behavior.
 
 ---
 
