@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** SLICE 0.3 IMPLEMENTATION CANDIDATE — PENDING INDEPENDENT EVALUATION
+**Status:** SLICE 0.3 — COMPLETE / ACCEPTED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -10,16 +10,25 @@
 # 1. Accepted Project Baseline
 
 ```text
-Accepted Slice: 0.2 — Core Domain Model
-Accepted implementation SHA: cdf5b1fedc92762095f38d684d4655aaa6bf57f0
-Accepted repository baseline on main: cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd
-Independent evaluation: RLY-S02-EVAL-001 — ACCEPT
-Human acceptance: RLY-S02-ACCEPT-001
-Repository: cschrupp/relay
+Accepted Slice: 0.3 — State Machine and Lifecycle Semantics
+Accepted implementation result SHA: 7a8d2ad37ef6816335175ca0ccdc37e9c1b13612
+Accepted technical implementation commit: 26e6c300f6b266f811e09084402fe2182d693f0f
+Accepted Design Revision 4 SHA: 6c49a90aa819d66db2a44d0b933e9c40ceb9e320
+Independent evaluation: RLY-S03-EVAL-002 — ACCEPT
+Human acceptance: Explicit instruction “authorized proceed” after evaluation
+Repository branch: main
 Visibility: public — human-authorized deviation
 ```
 
-The accepted Slice 0.2 technical SHA remains distinct from the acceptance-record baseline commit. Slice 0.1 remains accepted at implementation SHA `e8598ae5ffb046d4131e04655a0c063ff1e41ccc`.
+The accepted result SHA identifies the implementation candidate with the exact accepted Revision 4 design in its ancestry. The later acceptance-record commit is separate provenance and does not replace that result SHA.
+
+Earlier accepted results remain:
+
+```text
+Slice 0.1 implementation SHA: e8598ae5ffb046d4131e04655a0c063ff1e41ccc
+Slice 0.2 implementation SHA: cdf5b1fedc92762095f38d684d4655aaa6bf57f0
+Pre-Slice-0.3 accepted repository baseline: cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd
+```
 
 # 2. Engineering Foundation
 
@@ -39,44 +48,42 @@ CI:                  GitHub Actions
 
 # 3. Accepted Capability
 
-`main` contains the Slice 0.1 engineering foundation and accepted Slice 0.2 core domain model:
+The accepted project includes the Slice 0.1 engineering foundation, Slice 0.2 core domain model, and Slice 0.3 deterministic lifecycle state machine.
+
+Slice 0.2 vocabulary:
 
 ```text
 ActorRef, RepositoryRef, CommitRef, Project, Baseline, Slice,
 ScopeSpec, AcceptanceCriterion, Artifact, Decision, Evidence
 ```
 
-In the accepted baseline, `Slice` has no lifecycle state. The lifecycle implementation below is a candidate on a separate branch until evaluation and acceptance.
-
-The accepted baseline still has no authorization model, handover gates, persistence, `.relay/` schema, provider integration, agent execution, or UI.
-
-# 4. Slice 0.3 Authority
-
-Slice 0.3 Design Revision 4 is the governing design, at `6c49a90aa819d66db2a44d0b933e9c40ceb9e320`. Independent design review `RLY-S03-DESIGN-EVAL-002` returned ACCEPT. Human Authority accepted Revision 4 and revalidated `RLY-S03-AUTH-001` against it on 2026-09-23.
-
-The design and authorization permit lifecycle implementation only. Slice 0.4 and later implementation remain unauthorized.
-
-# 5. Slice 0.3 Candidate
+Slice 0.3 adds:
 
 ```text
-Candidate slice: 0.3 — State Machine and Lifecycle Semantics
-Candidate branch: slice/0.3-lifecycle-state-machine
-Authorized implementation baseline: cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd
-Governing design SHA: 6c49a90aa819d66db2a44d0b933e9c40ceb9e320
-Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
-Candidate result SHA: Reported in the implementation handover and Git; not embedded in its own commit.
+LifecyclePhase, LifecycleValidity, BlockageStatus, BlockReason,
+Blockage, SliceLifecycle, immutable lifecycle events, typed lifecycle errors,
+explicit deterministic transitions, strict event replay
 ```
 
-The candidate adds immutable lifecycle snapshots and events, the explicit structural transition engine, blocker and staleness operations, event replay, tests, and Slice 0.3 documentation. It introduces no authorization, handover gates, traffic lights, hard-stop behavior, artifact/dependency evaluation, persistence, integrations, agents, providers, API, or UI.
+Lifecycle state remains separate from `Slice`. The engine models structural lifecycle semantics only; it does not decide whether a transition is authorized.
 
-The candidate branch does not replace the accepted project baseline on `main` before acceptance.
+The accepted project still has no authorization model, handover gates, traffic lights, hard-stop enforcement mechanism, persistence, `.relay/` schema or artifact registry, GitHub product integration, providers, agent execution, API, or UI. Artifact-governance registry semantics remain deferred to Slice 0.6.
 
-# 6. Next Slice and Hard Stop
+# 4. Accepted Slice 0.3 Records
+
+```text
+Accepted design: docs/slices/SLICE_0_3_STATE_MACHINE_AND_LIFECYCLE.md — Revision 4
+Accepted development memory: docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY.md — LOCKED
+Accepted decision: docs/decisions/ADR-0003-lifecycle-state-decomposition.md — LOCKED / ACCEPTED
+Architecture: docs/architecture/LIFECYCLE_STATE_MACHINE.md
+```
+
+# 5. Next Slice and Hard Stop
 
 ```text
 Next implementation slice: NOT AUTHORIZED
-Slice 0.4: DESIGN/IMPLEMENTATION AUTHORITY NOT GRANTED
-Hard stop: ACTIVE after Slice 0.3 acceptance
+Slice 0.4: IMPLEMENTATION NOT AUTHORIZED
+Hard stop: ACTIVE
 ```
 
-After Slice 0.3 acceptance, stop. Do not begin Slice 0.4 or later work without new human authorization.
+Do not begin Slice 0.4 or later work without new explicit Human Authority authorization. The presence of future design documents does not grant implementation authority.

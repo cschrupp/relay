@@ -1,7 +1,7 @@
 # Slice 0.3 — State Machine and Lifecycle Semantics — Development Memory
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING EVALUATION
-**Record state:** WORKING
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
 **Implementation authorization:** `RLY-S03-AUTH-001`, revalidated against Revision 4 by Human Authority on 2026-09-23
 **Accepted project baseline:** `cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd`
 **Accepted Slice 0.2 implementation SHA:** `cdf5b1fedc92762095f38d684d4655aaa6bf57f0`
@@ -9,7 +9,11 @@
 **Independent design review:** `RLY-S03-DESIGN-EVAL-002 — ACCEPT`
 **Human design acceptance and authorization revalidation:** Explicit instruction received 2026-09-23
 **Implementation branch:** `slice/0.3-lifecycle-state-machine`
-**Candidate result SHA:** Reported in the implementation handover and Git; not embedded in its own commit.
+**Accepted result SHA:** `7a8d2ad37ef6816335175ca0ccdc37e9c1b13612`
+**Technical implementation commit:** `26e6c300f6b266f811e09084402fe2182d693f0f`
+**Governance provenance merge:** `7a8d2ad37ef6816335175ca0ccdc37e9c1b13612`
+**Independent evaluation:** `RLY-S03-EVAL-002 — ACCEPT`
+**Human acceptance:** Explicit instruction “authorized proceed” following `RLY-S03-EVAL-002`, received 2026-09-23
 
 ## Objective and scope
 
@@ -78,7 +82,7 @@ uv run pyright: PASS
 uv run pytest: PASS — 254 passed
 uv build: PASS — source distribution and wheel built
 git diff --check: PASS
-GitHub Actions: Result recorded in the implementation handover.
+GitHub Actions: PASS — run `35909021733` on accepted result `7a8d2ad37ef6816335175ca0ccdc37e9c1b13612`.
 ```
 
 ## Acceptance matrix evidence
@@ -96,12 +100,12 @@ A44–A58: Explicit evt_ identity, cancellation, successor retention, reason/tim
 
 ## Deviations and limitations
 
-Deviations from accepted Design Revision 4: none identified.
+Deviations from accepted Design Revision 4: none identified. Evaluator finding `RLY-S03-EVAL-F001` was resolved by integrating the exact accepted Revision 4 design commit into the candidate history; no lifecycle code or tests changed during that correction.
 
 Lifecycle events are immutable values returned by pure operations; this slice does not persist them or define storage/transport encoding. Replay operates on typed event objects, as authorized; event persistence remains out of scope.
 
 ## Hard stop and next-slice status
 
-This record remains working until Slice 0.3 is accepted. At acceptance it must be finalized and locked under Documentation Governance. Do not edit it in place after locking.
+This record is finalized and LOCKED under Documentation Governance. Do not edit it in place; any later correction requires an amendment or superseding record.
 
-After Slice 0.3 acceptance, HARD STOP is active. Slice 0.4 implementation is NOT AUTHORIZED. Design presence does not grant implementation authority.
+Slice 0.3 is COMPLETE / ACCEPTED. HARD STOP is ACTIVE. Slice 0.4 implementation is NOT AUTHORIZED. Design presence does not grant implementation authority.

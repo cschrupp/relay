@@ -1,6 +1,6 @@
 # ADR-0003 — Lifecycle State Decomposition
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
+**Status:** LOCKED / ACCEPTED
 **Date:** September 2026
 **Governing design:** Slice 0.3 Revision 4, `6c49a90aa819d66db2a44d0b933e9c40ceb9e320`
 
