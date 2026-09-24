@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Slice 0.3 accepted baseline; Slice 0.4 ratified candidate pending final evaluation and acceptance
+**Status:** Slice 0.4 accepted baseline; hard stop active
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -10,23 +10,27 @@
 # 1. Accepted Project Baseline
 
 ```text
-Accepted Slice: 0.3 — State Machine and Lifecycle Semantics
-Accepted implementation result SHA: 7a8d2ad37ef6816335175ca0ccdc37e9c1b13612
-Accepted technical implementation commit: 26e6c300f6b266f811e09084402fe2182d693f0f
-Accepted Design Revision 4 SHA: 6c49a90aa819d66db2a44d0b933e9c40ceb9e320
-Independent evaluation: RLY-S03-EVAL-002 — ACCEPT
-Human acceptance: RLY-S03-ACCEPT-001 — explicit instruction “proceed”
+Accepted Slice: 0.4 — Handover Gates and Traffic Lights
+Accepted Slice 0.4 design: Revision 2
+Accepted design SHA: 09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd
+Accepted technical implementation SHA: babd0980ed00a8ef686f510075e2848fd84831b5
+Ratified original candidate: d740b1712951fdb7543c459541a7c446b407d07e
+Accepted Slice 0.4 result: 493571dc13cb5f4afb27367f5f7e1528b0448041
+Independent evaluation: RLY-S04-EVAL-002 — ACCEPT
+Human acceptance: RLY-S04-ACCEPT-001
 Repository branch: main
 Visibility: public — human-authorized deviation
 ```
 
-The accepted result SHA identifies the implementation candidate with the exact accepted Revision 4 design in its ancestry. The later acceptance-record commit is separate provenance and does not replace that result SHA.
+The accepted Slice 0.4 result SHA identifies the evaluated candidate. This finalization commit is an acceptance record and does not replace the accepted result SHA.
 
 Earlier accepted results remain:
 
 ```text
 Slice 0.1 implementation SHA: e8598ae5ffb046d4131e04655a0c063ff1e41ccc
 Slice 0.2 implementation SHA: cdf5b1fedc92762095f38d684d4655aaa6bf57f0
+Slice 0.3 implementation SHA: 7a8d2ad37ef6816335175ca0ccdc37e9c1b13612
+Slice 0.3 technical implementation commit: 26e6c300f6b266f811e09084402fe2182d693f0f
 Pre-Slice-0.3 accepted repository baseline: cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd
 ```
 
@@ -48,7 +52,7 @@ CI:                  GitHub Actions
 
 # 3. Accepted Capability
 
-The accepted project includes the Slice 0.1 engineering foundation, Slice 0.2 core domain model, and Slice 0.3 deterministic lifecycle state machine.
+The accepted project includes the Slice 0.1 engineering foundation, Slice 0.2 core domain model, Slice 0.3 deterministic lifecycle state machine, and Slice 0.4 handover governance.
 
 Slice 0.2 vocabulary:
 
@@ -57,17 +61,32 @@ ActorRef, RepositoryRef, CommitRef, Project, Baseline, Slice,
 ScopeSpec, AcceptanceCriterion, Artifact, Decision, Evidence
 ```
 
-Slice 0.3 adds:
+Slice 0.3 adds deterministic lifecycle values, immutable lifecycle events, typed lifecycle errors, explicit transitions, and strict event replay. Lifecycle state remains separate from `Slice`.
+
+Slice 0.4 adds:
 
 ```text
-LifecyclePhase, LifecycleValidity, BlockageStatus, BlockReason,
-Blockage, SliceLifecycle, immutable lifecycle events, typed lifecycle errors,
-explicit deterministic transitions, strict event replay
+deterministic handover gates
+RED / YELLOW / GREEN traffic-light evaluation
+validity / authority / autonomy separation
+durable AuthorizationGrant
+execution-time HumanApprovalDecision
+set-bound HumanChoiceDecision
+governance_revision decision-basis freshness
+hard-stop governance
+artifact/evidence/dependency prerequisites
+evaluation-outcome routing
+quality evidence
+change-surface review
+risk review
+toolchain-change blocking
+canonical reason/result ordering
+unique executable-path enforcement
+eventless lifecycle transition validation
+governed lifecycle execution with authority-causality checks
 ```
 
-Lifecycle state remains separate from `Slice`. The engine models structural lifecycle semantics only; it does not decide whether a transition is authorized.
-
-The accepted project still has no authorization model, handover gates, traffic lights, hard-stop enforcement mechanism, persistence, `.relay/` schema or artifact registry, GitHub product integration, providers, agent execution, API, or UI. Artifact-governance registry semantics remain deferred to Slice 0.6.
+Gate evaluation is deterministic and consumes explicit facts. Governed execution reevaluates current context before delegating to the lifecycle transition operation.
 
 # 4. Accepted Slice 0.3 Records
 
@@ -81,43 +100,49 @@ Architecture: docs/architecture/LIFECYCLE_STATE_MACHINE.md
 
 The acceptance-record commit is `cad415cebdd0972d429567558d79a8c1f31514d4`. The amendment clarifies the exact Human Authority instruction and is read together with the locked memory.
 
-# 5. Slice 0.4 Candidate and Authority
+# 5. Accepted Slice 0.4 Records and Process Exception
 
 ```text
-Accepted Slice 0.4 design: Revision 2
-Accepted design SHA: 09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd
-Implementation scope: RLY-S04-IMPLEMENT-SCOPE-001
-Pre-execution implementation authorization: NOT ESTABLISHED
-Process exception: implementation began before explicit Human Authority authorization
-Independent evaluation: RLY-S04-EVAL-001 — TECHNICAL PASS / ESCALATE_CONTRACT for authority provenance
-Human Authority ratification: RLY-S04-RATIFY-001
-Ratified candidate: d740b1712951fdb7543c459541a7c446b407d07e
-Technical implementation SHA: babd0980ed00a8ef686f510075e2848fd84831b5
-Candidate branch: slice/0.4-handover-gates
-Candidate status: IMPLEMENTATION COMPLETE / RATIFIED / PENDING FINAL INDEPENDENT EVALUATION AND HUMAN ACCEPTANCE
-Candidate result SHA: recorded in the implementation handover
+Accepted design: docs/slices/SLICE_0_4_HANDOVER_GATES_AND_TRAFFIC_LIGHTS.md — Revision 2
+Accepted development memory: docs/slices/SLICE_0_4_HANDOVER_GATES_MEMORY.md — LOCKED / ACCEPTED
+Accepted decision: docs/decisions/ADR-0004-handover-governance-separation.md — LOCKED / ACCEPTED
+Architecture: docs/architecture/HANDOVER_GOVERNANCE.md
+Human ratification: RLY-S04-RATIFY-001
 ```
 
-The candidate is not yet an accepted project baseline. The accepted baseline remains Slice 0.3 on `main` at the accepted provenance commit below. `RLY-S04-IMPLEMENT-SCOPE-001` defined scope but did not grant execution authority. Slice 0.4 implementation began before explicit Human Authority authorization was established. Independent technical evaluation found no technical defect and escalated the authority-provenance deviation; Human Authority acknowledged and ratified the existing candidate under the one-time exception `RLY-S04-RATIFY-001`. The historical sequence remains unchanged.
+Implementation began before explicit pre-execution authorization. Human Authority ratified that one-time deviation through `RLY-S04-RATIFY-001` after independent technical evaluation. The ratification records the actual sequence; it does not claim prior authorization existed or rewrite history.
 
-Slice 0.4 candidate records:
+The accepted Slice 0.4 result is `493571dc13cb5f4afb27367f5f7e1528b0448041`; its technical implementation is `babd0980ed00a8ef686f510075e2848fd84831b5`. The finalization commit is separate acceptance provenance and does not replace either SHA.
+
+# 6. Deferred Capability
+
+Relay does not yet provide:
 
 ```text
-Design: docs/slices/SLICE_0_4_HANDOVER_GATES_AND_TRAFFIC_LIGHTS.md — Revision 2
-Architecture: docs/architecture/HANDOVER_GOVERNANCE.md — candidate
-Development memory: docs/slices/SLICE_0_4_HANDOVER_GATES_MEMORY.md — pending evaluation, not locked
-ADR-0004: docs/decisions/ADR-0004-handover-governance-separation.md — pending acceptance, not locked
+persistent governance history
+database/event store
+GitHub product integration
+artifact registry/discovery
+agent execution
+AgentRole / AgentAssignment
+handover packet construction
+notifications
+UI / board
+REST/API
+RBAC / identity
+risk scoring
+quality-command execution
+provider/model integration
 ```
 
-The accepted Slice 0.3 capability statement above describes `main`; candidate governance code is not promoted or accepted by this living projection.
+Artifact-governance registry semantics remain deferred to Slice 0.6.
 
-# 6. Next Slice and Hard Stop
+# 7. Next Slice and Hard Stop
 
 ```text
-Slice 0.4: IMPLEMENTATION COMPLETE — ratified candidate pending final independent evaluation and Human Authority acceptance
-Next implementation slice: Slice 0.5 NOT AUTHORIZED
-Further Slice 0.4 implementation: NOT AUTHORIZED by this ratification
-Post-Slice-0.4 hard stop: ACTIVE after submission
+Slice 0.4: COMPLETE / ACCEPTED
+Next slice: Slice 0.5 NOT AUTHORIZED
+Hard stop: ACTIVE
 ```
 
-Do not begin Slice 0.5 or later work without new explicit Human Authority authorization. The presence of future design documents does not grant implementation authority.
+Do not begin Slice 0.5 design or implementation without new explicit Human Authority authorization. The presence of future design documents does not grant authority.

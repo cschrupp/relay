@@ -1,9 +1,9 @@
 # ADR-0004 — Handover Governance Separation
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
+**Status:** LOCKED / ACCEPTED
 **Decision date:** 2026-09-23
 **Authority:** Slice 0.4 Design Revision 2 (`09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd`)
-**Implementation state:** Candidate implementation complete; pending independent evaluation
+**Implementation state:** Accepted
 
 ## Context
 
@@ -32,4 +32,6 @@ Persistence, notifications, agents, artifact discovery, RBAC, GitHub integration
 
 ## Acceptance
 
-This ADR remains PROPOSED / VALIDATED / PENDING ACCEPTANCE until Human Authority accepts Slice 0.4. It must not be locked before that decision.
+Human acceptance: `RLY-S04-ACCEPT-001`
+
+Accepted implementation result: `493571dc13cb5f4afb27367f5f7e1528b0448041`

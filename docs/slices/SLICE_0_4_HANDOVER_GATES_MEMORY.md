@@ -1,22 +1,27 @@
 # Slice 0.4 Development Memory — Handover Gates and Traffic Lights
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING EVALUATION
-**Record state:** WORKING — NOT LOCKED
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
 **Accepted project baseline:** Slice 0.3, `e3a8501e0e2a410d04e2e95fd566b01622535016`
 **Authorized design:** Slice 0.4 Revision 2, `09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd`
 **Independent design review:** `RLY-S04-DESIGN-EVAL-003` — ACCEPT
+**Technical implementation:** `babd0980ed00a8ef686f510075e2848fd84831b5`
+**Original implementation candidate:** `d740b1712951fdb7543c459541a7c446b407d07e`
 **Implementation scope:** `RLY-S04-IMPLEMENT-SCOPE-001`
 **Pre-execution implementation authorization:** NOT ESTABLISHED
 **Independent technical evaluation:** `RLY-S04-EVAL-001` — TECHNICAL PASS / ESCALATE_CONTRACT for authority provenance
 **Human Authority ratification:** `RLY-S04-RATIFY-001`
 **Ratified candidate:** `d740b1712951fdb7543c459541a7c446b407d07e`
+**Corrected accepted candidate:** `493571dc13cb5f4afb27367f5f7e1528b0448041`
+**Final independent evaluation:** `RLY-S04-EVAL-002` — ACCEPT
+**Human acceptance:** `RLY-S04-ACCEPT-001`
 **Candidate branch:** `slice/0.4-handover-gates`
 
 ## Governance chronology and exception
 
 `RLY-S04-IMPLEMENT-SCOPE-001` defined the permitted implementation boundary but did not grant execution authority. Implementation began before explicit Human Authority authorization was established. This is a historical governance-process deviation; it is not erased or backdated.
 
-Independent evaluation `RLY-S04-EVAL-001` found the technical implementation conformant and escalated the missing authorization provenance. Human Authority acknowledged the deviation and ratified the existing candidate through the one-time exception `RLY-S04-RATIFY-001`, permitting continued Slice 0.4 acceptance processing. The ratified candidate is `d740b1712951fdb7543c459541a7c446b407d07e`; its technical implementation commit remains `babd0980ed00a8ef686f510075e2848fd84831b5`.
+Independent evaluation `RLY-S04-EVAL-001` found the technical implementation conformant and escalated the missing authorization provenance. Human Authority acknowledged the deviation and ratified the existing candidate through the one-time exception `RLY-S04-RATIFY-001`, permitting continued Slice 0.4 acceptance processing. The original ratified candidate is `d740b1712951fdb7543c459541a7c446b407d07e`; its technical implementation commit remains `babd0980ed00a8ef686f510075e2848fd84831b5`. The corrected candidate `493571dc13cb5f4afb27367f5f7e1528b0448041` was accepted following `RLY-S04-EVAL-002` and Human Authority acceptance `RLY-S04-ACCEPT-001`.
 
 This ratification does not rewrite the historical sequence. It records a one-time Human Authority exception after independent technical evaluation. Future implementation work remains subject to explicit pre-execution authorization.
 
@@ -38,7 +43,7 @@ Revision 2 resolves the findings: gate baseline rules short-circuit; output orde
 - Added immutable versioned governance models, typed reason codes, three governance errors, deterministic `evaluate_handover_gates()`, and re-evaluating `execute_handover()`.
 - Exposed eventless `validate_phase_transition()` through the lifecycle API, reusing the same private structural check called by `transition_phase()`.
 - Added unit coverage in `tests/unit/test_governance.py`; no dependency or infrastructure additions.
-- Added `docs/architecture/HANDOVER_GOVERNANCE.md` and this memory; ADR-0004 remains pending acceptance.
+- Added `docs/architecture/HANDOVER_GOVERNANCE.md` and this memory; ADR-0004 is now locked and accepted.
 
 ## Change surface
 
@@ -58,11 +63,11 @@ uv build                         PASS — sdist and wheel built
 git diff --check                 PASS
 ```
 
-GitHub Actions is verified on the exact submitted result SHA; the run ID, conclusion, and head SHA are recorded in the RHP-1 implementation handover. This memory does not claim independent acceptance.
+GitHub Actions passed on the exact submitted result SHA; the run ID, conclusion, and head SHA are recorded in the RHP-1 implementation handover. Independent evaluation `RLY-S04-EVAL-002` returned ACCEPT, and Human Authority accepted the candidate through `RLY-S04-ACCEPT-001`.
 
 ## Acceptance matrix evidence
 
-All A01–A83 are mandatory and are mapped to implementation/schema inspection and tests in `tests/unit/test_governance.py`, existing lifecycle/domain tests, and GitHub Actions. In particular, tests cover immutable/versioned models, authorization and decision binding, exact choice-set staleness, baseline short-circuit behavior, canonical ordering and reason cardinality, dependencies/evaluation/quality/change-surface/risk/toolchain, hard stops, multiple-GREEN rejection, temporal causality, and governed transition delegation. Independent evaluation must verify the complete matrix.
+All A01–A83 were evaluated against implementation/schema inspection, tests in `tests/unit/test_governance.py`, existing lifecycle/domain tests, and GitHub Actions. In particular, evidence covers immutable/versioned models, authorization and decision binding, exact choice-set staleness, baseline short-circuit behavior, canonical ordering and reason cardinality, dependencies/evaluation/quality/change-surface/risk/toolchain, hard stops, multiple-GREEN rejection, temporal causality, and governed transition delegation. Independent evaluation `RLY-S04-EVAL-002` accepted the candidate.
 
 ## Deferred work and exclusions
 
@@ -74,4 +79,4 @@ The application supplies current facts and is responsible for advancing `governa
 
 ## Governance state and hard stop
 
-Candidate implementation status is pending independent evaluation. Human acceptance and baseline promotion have not occurred. The accepted project baseline remains Slice 0.3 on `main`; Slice 0.4 candidate is separate. After submission, stop. Slice 0.5 is NOT AUTHORIZED.
+Slice 0.4 is COMPLETE / ACCEPTED. The accepted Slice 0.4 result is `493571dc13cb5f4afb27367f5f7e1528b0448041`; the later acceptance-record commit does not replace this result. Slice 0.5 is NOT AUTHORIZED. The hard stop is ACTIVE.
