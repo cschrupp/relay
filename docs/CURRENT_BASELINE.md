@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Slice 0.3 accepted baseline; Slice 0.4 implementation candidate pending evaluation
+**Status:** Slice 0.3 accepted baseline; Slice 0.4 ratified candidate pending final evaluation and acceptance
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -86,13 +86,19 @@ The acceptance-record commit is `cad415cebdd0972d429567558d79a8c1f31514d4`. The 
 ```text
 Accepted Slice 0.4 design: Revision 2
 Accepted design SHA: 09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd
-Implementation authorization: RLY-S04-IMPLEMENT-SCOPE-001
+Implementation scope: RLY-S04-IMPLEMENT-SCOPE-001
+Pre-execution implementation authorization: NOT ESTABLISHED
+Process exception: implementation began before explicit Human Authority authorization
+Independent evaluation: RLY-S04-EVAL-001 — TECHNICAL PASS / ESCALATE_CONTRACT for authority provenance
+Human Authority ratification: RLY-S04-RATIFY-001
+Ratified candidate: d740b1712951fdb7543c459541a7c446b407d07e
+Technical implementation SHA: babd0980ed00a8ef686f510075e2848fd84831b5
 Candidate branch: slice/0.4-handover-gates
-Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Candidate status: IMPLEMENTATION COMPLETE / RATIFIED / PENDING FINAL INDEPENDENT EVALUATION AND HUMAN ACCEPTANCE
 Candidate result SHA: recorded in the implementation handover
 ```
 
-The candidate is not yet an accepted project baseline. The accepted baseline remains Slice 0.3 on `main` at the accepted provenance commit below. Slice 0.4 is being implemented under explicit Human Authority authorization against the exact accepted Revision 2 design.
+The candidate is not yet an accepted project baseline. The accepted baseline remains Slice 0.3 on `main` at the accepted provenance commit below. `RLY-S04-IMPLEMENT-SCOPE-001` defined scope but did not grant execution authority. Slice 0.4 implementation began before explicit Human Authority authorization was established. Independent technical evaluation found no technical defect and escalated the authority-provenance deviation; Human Authority acknowledged and ratified the existing candidate under the one-time exception `RLY-S04-RATIFY-001`. The historical sequence remains unchanged.
 
 Slice 0.4 candidate records:
 
@@ -108,8 +114,9 @@ The accepted Slice 0.3 capability statement above describes `main`; candidate go
 # 6. Next Slice and Hard Stop
 
 ```text
-Slice 0.4: IMPLEMENTATION AUTHORIZED — candidate pending evaluation
+Slice 0.4: IMPLEMENTATION COMPLETE — ratified candidate pending final independent evaluation and Human Authority acceptance
 Next implementation slice: Slice 0.5 NOT AUTHORIZED
+Further Slice 0.4 implementation: NOT AUTHORIZED by this ratification
 Post-Slice-0.4 hard stop: ACTIVE after submission
 ```
 

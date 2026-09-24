@@ -5,8 +5,20 @@
 **Accepted project baseline:** Slice 0.3, `e3a8501e0e2a410d04e2e95fd566b01622535016`
 **Authorized design:** Slice 0.4 Revision 2, `09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd`
 **Independent design review:** `RLY-S04-DESIGN-EVAL-003` — ACCEPT
-**Implementation authorization:** `RLY-S04-IMPLEMENT-SCOPE-001`
+**Implementation scope:** `RLY-S04-IMPLEMENT-SCOPE-001`
+**Pre-execution implementation authorization:** NOT ESTABLISHED
+**Independent technical evaluation:** `RLY-S04-EVAL-001` — TECHNICAL PASS / ESCALATE_CONTRACT for authority provenance
+**Human Authority ratification:** `RLY-S04-RATIFY-001`
+**Ratified candidate:** `d740b1712951fdb7543c459541a7c446b407d07e`
 **Candidate branch:** `slice/0.4-handover-gates`
+
+## Governance chronology and exception
+
+`RLY-S04-IMPLEMENT-SCOPE-001` defined the permitted implementation boundary but did not grant execution authority. Implementation began before explicit Human Authority authorization was established. This is a historical governance-process deviation; it is not erased or backdated.
+
+Independent evaluation `RLY-S04-EVAL-001` found the technical implementation conformant and escalated the missing authorization provenance. Human Authority acknowledged the deviation and ratified the existing candidate through the one-time exception `RLY-S04-RATIFY-001`, permitting continued Slice 0.4 acceptance processing. The ratified candidate is `d740b1712951fdb7543c459541a7c446b407d07e`; its technical implementation commit remains `babd0980ed00a8ef686f510075e2848fd84831b5`.
+
+This ratification does not rewrite the historical sequence. It records a one-time Human Authority exception after independent technical evaluation. Future implementation work remains subject to explicit pre-execution authorization.
 
 ## Objective and scope
 
