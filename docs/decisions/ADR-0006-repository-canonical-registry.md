@@ -1,9 +1,12 @@
 # ADR-0006 — Repository Canonical Registry
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
+**Status:** LOCKED / ACCEPTED
 **Decision date:** 2026-09-26
 **Authority:** Slice 0.6 Design Revision 4, accepted at `adc3164c41b847543181e106c37c0dbad82c7c6a`
-**Implementation state:** Complete; pending independent evaluation and Human Authority acceptance
+**Accepted design:** Slice 0.6 Design Revision 4 — `adc3164c41b847543181e106c37c0dbad82c7c6a`
+**Accepted implementation result:** `1903017dd7832dc21f0554be762bac1002891a89`
+**Independent evaluation:** `RLY-S06-EVAL-001` — ACCEPT
+**Human acceptance:** `RLY-S06-ACCEPT-001`
 
 ## Context
 
@@ -28,6 +31,8 @@ Humans and future automation can resolve explicit canonical pointers against a c
 Accepted design: Slice 0.6 Revision 4 — adc3164c41b847543181e106c37c0dbad82c7c6a
 Design acceptance: RLY-S06-DESIGN-ACCEPT-001
 Implementation authorization: RLY-S06-AUTH-001
-Implementation result: pending independent evaluation
-Human implementation acceptance: pending
+Accepted implementation result: 1903017dd7832dc21f0554be762bac1002891a89
+Independent evaluation: RLY-S06-EVAL-001 — ACCEPT
+Human implementation acceptance: RLY-S06-ACCEPT-001
+Decision state: LOCKED / ACCEPTED
 ```

@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Slice 0.5 accepted baseline
+**Status:** Phase 0 complete — Slice 0.6 accepted
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -10,17 +10,18 @@
 # 1. Accepted Project Baseline
 
 ```text
-Accepted Slice: 0.5 — Event and Persistence Model
-Accepted design: Slice 0.5 Design Revision 2
-Accepted design SHA: 2d2822644209e1002e77c39ab8f06757c583103b
-Accepted implementation result: d3ee53a572483e0bd96dbac2554bfad24c06136a
-Independent evaluation: RLY-S05-EVAL-002 — ACCEPT
-Human acceptance: RLY-S05-ACCEPT-001
+Accepted Slice: 0.6 — .relay/ Repository Contract
+Accepted project baseline before Slice 0.6: 442ed7657fed8d58974bd4e16aeb8a9fca495ceb
+Accepted design: Slice 0.6 Design Revision 4
+Accepted design SHA: adc3164c41b847543181e106c37c0dbad82c7c6a
+Accepted implementation result: 1903017dd7832dc21f0554be762bac1002891a89
+Independent evaluation: RLY-S06-EVAL-001 — ACCEPT
+Human acceptance: RLY-S06-ACCEPT-001
 Repository branch: main
 Visibility: public — human-authorized deviation
 ```
 
-The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.5 result SHA.
+The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.6 result SHA. The preceding accepted baseline was Slice 0.5.
 
 Slice 0.5 lineage:
 
@@ -126,6 +127,8 @@ persisted governed handover execution
 restart recovery and integrity verification
 ```
 
+Slice 0.6 adds the schema-v1 `.relay/registry.json` repository contract with explicit canonical keys and pointers, full `RepositoryRef` binding, strict immutable models, duplicate-key rejection, normative ordering, raw-byte SHA-256 and safe-path validation, historical supersession and field freezing, canonical-key persistence, living-projection advancement, pure transition validation, and explicit observation-commit provenance. Resolution returns the exact registry revision and observation `CommitRef`; it does not materialize or persist a snapshot-varying Slice 0.2 `Artifact`.
+
 # 4. Accepted Slice 0.3 Records
 
 ```text
@@ -157,12 +160,15 @@ The accepted Slice 0.4 result is `493571dc13cb5f4afb27367f5f7e1528b0448041`; its
 Relay does not yet provide:
 
 ```text
-GitHub product integration
-artifact registry/discovery
-canonical artifact discovery
+GitHub API product integration
+clone / fetch / pull / push capability
+branch, commit, or PR creation capability
+baseline/worktree proof
+repository registration service
+stable registry-revision → core Artifact CommitRef binding
+Slice 0.5 Artifact persistence from repository observations
+repository↔SQLite synchronization
 canonical gate-set discovery
-repository synchronization
-`.relay/` repository contract
 agent execution
 AgentRole / AgentAssignment
 handover packet construction
@@ -170,6 +176,7 @@ notifications
 UI / board
 REST/API
 RBAC / identity
+secrets storage
 risk scoring
 quality-command execution
 provider/model integration
@@ -177,45 +184,41 @@ authorization expiry/revocation
 cloud database
 backup/replication product
 full event sourcing
+cloud repository control plane
+Phase 1 / Slice 1.1
 ```
 
-The future UI requirement remains tracked separately in GitHub Issue #1: “Future UI: governance handover cards and structured human decision controls.” It was not implemented in Slice 0.5. Artifact-governance registry semantics remain deferred to Slice 0.6.
+The future UI requirement remains tracked separately in GitHub Issue #1: “Future UI: governance handover cards and structured human decision controls.” It was not implemented in Slice 0.5 or Slice 0.6.
 
-# 7. Next Slice and Hard Stop
-
-```text
-Slice 0.4: COMPLETE / ACCEPTED
-Slice 0.5: COMPLETE / ACCEPTED
-Accepted project baseline: Slice 0.5
-Accepted project baseline before Slice 0.5: c8006306d48624f13599fe448ef677015fd1829e
-Accepted Slice 0.5 design: Revision 2, 2d2822644209e1002e77c39ab8f06757c583103b
-Initial implementation candidate: 32f92b154d380a77188db36d9ea00c874748664a
-Independent evaluation: RLY-S05-EVAL-001 — REWORK
-Bounded migration rework: 5e387a9d3f123b6333f9b700b22a8f9846a51f0b
-Accepted Slice 0.5 result: d3ee53a572483e0bd96dbac2554bfad24c06136a
-Independent reevaluation: RLY-S05-EVAL-002 — ACCEPT
-Human acceptance: RLY-S05-ACCEPT-001
-Slice 0.5 memory: LOCKED / ACCEPTED
-ADR-0005: LOCKED / ACCEPTED
-Slice 0.6: IMPLEMENTATION AUTHORIZED / CANDIDATE PENDING EVALUATION
-Authorization: RLY-S06-AUTH-001
-Accepted Slice 0.6 design: Revision 4, adc3164c41b847543181e106c37c0dbad82c7c6a
-Phase 1 / Slice 1.1: NOT AUTHORIZED
-Hard stop after Slice 0.6 acceptance: ACTIVE
-```
-
-The initial Slice 0.5 submission received REWORK before the bounded technical corrections and later acceptance. Slice 0.5 remains the accepted project baseline until the Slice 0.6 candidate is independently evaluated and accepted. The Slice 0.6 authorization is limited to its accepted repository-contract design; it does not authorize Phase 1 / Slice 1.1.
-
-# 8. Slice 0.6 Candidate Projection
+# 7. Accepted Slice 0.6 Records
 
 ```text
-Slice: 0.6 — .relay/ Repository Contract
-Accepted project baseline: Slice 0.5
-Accepted design: Revision 4, adc3164c41b847543181e106c37c0dbad82c7c6a
+Accepted project baseline before Slice 0.6: 442ed7657fed8d58974bd4e16aeb8a9fca495ceb
+Accepted Slice 0.6 Design Revision 4: adc3164c41b847543181e106c37c0dbad82c7c6a
+Independent design evaluation: RLY-S06-DESIGN-EVAL-004 — ACCEPT
+Design acceptance: RLY-S06-DESIGN-ACCEPT-001
 Implementation authorization: RLY-S06-AUTH-001
-Candidate branch: slice/0.6-repository-contract
-Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
-Phase 1 / Slice 1.1: NOT AUTHORIZED
+Accepted Slice 0.6 implementation: 1903017dd7832dc21f0554be762bac1002891a89
+Independent implementation evaluation: RLY-S06-EVAL-001 — ACCEPT
+Human implementation acceptance: RLY-S06-ACCEPT-001
+Slice 0.6 development memory: LOCKED / ACCEPTED
+ADR-0006: LOCKED / ACCEPTED
 ```
 
-The implementation-result SHA is reported in the handover and is not embedded in the same commit. Slice 0.6 remains a candidate; no acceptance is claimed here.
+The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.6 implementation SHA.
+
+# 8. Phase-0 Completion and Hard Stop
+
+```text
+Phase 0: COMPLETE
+Slice 0.1: CLOSED / ACCEPTED
+Slice 0.2: CLOSED / ACCEPTED
+Slice 0.3: CLOSED / ACCEPTED
+Slice 0.4: CLOSED / ACCEPTED
+Slice 0.5: CLOSED / ACCEPTED
+Slice 0.6: CLOSED / ACCEPTED
+Next gate: HARD STOP — PROTOCOL REVIEW
+Phase 1: NOT AUTHORIZED
+```
+
+Phase-0 completion does not open Slice 1.1 or authorize Phase-1 work. The hard stop remains active pending protocol review and new explicit Human Authority decisions.
