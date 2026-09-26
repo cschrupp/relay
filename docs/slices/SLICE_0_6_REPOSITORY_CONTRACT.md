@@ -1,6 +1,6 @@
 # Slice 0.6 — `.relay/` Repository Contract
 
-**Document revision:** 3  
+**Document revision:** 4  
 **Status:** REVIEW  
 **Document class:** Lockable design record  
 **Authority:** Human Authority opened Slice 0.6 design after formal Slice 0.5 closure  
@@ -9,6 +9,8 @@
 **Revision 1 review:** `RLY-S06-DESIGN-EVAL-001 — REVISE`  
 **Revision 2:** `0096521a1fd49cb2fb4f093f977ada0193bd22ec`  
 **Revision 2 review:** `RLY-S06-DESIGN-EVAL-002 — REVISE`  
+**Revision 3:** `33fccfce8100b1be3e8e8f14e35b031673d78564`  
+**Revision 3 review:** `RLY-S06-DESIGN-EVAL-003 — REVISE`  
 **Implementation authorization:** NOT GRANTED  
 **Slice 1.1 / GitHub integration:** NOT AUTHORIZED
 
@@ -26,17 +28,14 @@ The governing principle remains:
 
 > **Historical authority is immutable. Current truth is represented through living projections and explicit canonical pointers.**
 
-Revision 3 is a bounded hardening of Revision 2. It resolves exactly:
+Revision 4 is a bounded provenance-semantics correction to Revision 3. It resolves exactly:
 
 ```text
-RLY-S06-DREV2-F005
-STATIC_SUPERSESSION_STATE_AND_LINEAGE_INVARIANTS_INCOMPLETE
-
-RLY-S06-DREV2-F006
-CANONICAL_KEY_REMOVAL_BYPASSES_TRANSITION_SEMANTICS
+RLY-S06-DREV3-F007
+ARTIFACT_ID_CAN_RESOLVE_TO_MULTIPLE_CORE_ARTIFACT_PAYLOADS
 ```
 
-It also clarifies that replacing nonhistorical bytes never reuses an `ArtifactId`.
+It does not reopen F001–F006 and does not change the repository-state architecture.
 
 No architectural redesign is introduced.
 
@@ -68,16 +67,21 @@ minimum sufficient architecture
 
 This slice MUST NOT redefine accepted `Artifact` as a mutable document identity.
 
-An accepted Slice 0.2 `Artifact` identifies exact immutable provenance:
+An accepted Slice 0.2 `Artifact` contains immutable provenance:
 
 ```text
 ArtifactId
+artifact_type
 path
 CommitRef
 content_digest
 ```
 
-Therefore each exact repository artifact revision represented by Slice 0.6 has its own `ArtifactId`.
+Slice 0.5 additionally makes `Artifact` insert-once by stable ID.
+
+Therefore one `ArtifactId` MUST NOT be materialized as multiple unequal Slice-0.2 `Artifact` payloads.
+
+Slice 0.6 registry revisions reuse `ArtifactId` as the stable identity intended for eventual exact core-artifact binding, but Slice 0.6 does NOT synthesize a Slice-0.2 `Artifact` by attaching a snapshot-varying commit to that ID.
 
 Changed exact bytes MUST NOT reuse the same `ArtifactId`.
 
@@ -92,10 +96,12 @@ repository artifact bytes
 +
 .relay/registry.json semantic registry
 +
-explicit source CommitRef supplied by the caller
+explicit observation CommitRef supplied by the caller
 ```
 
 The registry is authoritative for repository artifact semantics and canonical pointers at one repository snapshot.
+
+The supplied `CommitRef` is observation/resolution provenance for that snapshot. It is NOT silently rebound into the accepted Slice-0.2 `Artifact` model under an existing `ArtifactId`.
 
 The physical filesystem tree is never sufficient authority by itself.
 
@@ -218,6 +224,8 @@ The revision number does not replace `ArtifactId`, Git commit, or content digest
 artifact revision ≠ ArtifactId ≠ Git commit
 ```
 
+A registry `ArtifactRevisionRef` is not by itself a complete Slice-0.2 `Artifact` value because schema v1 intentionally does not serialize the immutable core-artifact commit binding.
+
 ---
 
 # 8. D05 — Repository artifact revision metadata
@@ -244,7 +252,7 @@ RepositoryArtifactRevision(
 
 Rules:
 
-- `artifact_id` identifies this exact revision;
+- `artifact_id` identifies this exact repository-contract revision;
 - `revision` is monotonic within an explicit lineage;
 - `path` uses the accepted repository-relative POSIX-path validator;
 - `.relay/registry.json` itself is forbidden as an artifact path;
@@ -254,7 +262,9 @@ Rules:
 - `human_version`, when present, is nonblank;
 - no generic metadata dictionary is permitted.
 
-`source_commit` is intentionally NOT serialized in the registry; see D15.
+`source_commit` / observation commit is intentionally NOT serialized in the registry; see D15.
+
+A stable immutable commit binding for a complete Slice-0.2 `Artifact` is also intentionally NOT invented in Slice 0.6; see D15.
 
 `canonical_status` is intentionally NOT serialized in artifact records; it is derived from the canonical-pointer relation.
 
@@ -486,8 +496,6 @@ temporary canonical absence
 
 Those require a future accepted schema/workflow rather than implicit deletion.
 
-This closes `RLY-S06-DREV2-F006`.
-
 ---
 
 # 13. D10 — Registry identity and uniqueness
@@ -613,8 +621,6 @@ IMMUTABLE_RECORD / IMMUTABLE
 This maturity rule applies whether or not either record is canonical.
 
 Living-projection advancement remains governed separately by D09/D13 and does not require retained prior entries in the current registry.
-
-These static rules close `RLY-S06-DREV2-F005`.
 
 ---
 
@@ -786,11 +792,11 @@ A digest mismatch is repository-contract corruption/staleness and MUST be surfac
 
 ---
 
-# 18. D15 — Source commit without self-reference
+# 18. D15 — Observation commit and core-Artifact provenance boundary
 
-Documentation Governance requires `source_commit`, but serializing the current Git commit SHA inside files that participate in that same commit creates a self-reference problem.
+Documentation Governance requires source-commit provenance, but serializing the current Git commit SHA inside files participating in that same commit creates self-reference.
 
-Slice 0.6 therefore defines `source_commit` as resolved provenance, not serialized registry content.
+Slice 0.6 therefore represents the supplied commit as **observation/resolution provenance**, not as an immutable core-`Artifact` commit binding.
 
 Repository resolution APIs receive an explicit:
 
@@ -798,21 +804,11 @@ Repository resolution APIs receive an explicit:
 CommitRef source_commit
 ```
 
-for the repository snapshot being inspected.
+meaning:
 
-A resolved artifact is constructed using accepted Slice 0.2 `Artifact`:
+> the repository snapshot against which this registry and these exact bytes are being inspected.
 
-```python
-Artifact(
-    id=registry_record.artifact_id,
-    artifact_type=registry_record.artifact_type,
-    path=registry_record.path,
-    commit=source_commit,
-    content_digest=registry_record.content_digest,
-)
-```
-
-Before construction/resolution:
+Before resolution:
 
 ```text
 source_commit.repository
@@ -830,27 +826,88 @@ path
 
 Matching only `RepositoryId` is insufficient.
 
-This satisfies:
+## No snapshot-varying core Artifact materialization
+
+Slice 0.6 MUST NOT construct or persist:
+
+```python
+Artifact(
+    id=registry_record.artifact_id,
+    ...,
+    commit=source_commit,
+    ...,
+)
+```
+
+because the same registry revision and bytes may be observed unchanged at multiple later repository commits. Binding each observation commit into the same `ArtifactId` would create multiple unequal Slice-0.2 `Artifact` payloads under one stable identity, violating Slice 0.2 immutability and Slice 0.5 insert-once semantics.
+
+Instead, one registry `ArtifactId` remains one stable repository-contract revision identity. Resolution reports the exact registry revision plus the explicit commit at which it was observed.
+
+Conceptual model:
+
+```python
+ResolvedRepositoryArtifact(
+    canonical_key: CanonicalKey | None,
+    revision: RepositoryArtifactRevision,
+    observed_at_commit: CommitRef,
+)
+```
+
+The field name may differ in implementation, but the semantics are exact:
 
 ```text
-source_commit captured
-content_digest stored outside artifact content
-no recursive commit-hash embedding
+revision
+= stable registry identity and exact registered bytes
+
+observed_at_commit
+= explicit repository-snapshot provenance for this resolution
 ```
+
+`observed_at_commit` is NOT part of the stable identity of `revision.artifact_id`.
+
+## Accepted Slice-0.2 Artifact boundary
+
+Slice 0.6 does not weaken, replace, or mutate the accepted Slice-0.2 `Artifact` model.
+
+It also does not claim that a registry record is already a complete persisted Slice-0.2 `Artifact` value.
+
+The invariant is:
+
+```text
+one ArtifactId
+MUST NOT
+materialize as multiple complete Slice-0.2 Artifact payloads
+```
+
+A future repository/baseline integration contract may establish one invariant `CommitRef` binding for a registry artifact identity and then materialize/persist the complete Slice-0.2 `Artifact` exactly once.
+
+That future contract must preserve:
+
+```text
+ArtifactId
+→ one artifact_type
+→ one path
+→ one immutable CommitRef
+→ one content_digest
+```
+
+No such binding is invented in Slice 0.6.
 
 ## Phase-1 trust boundary
 
 Slice 0.6 does NOT prove that the supplied filesystem tree was materialized from `source_commit`.
 
-The caller precondition is explicitly:
+The caller precondition remains:
 
 > The caller is responsible for supplying a **byte-exact repository snapshot corresponding to `source_commit`**.
 
-Slice 0.6 verifies the artifact bytes against registry digests and verifies repository identity, but it does not run Git to prove commit/worktree correspondence.
+Slice 0.6 verifies artifact bytes against registry digests and verifies repository identity, but it does not run Git to prove commit/worktree correspondence.
 
 A dirty, transformed, or newline-normalized working tree may therefore fail byte-integrity validation and MUST NOT be silently normalized or described as the supplied commit.
 
-Exact baseline/worktree proof belongs to Phase 1 repository integration.
+Exact baseline/worktree proof and stable core-Artifact Git-provenance binding belong to Phase 1 repository/baseline integration.
+
+This resolves `RLY-S06-DREV3-F007` without introducing a recursive commit field into `.relay/registry.json`.
 
 ---
 
@@ -884,7 +941,7 @@ Validation MUST:
 14. compute exact SHA-256 bytes and require digest equality;
 15. reject registration of `.relay/registry.json` itself.
 
-The operation performs no Git network access and no database write.
+The operation performs no Git network access, no core-Artifact persistence, and no database write.
 
 ---
 
@@ -913,15 +970,16 @@ resolve_canonical_artifact(
 ) -> ResolvedRepositoryArtifact
 ```
 
-`ResolvedRepositoryArtifact` contains:
+`ResolvedRepositoryArtifact` contains at minimum:
 
 ```text
 canonical_key
-repository metadata record
-existing Slice 0.2 Artifact value
-source_commit
+exact RepositoryArtifactRevision
+observed_at_commit = supplied source_commit
 canonical_status = CURRENT
 ```
+
+It does NOT contain a newly manufactured Slice-0.2 `Artifact` whose `commit` is the supplied observation commit.
 
 Resolution MUST fail when:
 
@@ -930,6 +988,8 @@ Resolution MUST fail when:
 - target is not an allowed canonical state;
 - artifact bytes no longer match digest;
 - `source_commit.repository != registry.repository` by full typed equality.
+
+The same registry revision may be validly observed at different later commits when its exact bytes and registered metadata are unchanged. Such observations do not change its `ArtifactId` and do not create new core `Artifact` payloads.
 
 No fallback to filename, path convention, Git recency, or modification time is permitted.
 
@@ -952,7 +1012,9 @@ It supports locked-record and historical navigation without requiring the artifa
 
 The same exact `RepositoryRef` equality and byte-integrity checks apply.
 
-It does not automatically traverse Git history.
+Its result carries the exact registry revision plus explicit `observed_at_commit` provenance.
+
+It does not construct a snapshot-varying Slice-0.2 `Artifact`, persist a core Artifact, or automatically traverse Git history.
 
 ---
 
@@ -977,6 +1039,8 @@ The registry MUST point to documents at their natural existing paths.
 Do not copy them under `.relay/`.
 
 The dogfood registry stores the exact Relay `RepositoryRef`, not only its ID.
+
+Dogfood resolution may record the commit at which the registry is inspected, but that observation commit is not serialized as the immutable core-Artifact commit binding for the registered `ArtifactId`.
 
 ---
 
@@ -1045,12 +1109,14 @@ cloud index of repository registry
 search/index caches
 UI document shelf
 agent context selection derived from registry
-repository Artifact rows mirrored/indexed from an exact registry snapshot
+repository-contract revision rows mirrored/indexed from an exact registry snapshot
 ```
 
 A derived mirror may be rebuilt.
 
 A mismatch between repository authority and a derived cloud mirror is an error/staleness condition, not a last-write-wins merge.
+
+Slice 0.6 does not mirror registry revisions into Slice-0.5 `Artifact` rows because no invariant core-Artifact commit binding is established in this slice.
 
 ---
 
@@ -1062,6 +1128,7 @@ It does NOT:
 
 - write registry changes into SQLite automatically;
 - publish SQLite records into Git;
+- materialize or update Slice-0.2 `Artifact` rows from registry observations;
 - reconcile divergent repositories;
 - push commits;
 - pull/fetch repositories;
@@ -1163,6 +1230,8 @@ source CommitRef RepositoryRef mismatch during resolution
 
 Pydantic `ValidationError` may remain visible for direct model-construction tests; public repository-loading/resolution boundaries translate malformed durable contract state into this error family.
 
+No new error type is needed for F007 because Slice 0.6 simply does not expose the invalid core-Artifact rematerialization operation.
+
 ---
 
 # 31. D28 — No implicit IDs, clocks, commits, repositories, or paths
@@ -1175,9 +1244,10 @@ Repository-contract code MUST NOT:
 - infer a `RepositoryRef` from a remote URL;
 - weaken repository equality to ID-only comparison;
 - infer canonical keys from filenames;
-- assign artifact class/state from directories.
+- assign artifact class/state from directories;
+- convert an observation commit into an immutable core-Artifact commit binding implicitly.
 
-All authority-bearing identity and time values are explicit.
+All authority-bearing identity, time, and observation-provenance values are explicit.
 
 ---
 
@@ -1210,9 +1280,10 @@ RepositoryId
 RepositoryRef
 CommitRef
 ContentDigest
-Artifact
 require_repository_relative_path
 ```
+
+Do not use the accepted `Artifact` model as a snapshot-varying resolution wrapper in Slice 0.6.
 
 No generic repository abstraction, plugin system, filesystem-provider interface, or Git backend interface is justified in Slice 0.6.
 
@@ -1282,6 +1353,9 @@ Tests MUST cover:
 - changed bytes with reused ArtifactId rejection;
 - nonhistorical changed bytes with reused ArtifactId rejection;
 - full source CommitRef repository mismatch;
+- same registry revision resolving at two valid observation commits without changing registry identity;
+- explicit observation commit exposure in resolution result;
+- absence of snapshot-varying Slice-0.2 `Artifact` rematerialization;
 - Relay's committed `.relay/registry.json` validating against a repository snapshot fixture.
 
 No external GitHub or network service is needed.
@@ -1296,6 +1370,8 @@ Slice 0.5 persistence tests MUST continue to pass without `.relay/` discovery.
 
 No hidden startup scan of `.relay/` is added to persistence.
 
+No Slice-0.5 `Artifact` insert is performed by Slice-0.6 resolution.
+
 Future integration must be explicit.
 
 ---
@@ -1306,7 +1382,9 @@ Slice 0.6 provides models, validation, transition checking, digest verification,
 
 It does NOT provide a public operation that edits artifacts or advances canonical pointers on behalf of a user.
 
-Repository mutation requires later authorization/workflow integration.
+It also does NOT provide a public operation that converts a registry observation into a persisted Slice-0.2 `Artifact`.
+
+Repository mutation and stable Git-provenance binding require later authorization/workflow integration.
 
 A deterministic serialization helper may produce bytes for tests/explicit tooling, but it does not write files or commits.
 
@@ -1322,7 +1400,7 @@ After Slice 0.6 acceptance, Relay enters the planned:
 HARD STOP — PROTOCOL REVIEW
 ```
 
-No GitHub write integration proceeds until Human Authority separately accepts the Phase-0 protocol review and opens Phase 1.
+No GitHub write integration or core-Artifact Git-provenance binding proceeds until Human Authority separately accepts the Phase-0 protocol review and opens Phase 1.
 
 ---
 
@@ -1337,6 +1415,8 @@ commit creation
 PR creation
 repository registration service
 baseline/worktree resolution
+stable registry-revision → Slice-0.2 Artifact CommitRef binding
+core Artifact materialization/persistence from repository observations
 cloud synchronization implementation
 SQLite registry mirroring
 UI / board
@@ -1449,51 +1529,55 @@ Slice 1.1+
 **A70** changed nonhistorical bytes also require a new ArtifactId.  
 **A71** removing/replacing a nonhistorical revision never means same-ID byte mutation.
 
-## Source commit / existing Artifact integration
+## Observation commit / Slice-0.2 Artifact boundary
 
-**A72** registry does not serialize its own source commit.  
-**A73** caller supplies exact `CommitRef`.  
+**A72** registry does not serialize its own observation/source commit.  
+**A73** caller supplies an exact observation `CommitRef`.  
 **A74** registry binds full accepted `RepositoryRef`, not repository ID alone.  
 **A75** expected repository validation uses exact typed `RepositoryRef` equality.  
-**A76** source `CommitRef.repository` must exactly equal registry `RepositoryRef`.  
+**A76** observation `CommitRef.repository` must exactly equal registry `RepositoryRef`.  
 **A77** same repository ID with differing host/path rejects.  
-**A78** resolved exact revision constructs/contains accepted Slice-0.2 `Artifact`.  
-**A79** constructed Artifact uses registry ID/path/type/digest and supplied commit.  
+**A78** resolution returns the exact `RepositoryArtifactRevision` plus explicit observation commit provenance.  
+**A79** resolution does not manufacture a Slice-0.2 `Artifact` by assigning the observation commit to an existing registry `ArtifactId`.  
 **A80** no hidden Git command is used.  
-**A81** caller precondition explicitly requires a byte-exact repository snapshot corresponding to source commit.  
-**A82** Slice 0.6 does not silently normalize worktree bytes or prove commit/worktree correspondence.
+**A81** caller precondition explicitly requires a byte-exact repository snapshot corresponding to the observation commit.  
+**A82** Slice 0.6 does not silently normalize worktree bytes or prove commit/worktree correspondence.  
+**A83** one registry `ArtifactId` can be observed at multiple commits without producing multiple complete Slice-0.2 `Artifact` payloads.  
+**A84** the observation commit is explicit context and is not part of the stable identity of the registry revision.  
+**A85** Slice 0.6 does not insert or update Slice-0.5 `Artifact` persistence from repository resolution.  
+**A86** stable mapping from a registry revision to one immutable core-Artifact `CommitRef` remains deferred unless a later accepted integration contract establishes it.
 
 ## Authority split / scope
 
-**A83** repository artifact bytes and canonical pointers are repository-authoritative.  
-**A84** credentials/runtime operational state remain cloud/runtime authoritative.  
-**A85** derived cloud registry mirrors do not override repository authority.  
-**A86** mismatch is surfaced, never last-write-wins.  
-**A87** no repository↔SQLite synchronization is implemented.  
-**A88** no GitHub-specific field enters registry schema.  
-**A89** no GitHub/network access occurs.  
-**A90** no artifact/canonical mutation API is exposed.  
-**A91** existing persistence behavior does not implicitly scan `.relay/`.  
-**A92** no UI or agent execution is introduced.  
-**A93** no Slice 1.x capability is implemented.
+**A87** repository artifact bytes and canonical pointers are repository-authoritative.  
+**A88** credentials/runtime operational state remain cloud/runtime authoritative.  
+**A89** derived cloud registry mirrors do not override repository authority.  
+**A90** mismatch is surfaced, never last-write-wins.  
+**A91** no repository↔SQLite synchronization is implemented.  
+**A92** no GitHub-specific field enters registry schema.  
+**A93** no GitHub/network access occurs.  
+**A94** no artifact/canonical mutation API is exposed.  
+**A95** existing persistence behavior does not implicitly scan `.relay/`.  
+**A96** no UI or agent execution is introduced.  
+**A97** no Slice 1.x capability is implemented.
 
 ## Dogfood / quality
 
-**A94** Relay's own registry includes `product-proposal`.  
-**A95** Relay's own registry includes `build-plan`.  
-**A96** Relay's own registry includes `documentation-governance`.  
-**A97** Relay's own registry includes `engineering-simplicity-quality`.  
-**A98** Relay's own registry includes `current-baseline`.  
-**A99** dogfood entries point to existing natural document paths.  
-**A100** dogfood registry contains the exact Relay `RepositoryRef`.  
-**A101** dogfood digests match exact bytes.  
-**A102** registry validation succeeds after clean snapshot materialization.  
-**A103** all existing Slice 0.1–0.5 tests remain green.  
-**A104** Ruff format/lint, Pyright, pytest, build, and `git diff --check` pass.  
-**A105** no dependencies are added.  
-**A106** Minimum Sufficient Architecture review finds no speculative repository framework.  
-**A107** Revision-1 findings F001–F004 and Revision-2 findings F005–F006 are represented by executable acceptance/regression criteria.  
-**A108** completing Slice 0.6 leaves Phase-0 protocol-review hard stop active.
+**A98** Relay's own registry includes `product-proposal`.  
+**A99** Relay's own registry includes `build-plan`.  
+**A100** Relay's own registry includes `documentation-governance`.  
+**A101** Relay's own registry includes `engineering-simplicity-quality`.  
+**A102** Relay's own registry includes `current-baseline`.  
+**A103** dogfood entries point to existing natural document paths.  
+**A104** dogfood registry contains the exact Relay `RepositoryRef`.  
+**A105** dogfood digests match exact bytes.  
+**A106** registry validation succeeds after clean snapshot materialization.  
+**A107** all existing Slice 0.1–0.5 tests remain green.  
+**A108** Ruff format/lint, Pyright, pytest, build, and `git diff --check` pass.  
+**A109** no dependencies are added.  
+**A110** Minimum Sufficient Architecture review finds no speculative repository framework.  
+**A111** Revision-1 findings F001–F004, Revision-2 findings F005–F006, and Revision-3 finding F007 are represented by executable acceptance/regression criteria.  
+**A112** completing Slice 0.6 leaves Phase-0 protocol-review hard stop active.
 
 ---
 
@@ -1538,7 +1622,7 @@ test_contract_rejects_symlink_artifact
 
 test_contract_rejects_escape_path
 
-test_canonical_resolution_returns_exact_artifact
+test_canonical_resolution_returns_exact_registry_revision
 
 test_canonical_resolution_rejects_missing_key
 
@@ -1549,6 +1633,12 @@ test_canonical_resolution_rejects_noncurrent_target
 test_resolution_rejects_source_commit_repository_mismatch
 
 test_resolution_rejects_source_commit_host_or_path_mismatch
+
+test_resolution_exposes_observation_commit_explicitly
+
+test_resolution_preserves_registry_artifact_identity_across_snapshot_commits
+
+test_resolution_does_not_rebind_core_artifact_commit_under_same_artifact_id
 
 test_supersession_requires_reciprocal_links
 
@@ -1643,19 +1733,19 @@ Do not lock before Human Authority acceptance.
 The reviewer must answer explicitly:
 
 **Q1** Does a single `.relay/registry.json` satisfy accepted requirements without duplicating repository documents?  
-**Q2** Does the design preserve Slice-0.2 `Artifact` immutability and Slice-0.5 insert-once ID semantics for historical and nonhistorical byte changes?  
+**Q2** Does the design preserve Slice-0.2 `Artifact` immutability and Slice-0.5 insert-once ID semantics, including the prohibition on snapshot-varying core-Artifact rematerialization?  
 **Q3** Is canonicality explicit rather than inferred from paths/recency, do historical canonical changes require direct supersession, and can existing canonical keys disappear?  
-**Q4** Does omitting serialized `source_commit` correctly avoid self-reference while satisfying provenance requirements?  
-**Q5** Is the caller-supplied `CommitRef` boundary acceptable with exact `RepositoryRef` equality and a byte-exact snapshot precondition before Phase-1 baseline resolution?  
+**Q4** Does treating `source_commit` as observation provenance avoid self-reference without rebinding a stable `ArtifactId` to multiple core `Artifact` payloads?  
+**Q5** Is the caller-supplied observation `CommitRef` boundary acceptable with exact `RepositoryRef` equality and a byte-exact snapshot precondition before Phase-1 baseline resolution?  
 **Q6** Are living projections modeled without falsely treating them as locked records?  
 **Q7** Does registry-transition validation enforce historical immutability without becoming an authorization engine?  
 **Q8** Are static supersession state↔lineage coupling, multihop maturity, transition-time successor maturity, field freezing, and anti-fabrication rules strong enough and still minimal?  
 **Q9** Is the repository/cloud authority split unambiguous and noncompetitive?  
-**Q10** Does the design improperly pull GitHub/repository synchronization from Phase 1?  
+**Q10** Does the design improperly pull GitHub/repository synchronization or stable core-Artifact Git binding from Phase 1?  
 **Q11** Is rejecting all unexpected `.relay/` schema-v1 entries appropriately minimal?  
 **Q12** Are path/symlink/raw-byte digest checks sufficient for deterministic artifact identity?  
-**Q13** Does the dogfood registry avoid commit/digest recursion while binding the exact Relay `RepositoryRef`?  
-**Q14** Are normative tuple-order and canonical-key-persistence rules sufficient without adding speculative abstractions?
+**Q13** Does the dogfood registry avoid commit/digest recursion while binding the exact Relay `RepositoryRef` and exposing observation commit separately?  
+**Q14** Are normative tuple-order, canonical-key-persistence, and observation-provenance rules sufficient without adding speculative abstractions?
 
 ---
 
@@ -1693,6 +1783,14 @@ CANONICAL_KEY_REMOVAL_BYPASSES_TRANSITION_SEMANTICS
 → RESOLVED by D09, D13, A37–A39
 ```
 
+## Revision 3
+
+```text
+RLY-S06-DREV3-F007
+ARTIFACT_ID_CAN_RESOLVE_TO_MULTIPLE_CORE_ARTIFACT_PAYLOADS
+→ RESOLVED by D15, D18, D19, D22/D23, A72–A86
+```
+
 No other prior architecture decision is reopened.
 
 ---
@@ -1700,7 +1798,7 @@ No other prior architecture decision is reopened.
 # 44. Design hard stop
 
 ```text
-Slice 0.6 Design Revision 3:
+Slice 0.6 Design Revision 4:
 COMPLETE / PENDING INDEPENDENT DESIGN REVIEW
 
 Implementation:
