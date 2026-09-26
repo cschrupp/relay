@@ -1,9 +1,9 @@
 # ADR-0005 — SQLite Phase-0 Persistence
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE
+**Status:** LOCKED / ACCEPTED
 **Decision date:** 2026-09-26
 **Authority:** Slice 0.5 Design Revision 2 (`2d2822644209e1002e77c39ab8f06757c583103b`)
-**Implementation state:** Candidate pending independent evaluation
+**Implementation state:** COMPLETE / ACCEPTED
 
 ## Context
 
@@ -29,7 +29,7 @@ Caller-supplied governance assessment facts and gate sets remain explicit. Persi
 
 ## Acceptance
 
-Human design acceptance: `RLY-S05-DESIGN-ACCEPT-001`
-Implementation authorization: `RLY-S05-AUTH-001`
-Technical implementation result: pending independent evaluation
-Human implementation acceptance: pending
+Accepted design: Slice 0.5 Design Revision 2 (`2d2822644209e1002e77c39ab8f06757c583103b`)
+Accepted implementation result: `d3ee53a572483e0bd96dbac2554bfad24c06136a`
+Independent evaluation: `RLY-S05-EVAL-002` — ACCEPT
+Human acceptance: `RLY-S05-ACCEPT-001`

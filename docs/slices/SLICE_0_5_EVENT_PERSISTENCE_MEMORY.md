@@ -1,10 +1,13 @@
 # Slice 0.5 Development Memory — Event and Persistence Model
 
-**Status:** REWORK COMPLETE / PENDING REEVALUATION — RLY-S05-EVAL-001
-**Record state:** WORKING / NOT LOCKED
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
 **Accepted project baseline:** `c8006306d48624f13599fe448ef677015fd1829e`
 **Accepted design:** Slice 0.5 Revision 2, `2d2822644209e1002e77c39ab8f06757c583103b`
 **Implementation branch:** `slice/0.5-event-persistence`
+**Accepted implementation result:** `d3ee53a572483e0bd96dbac2554bfad24c06136a`
+**Independent reevaluation:** `RLY-S05-EVAL-002` — ACCEPT
+**Human acceptance:** `RLY-S05-ACCEPT-001`
 
 ## Authority and design lineage
 
@@ -14,6 +17,9 @@
 - Independent design review: `RLY-S05-DESIGN-EVAL-002` — ACCEPT.
 - Human design acceptance: `RLY-S05-DESIGN-ACCEPT-001`.
 - Explicit implementation authorization: `RLY-S05-AUTH-001`.
+- Accepted Slice 0.5 implementation result: `d3ee53a572483e0bd96dbac2554bfad24c06136a`.
+- Independent reevaluation: `RLY-S05-EVAL-002` — ACCEPT.
+- Human acceptance: `RLY-S05-ACCEPT-001`.
 
 Revision 2 preserves the Revision 1 architecture and resolves F001–F007 with explicit lifecycle replay causality, distinct initialization, durable exact-fact checks for governed execution, complete evaluation evidence identity, insert-only static identities, canonical migration checksums and batch atomicity, and index/payload integrity checks.
 
@@ -34,7 +40,7 @@ The implementation adds no dependencies and no generic repository, ORM, unit-of-
 
 ## Change surface
 
-Production additions: `src/relay_engine/persistence/{__init__,database,errors,migrations,records,store}.py`. Existing production edits: `src/relay_engine/domain/ids.py`, `src/relay_engine/domain/__init__.py`. Tests: `tests/unit/test_persistence_models.py`, `tests/integration/test_persistence_sqlite.py`. Required documents: `docs/architecture/PERSISTENCE_MODEL.md`, this working memory, `docs/decisions/ADR-0005-sqlite-phase0-persistence.md`, and candidate projection update in `docs/CURRENT_BASELINE.md`.
+Production additions: `src/relay_engine/persistence/{__init__,database,errors,migrations,records,store}.py`. Existing production edits: `src/relay_engine/domain/ids.py`, `src/relay_engine/domain/__init__.py`. Tests: `tests/unit/test_persistence_models.py`, `tests/integration/test_persistence_sqlite.py`. Required documents: `docs/architecture/PERSISTENCE_MODEL.md`, this working memory, `docs/decisions/ADR-0005-sqlite-phase0-persistence.md`, and living baseline update in `docs/CURRENT_BASELINE.md`.
 
 Production behavior changes outside persistence and the two authorized ID exports: none. Runtime dependencies changed: none. Development dependencies changed: none. Slice 0.6 files/behavior added: none.
 
@@ -47,6 +53,14 @@ Submitted candidate: `32f92b154d380a77188db36d9ea00c874748664a`. Independent eva
 - F003: correct the migration-batch rollback test so an already-committed migration remains while a successful pending migration and a later failing migration are both rolled back.
 
 The evaluator verified accepted-design ancestry, authorized scope, the existing persistence/governance behavior, and green CI on the submitted SHA. The bounded corrections are complete in the authorized migration/database code and SQLite integration tests, with this memory/current-baseline projection updated. ADR-0005, the accepted design, and the persistence architecture document remain unchanged.
+
+Bounded migration rework implementation: `5e387a9d3f123b6333f9b700b22a8f9846a51f0b`. Rework result: `d3ee53a572483e0bd96dbac2554bfad24c06136a`. Independent reevaluation `RLY-S05-EVAL-002` returned ACCEPT. Human Authority accepted the exact result under `RLY-S05-ACCEPT-001`.
+
+Implementation findings:
+
+- `RLY-S05-EVAL-F001` — RESOLVED.
+- `RLY-S05-EVAL-F002` — RESOLVED.
+- `RLY-S05-EVAL-F003` — RESOLVED.
 
 ## Validation and evidence
 
@@ -63,7 +77,7 @@ git diff --check                 PASS
 GitHub Actions                   PASS — run 36206187380
 ```
 
-No acceptance is claimed here; independent reevaluation and Human Authority acceptance remain pending.
+The validation above records the rework implementation commit. The acceptance-record commit is separate provenance and does not replace the accepted implementation result SHA.
 
 ## Acceptance criteria
 
@@ -83,4 +97,4 @@ SQLite is the only backend. No database backup/replication product, cloud servic
 
 ## Governance state and hard stop
 
-Slice 0.5 design is accepted and implementation is explicitly authorized by `RLY-S05-AUTH-001`. The implementation candidate remains pending independent evaluation and Human Authority acceptance. Slice 0.6 has not started and is not authorized. This memory and ADR-0005 remain unlocked pending acceptance.
+Slice 0.5 is COMPLETE / ACCEPTED under `RLY-S05-ACCEPT-001`; this development memory is LOCKED. The accepted implementation result is `d3ee53a572483e0bd96dbac2554bfad24c06136a`. Slice 0.6 has not started and is NOT AUTHORIZED. Hard stop: ACTIVE. Corrections to this locked memory must follow Documentation Governance amendment or supersession rules.

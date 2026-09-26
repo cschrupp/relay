@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Slice 0.4 accepted baseline; Slice 0.5 candidate pending independent evaluation
+**Status:** Slice 0.5 accepted baseline
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -10,19 +10,33 @@
 # 1. Accepted Project Baseline
 
 ```text
-Accepted Slice: 0.4 — Handover Gates and Traffic Lights
-Accepted Slice 0.4 design: Revision 2
-Accepted design SHA: 09e2fc2fb5e38687d20c8db8050a4a7e5d2a37bd
-Accepted technical implementation SHA: babd0980ed00a8ef686f510075e2848fd84831b5
-Ratified original candidate: d740b1712951fdb7543c459541a7c446b407d07e
-Accepted Slice 0.4 result: 493571dc13cb5f4afb27367f5f7e1528b0448041
-Independent evaluation: RLY-S04-EVAL-002 — ACCEPT
-Human acceptance: RLY-S04-ACCEPT-001
+Accepted Slice: 0.5 — Event and Persistence Model
+Accepted design: Slice 0.5 Design Revision 2
+Accepted design SHA: 2d2822644209e1002e77c39ab8f06757c583103b
+Accepted implementation result: d3ee53a572483e0bd96dbac2554bfad24c06136a
+Independent evaluation: RLY-S05-EVAL-002 — ACCEPT
+Human acceptance: RLY-S05-ACCEPT-001
 Repository branch: main
 Visibility: public — human-authorized deviation
 ```
 
-The accepted Slice 0.4 result SHA identifies the evaluated candidate. This finalization commit is an acceptance record and does not replace the accepted result SHA.
+The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.5 result SHA.
+
+Slice 0.5 lineage:
+
+```text
+Accepted Slice: 0.5 — Event and Persistence Model
+Accepted design: Slice 0.5 Design Revision 2
+Accepted design SHA: 2d2822644209e1002e77c39ab8f06757c583103b
+Initial implementation candidate: 32f92b154d380a77188db36d9ea00c874748664a
+Independent evaluation: RLY-S05-EVAL-001 — REWORK
+Bounded migration rework: 5e387a9d3f123b6333f9b700b22a8f9846a51f0b
+Accepted Slice 0.5 result: d3ee53a572483e0bd96dbac2554bfad24c06136a
+Independent reevaluation: RLY-S05-EVAL-002 — ACCEPT
+Human acceptance: RLY-S05-ACCEPT-001
+```
+
+The initial evaluation returned REWORK and required technical corrections. Bounded rework under `RLY-S05-EVAL-001` completed successfully, and independent reevaluation `RLY-S05-EVAL-002` returned ACCEPT. The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.5 result SHA.
 
 Earlier accepted results remain:
 
@@ -88,6 +102,30 @@ governed lifecycle execution with authority-causality checks
 
 Gate evaluation is deterministic and consumes explicit facts. Governed execution reevaluates current context before delegating to the lifecycle transition operation.
 
+Slice 0.5 adds:
+
+```text
+SQLite Phase-0 persistence
+typed canonical JSON payload persistence
+insert-only stable domain identities
+immutable lifecycle event history
+materialized current lifecycle projection
+event→snapshot replay verification
+ABSENT→revision-0 lifecycle initialization
+expected-revision optimistic concurrency
+explicit migration versioning/checksums
+contiguous applied migration history
+atomic pending migration batches
+post-migration physical-schema verification
+durable gate revisions
+durable authorization grants
+durable human decisions
+GateEvaluationRecord audit evidence
+ExecutionRecord causal linkage
+persisted governed handover execution
+restart recovery and integrity verification
+```
+
 # 4. Accepted Slice 0.3 Records
 
 ```text
@@ -119,10 +157,12 @@ The accepted Slice 0.4 result is `493571dc13cb5f4afb27367f5f7e1528b0448041`; its
 Relay does not yet provide:
 
 ```text
-persistent governance history
-database/event store
 GitHub product integration
 artifact registry/discovery
+canonical artifact discovery
+canonical gate-set discovery
+repository synchronization
+`.relay/` repository contract
 agent execution
 AgentRole / AgentAssignment
 handover packet construction
@@ -133,33 +173,32 @@ RBAC / identity
 risk scoring
 quality-command execution
 provider/model integration
+authorization expiry/revocation
+cloud database
+backup/replication product
+full event sourcing
 ```
 
-Artifact-governance registry semantics remain deferred to Slice 0.6.
+The future UI requirement remains tracked separately in GitHub Issue #1: “Future UI: governance handover cards and structured human decision controls.” It was not implemented in Slice 0.5. Artifact-governance registry semantics remain deferred to Slice 0.6.
 
 # 7. Next Slice and Hard Stop
 
 ```text
 Slice 0.4: COMPLETE / ACCEPTED
-Slice 0.5: REWORK COMPLETE / PENDING REEVALUATION — RLY-S05-EVAL-001
+Slice 0.5: COMPLETE / ACCEPTED
+Accepted project baseline: Slice 0.5
 Accepted project baseline before Slice 0.5: c8006306d48624f13599fe448ef677015fd1829e
 Accepted Slice 0.5 design: Revision 2, 2d2822644209e1002e77c39ab8f06757c583103b
-Design acceptance: RLY-S05-DESIGN-ACCEPT-001
-Implementation authorization: RLY-S05-AUTH-001
-Implementation branch: slice/0.5-event-persistence
-Hard stop after Slice 0.4: superseded by explicit Slice 0.5 implementation authorization
-Next slice (0.6): NOT AUTHORIZED
-```
-
-The Slice 0.5 candidate is not an accepted project baseline. Independent evaluation `RLY-S05-EVAL-001` returned REWORK for post-migration physical-schema verification, contiguous applied migration history, and a false-positive rollback regression. Bounded rework is underway on the authorized branch. The accepted project capability remains Slice 0.4 until independent evaluation and Human Authority acceptance are complete. The accepted Slice 0.5 design and separate explicit implementation authorization do not authorize Slice 0.6.
-
-# 8. Slice 0.5 Candidate Projection
-
-```text
-Candidate capability: SQLite persistence for accepted domain, lifecycle, and governance records
-Prior submitted candidate SHA: 32f92b154d380a77188db36d9ea00c874748664a
-Candidate status: REWORK COMPLETE / PENDING REEVALUATION
+Initial implementation candidate: 32f92b154d380a77188db36d9ea00c874748664a
+Independent evaluation: RLY-S05-EVAL-001 — REWORK
+Bounded migration rework: 5e387a9d3f123b6333f9b700b22a8f9846a51f0b
+Accepted Slice 0.5 result: d3ee53a572483e0bd96dbac2554bfad24c06136a
+Independent reevaluation: RLY-S05-EVAL-002 — ACCEPT
+Human acceptance: RLY-S05-ACCEPT-001
+Slice 0.5 memory: LOCKED / ACCEPTED
+ADR-0005: LOCKED / ACCEPTED
 Slice 0.6: NOT AUTHORIZED
+Hard stop: ACTIVE
 ```
 
-The candidate adds an explicit SQLite persistence boundary for typed domain values, lifecycle current state and event history, immutable gate revisions and authority records, complete gate-evaluation evidence, and governed execution records. It preserves the accepted Slice 0.2–0.4 semantics and does not implement canonical artifact discovery, canonical gate-set selection, GitHub integration, `.relay/`, APIs, UI, or Slice 0.6 behavior. The accepted project baseline remains Slice 0.4 until the candidate is independently evaluated and accepted by Human Authority.
+The initial Slice 0.5 submission received REWORK before the bounded technical corrections and later acceptance. Slice 0.6 remains NOT AUTHORIZED; the accepted Slice 0.5 design and implementation do not authorize it.
