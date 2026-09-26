@@ -50,7 +50,20 @@ The evaluator verified accepted-design ancestry, authorized scope, the existing 
 
 ## Validation and evidence
 
-Final required validation and GitHub Actions on the exact rework result SHA are pending. No acceptance is claimed here.
+Validation on the rework implementation commit `5e387a9d3f123b6333f9b700b22a8f9846a51f0b`:
+
+```text
+uv sync --frozen --group dev     PASS
+ruff format --check              PASS
+ruff check                       PASS
+pyright                          PASS — 0 errors
+pytest                           PASS — 332 passed
+uv build                         PASS
+git diff --check                 PASS
+GitHub Actions                   PASS — run 36206187380
+```
+
+No acceptance is claimed here; independent reevaluation and Human Authority acceptance remain pending.
 
 ## Acceptance criteria
 
