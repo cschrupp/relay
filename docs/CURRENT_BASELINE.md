@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Slice 0.4 accepted baseline; hard stop active
+**Status:** Slice 0.4 accepted baseline; Slice 0.5 candidate pending independent evaluation
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** September 2026
@@ -141,8 +141,25 @@ Artifact-governance registry semantics remain deferred to Slice 0.6.
 
 ```text
 Slice 0.4: COMPLETE / ACCEPTED
-Next slice: Slice 0.5 NOT AUTHORIZED
-Hard stop: ACTIVE
+Slice 0.5: IMPLEMENTATION CANDIDATE / PENDING INDEPENDENT EVALUATION
+Accepted project baseline before Slice 0.5: c8006306d48624f13599fe448ef677015fd1829e
+Accepted Slice 0.5 design: Revision 2, 2d2822644209e1002e77c39ab8f06757c583103b
+Design acceptance: RLY-S05-DESIGN-ACCEPT-001
+Implementation authorization: RLY-S05-AUTH-001
+Implementation branch: slice/0.5-event-persistence
+Hard stop after Slice 0.4: superseded by explicit Slice 0.5 implementation authorization
+Next slice (0.6): NOT AUTHORIZED
 ```
 
-Do not begin Slice 0.5 design or implementation without new explicit Human Authority authorization. The presence of future design documents does not grant authority.
+The Slice 0.5 candidate is not an accepted project baseline. The accepted project capability remains Slice 0.4 until independent evaluation and Human Authority acceptance are complete. The accepted Slice 0.5 design and separate explicit implementation authorization do not authorize Slice 0.6.
+
+# 8. Slice 0.5 Candidate Projection
+
+```text
+Candidate capability: SQLite persistence for accepted domain, lifecycle, and governance records
+Candidate result SHA: pending
+Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Slice 0.6: NOT AUTHORIZED
+```
+
+The candidate adds an explicit SQLite persistence boundary for typed domain values, lifecycle current state and event history, immutable gate revisions and authority records, complete gate-evaluation evidence, and governed execution records. It preserves the accepted Slice 0.2–0.4 semantics and does not implement canonical artifact discovery, canonical gate-set selection, GitHub integration, `.relay/`, APIs, UI, or Slice 0.6 behavior. The accepted project baseline remains Slice 0.4 until the candidate is independently evaluated and accepted by Human Authority.
