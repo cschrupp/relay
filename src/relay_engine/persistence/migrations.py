@@ -166,6 +166,14 @@ def validate_migration_definitions(migrations: tuple[Migration, ...]) -> None:
         raise MigrationError("migration versions must be unique, increasing, and begin at 1")
 
 
+def _validate_applied_prefix(applied_versions: set[int], supported_count: int) -> None:
+    expected = set(range(1, len(applied_versions) + 1))
+    if applied_versions != expected:
+        raise MigrationError("applied migration history is not a contiguous version prefix")
+    if len(applied_versions) > supported_count:
+        raise MigrationError("database has an unsupported future schema version")
+
+
 def apply_migrations(
     connection: sqlite3.Connection,
     migrations: tuple[Migration, ...] = DEFAULT_MIGRATIONS,
@@ -187,9 +195,7 @@ def apply_migrations(
         ).fetchall()
         applied = {int(row["version"]): (str(row["name"]), str(row["checksum"])) for row in rows}
         migration_by_version = {item.version: item for item in migrations}
-
-        if applied and max(applied) > len(migrations):
-            raise MigrationError("database has an unsupported future schema version")
+        _validate_applied_prefix(set(applied), len(migrations))
 
         for version, (name, checksum) in applied.items():
             migration = migration_by_version.get(version)
@@ -238,8 +244,7 @@ def verify_schema(
         raise MigrationError("database schema metadata is missing") from error
 
     applied = {int(row["version"]): (str(row["name"]), str(row["checksum"])) for row in rows}
-    if applied and max(applied) > len(migrations):
-        raise MigrationError("database has an unsupported future schema version")
+    _validate_applied_prefix(set(applied), len(migrations))
     for version, (name, checksum) in applied.items():
         migration = migrations[version - 1] if 0 < version <= len(migrations) else None
         if migration is None or name != migration.name or checksum != migration.checksum:

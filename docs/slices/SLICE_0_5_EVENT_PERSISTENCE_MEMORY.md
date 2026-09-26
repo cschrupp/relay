@@ -1,6 +1,6 @@
 # Slice 0.5 Development Memory — Event and Persistence Model
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING EVALUATION
+**Status:** REWORK COMPLETE / PENDING REEVALUATION — RLY-S05-EVAL-001
 **Record state:** WORKING / NOT LOCKED
 **Accepted project baseline:** `c8006306d48624f13599fe448ef677015fd1829e`
 **Accepted design:** Slice 0.5 Revision 2, `2d2822644209e1002e77c39ab8f06757c583103b`
@@ -38,9 +38,19 @@ Production additions: `src/relay_engine/persistence/{__init__,database,errors,mi
 
 Production behavior changes outside persistence and the two authorized ID exports: none. Runtime dependencies changed: none. Development dependencies changed: none. Slice 0.6 files/behavior added: none.
 
+## Independent evaluation and bounded rework
+
+Submitted candidate: `32f92b154d380a77188db36d9ea00c874748664a`. Independent evaluation `RLY-S05-EVAL-001` returned REWORK; architecture and contract escalations were not required. Findings are limited to:
+
+- F001: verify the physical schema after both migration-apply and verify-only startup paths.
+- F002: reject applied migration history that is not a contiguous prefix before applying pending SQL.
+- F003: correct the migration-batch rollback test so an already-committed migration remains while a successful pending migration and a later failing migration are both rolled back.
+
+The evaluator verified accepted-design ancestry, authorized scope, the existing persistence/governance behavior, and green CI on the submitted SHA. The bounded corrections are complete in the authorized migration/database code and SQLite integration tests, with this memory/current-baseline projection updated. ADR-0005, the accepted design, and the persistence architecture document remain unchanged.
+
 ## Validation and evidence
 
-Pending final complete local validation and GitHub Actions on the exact candidate result SHA. The named persistence test files have been exercised during development; final command results and test count will be recorded in the implementation handover. No acceptance is claimed here.
+Final required validation and GitHub Actions on the exact rework result SHA are pending. No acceptance is claimed here.
 
 ## Acceptance criteria
 

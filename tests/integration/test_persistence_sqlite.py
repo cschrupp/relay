@@ -303,21 +303,82 @@ def test_migration_pending_batch_rolls_back_as_one_unit(tmp_path: Path) -> None:
     connection.row_factory = sqlite3.Row
     first = Migration(
         1,
-        "create one",
-        (
-            "CREATE TABLE relay_schema_migrations (version INTEGER PRIMARY KEY, "
-            "name TEXT, applied_at TEXT, checksum TEXT)",
-        ),
+        "committed migration",
+        ("CREATE TABLE committed_table (id INTEGER)",),
     )
     second = Migration(2, "pending one", ("CREATE TABLE temporary_table (id INTEGER)",))
-    third = Migration(3, "pending failure", ("CREATE TABLE broken (id INTEGER)", "INVALID SQL"))
+    third = Migration(
+        3,
+        "pending failure",
+        ("CREATE TABLE broken (id INTEGER)", "INVALID SQL"),
+    )
+    apply_migrations(connection, (first,), applied_at=NOW)
+
     with pytest.raises(MigrationError):
-        apply_migrations(connection, (first, second, third), applied_at=NOW)
+        apply_migrations(connection, (first, second, third), applied_at=NOW + timedelta(seconds=1))
     tables = {
         row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
     }
+    assert "committed_table" in tables
     assert "temporary_table" not in tables
-    assert "relay_schema_migrations" not in tables
+    assert "broken" not in tables
+    applied_versions = connection.execute(
+        "SELECT version FROM relay_schema_migrations ORDER BY version"
+    ).fetchall()
+    assert tuple(row[0] for row in applied_versions) == (1,)
+    connection.close()
+
+
+def test_open_database_apply_mode_rejects_missing_required_index(tmp_path: Path) -> None:
+    path = tmp_path / "missing-index.sqlite"
+    database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    database.close()
+    connection = sqlite3.connect(path)
+    connection.execute("DROP INDEX lifecycle_events_by_slice_revision")
+    connection.close()
+    with pytest.raises(MigrationError):
+        open_database(path, apply_migrations=True, migration_applied_at=NOW)
+
+
+def test_open_database_apply_mode_rejects_missing_required_table(tmp_path: Path) -> None:
+    path = tmp_path / "missing-table.sqlite"
+    database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    database.close()
+    connection = sqlite3.connect(path)
+    connection.execute("DROP TABLE artifacts")
+    connection.close()
+    with pytest.raises(MigrationError):
+        open_database(path, apply_migrations=True, migration_applied_at=NOW)
+
+
+def test_apply_migrations_rejects_noncontiguous_applied_history(tmp_path: Path) -> None:
+    connection = sqlite3.connect(tmp_path / "migration-gap.sqlite", isolation_level=None)
+    connection.row_factory = sqlite3.Row
+    first = Migration(1, "first", ("CREATE TABLE first_table (id INTEGER)",))
+    second = Migration(2, "second", ("CREATE TABLE must_not_run (id INTEGER)",))
+    third = Migration(3, "third", ("CREATE TABLE third_table (id INTEGER)",))
+    migrations = (first, second, third)
+    apply_migrations(connection, (first,), applied_at=NOW)
+    connection.execute(
+        "INSERT INTO relay_schema_migrations(version, name, applied_at, checksum) "
+        "VALUES (?, ?, ?, ?)",
+        (third.version, third.name, NOW.isoformat(), third.checksum),
+    )
+    before = connection.execute(
+        "SELECT version, name, applied_at, checksum FROM relay_schema_migrations ORDER BY version"
+    ).fetchall()
+
+    with pytest.raises(MigrationError):
+        apply_migrations(connection, migrations, applied_at=NOW + timedelta(seconds=1))
+
+    tables = {
+        row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    after = connection.execute(
+        "SELECT version, name, applied_at, checksum FROM relay_schema_migrations ORDER BY version"
+    ).fetchall()
+    assert "must_not_run" not in tables
+    assert [tuple(row) for row in after] == [tuple(row) for row in before]
     connection.close()
 
 

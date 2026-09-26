@@ -141,7 +141,7 @@ Artifact-governance registry semantics remain deferred to Slice 0.6.
 
 ```text
 Slice 0.4: COMPLETE / ACCEPTED
-Slice 0.5: IMPLEMENTATION CANDIDATE / PENDING INDEPENDENT EVALUATION
+Slice 0.5: REWORK COMPLETE / PENDING REEVALUATION — RLY-S05-EVAL-001
 Accepted project baseline before Slice 0.5: c8006306d48624f13599fe448ef677015fd1829e
 Accepted Slice 0.5 design: Revision 2, 2d2822644209e1002e77c39ab8f06757c583103b
 Design acceptance: RLY-S05-DESIGN-ACCEPT-001
@@ -151,14 +151,14 @@ Hard stop after Slice 0.4: superseded by explicit Slice 0.5 implementation autho
 Next slice (0.6): NOT AUTHORIZED
 ```
 
-The Slice 0.5 candidate is not an accepted project baseline. The accepted project capability remains Slice 0.4 until independent evaluation and Human Authority acceptance are complete. The accepted Slice 0.5 design and separate explicit implementation authorization do not authorize Slice 0.6.
+The Slice 0.5 candidate is not an accepted project baseline. Independent evaluation `RLY-S05-EVAL-001` returned REWORK for post-migration physical-schema verification, contiguous applied migration history, and a false-positive rollback regression. Bounded rework is underway on the authorized branch. The accepted project capability remains Slice 0.4 until independent evaluation and Human Authority acceptance are complete. The accepted Slice 0.5 design and separate explicit implementation authorization do not authorize Slice 0.6.
 
 # 8. Slice 0.5 Candidate Projection
 
 ```text
 Candidate capability: SQLite persistence for accepted domain, lifecycle, and governance records
-Candidate result SHA: pending
-Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Prior submitted candidate SHA: 32f92b154d380a77188db36d9ea00c874748664a
+Candidate status: REWORK COMPLETE / PENDING REEVALUATION
 Slice 0.6: NOT AUTHORIZED
 ```
 

@@ -74,8 +74,7 @@ def open_database(
                 migrations,
                 applied_at=migration_applied_at,
             )
-        else:
-            verify_schema(connection, migrations)
+        verify_schema(connection, migrations)
         return database
     except DatabaseUnavailable, MigrationError:
         if connection is not None:
