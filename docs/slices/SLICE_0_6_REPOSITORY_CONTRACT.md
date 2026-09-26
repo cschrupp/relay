@@ -1,10 +1,12 @@
 # Slice 0.6 — `.relay/` Repository Contract
 
-**Document revision:** 1  
+**Document revision:** 2  
 **Status:** REVIEW  
 **Document class:** Lockable design record  
 **Authority:** Human Authority opened Slice 0.6 design after formal Slice 0.5 closure  
 **Accepted project baseline:** `442ed7657fed8d58974bd4e16aeb8a9fca495ceb`  
+**Revision 1:** `b1e443aa2a7b4e3ad33f61c4d2b853cd5cb28e61`  
+**Revision 1 review:** `RLY-S06-DESIGN-EVAL-001 — REVISE`  
 **Implementation authorization:** NOT GRANTED  
 **Slice 1.1 / GitHub integration:** NOT AUTHORIZED
 
@@ -16,17 +18,35 @@ Define Relay's first repository-side machine-readable engineering contract so hu
 
 > Which repository artifacts exist, what semantic class/state do they have, which exact bytes are being referenced, and which revision is canonical now?
 
-Slice 0.6 implements the repository-contract semantics already established by `DOCUMENTATION_GOVERNANCE.md` without introducing GitHub integration, autonomous repository mutation, UI, or agent execution.
+Slice 0.6 implements repository-contract semantics already established by `DOCUMENTATION_GOVERNANCE.md` without introducing GitHub integration, autonomous repository mutation, UI, agent execution, or repository↔cloud synchronization.
 
 The governing principle remains:
 
 > **Historical authority is immutable. Current truth is represented through living projections and explicit canonical pointers.**
 
+Revision 2 is a bounded hardening of Revision 1. It resolves exactly:
+
+```text
+RLY-S06-DREV1-F001
+CANONICAL_HISTORICAL_AUTHORITY_CAN_CHANGE_WITHOUT_SUPERSESSION
+
+RLY-S06-DREV1-F002
+REGISTRY_REPOSITORY_IDENTITY_WEAKER_THAN_ACCEPTED_REPOSITORY_IDENTITY
+
+RLY-S06-DREV1-F003
+HISTORICAL_RECORD_TRANSITION_CONTRACT_NOT_FULLY_CLOSED
+
+RLY-S06-DREV1-F004
+ARTIFACT_CANONICAL_ORDER_NOT_NORMATIVELY_DEFINED
+```
+
+No architectural redesign is introduced.
+
 ---
 
 # 2. Governing accepted inputs
 
-Slice 0.6 is subordinate to these already accepted contracts:
+Slice 0.6 is subordinate to these accepted contracts:
 
 ```text
 Slice 0.2
@@ -48,9 +68,9 @@ ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md
 minimum sufficient architecture
 ```
 
-This slice MUST NOT redefine the accepted `Artifact` model as a mutable document identity.
+This slice MUST NOT redefine accepted `Artifact` as a mutable document identity.
 
-An accepted Slice 0.2 `Artifact` is an exact immutable provenance value:
+An accepted Slice 0.2 `Artifact` identifies exact immutable provenance:
 
 ```text
 ArtifactId
@@ -61,7 +81,7 @@ content_digest
 
 Therefore each exact repository artifact revision represented by Slice 0.6 has its own `ArtifactId`.
 
-A changed document revision MUST NOT reuse the same `ArtifactId`.
+Changed exact bytes MUST NOT reuse the same `ArtifactId`.
 
 ---
 
@@ -94,7 +114,7 @@ The entire Slice 0.6 machine-readable repository contract is:
 └── registry.json
 ```
 
-No `relay.yaml` is introduced in this slice.
+No `relay.yaml` is introduced.
 
 No duplicate copies of current project Markdown documents are introduced under `.relay/project/`.
 
@@ -103,11 +123,11 @@ Reason:
 - existing documents already have natural repository locations;
 - duplication would create competing copies;
 - JSON requires no new dependency;
-- one registry is the minimum structure that satisfies the accepted canonical-governance requirements.
+- one registry is the minimum structure satisfying accepted canonical-governance requirements.
 
 Future slices may add other `.relay/` files only through an accepted schema revision.
 
-For Slice 0.6 validation, unexpected files or directories directly under `.relay/` are invalid contract state.
+For schema v1, unexpected files or directories directly under `.relay/` are invalid contract state.
 
 ---
 
@@ -133,7 +153,7 @@ This avoids recursive self-reference.
 
 ---
 
-# 6. D03 — Registry model
+# 6. D03 — Registry model and repository identity
 
 Conceptual exact model:
 
@@ -141,7 +161,7 @@ Conceptual exact model:
 RepositoryRegistry(
     schema_version: Literal[1],
     project_id: ProjectId,
-    repository_id: RepositoryId,
+    repository: RepositoryRef,
     artifacts: tuple[RepositoryArtifactRevision, ...],
     canonical: tuple[CanonicalPointer, ...],
 )
@@ -149,9 +169,37 @@ RepositoryRegistry(
 
 All models are immutable, strict, extra-forbid Pydantic values following existing Relay patterns.
 
-`artifacts` MUST be stored in deterministic canonical order.
+The registry stores the complete accepted provider-neutral `RepositoryRef`:
 
-`canonical` MUST be stored in deterministic canonical-key order.
+```text
+id
+host
+path
+```
+
+It MUST NOT weaken repository identity to `RepositoryId` alone.
+
+Exact repository equality means full typed `RepositoryRef` equality.
+
+## Normative tuple ordering
+
+The serialized `artifacts` tuple MUST already be ordered by the total key:
+
+```text
+(path ASC, artifact_id ASC)
+```
+
+The serialized `canonical` tuple MUST already be ordered by:
+
+```text
+canonical_key ASC
+```
+
+The loader MUST reject noncanonical ordering rather than silently reorder durable contract input.
+
+The deterministic serializer emits the same normative order.
+
+This closes `RLY-S06-DREV1-F004`.
 
 ---
 
@@ -168,7 +216,7 @@ ArtifactRevisionRef(
 
 An `ArtifactRevisionRef` identifies the exact semantic revision represented by one repository artifact record.
 
-The `revision` number does not replace `ArtifactId`, Git commit, or content digest.
+The revision number does not replace `ArtifactId`, Git commit, or content digest:
 
 ```text
 artifact revision ≠ ArtifactId ≠ Git commit
@@ -201,10 +249,10 @@ RepositoryArtifactRevision(
 Rules:
 
 - `artifact_id` identifies this exact revision;
-- `revision` is monotonic within an explicit supersession/revision lineage;
+- `revision` is monotonic within an explicit lineage;
 - `path` uses the accepted repository-relative POSIX-path validator;
 - `.relay/registry.json` itself is forbidden as an artifact path;
-- `content_digest` is SHA-256 over the exact artifact file bytes;
+- `content_digest` is SHA-256 over exact artifact bytes;
 - `updated_at` is explicit, timezone-aware, UTC-normalized;
 - `title`, `artifact_type`, and `scope` are nonblank;
 - `human_version`, when present, is nonblank;
@@ -233,7 +281,7 @@ Mutable project material that is not historical authority.
 
 ### LOCKABLE_RECORD
 
-May evolve before lock; once locked its exact artifact bytes may not change in place.
+May evolve before lock; once locked its exact accepted revision is historical authority.
 
 ### LIVING_PROJECTION
 
@@ -281,13 +329,13 @@ IMMUTABLE_RECORD
 
 All other combinations are invalid.
 
-A living projection does not become `LOCKED` simply because it is canonical.
+A living projection does not become `LOCKED` merely because it is canonical.
 
 ---
 
 # 11. D08 — Canonical keys
 
-Canonical keys are lower-case stable logical names matching:
+Canonical keys are stable lower-kebab logical names matching:
 
 ```text
 ^[a-z0-9]+(?:-[a-z0-9]+)*$
@@ -307,7 +355,7 @@ known-limitations
 
 A canonical key is semantic identity for current consultation.
 
-It is not a filename and not a path.
+It is not a filename or path.
 
 ---
 
@@ -325,16 +373,85 @@ CanonicalPointer(
 Registry invariants:
 
 - canonical keys are unique;
-- there is at most one pointer for each canonical key;
-- every pointer target MUST exist in the same registry;
-- pointer target revision MUST equal the referenced artifact record revision;
+- at most one pointer exists for each key;
+- every pointer target exists in the same registry;
+- pointer target revision equals the referenced artifact record revision;
 - canonical pointers MUST NOT target `DRAFT`, `REVIEW`, or `SUPERSEDED` records;
 - valid canonical targets are:
   - `LIVING_PROJECTION / CURRENT`;
   - `LOCKABLE_RECORD / LOCKED`;
   - `IMMUTABLE_RECORD / IMMUTABLE`.
 
-Canonical status is therefore derived, never duplicated.
+Canonical status is derived, never duplicated.
+
+## Canonical pointer transition by authority class
+
+When a canonical key exists in both `previous` and `current`:
+
+### Living projection
+
+If the old target is `LIVING_PROJECTION / CURRENT` and the pointer changes:
+
+```text
+new target class/state
+= LIVING_PROJECTION / CURRENT
+
+new revision
+= old revision + 1
+
+new ArtifactId
+≠ old ArtifactId
+```
+
+Prior living-projection revisions do not have to remain in the current registry; Git history provides byte history.
+
+### Lockable historical authority
+
+If the old target is `LOCKABLE_RECORD / LOCKED` and the pointer changes, the new target MUST be the direct historical successor:
+
+```text
+old artifact state in current
+= SUPERSEDED
+
+new target
+= LOCKABLE_RECORD / LOCKED
+
+new.supersedes
+= ref(old)
+
+old.superseded_by
+= ref(new)
+
+new.revision
+= old.revision + 1
+```
+
+### Immutable historical authority
+
+If the old target is `IMMUTABLE_RECORD / IMMUTABLE` and the pointer changes, the new target MUST be the direct historical successor:
+
+```text
+old artifact state in current
+= SUPERSEDED
+
+new target
+= IMMUTABLE_RECORD / IMMUTABLE
+
+new.supersedes
+= ref(old)
+
+old.superseded_by
+= ref(new)
+
+new.revision
+= old.revision + 1
+```
+
+A canonical historical authority pointer MUST NOT jump to an unrelated locked/immutable record merely because that record is individually valid.
+
+These are structural lineage rules only; they do not authorize the authority change.
+
+This closes `RLY-S06-DREV1-F001`.
 
 ---
 
@@ -346,13 +463,14 @@ Within one registry:
 - every artifact path is unique;
 - every canonical key is unique;
 - every supersession relation is acyclic;
-- all referenced artifact revisions exist unless explicitly described as historical external provenance by a later schema version.
+- every artifact/supersession reference resolves inside the same registry in schema v1;
+- the full `RepositoryRef` is singular and explicit.
 
-Slice 0.6 schema v1 does NOT permit dangling supersession references.
+Schema v1 does NOT permit dangling supersession references.
 
 ---
 
-# 14. D11 — Supersession consistency
+# 14. D11 — Supersession consistency and successor maturity
 
 When artifact B supersedes artifact A:
 
@@ -371,41 +489,96 @@ artifact_type
 artifact_class
 ```
 
-except no class change is permitted within a Slice 0.6 lineage.
+No class change is permitted within a Slice 0.6 lineage.
 
 Supersession cycles are invalid.
 
-A superseded artifact remains in the registry and its content file remains present at its registered path.
+A superseded historical artifact remains in the registry and its content file remains present at its registered path.
 
-This requirement applies to lockable/immutable records.
+For a supersession transition that converts an existing historical authority to `SUPERSEDED`, successor maturity is exact:
 
-Living-projection history is represented by Git history plus monotonically advancing registered revision; prior living-projection records do not have to remain in the current registry.
+```text
+LOCKABLE_RECORD / LOCKED
+    → direct successor is LOCKABLE_RECORD / LOCKED
+
+IMMUTABLE_RECORD / IMMUTABLE
+    → direct successor is IMMUTABLE_RECORD / IMMUTABLE
+```
+
+A `DRAFT` or `REVIEW` artifact cannot be the successor that causes an accepted historical record to become `SUPERSEDED`.
+
+This maturity rule applies whether or not either record is canonical.
+
+Living-projection advancement remains governed separately by D09/D13 and does not require retained prior entries in the current registry.
 
 ---
 
-# 15. D12 — Locked/immutable file preservation
+# 15. D12 — Historical record preservation and exact field freeze
 
-For a `LOCKABLE_RECORD / LOCKED`, `LOCKABLE_RECORD / SUPERSEDED`, `IMMUTABLE_RECORD / IMMUTABLE`, or `IMMUTABLE_RECORD / SUPERSEDED` entry:
-
-- the registered path must continue to exist;
-- the exact bytes must match the stored content digest;
-- future registry transitions may not change its path, digest, title, artifact type, scope, human version, or updated-at value;
-- the only permitted metadata transition for an accepted historical record is:
+Historical states are:
 
 ```text
-LOCKED      → SUPERSEDED
-IMMUTABLE   → SUPERSEDED
+LOCKABLE_RECORD / LOCKED
+LOCKABLE_RECORD / SUPERSEDED
+IMMUTABLE_RECORD / IMMUTABLE
+IMMUTABLE_RECORD / SUPERSEDED
 ```
 
-with a valid reciprocal supersession relation.
+For every `ArtifactId` present in `previous` in one of those states, the same `ArtifactId` MUST exist in `current`.
 
-This enforces historical immutability without mutating accepted Slice 0.2 Artifact semantics.
+The record MUST be field-for-field identical except for exactly one permitted transition:
+
+```text
+LOCKABLE_RECORD / LOCKED
+→
+LOCKABLE_RECORD / SUPERSEDED
+
+or
+
+IMMUTABLE_RECORD / IMMUTABLE
+→
+IMMUTABLE_RECORD / SUPERSEDED
+```
+
+During that transition, only these fields may change:
+
+```text
+artifact_state:
+LOCKED | IMMUTABLE
+→ SUPERSEDED
+
+superseded_by:
+None
+→ exact direct-successor ArtifactRevisionRef
+```
+
+Everything else MUST remain exactly equal, including:
+
+```text
+artifact_id
+revision
+title
+artifact_type
+artifact_class
+path
+content_digest
+human_version
+updated_at
+scope
+supersedes
+```
+
+An already `SUPERSEDED` historical record is completely frozen field-for-field.
+
+Its registered file path must continue to exist and its bytes must continue to match the stored digest.
+
+This is the normative meaning of historical immutability for registry transitions.
 
 ---
 
 # 16. D13 — Registry transition validation
 
-Slice 0.6 introduces a pure deterministic comparison operation conceptually:
+Slice 0.6 introduces a pure deterministic comparison operation:
 
 ```python
 validate_registry_transition(
@@ -414,26 +587,54 @@ validate_registry_transition(
 ) -> None
 ```
 
-It validates repository-contract semantics only.
+It validates repository-contract structure only.
 
-It does not authorize the change.
+It does not authorize changes.
 
 Required transition rules:
 
-1. project and repository identity cannot change;
-2. previously locked/immutable/superseded records cannot disappear;
-3. their immutable metadata cannot change;
-4. allowed historical state transition is only locked/immutable → superseded;
-5. supersession relation must be reciprocal and revision-monotonic;
-6. a canonical pointer that changes target must resolve to a valid current authority target;
-7. if a canonical living projection advances, its new target revision MUST equal old target revision + 1;
-8. advancing a living projection requires a new `ArtifactId`;
-9. reusing an old `ArtifactId` for changed bytes is forbidden;
-10. no canonical pointer may remain on a now-superseded target.
+1. `project_id` cannot change;
+2. full `RepositoryRef` cannot change;
+3. previously historical records cannot disappear;
+4. historical records obey the exact field-freeze contract in D12;
+5. historical supersession obeys reciprocal direct-successor and maturity rules in D11;
+6. an already `SUPERSEDED` record is completely immutable;
+7. a record newly added in `current` MUST NOT begin in `SUPERSEDED` state;
+8. a canonical pointer change must obey the authority-class-specific rules in D09;
+9. canonical living-projection advancement requires `revision + 1` and a new `ArtifactId`;
+10. changed exact bytes MUST NOT reuse an old `ArtifactId`;
+11. no canonical pointer may remain on a now-superseded target;
+12. registry ordering remains canonical;
+13. all ordinary registry invariants remain valid in `current`.
 
-Working/DRAFT/REVIEW artifacts may be added, replaced, or removed because they are not historical authority.
+## Anti-fabrication rule
 
-Transition validation does not infer human authorization.
+When a previous registry exists, a newly added record may begin as:
+
+```text
+WORKING / DRAFT
+WORKING / REVIEW
+LOCKABLE_RECORD / DRAFT
+LOCKABLE_RECORD / REVIEW
+LOCKABLE_RECORD / LOCKED
+LIVING_PROJECTION / CURRENT
+IMMUTABLE_RECORD / IMMUTABLE
+```
+
+but MUST NOT begin as:
+
+```text
+LOCKABLE_RECORD / SUPERSEDED
+IMMUTABLE_RECORD / SUPERSEDED
+```
+
+because `SUPERSEDED` represents historical transition state.
+
+Initial bootstrap validation is different: `validate_repository_contract()` has no prior snapshot and may validate imported historical state if all static registry/supersession invariants are satisfied.
+
+Working/DRAFT/REVIEW artifacts may otherwise be added, replaced, or removed because they are not historical authority.
+
+This closes `RLY-S06-DREV1-F003`.
 
 ---
 
@@ -451,7 +652,7 @@ Representation:
 sha256:<lowercase 64-hex>
 ```
 
-Digest input is the exact raw artifact file bytes.
+Digest input is exact raw artifact file bytes.
 
 No newline normalization.
 
@@ -465,7 +666,7 @@ A digest mismatch is repository-contract corruption/staleness and MUST be surfac
 
 # 18. D15 — Source commit without self-reference
 
-Documentation Governance requires `source_commit`, but storing the current Git commit SHA inside files that participate in that same commit creates a self-reference problem.
+Documentation Governance requires `source_commit`, but serializing the current Git commit SHA inside files that participate in that same commit creates a self-reference problem.
 
 Slice 0.6 therefore defines `source_commit` as resolved provenance, not serialized registry content.
 
@@ -477,7 +678,7 @@ CommitRef source_commit
 
 for the repository snapshot being inspected.
 
-A resolved artifact is constructed using the existing Slice 0.2 `Artifact` model:
+A resolved artifact is constructed using accepted Slice 0.2 `Artifact`:
 
 ```python
 Artifact(
@@ -489,6 +690,24 @@ Artifact(
 )
 ```
 
+Before construction/resolution:
+
+```text
+source_commit.repository
+MUST equal
+registry.repository
+```
+
+Equality is exact typed `RepositoryRef` equality across:
+
+```text
+id
+host
+path
+```
+
+Matching only `RepositoryId` is insufficient.
+
 This satisfies:
 
 ```text
@@ -497,11 +716,21 @@ content_digest stored outside artifact content
 no recursive commit-hash embedding
 ```
 
-Slice 0.6 does NOT prove that a local working directory is materialized from the supplied CommitRef.
+## Phase-1 trust boundary
 
-Exact baseline/worktree resolution belongs to Phase 1 repository integration.
+Slice 0.6 does NOT prove that the supplied filesystem tree was materialized from `source_commit`.
 
-The caller is responsible for providing a repository snapshot corresponding to the supplied commit.
+The caller precondition is explicitly:
+
+> The caller is responsible for supplying a **byte-exact repository snapshot corresponding to `source_commit`**.
+
+Slice 0.6 verifies the artifact bytes against registry digests and verifies repository identity, but it does not run Git to prove commit/worktree correspondence.
+
+A dirty, transformed, or newline-normalized working tree may therefore fail byte-integrity validation and MUST NOT be silently normalized or described as the supplied commit.
+
+Exact baseline/worktree proof belongs to Phase 1 repository integration.
+
+This closes `RLY-S06-DREV1-F002`.
 
 ---
 
@@ -520,17 +749,19 @@ validate_repository_contract(
 Validation MUST:
 
 1. require `.relay/registry.json`;
-2. require `.relay/` to contain no unknown Slice-0.6 files/directories;
+2. require `.relay/` to contain no unknown schema-v1 files/directories;
 3. parse UTF-8 JSON strictly;
-4. reject unknown schema versions;
-5. validate project ID;
-6. validate repository ID;
-7. validate artifact/class/state/canonical/supersession invariants;
-8. safely resolve every registered path beneath repository root;
-9. reject symlink traversal or any path escaping the repository root;
-10. require every registered artifact file to exist as a regular file;
-11. compute exact SHA-256 bytes and require digest equality;
-12. reject registration of `.relay/registry.json` itself.
+4. reject duplicate JSON object keys;
+5. reject unknown schema versions;
+6. validate exact `project_id`;
+7. validate `registry.repository == expected_repository` by full typed equality;
+8. require canonical tuple ordering defined by D03;
+9. validate artifact/class/state/canonical/supersession invariants;
+10. safely resolve every registered path beneath repository root;
+11. reject symlink traversal or any path escaping the repository root;
+12. require every registered artifact file to exist as a regular non-symlink file;
+13. compute exact SHA-256 bytes and require digest equality;
+14. reject registration of `.relay/registry.json` itself.
 
 The operation performs no Git network access and no database write.
 
@@ -540,7 +771,7 @@ The operation performs no Git network access and no database write.
 
 Registered artifact paths MUST resolve to regular files physically contained inside the supplied repository root.
 
-A registered artifact path whose filesystem entry or resolved target escapes through a symlink is invalid.
+A registered path whose filesystem entry or resolved target escapes through a symlink is invalid.
 
 For Slice 0.6, registered artifact files that are symlinks are rejected even when their target remains inside the repository.
 
@@ -577,9 +808,9 @@ Resolution MUST fail when:
 - pointer is broken;
 - target is not an allowed canonical state;
 - artifact bytes no longer match digest;
-- supplied CommitRef repository identity does not match registry repository ID.
+- `source_commit.repository != registry.repository` by full typed equality.
 
-No fallback to filename or recency is permitted.
+No fallback to filename, path convention, Git recency, or modification time is permitted.
 
 ---
 
@@ -596,7 +827,9 @@ resolve_artifact_revision(
 ) -> ResolvedRepositoryArtifact
 ```
 
-This supports locked-record and historical navigation without requiring the artifact to be canonical.
+It supports locked-record and historical navigation without requiring the artifact to be canonical.
+
+The same exact `RepositoryRef` equality and byte-integrity checks apply.
 
 It does not automatically traverse Git history.
 
@@ -604,7 +837,7 @@ It does not automatically traverse Git history.
 
 # 23. D20 — Initial dogfood canonical registry
 
-The Relay repository implementation fixture MUST register the current revisions of the existing living canonical documents:
+The Relay repository implementation fixture MUST register the current revisions of existing living canonical documents:
 
 ```text
 product-proposal
@@ -618,9 +851,11 @@ current-baseline
 
 These keys are dogfood data, not globally mandatory keys for every future Relay project.
 
-The registry MUST point to the documents at their natural existing paths.
+The registry MUST point to documents at their natural existing paths.
 
 Do not copy them under `.relay/`.
+
+The dogfood registry stores the exact Relay `RepositoryRef`, not only its ID.
 
 ---
 
@@ -651,7 +886,7 @@ Relay automation and future UI MUST use the registry to determine canonical stat
 
 # 25. D22 — Repository/cloud authority split
 
-Slice 0.6 locks the following ownership model.
+Slice 0.6 locks this ownership model.
 
 ## Repository-authoritative
 
@@ -678,7 +913,7 @@ operational retry state
 runtime execution infrastructure
 ```
 
-Existing Slice 0.5 durable lifecycle/governance persistence remains authoritative for the runtime governance records it stores.
+Existing Slice 0.5 durable lifecycle/governance persistence remains authoritative for runtime governance records it stores.
 
 It does NOT override repository artifact bytes or repository canonical pointers.
 
@@ -719,11 +954,11 @@ Those capabilities require later repository integration and governed write workf
 
 # 27. D24 — No GitHub assumptions
 
-Repository contract models remain provider-neutral.
+Repository-contract models remain provider-neutral.
 
 No GitHub repository IDs, installation IDs, tokens, API URLs, PR numbers, or GitHub-specific fields appear in `.relay/registry.json`.
 
-Repository identity continues to use accepted `RepositoryRef`.
+Repository identity uses accepted `RepositoryRef` exactly.
 
 ---
 
@@ -737,7 +972,7 @@ Unknown files under `.relay/` are forbidden for schema v1.
 
 Registry values MUST NOT include credentials, private keys, access tokens, passwords, or connection strings.
 
-Semantic secret detection inside arbitrary descriptive strings is not attempted; the contract and code provide no supported secret storage location.
+Semantic secret detection inside arbitrary descriptive strings is not attempted; the contract/code provide no supported secret-storage location.
 
 ---
 
@@ -747,7 +982,7 @@ Registry format is UTF-8 JSON.
 
 Implementation MUST reject duplicate JSON object keys rather than silently using the last value.
 
-A deterministic serializer is provided for fixtures/tooling:
+Deterministic serialization for fixtures/tooling uses:
 
 ```python
 json.dumps(
@@ -758,9 +993,11 @@ json.dumps(
 )
 ```
 
-The contract does not require the committed registry file to be minified.
+Before serialization, model tuples MUST already satisfy the normative D03 order.
 
-Semantic validation, not whitespace, determines validity.
+The contract does not require committed `registry.json` to be minified.
+
+Semantic validation and normative tuple order, not insignificant JSON whitespace, determine validity.
 
 ---
 
@@ -784,6 +1021,7 @@ identity mismatch
 invalid class/state
 broken supersession
 invalid transition
+noncanonical tuple order
 unknown .relay/ file
 unsafe path
 → RepositoryContractInvalid
@@ -796,23 +1034,24 @@ content digest mismatch
 missing canonical key
 broken canonical target
 noncanonical target state
-source CommitRef repository mismatch during resolution
+source CommitRef RepositoryRef mismatch during resolution
 → CanonicalResolutionError
 ```
 
-Pydantic `ValidationError` may remain visible for direct model construction tests; public repository-loading/resolution boundaries translate malformed durable contract state into this error family.
+Pydantic `ValidationError` may remain visible for direct model-construction tests; public repository-loading/resolution boundaries translate malformed durable contract state into this error family.
 
 ---
 
-# 31. D28 — No implicit IDs, clocks, commits, or paths
+# 31. D28 — No implicit IDs, clocks, commits, repositories, or paths
 
 Repository-contract code MUST NOT:
 
-- generate ArtifactIds;
+- generate `ArtifactId` values;
 - read the current clock to populate semantic metadata;
 - run `git rev-parse HEAD` implicitly;
-- infer a repository identity from a remote URL;
-- infer canonical keys from file names;
+- infer a `RepositoryRef` from a remote URL;
+- weaken repository equality to ID-only comparison;
+- infer canonical keys from filenames;
 - assign artifact class/state from directories.
 
 All authority-bearing identity and time values are explicit.
@@ -852,7 +1091,7 @@ Artifact
 require_repository_relative_path
 ```
 
-No generic repository abstraction, plugin system, filesystem provider interface, or Git backend interface is justified in Slice 0.6.
+No generic repository abstraction, plugin system, filesystem-provider interface, or Git backend interface is justified in Slice 0.6.
 
 ---
 
@@ -883,7 +1122,9 @@ Tests MUST cover:
 - duplicate JSON keys;
 - unknown schema version;
 - extra fields;
-- wrong project/repository identity;
+- wrong project identity;
+- wrong full repository identity;
+- same repository ID with wrong host/path;
 - missing artifact file;
 - digest mismatch;
 - absolute / traversal / symlink paths;
@@ -893,15 +1134,23 @@ Tests MUST cover:
 - invalid class/state pair;
 - duplicate canonical key;
 - duplicate artifact ID/path;
+- noncanonical artifact order;
+- noncanonical canonical-pointer order;
 - broken reciprocal supersession;
 - supersession cycle;
 - locked-record mutation across registry transition;
 - immutable-record mutation across registry transition;
-- valid locked→superseded transition;
+- mutation of any frozen historical field;
+- mutation of already-superseded record;
+- introduction of a new already-superseded record;
+- invalid successor maturity;
+- valid locked→superseded direct-successor transition;
+- valid immutable→superseded direct-successor transition;
+- canonical historical pointer direct-successor enforcement;
 - living-projection canonical advancement;
-- changed bytes with reused ArtifactId rejected;
-- source CommitRef repository mismatch;
-- Relay's committed `.relay/registry.json` validates against the repository snapshot fixture used by the test.
+- changed bytes with reused ArtifactId rejection;
+- full source CommitRef repository mismatch;
+- Relay's committed `.relay/registry.json` validating against a repository snapshot fixture.
 
 No external GitHub or network service is needed.
 
@@ -984,111 +1233,124 @@ Slice 1.1+
 **A02** registry schema version 1 validates; unknown future versions reject.  
 **A03** strict extra-forbid models reject unknown fields.  
 **A04** duplicate JSON object keys reject.  
-**A05** project and repository identities are explicit and validated.  
-**A06** artifacts and canonical pointers have deterministic ordering.  
-**A07** no new runtime or development dependency is added.  
-**A08** `.relay/registry.json` cannot register itself.  
-**A09** unknown files/directories under `.relay/` reject in schema v1.  
-**A10** no credential-bearing contract field exists.
+**A05** project identity and full `RepositoryRef` are explicit and validated.  
+**A06** artifacts use normative `(path ASC, artifact_id ASC)` ordering and noncanonical input rejects.  
+**A07** canonical pointers use `canonical_key ASC` ordering and noncanonical input rejects.  
+**A08** no new runtime or development dependency is added.  
+**A09** `.relay/registry.json` cannot register itself.  
+**A10** unknown files/directories under `.relay/` reject in schema v1.  
+**A11** no credential-bearing contract field exists.
 
 ## Artifact metadata
 
-**A11** artifact revision uses existing `ArtifactId`; changed exact revision requires new ID.  
-**A12** artifact revision is integer >=1.  
-**A13** title/type/scope are nonblank.  
-**A14** optional human version is nonblank when present.  
-**A15** timestamp is aware and UTC-normalized.  
-**A16** path uses accepted repository-relative POSIX validation.  
-**A17** digest is accepted SHA-256 `ContentDigest`.  
-**A18** class/state matrix is exact.  
-**A19** duplicate ArtifactId rejects.  
-**A20** duplicate registered path rejects.
+**A12** artifact revision uses existing `ArtifactId`; changed exact revision requires new ID.  
+**A13** artifact revision is integer >=1.  
+**A14** title/type/scope are nonblank.  
+**A15** optional human version is nonblank when present.  
+**A16** timestamp is aware and UTC-normalized.  
+**A17** path uses accepted repository-relative POSIX validation.  
+**A18** digest is accepted SHA-256 `ContentDigest`.  
+**A19** class/state matrix is exact.  
+**A20** duplicate `ArtifactId` rejects.  
+**A21** duplicate registered path rejects.
 
 ## Canonicality
 
-**A21** canonical-key syntax is enforced.  
-**A22** duplicate canonical key rejects.  
-**A23** pointer target must exist.  
-**A24** pointer target revision must match.  
-**A25** DRAFT/REVIEW/SUPERSEDED cannot be canonical.  
-**A26** current living projection may be canonical.  
-**A27** locked record may be canonical.  
-**A28** immutable record may be canonical.  
-**A29** missing canonical key raises `CanonicalResolutionError`.  
-**A30** no path/name/mtime fallback exists.
+**A22** canonical-key syntax is enforced.  
+**A23** duplicate canonical key rejects.  
+**A24** pointer target must exist.  
+**A25** pointer target revision must match.  
+**A26** DRAFT/REVIEW/SUPERSEDED cannot be canonical.  
+**A27** current living projection may be canonical.  
+**A28** locked record may be canonical.  
+**A29** immutable record may be canonical.  
+**A30** missing canonical key raises `CanonicalResolutionError`.  
+**A31** no path/name/mtime fallback exists.  
+**A32** living canonical advancement requires new ArtifactId and revision +1.  
+**A33** canonical locked-record advancement requires exact direct reciprocal supersession.  
+**A34** canonical immutable-record advancement requires exact direct reciprocal supersession.  
+**A35** lockable canonical successor taking authority is `LOCKABLE_RECORD/LOCKED`.  
+**A36** immutable canonical successor taking authority is `IMMUTABLE_RECORD/IMMUTABLE`.
 
 ## Content integrity / paths
 
-**A31** registered file must exist.  
-**A32** registered file must be regular non-symlink file.  
-**A33** resolved path must remain inside repo root.  
-**A34** exact raw-byte SHA-256 must match registry.  
-**A35** digest mismatch raises `ArtifactIntegrityError`.  
-**A36** canonical resolution re-verifies content integrity.  
-**A37** exact artifact resolution re-verifies content integrity.
+**A37** registered file must exist.  
+**A38** registered file must be regular and non-symlink.  
+**A39** resolved path must remain inside repository root.  
+**A40** exact raw-byte SHA-256 must match registry.  
+**A41** digest mismatch raises `ArtifactIntegrityError`.  
+**A42** canonical resolution re-verifies content integrity.  
+**A43** exact artifact resolution re-verifies content integrity.
 
 ## Supersession / historical authority
 
-**A38** supersession references are exact and bidirectional.  
-**A39** superseding revision increments by exactly one.  
-**A40** supersession chain cannot cycle.  
-**A41** supersession chain preserves artifact type/class.  
-**A42** superseded historical record remains registered.  
-**A43** locked/immutable/superseded record cannot disappear across transition.  
-**A44** locked immutable metadata cannot change across transition.  
-**A45** LOCKED→SUPERSEDED is allowed only with valid reciprocal link.  
-**A46** IMMUTABLE→SUPERSEDED is allowed only with valid reciprocal link.
+**A44** supersession references are exact and bidirectional.  
+**A45** superseding revision increments by exactly one.  
+**A46** supersession chain cannot cycle.  
+**A47** supersession lineage preserves artifact type/class.  
+**A48** superseded historical record remains registered and present.  
+**A49** historical record cannot disappear across transition.  
+**A50** historical record is field-for-field frozen except explicitly allowed state/superseded_by transition.  
+**A51** an already `SUPERSEDED` record is completely frozen.  
+**A52** `LOCKED→SUPERSEDED` requires valid reciprocal direct successor.  
+**A53** `IMMUTABLE→SUPERSEDED` requires valid reciprocal direct successor.  
+**A54** a newly added transition record cannot begin `SUPERSEDED`.  
+**A55** lockable superseding successor is `LOCKABLE_RECORD/LOCKED` even when noncanonical.  
+**A56** immutable superseding successor is `IMMUTABLE_RECORD/IMMUTABLE` even when noncanonical.
 
 ## Living projection revision
 
-**A47** canonical living projection advancement requires new ArtifactId.  
-**A48** new living revision equals previous revision +1.  
-**A49** new canonical target is `LIVING_PROJECTION/CURRENT`.  
-**A50** old ArtifactId cannot be reused for changed digest.  
-**A51** Git history, not current registry retention, provides prior living-projection snapshots.
+**A57** canonical living-projection advancement requires new ArtifactId.  
+**A58** new living revision equals previous revision +1.  
+**A59** new canonical target is `LIVING_PROJECTION/CURRENT`.  
+**A60** old ArtifactId cannot be reused for changed digest.  
+**A61** Git history, not current registry retention, provides prior living-projection snapshots.
 
 ## Source commit / existing Artifact integration
 
-**A52** registry does not serialize its own source commit.  
-**A53** caller supplies exact `CommitRef`.  
-**A54** resolution rejects CommitRef repository identity mismatch.  
-**A55** resolved exact revision constructs/contains accepted Slice-0.2 `Artifact`.  
-**A56** constructed Artifact uses registry ID/path/type/digest and supplied commit.  
-**A57** no hidden Git command is used.
+**A62** registry does not serialize its own source commit.  
+**A63** caller supplies exact `CommitRef`.  
+**A64** registry binds full accepted `RepositoryRef`, not repository ID alone.  
+**A65** expected repository validation uses exact typed `RepositoryRef` equality.  
+**A66** source `CommitRef.repository` must exactly equal registry `RepositoryRef`.  
+**A67** same repository ID with differing host/path rejects.  
+**A68** resolved exact revision constructs/contains accepted Slice-0.2 `Artifact`.  
+**A69** constructed Artifact uses registry ID/path/type/digest and supplied commit.  
+**A70** no hidden Git command is used.  
+**A71** caller precondition explicitly requires a byte-exact repository snapshot corresponding to source commit.  
+**A72** Slice 0.6 does not silently normalize worktree bytes or prove commit/worktree correspondence.
 
 ## Authority split / scope
 
-**A58** repository artifact bytes and canonical pointers are repository-authoritative.  
-**A59** credentials/runtime operational state remain cloud/runtime authoritative.  
-**A60** derived cloud registry mirrors do not override repository authority.  
-**A61** mismatch is surfaced, never last-write-wins.  
-**A62** no repository↔SQLite synchronization is implemented.  
-**A63** no GitHub-specific field enters registry schema.  
-**A64** no GitHub/network access occurs.  
-**A65** no artifact/canonical mutation API is exposed.  
-**A66** existing persistence behavior does not implicitly scan `.relay/`.  
-**A67** no UI or agent execution is introduced.  
-**A68** no Slice 1.x capability is implemented.
+**A73** repository artifact bytes and canonical pointers are repository-authoritative.  
+**A74** credentials/runtime operational state remain cloud/runtime authoritative.  
+**A75** derived cloud registry mirrors do not override repository authority.  
+**A76** mismatch is surfaced, never last-write-wins.  
+**A77** no repository↔SQLite synchronization is implemented.  
+**A78** no GitHub-specific field enters registry schema.  
+**A79** no GitHub/network access occurs.  
+**A80** no artifact/canonical mutation API is exposed.  
+**A81** existing persistence behavior does not implicitly scan `.relay/`.  
+**A82** no UI or agent execution is introduced.  
+**A83** no Slice 1.x capability is implemented.
 
 ## Dogfood / quality
 
-**A69** Relay's own registry includes product-proposal.  
-**A70** Relay's own registry includes build-plan.  
-**A71** Relay's own registry includes documentation-governance.  
-**A72** Relay's own registry includes engineering-simplicity-quality.  
-**A73** Relay's own registry includes current-baseline.  
-**A74** dogfood entries point to existing natural document paths.  
-**A75** dogfood digests match exact bytes.  
-**A76** registry validation succeeds after clean checkout/snapshot materialization.  
-**A77** all existing Slice 0.1–0.5 tests remain green.  
-**A78** Ruff format passes.  
-**A79** Ruff lint passes.  
-**A80** Pyright passes.  
-**A81** pytest passes.  
-**A82** build passes.  
-**A83** `git diff --check` passes.  
-**A84** no dependencies added.  
-**A85** Minimum Sufficient Architecture review finds no speculative repository framework.
+**A84** Relay's own registry includes `product-proposal`.  
+**A85** Relay's own registry includes `build-plan`.  
+**A86** Relay's own registry includes `documentation-governance`.  
+**A87** Relay's own registry includes `engineering-simplicity-quality`.  
+**A88** Relay's own registry includes `current-baseline`.  
+**A89** dogfood entries point to existing natural document paths.  
+**A90** dogfood registry contains the exact Relay `RepositoryRef`.  
+**A91** dogfood digests match exact bytes.  
+**A92** registry validation succeeds after clean snapshot materialization.  
+**A93** all existing Slice 0.1–0.5 tests remain green.  
+**A94** Ruff format/lint, Pyright, pytest, build, and `git diff --check` pass.  
+**A95** no dependencies are added.  
+**A96** Minimum Sufficient Architecture review finds no speculative repository framework.  
+**A97** Revision-1 findings F001–F004 are represented by executable acceptance/regression criteria.  
+**A98** completing Slice 0.6 leaves Phase-0 protocol-review hard stop active.
 
 ---
 
@@ -1105,7 +1367,11 @@ test_registry_rejects_duplicate_json_key
 
 test_registry_rejects_unknown_field
 
-test_registry_rejects_wrong_project_or_repository
+test_registry_rejects_wrong_project
+
+test_registry_rejects_repositoryref_mismatch
+
+test_registry_rejects_repositoryref_mismatch_with_same_repository_id
 
 test_registry_rejects_duplicate_artifact_id
 
@@ -1116,6 +1382,10 @@ test_registry_rejects_invalid_class_state_pair
 test_registry_rejects_self_registration
 
 test_registry_rejects_unknown_dot_relay_entry
+
+test_registry_rejects_noncanonical_artifact_order
+
+test_registry_rejects_noncanonical_canonical_order
 
 test_contract_rejects_missing_artifact
 
@@ -1135,6 +1405,8 @@ test_canonical_resolution_rejects_noncurrent_target
 
 test_resolution_rejects_source_commit_repository_mismatch
 
+test_resolution_rejects_source_commit_host_or_path_mismatch
+
 test_supersession_requires_reciprocal_links
 
 test_supersession_rejects_cycle
@@ -1145,7 +1417,27 @@ test_registry_transition_rejects_locked_record_removal
 
 test_registry_transition_rejects_immutable_record_mutation
 
+test_registry_transition_rejects_historical_revision_mutation
+
+test_registry_transition_rejects_historical_class_mutation
+
+test_registry_transition_rejects_historical_supersedes_mutation
+
+test_registry_transition_rejects_already_superseded_mutation
+
+test_registry_transition_rejects_new_already_superseded_record
+
+test_registry_transition_rejects_locked_superseded_by_review_successor
+
 test_registry_transition_allows_locked_to_superseded
+
+test_registry_transition_allows_immutable_to_superseded
+
+test_transition_rejects_canonical_locked_jump_without_supersession
+
+test_transition_allows_canonical_locked_direct_successor
+
+test_transition_rejects_canonical_immutable_jump_without_supersession
 
 test_registry_transition_requires_living_revision_increment
 
@@ -1189,30 +1481,63 @@ Do not lock before Human Authority acceptance.
 
 The reviewer must answer explicitly:
 
-**Q1** Does a single `.relay/registry.json` satisfy the accepted requirements without duplicating repository documents?  
+**Q1** Does a single `.relay/registry.json` satisfy accepted requirements without duplicating repository documents?  
 **Q2** Does the design preserve Slice-0.2 `Artifact` immutability and Slice-0.5 insert-once ID semantics?  
-**Q3** Is the canonical relationship explicit rather than inferred from file paths/recency?  
-**Q4** Does omitting serialized `source_commit` correctly avoid self-reference while still satisfying provenance requirements?  
-**Q5** Is the caller-supplied `CommitRef` trust boundary acceptable before Phase-1 baseline resolution?  
+**Q3** Is canonicality explicit rather than inferred from file paths/recency, and do historical canonical changes require direct supersession?  
+**Q4** Does omitting serialized `source_commit` correctly avoid self-reference while satisfying provenance requirements?  
+**Q5** Is the caller-supplied `CommitRef` boundary acceptable with exact `RepositoryRef` equality and a byte-exact snapshot precondition before Phase-1 baseline resolution?  
 **Q6** Are living projections modeled without falsely treating them as locked records?  
 **Q7** Does registry-transition validation enforce historical immutability without becoming an authorization engine?  
-**Q8** Are supersession semantics strong enough and still minimal?  
+**Q8** Are supersession semantics, successor maturity, field freezing, and anti-fabrication rules strong enough and still minimal?  
 **Q9** Is the repository/cloud authority split unambiguous and noncompetitive?  
 **Q10** Does the design improperly pull GitHub/repository synchronization from Phase 1?  
-**Q11** Is rejecting all unexpected `.relay/` schema-v1 entries too restrictive or appropriately minimal?  
-**Q12** Are path/symlink/digest checks sufficient for deterministic artifact identity?  
-**Q13** Does the dogfood registry introduce any commit/digest recursion?  
-**Q14** Are there any speculative abstractions violating Minimum Sufficient Architecture?
+**Q11** Is rejecting all unexpected `.relay/` schema-v1 entries appropriately minimal?  
+**Q12** Are path/symlink/raw-byte digest checks sufficient for deterministic artifact identity?  
+**Q13** Does the dogfood registry avoid commit/digest recursion while binding the exact Relay `RepositoryRef`?  
+**Q14** Are the normative tuple-order rules sufficient without adding speculative abstractions?
 
 ---
 
-# 43. Design hard stop
+# 43. Revision-1 finding disposition
 
 ```text
-Slice 0.6 Design Revision 1:
+RLY-S06-DREV1-F001
+CANONICAL_HISTORICAL_AUTHORITY_CAN_CHANGE_WITHOUT_SUPERSESSION
+→ RESOLVED by D09, D11, D13, A33–A36
+
+RLY-S06-DREV1-F002
+REGISTRY_REPOSITORY_IDENTITY_WEAKER_THAN_ACCEPTED_REPOSITORY_IDENTITY
+→ RESOLVED by D03, D15, D16, D18/D19, A64–A72
+
+RLY-S06-DREV1-F003
+HISTORICAL_RECORD_TRANSITION_CONTRACT_NOT_FULLY_CLOSED
+→ RESOLVED by D11, D12, D13, A49–A56
+
+RLY-S06-DREV1-F004
+ARTIFACT_CANONICAL_ORDER_NOT_NORMATIVELY_DEFINED
+→ RESOLVED by D03, D16, D26, A06–A07
+```
+
+No other Revision-1 architecture decision is reopened.
+
+---
+
+# 44. Design hard stop
+
+```text
+Slice 0.6 Design Revision 2:
 COMPLETE / PENDING INDEPENDENT DESIGN REVIEW
 
 Implementation:
+NOT AUTHORIZED
+
+.relay/ implementation:
+NOT AUTHORIZED
+
+CURRENT_BASELINE modification:
+NOT AUTHORIZED
+
+Dependency change:
 NOT AUTHORIZED
 
 Phase 1 / Slice 1.1:
