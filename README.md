@@ -6,20 +6,57 @@ Its core thesis is:
 
 > **Agents perform engineering; Relay governs engineering.**
 
-This repository is currently a **foundation starter**. It implements the engineering substrate defined by Slice 0.1 and intentionally does not implement Relay product-domain behavior yet.
+Relay is being built inside-out: deterministic engineering governance first, then repository integration, human workflow, agents, and higher autonomy.
 
 ## Current status
 
 ```text
-Product capability: engineering foundation only
-Domain model:       not implemented
-Lifecycle engine:   not implemented
-Handover gates:     not implemented
-GitHub integration: not implemented
-Agent execution:    not implemented
+Phase 0:              COMPLETE / CLOSED
+Core domain model:    ACCEPTED
+Lifecycle engine:     ACCEPTED
+Handover governance:  ACCEPTED
+Persistence/events:   ACCEPTED
+Repository contract:  ACCEPTED
+Phase-0 protocol review: SUBMITTED / PENDING HUMAN ACCEPTANCE
+Phase 1:              NOT AUTHORIZED
+Agent execution:      NOT IMPLEMENTED
 ```
 
-See `docs/CURRENT_BASELINE.md` before starting work.
+The accepted Phase-0 baseline is recorded in `docs/CURRENT_BASELINE.md`.
+
+## What Phase 0 provides
+
+Relay currently implements:
+
+- immutable provider-neutral domain values;
+- deterministic lifecycle transitions and replay;
+- validity / authority / autonomy handover gates;
+- durable SQLite persistence and migration verification;
+- authorization and human-decision persistence;
+- repository-side canonical artifact governance through `.relay/registry.json`;
+- exact raw-byte digest validation and repository-relative path safety;
+- historical artifact locking/supersession semantics;
+- explicit canonical living projections.
+
+It does **not** yet implement GitHub product integration, repository mutation, a human-facing board, model providers, agent execution, or Phase-1 workflows.
+
+## Canonical documentation
+
+Canonical document identity is defined by `.relay/registry.json`, not by file name or modification time.
+
+Current canonical projections include:
+
+- Product Proposal v0.4
+- Build Plan v0.4
+- Current Baseline
+- Documentation Governance v0.3
+- Engineering Simplicity, Scope, and Quality
+
+The Phase-0 hard-stop review is recorded at:
+
+```text
+docs/reviews/PHASE_0_PROTOCOL_REVIEW.md
+```
 
 ## Requirements
 
@@ -31,8 +68,6 @@ See `docs/CURRENT_BASELINE.md` before starting work.
 ```bash
 uv sync --group dev
 ```
-
-The committed lock file is the authoritative dependency resolution once generated/updated against Python 3.14.
 
 ## Quality checks
 
@@ -47,27 +82,16 @@ uv build
 ## Repository structure
 
 ```text
-src/relay_engine/          minimal runtime foundation
-tests/unit/                foundation tests
-docs/                      product, policy, slice, and decision records
+src/relay_engine/          accepted Relay runtime foundation
+tests/                     deterministic regression coverage
+docs/                      product, policy, architecture, slice, and review records
+.relay/registry.json       schema-v1 canonical artifact registry
 AGENTS.md                   coding-agent governance instructions
 .github/workflows/ci.yml   canonical CI checks
 ```
 
-## Canonical documentation
+## Development rule
 
-Start with:
+**Unblocked is not authorized.**
 
-- `docs/PRODUCT_PROPOSAL.md`
-- `docs/BUILD_PLAN.md`
-- `docs/CURRENT_BASELINE.md`
-- `docs/policies/DOCUMENTATION_GOVERNANCE.md`
-- `docs/policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md`
-
-Slice documents live in `docs/slices/`.
-
-## Important development rule
-
-The presence of a future slice document does **not** authorize its implementation.
-
-Do not advance beyond the current authorized boundary without explicit human authorization.
+The existence of a design, roadmap entry, or passing review does not authorize the next implementation phase. Phase 1 remains closed until the Phase-0 protocol review is accepted and Human Authority explicitly opens Phase 1.

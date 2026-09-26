@@ -1,224 +1,179 @@
 # Relay — Current Baseline
 
-**Status:** Phase 0 complete — Slice 0.6 accepted
-**Document class:** Living canonical projection
-**Canonical key:** `current-baseline`
+**Status:** Phase 0 complete — protocol review submitted  
+**Document class:** Living canonical projection  
+**Canonical key:** `current-baseline`  
 **Date:** September 2026
 
 ---
 
-# 1. Accepted Project Baseline
+# 1. Accepted technical baseline
+
+Phase 0 is complete and closed.
+
+Accepted Phase-0 acceptance-record SHA:
 
 ```text
-Accepted Slice: 0.6 — .relay/ Repository Contract
-Accepted project baseline before Slice 0.6: 442ed7657fed8d58974bd4e16aeb8a9fca495ceb
-Accepted design: Slice 0.6 Design Revision 4
-Accepted design SHA: adc3164c41b847543181e106c37c0dbad82c7c6a
-Accepted implementation result: 1903017dd7832dc21f0554be762bac1002891a89
-Independent evaluation: RLY-S06-EVAL-001 — ACCEPT
-Human acceptance: RLY-S06-ACCEPT-001
-Repository branch: main
-Visibility: public — human-authorized deviation
+6c1b3e1098cdc6c220868aea8a492c413d3cca35
 ```
 
-The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.6 result SHA. The preceding accepted baseline was Slice 0.5.
-
-Slice 0.5 lineage:
+Accepted Slice 0.6 implementation result:
 
 ```text
-Accepted Slice: 0.5 — Event and Persistence Model
-Accepted design: Slice 0.5 Design Revision 2
-Accepted design SHA: 2d2822644209e1002e77c39ab8f06757c583103b
-Initial implementation candidate: 32f92b154d380a77188db36d9ea00c874748664a
-Independent evaluation: RLY-S05-EVAL-001 — REWORK
-Bounded migration rework: 5e387a9d3f123b6333f9b700b22a8f9846a51f0b
-Accepted Slice 0.5 result: d3ee53a572483e0bd96dbac2554bfad24c06136a
-Independent reevaluation: RLY-S05-EVAL-002 — ACCEPT
-Human acceptance: RLY-S05-ACCEPT-001
+1903017dd7832dc21f0554be762bac1002891a89
 ```
 
-The initial evaluation returned REWORK and required technical corrections. Bounded rework under `RLY-S05-EVAL-001` completed successfully, and independent reevaluation `RLY-S05-EVAL-002` returned ACCEPT. The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.5 result SHA.
-
-Earlier accepted results remain:
+Slice 0.6 closure evaluation:
 
 ```text
-Slice 0.1 implementation SHA: e8598ae5ffb046d4131e04655a0c063ff1e41ccc
-Slice 0.2 implementation SHA: cdf5b1fedc92762095f38d684d4655aaa6bf57f0
-Slice 0.3 implementation SHA: 7a8d2ad37ef6816335175ca0ccdc37e9c1b13612
-Slice 0.3 technical implementation commit: 26e6c300f6b266f811e09084402fe2182d693f0f
-Pre-Slice-0.3 accepted repository baseline: cf4a2f5195bdb6e97dfece2a2e608e9c5adf9cbd
+RLY-S06-CLOSE-EVAL-001 — ACCEPT
 ```
 
-# 2. Engineering Foundation
+The current repository may include a later documentation/protocol-review synchronization commit. That commit is separate provenance and is not embedded into this same living projection to avoid self-reference.
+
+---
+
+# 2. Phase-0 state
 
 ```text
-Runtime:             Python 3.14
-Dependency manager: uv
-Distribution:        relay-engine
-Import package:      relay_engine
-Build backend:       hatchling
-Configuration:       Pydantic settings
-Structured logging: structlog
-Formatter/linter:    Ruff
-Type checker:        Pyright
-Test runner:         pytest
-CI:                  GitHub Actions
-```
-
-# 3. Accepted Capability
-
-The accepted project includes the Slice 0.1 engineering foundation, Slice 0.2 core domain model, Slice 0.3 deterministic lifecycle state machine, and Slice 0.4 handover governance.
-
-Slice 0.2 vocabulary:
-
-```text
-ActorRef, RepositoryRef, CommitRef, Project, Baseline, Slice,
-ScopeSpec, AcceptanceCriterion, Artifact, Decision, Evidence
-```
-
-Slice 0.3 adds deterministic lifecycle values, immutable lifecycle events, typed lifecycle errors, explicit transitions, and strict event replay. Lifecycle state remains separate from `Slice`.
-
-Slice 0.4 adds:
-
-```text
-deterministic handover gates
-RED / YELLOW / GREEN traffic-light evaluation
-validity / authority / autonomy separation
-durable AuthorizationGrant
-execution-time HumanApprovalDecision
-set-bound HumanChoiceDecision
-governance_revision decision-basis freshness
-hard-stop governance
-artifact/evidence/dependency prerequisites
-evaluation-outcome routing
-quality evidence
-change-surface review
-risk review
-toolchain-change blocking
-canonical reason/result ordering
-unique executable-path enforcement
-eventless lifecycle transition validation
-governed lifecycle execution with authority-causality checks
-```
-
-Gate evaluation is deterministic and consumes explicit facts. Governed execution reevaluates current context before delegating to the lifecycle transition operation.
-
-Slice 0.5 adds:
-
-```text
-SQLite Phase-0 persistence
-typed canonical JSON payload persistence
-insert-only stable domain identities
-immutable lifecycle event history
-materialized current lifecycle projection
-event→snapshot replay verification
-ABSENT→revision-0 lifecycle initialization
-expected-revision optimistic concurrency
-explicit migration versioning/checksums
-contiguous applied migration history
-atomic pending migration batches
-post-migration physical-schema verification
-durable gate revisions
-durable authorization grants
-durable human decisions
-GateEvaluationRecord audit evidence
-ExecutionRecord causal linkage
-persisted governed handover execution
-restart recovery and integrity verification
-```
-
-Slice 0.6 adds the schema-v1 `.relay/registry.json` repository contract with explicit canonical keys and pointers, full `RepositoryRef` binding, strict immutable models, duplicate-key rejection, normative ordering, raw-byte SHA-256 and safe-path validation, historical supersession and field freezing, canonical-key persistence, living-projection advancement, pure transition validation, and explicit observation-commit provenance. Resolution returns the exact registry revision and observation `CommitRef`; it does not materialize or persist a snapshot-varying Slice 0.2 `Artifact`.
-
-# 4. Accepted Slice 0.3 Records
-
-```text
-Accepted design: docs/slices/SLICE_0_3_STATE_MACHINE_AND_LIFECYCLE.md — Revision 4
-Accepted development memory: docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY.md — LOCKED
-Accepted memory amendment: docs/slices/SLICE_0_3_STATE_MACHINE_MEMORY_AMENDMENT_001.md — LOCKED / ACCEPTED CORRECTION
-Accepted decision: docs/decisions/ADR-0003-lifecycle-state-decomposition.md — LOCKED / ACCEPTED
-Architecture: docs/architecture/LIFECYCLE_STATE_MACHINE.md
-```
-
-The acceptance-record commit is `cad415cebdd0972d429567558d79a8c1f31514d4`. The amendment clarifies the exact Human Authority instruction and is read together with the locked memory.
-
-# 5. Accepted Slice 0.4 Records and Process Exception
-
-```text
-Accepted design: docs/slices/SLICE_0_4_HANDOVER_GATES_AND_TRAFFIC_LIGHTS.md — Revision 2
-Accepted development memory: docs/slices/SLICE_0_4_HANDOVER_GATES_MEMORY.md — LOCKED / ACCEPTED
-Accepted decision: docs/decisions/ADR-0004-handover-governance-separation.md — LOCKED / ACCEPTED
-Architecture: docs/architecture/HANDOVER_GOVERNANCE.md
-Human ratification: RLY-S04-RATIFY-001
-```
-
-Implementation began before explicit pre-execution authorization. Human Authority ratified that one-time deviation through `RLY-S04-RATIFY-001` after independent technical evaluation. The ratification records the actual sequence; it does not claim prior authorization existed or rewrite history.
-
-The accepted Slice 0.4 result is `493571dc13cb5f4afb27367f5f7e1528b0448041`; its technical implementation is `babd0980ed00a8ef686f510075e2848fd84831b5`. The finalization commit is separate acceptance provenance and does not replace either SHA.
-
-# 6. Deferred Capability
-
-Relay does not yet provide:
-
-```text
-GitHub API product integration
-clone / fetch / pull / push capability
-branch, commit, or PR creation capability
-baseline/worktree proof
-repository registration service
-stable registry-revision → core Artifact CommitRef binding
-Slice 0.5 Artifact persistence from repository observations
-repository↔SQLite synchronization
-canonical gate-set discovery
-agent execution
-AgentRole / AgentAssignment
-handover packet construction
-notifications
-UI / board
-REST/API
-RBAC / identity
-secrets storage
-risk scoring
-quality-command execution
-provider/model integration
-authorization expiry/revocation
-cloud database
-backup/replication product
-full event sourcing
-cloud repository control plane
-Phase 1 / Slice 1.1
-```
-
-The future UI requirement remains tracked separately in GitHub Issue #1: “Future UI: governance handover cards and structured human decision controls.” It was not implemented in Slice 0.5 or Slice 0.6.
-
-# 7. Accepted Slice 0.6 Records
-
-```text
-Accepted project baseline before Slice 0.6: 442ed7657fed8d58974bd4e16aeb8a9fca495ceb
-Accepted Slice 0.6 Design Revision 4: adc3164c41b847543181e106c37c0dbad82c7c6a
-Independent design evaluation: RLY-S06-DESIGN-EVAL-004 — ACCEPT
-Design acceptance: RLY-S06-DESIGN-ACCEPT-001
-Implementation authorization: RLY-S06-AUTH-001
-Accepted Slice 0.6 implementation: 1903017dd7832dc21f0554be762bac1002891a89
-Independent implementation evaluation: RLY-S06-EVAL-001 — ACCEPT
-Human implementation acceptance: RLY-S06-ACCEPT-001
-Slice 0.6 development memory: LOCKED / ACCEPTED
-ADR-0006: LOCKED / ACCEPTED
-```
-
-The acceptance-record commit is separate provenance and does not replace the accepted Slice 0.6 implementation SHA.
-
-# 8. Phase-0 Completion and Hard Stop
-
-```text
-Phase 0: COMPLETE
 Slice 0.1: CLOSED / ACCEPTED
 Slice 0.2: CLOSED / ACCEPTED
 Slice 0.3: CLOSED / ACCEPTED
 Slice 0.4: CLOSED / ACCEPTED
 Slice 0.5: CLOSED / ACCEPTED
 Slice 0.6: CLOSED / ACCEPTED
-Next gate: HARD STOP — PROTOCOL REVIEW
-Phase 1: NOT AUTHORIZED
+
+Phase 0:
+COMPLETE / CLOSED
 ```
 
-Phase-0 completion does not open Slice 1.1 or authorize Phase-1 work. The hard stop remains active pending protocol review and new explicit Human Authority decisions.
+Accepted Phase-0 capability includes:
+
+- Python 3.14 / uv engineering foundation;
+- provider-neutral immutable domain values;
+- deterministic lifecycle transitions and replay;
+- deterministic handover gates and traffic lights;
+- validity / authority / autonomy separation;
+- durable authorization and human-decision records;
+- SQLite persistence, migrations, restart recovery, and causal audit records;
+- schema-v1 repository artifact registry;
+- explicit canonical pointers;
+- historical artifact immutability/supersession;
+- raw-byte digest and path integrity;
+- observation-commit provenance without snapshot-varying core `Artifact` construction.
+
+---
+
+# 3. Canonical living documents
+
+Canonical status is defined by `.relay/registry.json`.
+
+Current living projections include:
+
+```text
+product-proposal
+build-plan
+current-baseline
+documentation-governance
+engineering-simplicity-quality
+```
+
+The current registry revision is authoritative for the exact target path and revision of each key.
+
+---
+
+# 4. Phase-0 protocol review
+
+Review record:
+
+```text
+docs/reviews/PHASE_0_PROTOCOL_REVIEW.md
+```
+
+Review ID:
+
+```text
+RLY-P0-PROTOCOL-REVIEW-001
+```
+
+Submitted reviewer outcome:
+
+```text
+ACCEPT WITH PROCESS AMENDMENTS
+```
+
+Required amendments:
+
+```text
+P0-PR-01 registered living-projection impact preflight
+P0-PR-02 visible current/next role + model
+P0-PR-03 explicit design-review outcome vocabulary
+P0-PR-04 review acceptance and next-phase authorization remain separate
+```
+
+The review is submitted but still requires Human Authority acceptance.
+
+---
+
+# 5. Current hard stop
+
+```text
+PHASE-0 PROTOCOL REVIEW:
+SUBMITTED / PENDING HUMAN ACCEPTANCE
+
+PHASE 1:
+NOT AUTHORIZED
+
+SLICE 1.1:
+NOT OPEN
+
+HARD STOP:
+ACTIVE
+```
+
+A pre-review request to proceed to Phase 1 does not satisfy the accepted rule requiring a fresh Human Authority decision after the review is available.
+
+---
+
+# 6. Deferred capability
+
+Relay does not yet provide:
+
+- GitHub App/product integration;
+- repository registration or baseline/worktree proof;
+- clone/fetch/pull/push product workflow;
+- branch/commit/PR creation workflow;
+- repository↔SQLite synchronization;
+- stable registry-revision → core-Artifact commit binding;
+- human-facing board;
+- model/provider execution;
+- agent workspaces;
+- implementation/evaluation automation;
+- research/experiment execution;
+- multi-agent orchestration.
+
+These remain later-phase capabilities.
+
+---
+
+# 7. Next legitimate decision
+
+Human Authority may now review:
+
+```text
+RLY-P0-PROTOCOL-REVIEW-001
+```
+
+If accepted, Human Authority may separately authorize:
+
+```text
+Phase 1:
+OPEN
+
+Slice 1.1:
+DESIGN ONLY
+```
+
+Slice 1.1 implementation would remain unauthorized until its design is independently reviewed and explicitly authorized.
+
+**Unblocked ≠ authorized.**
