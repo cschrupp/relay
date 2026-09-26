@@ -197,8 +197,25 @@ Independent reevaluation: RLY-S05-EVAL-002 — ACCEPT
 Human acceptance: RLY-S05-ACCEPT-001
 Slice 0.5 memory: LOCKED / ACCEPTED
 ADR-0005: LOCKED / ACCEPTED
-Slice 0.6: NOT AUTHORIZED
-Hard stop: ACTIVE
+Slice 0.6: IMPLEMENTATION AUTHORIZED / CANDIDATE PENDING EVALUATION
+Authorization: RLY-S06-AUTH-001
+Accepted Slice 0.6 design: Revision 4, adc3164c41b847543181e106c37c0dbad82c7c6a
+Phase 1 / Slice 1.1: NOT AUTHORIZED
+Hard stop after Slice 0.6 acceptance: ACTIVE
 ```
 
-The initial Slice 0.5 submission received REWORK before the bounded technical corrections and later acceptance. Slice 0.6 remains NOT AUTHORIZED; the accepted Slice 0.5 design and implementation do not authorize it.
+The initial Slice 0.5 submission received REWORK before the bounded technical corrections and later acceptance. Slice 0.5 remains the accepted project baseline until the Slice 0.6 candidate is independently evaluated and accepted. The Slice 0.6 authorization is limited to its accepted repository-contract design; it does not authorize Phase 1 / Slice 1.1.
+
+# 8. Slice 0.6 Candidate Projection
+
+```text
+Slice: 0.6 — .relay/ Repository Contract
+Accepted project baseline: Slice 0.5
+Accepted design: Revision 4, adc3164c41b847543181e106c37c0dbad82c7c6a
+Implementation authorization: RLY-S06-AUTH-001
+Candidate branch: slice/0.6-repository-contract
+Candidate status: IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+Phase 1 / Slice 1.1: NOT AUTHORIZED
+```
+
+The implementation-result SHA is reported in the handover and is not embedded in the same commit. Slice 0.6 remains a candidate; no acceptance is claimed here.
