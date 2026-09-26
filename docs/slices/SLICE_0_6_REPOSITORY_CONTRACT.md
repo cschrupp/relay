@@ -1,12 +1,14 @@
 # Slice 0.6 — `.relay/` Repository Contract
 
-**Document revision:** 2  
+**Document revision:** 3  
 **Status:** REVIEW  
 **Document class:** Lockable design record  
 **Authority:** Human Authority opened Slice 0.6 design after formal Slice 0.5 closure  
 **Accepted project baseline:** `442ed7657fed8d58974bd4e16aeb8a9fca495ceb`  
 **Revision 1:** `b1e443aa2a7b4e3ad33f61c4d2b853cd5cb28e61`  
 **Revision 1 review:** `RLY-S06-DESIGN-EVAL-001 — REVISE`  
+**Revision 2:** `0096521a1fd49cb2fb4f093f977ada0193bd22ec`  
+**Revision 2 review:** `RLY-S06-DESIGN-EVAL-002 — REVISE`  
 **Implementation authorization:** NOT GRANTED  
 **Slice 1.1 / GitHub integration:** NOT AUTHORIZED
 
@@ -24,21 +26,17 @@ The governing principle remains:
 
 > **Historical authority is immutable. Current truth is represented through living projections and explicit canonical pointers.**
 
-Revision 2 is a bounded hardening of Revision 1. It resolves exactly:
+Revision 3 is a bounded hardening of Revision 2. It resolves exactly:
 
 ```text
-RLY-S06-DREV1-F001
-CANONICAL_HISTORICAL_AUTHORITY_CAN_CHANGE_WITHOUT_SUPERSESSION
+RLY-S06-DREV2-F005
+STATIC_SUPERSESSION_STATE_AND_LINEAGE_INVARIANTS_INCOMPLETE
 
-RLY-S06-DREV1-F002
-REGISTRY_REPOSITORY_IDENTITY_WEAKER_THAN_ACCEPTED_REPOSITORY_IDENTITY
-
-RLY-S06-DREV1-F003
-HISTORICAL_RECORD_TRANSITION_CONTRACT_NOT_FULLY_CLOSED
-
-RLY-S06-DREV1-F004
-ARTIFACT_CANONICAL_ORDER_NOT_NORMATIVELY_DEFINED
+RLY-S06-DREV2-F006
+CANONICAL_KEY_REMOVAL_BYPASSES_TRANSITION_SEMANTICS
 ```
+
+It also clarifies that replacing nonhistorical bytes never reuses an `ArtifactId`.
 
 No architectural redesign is introduced.
 
@@ -198,8 +196,6 @@ canonical_key ASC
 The loader MUST reject noncanonical ordering rather than silently reorder durable contract input.
 
 The deterministic serializer emits the same normative order.
-
-This closes `RLY-S06-DREV1-F004`.
 
 ---
 
@@ -451,7 +447,46 @@ A canonical historical authority pointer MUST NOT jump to an unrelated locked/im
 
 These are structural lineage rules only; they do not authorize the authority change.
 
-This closes `RLY-S06-DREV1-F001`.
+## Canonical-key persistence
+
+For schema v1, a canonical key that exists in `previous` MUST also exist in `current`.
+
+Formally:
+
+```text
+previous canonical-key set
+⊆
+current canonical-key set
+```
+
+An existing canonical key may:
+
+```text
+remain on the same valid target
+```
+
+or:
+
+```text
+advance according to the authority-class rules above
+```
+
+but it MUST NOT disappear.
+
+New canonical keys may be added when their targets satisfy ordinary canonical invariants.
+
+Schema v1 deliberately does not model:
+
+```text
+canonical-key retirement
+canonical-key deletion
+canonical-key renaming
+temporary canonical absence
+```
+
+Those require a future accepted schema/workflow rather than implicit deletion.
+
+This closes `RLY-S06-DREV2-F006`.
 
 ---
 
@@ -470,7 +505,7 @@ Schema v1 does NOT permit dangling supersession references.
 
 ---
 
-# 14. D11 — Supersession consistency and successor maturity
+# 14. D11 — Supersession consistency, static state coupling, and successor maturity
 
 When artifact B supersedes artifact A:
 
@@ -495,7 +530,77 @@ Supersession cycles are invalid.
 
 A superseded historical artifact remains in the registry and its content file remains present at its registered path.
 
-For a supersession transition that converts an existing historical authority to `SUPERSEDED`, successor maturity is exact:
+## Static state ↔ lineage coupling
+
+For `LOCKABLE_RECORD`:
+
+```text
+DRAFT
+→ superseded_by MUST be None
+
+REVIEW
+→ superseded_by MUST be None
+
+LOCKED
+→ superseded_by MUST be None
+
+SUPERSEDED
+→ superseded_by MUST be non-None
+```
+
+For `IMMUTABLE_RECORD`:
+
+```text
+IMMUTABLE
+→ superseded_by MUST be None
+
+SUPERSEDED
+→ superseded_by MUST be non-None
+```
+
+Therefore, for lockable/immutable historical records:
+
+```text
+artifact_state == SUPERSEDED
+IFF
+superseded_by is not None
+```
+
+A record cannot claim to remain `LOCKED` or `IMMUTABLE` while also naming a successor.
+
+A record cannot claim `SUPERSEDED` without an exact successor.
+
+The static rule applies during bootstrap as well as later transition validation.
+
+## Static successor maturity
+
+For any valid static historical supersession edge:
+
+```text
+LOCKABLE_RECORD predecessor
+→ successor state is LOCKED or SUPERSEDED
+
+IMMUTABLE_RECORD predecessor
+→ successor state is IMMUTABLE or SUPERSEDED
+```
+
+`SUPERSEDED` is allowed statically for a successor because a later snapshot may validly contain a multihop chain such as:
+
+```text
+A SUPERSEDED
+  ↓
+B SUPERSEDED
+  ↓
+C LOCKED | IMMUTABLE
+```
+
+subject to same class/type, exact reciprocal links, revision +1 per edge, and acyclicity.
+
+A `DRAFT` or `REVIEW` record can never be the effective successor of a historical record.
+
+## Transition-time successor maturity
+
+When a transition converts an existing historical authority to `SUPERSEDED`, the newly effective direct successor is stricter:
 
 ```text
 LOCKABLE_RECORD / LOCKED
@@ -505,11 +610,11 @@ IMMUTABLE_RECORD / IMMUTABLE
     → direct successor is IMMUTABLE_RECORD / IMMUTABLE
 ```
 
-A `DRAFT` or `REVIEW` artifact cannot be the successor that causes an accepted historical record to become `SUPERSEDED`.
-
 This maturity rule applies whether or not either record is canonical.
 
 Living-projection advancement remains governed separately by D09/D13 and does not require retained prior entries in the current registry.
+
+These static rules close `RLY-S06-DREV2-F005`.
 
 ---
 
@@ -595,17 +700,19 @@ Required transition rules:
 
 1. `project_id` cannot change;
 2. full `RepositoryRef` cannot change;
-3. previously historical records cannot disappear;
-4. historical records obey the exact field-freeze contract in D12;
-5. historical supersession obeys reciprocal direct-successor and maturity rules in D11;
-6. an already `SUPERSEDED` record is completely immutable;
-7. a record newly added in `current` MUST NOT begin in `SUPERSEDED` state;
-8. a canonical pointer change must obey the authority-class-specific rules in D09;
-9. canonical living-projection advancement requires `revision + 1` and a new `ArtifactId`;
-10. changed exact bytes MUST NOT reuse an old `ArtifactId`;
-11. no canonical pointer may remain on a now-superseded target;
-12. registry ordering remains canonical;
-13. all ordinary registry invariants remain valid in `current`.
+3. every canonical key in `previous` remains present in `current`;
+4. newly added canonical keys have valid canonical targets;
+5. previously historical records cannot disappear;
+6. historical records obey the exact field-freeze contract in D12;
+7. historical supersession obeys static and transition-time state↔lineage and maturity rules in D11;
+8. an already `SUPERSEDED` record is completely immutable;
+9. a record newly added in `current` MUST NOT begin in `SUPERSEDED` state;
+10. a canonical pointer change must obey the authority-class-specific rules in D09;
+11. canonical living-projection advancement requires `revision + 1` and a new `ArtifactId`;
+12. changed exact bytes MUST NOT reuse an old `ArtifactId`;
+13. no canonical pointer may remain on a now-superseded target;
+14. registry ordering remains canonical;
+15. all ordinary registry invariants remain valid in `current`.
 
 ## Anti-fabrication rule
 
@@ -630,11 +737,26 @@ IMMUTABLE_RECORD / SUPERSEDED
 
 because `SUPERSEDED` represents historical transition state.
 
-Initial bootstrap validation is different: `validate_repository_contract()` has no prior snapshot and may validate imported historical state if all static registry/supersession invariants are satisfied.
+Initial bootstrap validation is different: `validate_repository_contract()` has no prior snapshot and may validate imported historical state only when all static registry, state↔lineage, successor-maturity, and supersession invariants are satisfied.
 
-Working/DRAFT/REVIEW artifacts may otherwise be added, replaced, or removed because they are not historical authority.
+## Nonhistorical replacement semantics
 
-This closes `RLY-S06-DREV1-F003`.
+Working, DRAFT, and REVIEW artifacts may be added or removed because they are not historical authority.
+
+When their exact bytes change, the changed revision MUST use a new `ArtifactId`.
+
+“Replace” never means same-ID byte mutation.
+
+An old nonhistorical revision may be removed from the current registry and a new exact revision may be added under a new `ArtifactId`, subject to ordinary path/uniqueness/canonical invariants.
+
+This makes the global rule explicit:
+
+```text
+changed exact bytes
+→ new ArtifactId
+```
+
+for historical and nonhistorical artifacts alike.
 
 ---
 
@@ -730,8 +852,6 @@ A dirty, transformed, or newline-normalized working tree may therefore fail byte
 
 Exact baseline/worktree proof belongs to Phase 1 repository integration.
 
-This closes `RLY-S06-DREV1-F002`.
-
 ---
 
 # 19. D16 — Repository contract validation
@@ -757,11 +877,12 @@ Validation MUST:
 7. validate `registry.repository == expected_repository` by full typed equality;
 8. require canonical tuple ordering defined by D03;
 9. validate artifact/class/state/canonical/supersession invariants;
-10. safely resolve every registered path beneath repository root;
-11. reject symlink traversal or any path escaping the repository root;
-12. require every registered artifact file to exist as a regular non-symlink file;
-13. compute exact SHA-256 bytes and require digest equality;
-14. reject registration of `.relay/registry.json` itself.
+10. validate static state↔lineage coupling and successor maturity from D11;
+11. safely resolve every registered path beneath repository root;
+12. reject symlink traversal or any path escaping the repository root;
+13. require every registered artifact file to exist as a regular non-symlink file;
+14. compute exact SHA-256 bytes and require digest equality;
+15. reject registration of `.relay/registry.json` itself.
 
 The operation performs no Git network access and no database write.
 
@@ -1020,7 +1141,9 @@ schema mismatch
 identity mismatch
 invalid class/state
 broken supersession
+state↔lineage contradiction
 invalid transition
+canonical-key removal
 noncanonical tuple order
 unknown .relay/ file
 unsafe path
@@ -1138,17 +1261,26 @@ Tests MUST cover:
 - noncanonical canonical-pointer order;
 - broken reciprocal supersession;
 - supersession cycle;
+- locked record with illegal `superseded_by`;
+- immutable record with illegal `superseded_by`;
+- superseded record without successor;
+- superseded record pointing to draft/review successor;
+- valid multihop mature supersession chain;
 - locked-record mutation across registry transition;
 - immutable-record mutation across registry transition;
 - mutation of any frozen historical field;
 - mutation of already-superseded record;
 - introduction of a new already-superseded record;
-- invalid successor maturity;
+- invalid transition-time successor maturity;
 - valid locked→superseded direct-successor transition;
 - valid immutable→superseded direct-successor transition;
 - canonical historical pointer direct-successor enforcement;
+- canonical key removal rejection;
+- canonical key addition with valid target;
+- unchanged canonical pointer;
 - living-projection canonical advancement;
 - changed bytes with reused ArtifactId rejection;
+- nonhistorical changed bytes with reused ArtifactId rejection;
 - full source CommitRef repository mismatch;
 - Relay's committed `.relay/registry.json` validating against a repository snapshot fixture.
 
@@ -1220,6 +1352,7 @@ YAML
 registry plugin system
 multiple registry backends
 full event sourcing
+canonical-key retirement/renaming model
 Slice 1.1+
 ```
 
@@ -1270,87 +1403,97 @@ Slice 1.1+
 **A33** canonical locked-record advancement requires exact direct reciprocal supersession.  
 **A34** canonical immutable-record advancement requires exact direct reciprocal supersession.  
 **A35** lockable canonical successor taking authority is `LOCKABLE_RECORD/LOCKED`.  
-**A36** immutable canonical successor taking authority is `IMMUTABLE_RECORD/IMMUTABLE`.
+**A36** immutable canonical successor taking authority is `IMMUTABLE_RECORD/IMMUTABLE`.  
+**A37** every canonical key present in previous remains present in current.  
+**A38** new canonical keys may be added only with valid targets.  
+**A39** unchanged canonical pointers remain valid.
 
 ## Content integrity / paths
 
-**A37** registered file must exist.  
-**A38** registered file must be regular and non-symlink.  
-**A39** resolved path must remain inside repository root.  
-**A40** exact raw-byte SHA-256 must match registry.  
-**A41** digest mismatch raises `ArtifactIntegrityError`.  
-**A42** canonical resolution re-verifies content integrity.  
-**A43** exact artifact resolution re-verifies content integrity.
+**A40** registered file must exist.  
+**A41** registered file must be regular and non-symlink.  
+**A42** resolved path must remain inside repository root.  
+**A43** exact raw-byte SHA-256 must match registry.  
+**A44** digest mismatch raises `ArtifactIntegrityError`.  
+**A45** canonical resolution re-verifies content integrity.  
+**A46** exact artifact resolution re-verifies content integrity.
 
 ## Supersession / historical authority
 
-**A44** supersession references are exact and bidirectional.  
-**A45** superseding revision increments by exactly one.  
-**A46** supersession chain cannot cycle.  
-**A47** supersession lineage preserves artifact type/class.  
-**A48** superseded historical record remains registered and present.  
-**A49** historical record cannot disappear across transition.  
-**A50** historical record is field-for-field frozen except explicitly allowed state/superseded_by transition.  
-**A51** an already `SUPERSEDED` record is completely frozen.  
-**A52** `LOCKED→SUPERSEDED` requires valid reciprocal direct successor.  
-**A53** `IMMUTABLE→SUPERSEDED` requires valid reciprocal direct successor.  
-**A54** a newly added transition record cannot begin `SUPERSEDED`.  
-**A55** lockable superseding successor is `LOCKABLE_RECORD/LOCKED` even when noncanonical.  
-**A56** immutable superseding successor is `IMMUTABLE_RECORD/IMMUTABLE` even when noncanonical.
+**A47** supersession references are exact and bidirectional.  
+**A48** superseding revision increments by exactly one.  
+**A49** supersession chain cannot cycle.  
+**A50** supersession lineage preserves artifact type/class.  
+**A51** superseded historical record remains registered and present.  
+**A52** historical record cannot disappear across transition.  
+**A53** historical record is field-for-field frozen except explicitly allowed state/superseded_by transition.  
+**A54** an already `SUPERSEDED` record is completely frozen.  
+**A55** a newly added transition record cannot begin `SUPERSEDED`.  
+**A56** `LOCKABLE_RECORD/LOCKED` has `superseded_by == None`.  
+**A57** `IMMUTABLE_RECORD/IMMUTABLE` has `superseded_by == None`.  
+**A58** every `SUPERSEDED` historical record has a non-None exact successor.  
+**A59** static lockable supersession successor state is `LOCKED` or `SUPERSEDED`.  
+**A60** static immutable supersession successor state is `IMMUTABLE` or `SUPERSEDED`.  
+**A61** multihop mature historical supersession chains are valid when all edges satisfy class/type/revision/reciprocity rules.  
+**A62** `LOCKED→SUPERSEDED` transition requires a direct `LOCKABLE_RECORD/LOCKED` successor.  
+**A63** `IMMUTABLE→SUPERSEDED` transition requires a direct `IMMUTABLE_RECORD/IMMUTABLE` successor.  
+**A64** DRAFT/REVIEW records cannot be effective historical successors.
 
-## Living projection revision
+## Living / nonhistorical revision identity
 
-**A57** canonical living-projection advancement requires new ArtifactId.  
-**A58** new living revision equals previous revision +1.  
-**A59** new canonical target is `LIVING_PROJECTION/CURRENT`.  
-**A60** old ArtifactId cannot be reused for changed digest.  
-**A61** Git history, not current registry retention, provides prior living-projection snapshots.
+**A65** canonical living-projection advancement requires new ArtifactId.  
+**A66** new living revision equals previous revision +1.  
+**A67** new canonical target is `LIVING_PROJECTION/CURRENT`.  
+**A68** old ArtifactId cannot be reused for changed digest.  
+**A69** Git history, not current registry retention, provides prior living-projection snapshots.  
+**A70** changed nonhistorical bytes also require a new ArtifactId.  
+**A71** removing/replacing a nonhistorical revision never means same-ID byte mutation.
 
 ## Source commit / existing Artifact integration
 
-**A62** registry does not serialize its own source commit.  
-**A63** caller supplies exact `CommitRef`.  
-**A64** registry binds full accepted `RepositoryRef`, not repository ID alone.  
-**A65** expected repository validation uses exact typed `RepositoryRef` equality.  
-**A66** source `CommitRef.repository` must exactly equal registry `RepositoryRef`.  
-**A67** same repository ID with differing host/path rejects.  
-**A68** resolved exact revision constructs/contains accepted Slice-0.2 `Artifact`.  
-**A69** constructed Artifact uses registry ID/path/type/digest and supplied commit.  
-**A70** no hidden Git command is used.  
-**A71** caller precondition explicitly requires a byte-exact repository snapshot corresponding to source commit.  
-**A72** Slice 0.6 does not silently normalize worktree bytes or prove commit/worktree correspondence.
+**A72** registry does not serialize its own source commit.  
+**A73** caller supplies exact `CommitRef`.  
+**A74** registry binds full accepted `RepositoryRef`, not repository ID alone.  
+**A75** expected repository validation uses exact typed `RepositoryRef` equality.  
+**A76** source `CommitRef.repository` must exactly equal registry `RepositoryRef`.  
+**A77** same repository ID with differing host/path rejects.  
+**A78** resolved exact revision constructs/contains accepted Slice-0.2 `Artifact`.  
+**A79** constructed Artifact uses registry ID/path/type/digest and supplied commit.  
+**A80** no hidden Git command is used.  
+**A81** caller precondition explicitly requires a byte-exact repository snapshot corresponding to source commit.  
+**A82** Slice 0.6 does not silently normalize worktree bytes or prove commit/worktree correspondence.
 
 ## Authority split / scope
 
-**A73** repository artifact bytes and canonical pointers are repository-authoritative.  
-**A74** credentials/runtime operational state remain cloud/runtime authoritative.  
-**A75** derived cloud registry mirrors do not override repository authority.  
-**A76** mismatch is surfaced, never last-write-wins.  
-**A77** no repository↔SQLite synchronization is implemented.  
-**A78** no GitHub-specific field enters registry schema.  
-**A79** no GitHub/network access occurs.  
-**A80** no artifact/canonical mutation API is exposed.  
-**A81** existing persistence behavior does not implicitly scan `.relay/`.  
-**A82** no UI or agent execution is introduced.  
-**A83** no Slice 1.x capability is implemented.
+**A83** repository artifact bytes and canonical pointers are repository-authoritative.  
+**A84** credentials/runtime operational state remain cloud/runtime authoritative.  
+**A85** derived cloud registry mirrors do not override repository authority.  
+**A86** mismatch is surfaced, never last-write-wins.  
+**A87** no repository↔SQLite synchronization is implemented.  
+**A88** no GitHub-specific field enters registry schema.  
+**A89** no GitHub/network access occurs.  
+**A90** no artifact/canonical mutation API is exposed.  
+**A91** existing persistence behavior does not implicitly scan `.relay/`.  
+**A92** no UI or agent execution is introduced.  
+**A93** no Slice 1.x capability is implemented.
 
 ## Dogfood / quality
 
-**A84** Relay's own registry includes `product-proposal`.  
-**A85** Relay's own registry includes `build-plan`.  
-**A86** Relay's own registry includes `documentation-governance`.  
-**A87** Relay's own registry includes `engineering-simplicity-quality`.  
-**A88** Relay's own registry includes `current-baseline`.  
-**A89** dogfood entries point to existing natural document paths.  
-**A90** dogfood registry contains the exact Relay `RepositoryRef`.  
-**A91** dogfood digests match exact bytes.  
-**A92** registry validation succeeds after clean snapshot materialization.  
-**A93** all existing Slice 0.1–0.5 tests remain green.  
-**A94** Ruff format/lint, Pyright, pytest, build, and `git diff --check` pass.  
-**A95** no dependencies are added.  
-**A96** Minimum Sufficient Architecture review finds no speculative repository framework.  
-**A97** Revision-1 findings F001–F004 are represented by executable acceptance/regression criteria.  
-**A98** completing Slice 0.6 leaves Phase-0 protocol-review hard stop active.
+**A94** Relay's own registry includes `product-proposal`.  
+**A95** Relay's own registry includes `build-plan`.  
+**A96** Relay's own registry includes `documentation-governance`.  
+**A97** Relay's own registry includes `engineering-simplicity-quality`.  
+**A98** Relay's own registry includes `current-baseline`.  
+**A99** dogfood entries point to existing natural document paths.  
+**A100** dogfood registry contains the exact Relay `RepositoryRef`.  
+**A101** dogfood digests match exact bytes.  
+**A102** registry validation succeeds after clean snapshot materialization.  
+**A103** all existing Slice 0.1–0.5 tests remain green.  
+**A104** Ruff format/lint, Pyright, pytest, build, and `git diff --check` pass.  
+**A105** no dependencies are added.  
+**A106** Minimum Sufficient Architecture review finds no speculative repository framework.  
+**A107** Revision-1 findings F001–F004 and Revision-2 findings F005–F006 are represented by executable acceptance/regression criteria.  
+**A108** completing Slice 0.6 leaves Phase-0 protocol-review hard stop active.
 
 ---
 
@@ -1411,6 +1554,16 @@ test_supersession_requires_reciprocal_links
 
 test_supersession_rejects_cycle
 
+test_registry_rejects_locked_record_with_superseded_by
+
+test_registry_rejects_immutable_record_with_superseded_by
+
+test_registry_rejects_superseded_record_without_successor
+
+test_registry_rejects_superseded_record_pointing_to_draft_successor
+
+test_registry_accepts_multihop_mature_supersession_chain
+
 test_registry_transition_rejects_locked_record_mutation
 
 test_registry_transition_rejects_locked_record_removal
@@ -1439,11 +1592,19 @@ test_transition_allows_canonical_locked_direct_successor
 
 test_transition_rejects_canonical_immutable_jump_without_supersession
 
+test_registry_transition_rejects_canonical_key_removal
+
+test_registry_transition_allows_new_canonical_key
+
+test_registry_transition_allows_unchanged_canonical_pointer
+
 test_registry_transition_requires_living_revision_increment
 
 test_registry_transition_requires_new_artifact_id_for_living_update
 
 test_registry_transition_rejects_canonical_pointer_to_superseded_record
+
+test_registry_transition_rejects_nonhistorical_same_id_byte_replacement
 
 test_relay_repository_registry_validates
 ```
@@ -1482,50 +1643,64 @@ Do not lock before Human Authority acceptance.
 The reviewer must answer explicitly:
 
 **Q1** Does a single `.relay/registry.json` satisfy accepted requirements without duplicating repository documents?  
-**Q2** Does the design preserve Slice-0.2 `Artifact` immutability and Slice-0.5 insert-once ID semantics?  
-**Q3** Is canonicality explicit rather than inferred from file paths/recency, and do historical canonical changes require direct supersession?  
+**Q2** Does the design preserve Slice-0.2 `Artifact` immutability and Slice-0.5 insert-once ID semantics for historical and nonhistorical byte changes?  
+**Q3** Is canonicality explicit rather than inferred from paths/recency, do historical canonical changes require direct supersession, and can existing canonical keys disappear?  
 **Q4** Does omitting serialized `source_commit` correctly avoid self-reference while satisfying provenance requirements?  
 **Q5** Is the caller-supplied `CommitRef` boundary acceptable with exact `RepositoryRef` equality and a byte-exact snapshot precondition before Phase-1 baseline resolution?  
 **Q6** Are living projections modeled without falsely treating them as locked records?  
 **Q7** Does registry-transition validation enforce historical immutability without becoming an authorization engine?  
-**Q8** Are supersession semantics, successor maturity, field freezing, and anti-fabrication rules strong enough and still minimal?  
+**Q8** Are static supersession state↔lineage coupling, multihop maturity, transition-time successor maturity, field freezing, and anti-fabrication rules strong enough and still minimal?  
 **Q9** Is the repository/cloud authority split unambiguous and noncompetitive?  
 **Q10** Does the design improperly pull GitHub/repository synchronization from Phase 1?  
 **Q11** Is rejecting all unexpected `.relay/` schema-v1 entries appropriately minimal?  
 **Q12** Are path/symlink/raw-byte digest checks sufficient for deterministic artifact identity?  
 **Q13** Does the dogfood registry avoid commit/digest recursion while binding the exact Relay `RepositoryRef`?  
-**Q14** Are the normative tuple-order rules sufficient without adding speculative abstractions?
+**Q14** Are normative tuple-order and canonical-key-persistence rules sufficient without adding speculative abstractions?
 
 ---
 
-# 43. Revision-1 finding disposition
+# 43. Prior finding disposition
+
+## Revision 1
 
 ```text
 RLY-S06-DREV1-F001
 CANONICAL_HISTORICAL_AUTHORITY_CAN_CHANGE_WITHOUT_SUPERSESSION
-→ RESOLVED by D09, D11, D13, A33–A36
+→ RESOLVED by D09, D11, D13
 
 RLY-S06-DREV1-F002
 REGISTRY_REPOSITORY_IDENTITY_WEAKER_THAN_ACCEPTED_REPOSITORY_IDENTITY
-→ RESOLVED by D03, D15, D16, D18/D19, A64–A72
+→ RESOLVED by D03, D15, D16, D18/D19
 
 RLY-S06-DREV1-F003
 HISTORICAL_RECORD_TRANSITION_CONTRACT_NOT_FULLY_CLOSED
-→ RESOLVED by D11, D12, D13, A49–A56
+→ RESOLVED by D11, D12, D13
 
 RLY-S06-DREV1-F004
 ARTIFACT_CANONICAL_ORDER_NOT_NORMATIVELY_DEFINED
-→ RESOLVED by D03, D16, D26, A06–A07
+→ RESOLVED by D03, D16, D26
 ```
 
-No other Revision-1 architecture decision is reopened.
+## Revision 2
+
+```text
+RLY-S06-DREV2-F005
+STATIC_SUPERSESSION_STATE_AND_LINEAGE_INVARIANTS_INCOMPLETE
+→ RESOLVED by D11, D13, D16, A56–A64
+
+RLY-S06-DREV2-F006
+CANONICAL_KEY_REMOVAL_BYPASSES_TRANSITION_SEMANTICS
+→ RESOLVED by D09, D13, A37–A39
+```
+
+No other prior architecture decision is reopened.
 
 ---
 
 # 44. Design hard stop
 
 ```text
-Slice 0.6 Design Revision 2:
+Slice 0.6 Design Revision 3:
 COMPLETE / PENDING INDEPENDENT DESIGN REVIEW
 
 Implementation:
