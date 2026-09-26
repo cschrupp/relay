@@ -11,18 +11,20 @@ Relay is being built inside-out: deterministic engineering governance first, the
 ## Current status
 
 ```text
-Phase 0:              COMPLETE / CLOSED
-Core domain model:    ACCEPTED
-Lifecycle engine:     ACCEPTED
-Handover governance:  ACCEPTED
-Persistence/events:   ACCEPTED
-Repository contract:  ACCEPTED
-Phase-0 protocol review: SUBMITTED / PENDING HUMAN ACCEPTANCE
-Phase 1:              NOT AUTHORIZED
-Agent execution:      NOT IMPLEMENTED
+Phase 0:                 COMPLETE / CLOSED
+Core domain model:       ACCEPTED
+Lifecycle engine:        ACCEPTED
+Handover governance:     ACCEPTED
+Persistence/events:      ACCEPTED
+Repository contract:     ACCEPTED
+Phase-0 protocol review: ACCEPTED
+Phase 1:                 OPEN
+Slice 1.1:               DESIGN ONLY
+Slice 1.1 implementation: NOT AUTHORIZED
+Agent execution:         NOT IMPLEMENTED
 ```
 
-The accepted Phase-0 baseline is recorded in `docs/CURRENT_BASELINE.md`.
+The current authority is recorded in `docs/CURRENT_BASELINE.md`.
 
 ## What Phase 0 provides
 
@@ -38,7 +40,7 @@ Relay currently implements:
 - historical artifact locking/supersession semantics;
 - explicit canonical living projections.
 
-It does **not** yet implement GitHub product integration, repository mutation, a human-facing board, model providers, agent execution, or Phase-1 workflows.
+Phase 1 has now opened. Slice 1.1 is **design only** and concerns GitHub App integration. No GitHub product implementation is authorized until that design is independently reviewed and Human Authority separately authorizes implementation.
 
 ## Canonical documentation
 
@@ -52,10 +54,22 @@ Current canonical projections include:
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality
 
-The Phase-0 hard-stop review is recorded at:
+Phase-0 protocol review:
 
 ```text
 docs/reviews/PHASE_0_PROTOCOL_REVIEW.md
+```
+
+Phase-0 review acceptance / Phase-1 opening:
+
+```text
+docs/reviews/PHASE_0_PROTOCOL_REVIEW_ACCEPTANCE.md
+```
+
+Current Slice 1.1 design:
+
+```text
+docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION.md
 ```
 
 ## Requirements
@@ -94,4 +108,4 @@ AGENTS.md                   coding-agent governance instructions
 
 **Unblocked is not authorized.**
 
-The existence of a design, roadmap entry, or passing review does not authorize the next implementation phase. Phase 1 remains closed until the Phase-0 protocol review is accepted and Human Authority explicitly opens Phase 1.
+The existence of a design, roadmap entry, passing CI, or passing review does not authorize implementation. Follow the current authority recorded in `docs/CURRENT_BASELINE.md`.

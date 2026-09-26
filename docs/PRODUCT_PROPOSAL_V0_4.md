@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.4  
-**Status:** Current living product and architecture proposal  
+**Status:** Current living product and architecture proposal — Phase 1 open  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.3 at `docs/PRODUCT_PROPOSAL.md`  
@@ -21,7 +21,7 @@ Relay is not primarily a coding agent and is not primarily a Kanban board.
 
 It governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, and remembered.
 
-The board is a human-readable projection of that governed state, not the source of truth.
+The board is a human-readable projection of governed state, not the source of truth.
 
 ---
 
@@ -29,7 +29,7 @@ The board is a human-readable projection of that governed state, not the source 
 
 Relay is designed first for professional developers, technical leads, scientists, and engineers working on long-lived, high-context software where correctness, architecture, evidence, and traceability matter.
 
-The strongest early beachhead remains scientific and engineering software, including:
+The strongest early beachhead remains scientific and engineering software:
 
 - scientific computing;
 - industrial and energy software;
@@ -59,9 +59,9 @@ Relay differentiates through engineering governance and continuity:
 
 # 4. Accepted technical foundation
 
-Phase 0 is complete.
+Phase 0 is complete and its protocol review is accepted.
 
-Relay currently has accepted implementations for:
+Relay has accepted implementations for:
 
 ```text
 core domain contracts
@@ -83,7 +83,7 @@ ordinary engineering documents at natural repository paths
 
 `.relay/registry.json` provides machine-readable artifact semantics and canonical pointers.
 
-It does **not** contain duplicated copies of project documents.
+It does not contain duplicated copies of project documents.
 
 Runtime/cloud state remains separate from repository authority.
 
@@ -101,7 +101,7 @@ derived UI/search/agent-context projections
 
 Repository documents and canonical registry metadata are version controlled.
 
-Credentials, queues, temporary execution state, and provider runtime information are not committed to the repository.
+Credentials, queues, temporary execution state, model/provider credentials, GitHub App keys, and short-lived provider tokens are not repository authority.
 
 Canonical status is explicit. A filename, newest commit, or modification timestamp does not decide authority.
 
@@ -141,40 +141,68 @@ Research and sidecar experiments may branch from the main path when uncertainty 
 
 # 7. Model and provider philosophy
 
-Relay project semantics should not depend on one model vendor.
+Relay project semantics do not depend on one model vendor.
 
-Different roles may eventually use different providers/models, but role authority belongs to Relay contracts, not to model identity.
+Different roles may later use different providers/models, but role authority belongs to Relay contracts, not model identity.
 
-Model/provider identity should be recorded as execution provenance when agent execution is introduced.
+Model/provider identity should become execution provenance when agent execution is introduced.
 
-Until then, Relay dogfooding should keep role/model attribution visible in substantive handovers.
+Until then, Relay dogfooding keeps current role/model and next role/model visible in substantive handovers.
 
 ---
 
 # 8. Current roadmap
 
-The current canonical Build Plan is the authoritative implementation roadmap.
-
-At this proposal revision:
-
 ```text
 Phase 0:
-COMPLETE
+COMPLETE / CLOSED
 
 Phase-0 protocol review:
-SUBMITTED / PENDING HUMAN ACCEPTANCE
+ACCEPTED
 
 Phase 1:
+OPEN
+
+Slice 1.1:
+GITHUB APP INTEGRATION — DESIGN ONLY
+
+Slice 1.1 implementation:
 NOT AUTHORIZED
 ```
 
-Phase 1 is intended to add GitHub integration and the human-controlled product workflow before autonomous coding-agent execution.
+Phase 1 adds GitHub integration and the human-controlled product workflow before autonomous coding-agent execution.
+
+The first provider integration remains subordinate to provider-neutral Phase-0 domain semantics.
+
+Repository registration and immutable baseline resolution remain Slice 1.2.
+
+Repository-side `.relay/` initialization/write synchronization remains Slice 1.3.
 
 Provider/model execution follows only after Relay can govern a useful human-only workflow.
 
 ---
 
-# 9. Product boundary
+# 9. Phase-1 product boundary
+
+Slice 1.1 should allow Relay to answer:
+
+> Is this GitHub App installation valid for this Relay project, which repositories can it currently read, what permissions were granted, and is a selected repository still accessible?
+
+It should not yet answer:
+
+> What commit is the authoritative project baseline?
+
+That belongs to Slice 1.2.
+
+It should not yet write:
+
+> Initialize/update `.relay/` in the remote repository.
+
+That belongs to Slice 1.3 and requires a separately accepted write-permission decision.
+
+---
+
+# 10. Product non-goals remain
 
 Relay should not compete mainly on:
 
@@ -193,10 +221,10 @@ The product value is governed engineering continuity:
 
 ---
 
-# 10. Prior proposal
+# 11. Prior proposal
 
 Product Proposal v0.3 remains a useful long-form record of market context, customer rationale, and the broader roadmap.
 
-Where v0.3 described a broader proposed `.relay/` directory or pre-Phase-0 architecture, the accepted Slice 0.6 repository contract and this v0.4 projection supersede that wording.
+Where older proposal text described a broad proposed `.relay/` directory or pre-Phase-0 architecture, accepted Slice 0.6 and this projection supersede it.
 
 Historical proposal text remains preserved rather than rewritten in place.

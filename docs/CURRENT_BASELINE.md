@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 0 complete — protocol review submitted  
+**Status:** Phase 1 open — Slice 1.1 design active  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -17,40 +17,127 @@ Accepted Phase-0 acceptance-record SHA:
 6c1b3e1098cdc6c220868aea8a492c413d3cca35
 ```
 
+Accepted Phase-0 protocol/document synchronization SHA:
+
+```text
+cb9edc453442dc639a523ef301e4a258d0394daa
+```
+
 Accepted Slice 0.6 implementation result:
 
 ```text
 1903017dd7832dc21f0554be762bac1002891a89
 ```
 
-Slice 0.6 closure evaluation:
+Phase-0 closure evaluation:
 
 ```text
 RLY-S06-CLOSE-EVAL-001 — ACCEPT
 ```
 
-The current repository may include a later documentation/protocol-review synchronization commit. That commit is separate provenance and is not embedded into this same living projection to avoid self-reference.
-
 ---
 
-# 2. Phase-0 state
+# 2. Phase-0 protocol review
+
+Review:
 
 ```text
-Slice 0.1: CLOSED / ACCEPTED
-Slice 0.2: CLOSED / ACCEPTED
-Slice 0.3: CLOSED / ACCEPTED
-Slice 0.4: CLOSED / ACCEPTED
-Slice 0.5: CLOSED / ACCEPTED
-Slice 0.6: CLOSED / ACCEPTED
+RLY-P0-PROTOCOL-REVIEW-001
+ACCEPT WITH PROCESS AMENDMENTS
+```
 
-Phase 0:
+Human acceptance:
+
+```text
+RLY-P0-PROTOCOL-ACCEPT-001
+```
+
+Process amendments now in force:
+
+```text
+P0-PR-01  registered living-projection impact preflight
+P0-PR-02  visible current/next role + model
+P0-PR-03  design review uses ACCEPT / REVISE / ESCALATE
+P0-PR-04  review acceptance and next-phase authorization are separate
+```
+
+Phase 0 remains:
+
+```text
 COMPLETE / CLOSED
 ```
 
-Accepted Phase-0 capability includes:
+---
 
-- Python 3.14 / uv engineering foundation;
-- provider-neutral immutable domain values;
+# 3. Current phase authority
+
+Human Authority has separately granted:
+
+```text
+RLY-P1-OPEN-001
+Phase 1 — OPEN
+```
+
+and:
+
+```text
+RLY-S11-DESIGN-AUTH-001
+Slice 1.1 — GitHub App Integration
+DESIGN ONLY
+```
+
+Exact authorized design baseline:
+
+```text
+cb9edc453442dc639a523ef301e4a258d0394daa
+```
+
+Current engineering role/model:
+
+```text
+Slice 1.1 Architect — GPT-5.6 Sol
+```
+
+Next governed role/model after Design Revision 1:
+
+```text
+Independent Design Reviewer — GPT-5.6 Sol
+```
+
+---
+
+# 4. Authorization state
+
+```text
+Phase 1:
+OPEN
+
+Slice 1.1:
+DESIGN AUTHORIZED / IN PROGRESS
+
+Slice 1.1 implementation:
+NOT AUTHORIZED
+
+Slice 1.2:
+NOT OPEN / NOT AUTHORIZED
+
+Agent execution:
+NOT AUTHORIZED
+```
+
+A passing Slice 1.1 design review will not by itself authorize implementation.
+
+Human Authority must accept the reviewed design and separately authorize implementation.
+
+**Unblocked ≠ authorized.**
+
+---
+
+# 5. Accepted Phase-0 capability
+
+Relay currently provides:
+
+- immutable provider-neutral domain values;
 - deterministic lifecycle transitions and replay;
 - deterministic handover gates and traffic lights;
 - validity / authority / autonomy separation;
@@ -59,16 +146,16 @@ Accepted Phase-0 capability includes:
 - schema-v1 repository artifact registry;
 - explicit canonical pointers;
 - historical artifact immutability/supersession;
-- raw-byte digest and path integrity;
+- raw-byte digest and repository-path integrity;
 - observation-commit provenance without snapshot-varying core `Artifact` construction.
 
 ---
 
-# 3. Canonical living documents
+# 6. Canonical living documents
 
 Canonical status is defined by `.relay/registry.json`.
 
-Current living projections include:
+Current canonical keys:
 
 ```text
 product-proposal
@@ -78,102 +165,47 @@ documentation-governance
 engineering-simplicity-quality
 ```
 
-The current registry revision is authoritative for the exact target path and revision of each key.
+Registered living projections must advance through a new ArtifactId/revision when their exact bytes change.
 
 ---
 
-# 4. Phase-0 protocol review
+# 7. Current Slice 1.1 objective
 
-Review record:
+Slice 1.1 designs the GitHub App integration boundary needed to securely identify installations, discover permitted repositories, validate least-privilege read access, process installation lifecycle signals, persist non-secret provider state, and map selected GitHub repositories into explicit provider-neutral `RepositoryRef` values.
 
-```text
-docs/reviews/PHASE_0_PROTOCOL_REVIEW.md
-```
+The slice does not yet:
 
-Review ID:
+- register authoritative project repository/baseline state;
+- resolve branches/tags to immutable commit SHAs;
+- initialize or synchronize `.relay/` through GitHub;
+- mutate repository content;
+- create branches/commits/PRs;
+- execute coding agents.
 
-```text
-RLY-P0-PROTOCOL-REVIEW-001
-```
-
-Submitted reviewer outcome:
-
-```text
-ACCEPT WITH PROCESS AMENDMENTS
-```
-
-Required amendments:
-
-```text
-P0-PR-01 registered living-projection impact preflight
-P0-PR-02 visible current/next role + model
-P0-PR-03 explicit design-review outcome vocabulary
-P0-PR-04 review acceptance and next-phase authorization remain separate
-```
-
-The review is submitted but still requires Human Authority acceptance.
+Those capabilities remain separately gated.
 
 ---
 
-# 5. Current hard stop
+# 8. Deferred next slices
 
 ```text
-PHASE-0 PROTOCOL REVIEW:
-SUBMITTED / PENDING HUMAN ACCEPTANCE
+Slice 1.2
+Repository Registration and Baseline Resolution
 
-PHASE 1:
-NOT AUTHORIZED
+Slice 1.3
+.relay Initialization and Sync
 
-SLICE 1.1:
-NOT OPEN
+Slice 1.4
+Project and Slice CRUD
 
-HARD STOP:
-ACTIVE
+Slice 1.5
+Board Projection
+
+Slice 1.6
+Human Authorization and Decision Gates
+
+Slice 1.7
+Manual Evaluation and Acceptance
 ```
 
-A pre-review request to proceed to Phase 1 does not satisfy the accepted rule requiring a fresh Human Authority decision after the review is available.
-
----
-
-# 6. Deferred capability
-
-Relay does not yet provide:
-
-- GitHub App/product integration;
-- repository registration or baseline/worktree proof;
-- clone/fetch/pull/push product workflow;
-- branch/commit/PR creation workflow;
-- repository↔SQLite synchronization;
-- stable registry-revision → core-Artifact commit binding;
-- human-facing board;
-- model/provider execution;
-- agent workspaces;
-- implementation/evaluation automation;
-- research/experiment execution;
-- multi-agent orchestration.
-
-These remain later-phase capabilities.
-
----
-
-# 7. Next legitimate decision
-
-Human Authority may now review:
-
-```text
-RLY-P0-PROTOCOL-REVIEW-001
-```
-
-If accepted, Human Authority may separately authorize:
-
-```text
-Phase 1:
-OPEN
-
-Slice 1.1:
-DESIGN ONLY
-```
-
-Slice 1.1 implementation would remain unauthorized until its design is independently reviewed and explicitly authorized.
-
-**Unblocked ≠ authorized.**
+No later slice is authorized by roadmap presence.
