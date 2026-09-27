@@ -19,9 +19,9 @@ Persistence/events:       ACCEPTED
 Repository contract:      ACCEPTED
 Phase-0 protocol review:  ACCEPTED
 Phase 1:                  OPEN
-Slice 1.1 design:         ACCEPTED
-Slice 1.1 implementation: COMPLETE / ACCEPTED
-Slice 1.2:                NOT OPEN / NOT AUTHORIZED
+Slice 1.1:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.2 design:         AUTHORIZED
+Slice 1.2 implementation: NOT AUTHORIZED
 Agent execution:          NOT IMPLEMENTED
 ```
 
@@ -29,7 +29,7 @@ The current authority is recorded in `docs/CURRENT_BASELINE.md`.
 
 ## What Relay currently provides
 
-The accepted Phase-0 foundation includes:
+The accepted foundation now includes:
 
 - immutable provider-neutral domain values;
 - deterministic lifecycle transitions and replay;
@@ -39,11 +39,16 @@ The accepted Phase-0 foundation includes:
 - repository-side canonical artifact governance through `.relay/registry.json`;
 - exact raw-byte digest validation and repository-relative path safety;
 - historical artifact locking/supersession semantics;
-- explicit canonical living projections.
+- explicit canonical living projections;
+- accepted GitHub App read integration with project-scoped installation/repository state;
+- fail-closed provider permission readiness;
+- signed GitHub installation webhooks;
+- optimistic integration-state concurrency;
+- deterministic webhook redelivery idempotency.
 
-Slice 1.1 is accepted at `ae79b15170c88e776af99944eab9b2fdd6872c2e` under Human Authority acceptance `RLY-S11-ACCEPT-001`. It adds GitHub App JWT authentication, installation/repository discovery, project-scoped access state, fail-closed permission readiness, signed installation webhooks, optimistic concurrency, and deterministic webhook idempotency.
+Slice 1.1 is accepted at technical result `ae79b15170c88e776af99944eab9b2fdd6872c2e`, with acceptance-record/finalization commit `ccfbfb964064e92aef4e21e11f0ad01290acb16f`.
 
-Slice 1.1 does **not** authorize or implement repository registration, baseline/ref resolution, remote `.relay/` writes, repository mutation, or agent execution.
+Slice 1.2 is now authorized for **design only**. It owns provider-neutral repository registration, branch/tag/ref resolution to immutable commit identity, and the baseline/worktree proof deferred by Slice 0.6. Implementation still requires independent design review, Human Authority design acceptance, and a separate implementation authorization.
 
 ## Canonical documentation
 
@@ -51,13 +56,13 @@ Canonical document identity is defined by `.relay/registry.json`, not by file na
 
 Current canonical projections include:
 
-- Product Proposal v0.4
-- Build Plan v0.4
+- Product Proposal v0.5
+- Build Plan v0.5
 - Current Baseline
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality
 
-Current Slice 1.1 records include:
+Current accepted Slice 1.1 records include:
 
 ```text
 docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION.md
