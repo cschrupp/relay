@@ -166,7 +166,9 @@ GITHUB_INTEGRATION_MIGRATION = Migration(
         """CREATE INDEX github_installations_by_external_id
         ON github_installations(installation_id, project_id)""",
         """CREATE INDEX github_events_by_binding_revision
-        ON github_installation_events(project_id, installation_id, resulting_state_revision, sequence)""",
+        ON github_installation_events(
+            project_id, installation_id, resulting_state_revision, sequence
+        )""",
     ),
 )
 

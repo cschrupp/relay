@@ -134,9 +134,9 @@ def _headers(body: bytes, delivery="delivery-1", event="installation"):
 
 
 class FakeGitHubClient:
-    def __init__(self, snapshot: GitHubInstallationSnapshot, repositories=(_repo(),)):
+    def __init__(self, snapshot: GitHubInstallationSnapshot, repositories=None):
         self.snapshot = snapshot
-        self.repositories = repositories
+        self.repositories = (_repo(),) if repositories is None else repositories
         self.before_repository_list = None
 
     def get_installation(self, **kwargs):
@@ -160,11 +160,12 @@ class FakeGitHubClient:
         )
 
 
-def _service(store, client, webhook_secret=SecretStr("webhook-secret")):
+def _service(store, client, webhook_secret=None):
+    secret = SecretStr("webhook-secret") if webhook_secret is None else webhook_secret
     return GitHubIntegrationService(
         config=GitHubAppConfig(client_id="Iv1.test"),
         private_key_pem=_private_key(),
-        webhook_secret=webhook_secret,
+        webhook_secret=secret,
         client=client,
         store=store,
     )
