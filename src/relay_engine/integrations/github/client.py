@@ -97,9 +97,12 @@ def _required_bool(value: object, label: str) -> bool:
 
 
 def _required_mapping(value: object, label: str) -> Mapping[str, object]:
-    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+    if not isinstance(value, dict):
         raise GitHubRemoteError(f"GitHub {label} must be an object with string keys")
-    return cast(Mapping[str, object], value)
+    mapping = cast(Mapping[object, object], value)
+    if any(not isinstance(key, str) for key in mapping):
+        raise GitHubRemoteError(f"GitHub {label} must be an object with string keys")
+    return cast(Mapping[str, object], mapping)
 
 
 def _required_list(value: object, label: str) -> list[object]:
