@@ -20,7 +20,7 @@ Repository contract:      ACCEPTED
 Phase-0 protocol review:  ACCEPTED
 Phase 1:                  OPEN
 Slice 1.1 design:         ACCEPTED
-Slice 1.1 implementation: COMPLETE / PENDING INDEPENDENT EVALUATION
+Slice 1.1 implementation: COMPLETE / ACCEPTED
 Slice 1.2:                NOT OPEN / NOT AUTHORIZED
 Agent execution:          NOT IMPLEMENTED
 ```
@@ -41,7 +41,7 @@ The accepted Phase-0 foundation includes:
 - historical artifact locking/supersession semantics;
 - explicit canonical living projections.
 
-Slice 1.1 now has an implementation candidate for read-only GitHub App integration. It adds GitHub App JWT authentication, installation/repository discovery, project-scoped access state, fail-closed permission readiness, signed installation webhooks, optimistic concurrency, and deterministic webhook idempotency. It remains pending independent evaluation and Human Authority acceptance.
+Slice 1.1 is accepted at `ae79b15170c88e776af99944eab9b2fdd6872c2e` under Human Authority acceptance `RLY-S11-ACCEPT-001`. It adds GitHub App JWT authentication, installation/repository discovery, project-scoped access state, fail-closed permission readiness, signed installation webhooks, optimistic concurrency, and deterministic webhook idempotency.
 
 Slice 1.1 does **not** authorize or implement repository registration, baseline/ref resolution, remote `.relay/` writes, repository mutation, or agent execution.
 

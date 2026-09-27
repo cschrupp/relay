@@ -1,8 +1,8 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.1 implementation complete / pending independent evaluation  
-**Document class:** Living canonical projection  
-**Canonical key:** `current-baseline`  
+**Status:** Phase 1 open — Slice 1.1 complete / accepted
+**Document class:** Living canonical projection
+**Canonical key:** `current-baseline`
 **Date:** September 2026
 
 ---
@@ -97,36 +97,34 @@ Slice 1.2 remains separately unauthorized.
 
 ---
 
-# 4. Current Slice 1.1 state
+# 4. Accepted Slice 1.1 state
 
 ```text
 Slice 1.1:
-IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+COMPLETE / ACCEPTED
 
-Technical implementation checkpoint:
-92a65728ab66ededed86d134a845a93fe58ad01d
+Accepted implementation result:
+ae79b15170c88e776af99944eab9b2fdd6872c2e
 
-Technical checkpoint CI:
-36338324389 — SUCCESS
+Human acceptance:
+RLY-S11-ACCEPT-001
 
-Tests:
-405 passed
+Phase 0 baseline before Slice 1.1:
+cb9edc453442dc639a523ef301e4a258d0394daa
 ```
 
-The final repository result SHA is the implementation-result handover commit that includes this candidate documentation and registry synchronization.
-
-That result is not accepted until independent evaluation and a separate Human Authority acceptance.
+The accepted implementation SHA remains distinct from this later acceptance-record commit.
 
 Current role/model:
 
 ```text
-Implementation Agent — GPT-5.6 Sol
+Implementation Agent — GPT-6 (acceptance finalization)
 ```
 
 Next role/model:
 
 ```text
-Independent Evaluator — GPT-5.6 Sol
+Independent Evaluator — GPT-5.6 Luna (preferred)
 ```
 
 ---
@@ -186,10 +184,10 @@ Phase 1:
 OPEN
 
 Slice 1.1:
-IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+COMPLETE / ACCEPTED
 
-Slice 1.1 accepted:
-NO
+Human acceptance:
+RLY-S11-ACCEPT-001
 
 Slice 1.2:
 NOT OPEN / NOT AUTHORIZED
@@ -199,6 +197,8 @@ NOT AUTHORIZED
 ```
 
 **Unblocked ≠ authorized.**
+
+Phase-1 acceptance of Slice 1.1 does not authorize Slice 1.2. The next slice remains separately gated.
 
 ---
 

@@ -1,12 +1,14 @@
 # ADR-0007 — GitHub App Authentication and Installation State
 
-**Status:** PROPOSED / VALIDATED / PENDING ACCEPTANCE  
-**Decision date:** 2026-09-27  
-**Authority:** Slice 1.1 Design Revision 1 plus accepted Revision 2 amendment  
-**Accepted design head:** `0cf5436021eeef45f5e6d9fc20fe6dcf76e0a19b`  
-**Independent design evaluation:** `RLY-S11-DESIGN-EVAL-002` — ACCEPT  
-**Human design acceptance:** `RLY-S11-DESIGN-ACCEPT-001`  
+**Status:** LOCKED / ACCEPTED
+**Decision date:** 2026-09-27
+**Authority:** Slice 1.1 Design Revision 1 plus accepted Revision 2 amendment
+**Accepted design head:** `0cf5436021eeef45f5e6d9fc20fe6dcf76e0a19b`
+**Independent design evaluation:** `RLY-S11-DESIGN-EVAL-002` — ACCEPT
+**Human design acceptance:** `RLY-S11-DESIGN-ACCEPT-001`
 **Implementation authorization:** `RLY-S11-AUTH-001`
+**Accepted implementation result:** `ae79b15170c88e776af99944eab9b2fdd6872c2e`
+**Human implementation acceptance:** `RLY-S11-ACCEPT-001`
 
 ## Context
 
@@ -32,24 +34,10 @@ Relay can reason deterministically about which GitHub installation/repositories 
 
 Repository registration, ref resolution, immutable baseline proof, `.relay/` writes, repository mutation, user OAuth, and generic provider abstractions remain deferred.
 
-## Candidate implementation state
+## Acceptance state
 
 ```text
-Technical implementation checkpoint:
-92a65728ab66ededed86d134a845a93fe58ad01d
-
-Exact-head CI:
-36338324389 — SUCCESS
-
-Tests:
-405 passed
-
-Independent implementation evaluation:
-PENDING
-
-Human implementation acceptance:
-PENDING
-
-Decision state:
-PROPOSED / VALIDATED / PENDING ACCEPTANCE
+Accepted implementation result: ae79b15170c88e776af99944eab9b2fdd6872c2e
+Human implementation acceptance: RLY-S11-ACCEPT-001
+Decision state: LOCKED / ACCEPTED
 ```

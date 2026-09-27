@@ -1,11 +1,12 @@
 # Slice 1.1 — GitHub App Integration Memory
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION  
-**Record state:** WORKING / NOT LOCKED  
-**Phase:** 1  
-**Slice:** 1.1  
-**Accepted design head:** `0cf5436021eeef45f5e6d9fc20fe6dcf76e0a19b`  
-**Technical implementation checkpoint:** `92a65728ab66ededed86d134a845a93fe58ad01d`
+**Status:** COMPLETE / ACCEPTED
+**Record state:** LOCKED
+**Phase:** 1
+**Slice:** 1.1
+**Accepted design head:** `0cf5436021eeef45f5e6d9fc20fe6dcf76e0a19b`
+**Accepted technical implementation:** `ae79b15170c88e776af99944eab9b2fdd6872c2e`
+**Human acceptance:** `RLY-S11-ACCEPT-001`
 
 ## Authority chain
 
@@ -139,6 +140,8 @@ build:
 PASS
 ```
 
+The final candidate SHA `ae79b15170c88e776af99944eab9b2fdd6872c2e` also passed GitHub Actions run `36338853536` on `slice/1.1-github-app-integration`; environment sync, Ruff format/lint, Pyright, tests, and build all succeeded.
+
 ## Scope boundaries preserved
 
 Not implemented:
@@ -155,20 +158,24 @@ generic provider framework
 agent execution
 ```
 
-## Candidate state
+## Accepted state and registry advancement
+
+Acceptance finalization advances the registered `current-baseline` projection from `art_018f47c1-7b2c-7abc-8def-123456789117` revision 5 to `art_018f47c1-7b2c-7abc-8def-123456789119` revision 6. Its exact-byte digest is `sha256:8b84cc3880e6a86940a374cc62d93025b96ee24c92d78143b23b664eb887e9d6` (`updated_at: 2026-09-27T18:56:13Z`); the other four records and canonical pointers are unchanged.
+
+## Accepted state
 
 ```text
 Implementation:
-COMPLETE / PENDING INDEPENDENT EVALUATION
+COMPLETE / ACCEPTED
 
 ADR-0007:
-PROPOSED / VALIDATED / PENDING ACCEPTANCE
+LOCKED / ACCEPTED
 
 Memory:
-WORKING / NOT LOCKED
+LOCKED / ACCEPTED
 
 Slice 1.2:
 NOT OPEN / NOT AUTHORIZED
 ```
 
-This record must not be locked until Human Authority accepts an independently evaluated Slice 1.1 implementation result.
+Human Authority accepted the exact Slice 1.1 result `ae79b15170c88e776af99944eab9b2fdd6872c2e` under `RLY-S11-ACCEPT-001`. This memory is now locked; future correction must follow Documentation Governance amendment or supersession rules.
