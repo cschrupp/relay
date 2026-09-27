@@ -11,8 +11,8 @@ from relay_engine.domain.references import RepositoryRef
 from relay_engine.integrations.github.auth import create_app_jwt
 from relay_engine.integrations.github.client import GitHubClient
 from relay_engine.integrations.github.errors import (
-    GitHubIntegrationError,
     GitHubInstallationUnavailable,
+    GitHubIntegrationError,
     GitHubPermissionError,
     GitHubRepositoryAccessDenied,
 )
@@ -274,7 +274,7 @@ class GitHubIntegrationService:
         raw_body: bytes,
         observed_at: datetime,
         event_id_factory: Callable[[ProjectId, GitHubWebhookEnvelope], str],
-    ) -> tuple["GitHubWebhookProjectOutcome", ...]:
+    ) -> tuple[GitHubWebhookProjectOutcome, ...]:
         envelope = parse_supported_webhook(
             headers=headers,
             raw_body=raw_body,
