@@ -158,7 +158,10 @@ def test_repository_listing_paginates_before_returning_complete_sorted_set() -> 
         }
     ]
     transport = FakeTransport(
-        [_response(200, {"repositories": first_page}), _response(200, {"repositories": second_page})]
+        [
+            _response(200, {"repositories": first_page}),
+            _response(200, {"repositories": second_page}),
+        ]
     )
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
     repositories = client.list_installation_repositories(

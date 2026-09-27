@@ -179,12 +179,16 @@ def test_webhook_semantic_digest_is_stable_and_excludes_irrelevant_fields() -> N
     body_a = json.dumps({**base, "sender": {"login": "a"}}, separators=(",", ":")).encode()
     body_b = json.dumps({**base, "sender": {"login": "b"}}, separators=(",", ":")).encode()
     envelope_a = parse_supported_webhook(
-        headers=_signed_headers(body_a, event="installation_repositories", delivery="d1", secret=secret),
+        headers=_signed_headers(
+            body_a, event="installation_repositories", delivery="d1", secret=secret
+        ),
         raw_body=body_a,
         webhook_secret=SecretStr(secret),
     )
     envelope_b = parse_supported_webhook(
-        headers=_signed_headers(body_b, event="installation_repositories", delivery="d1", secret=secret),
+        headers=_signed_headers(
+            body_b, event="installation_repositories", delivery="d1", secret=secret
+        ),
         raw_body=body_b,
         webhook_secret=SecretStr(secret),
     )

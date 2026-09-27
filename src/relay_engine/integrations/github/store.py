@@ -44,7 +44,9 @@ class GitHubIntegrationStore:
         try:
             state = GitHubInstallationState.model_validate_json(cast(str, row["payload_json"]))
         except (ValidationError, ValueError, TypeError) as error:
-            raise GitHubIntegrationIntegrityError("stored GitHub installation state is invalid") from error
+            raise GitHubIntegrationIntegrityError(
+                "stored GitHub installation state is invalid"
+            ) from error
         if (
             row["project_id"] != state.project_id
             or int(row["installation_id"]) != state.installation_id
@@ -62,7 +64,9 @@ class GitHubIntegrationStore:
                 cast(str, row["payload_json"])
             )
         except (ValidationError, ValueError, TypeError) as error:
-            raise GitHubIntegrationIntegrityError("stored GitHub repository state is invalid") from error
+            raise GitHubIntegrationIntegrityError(
+                "stored GitHub repository state is invalid"
+            ) from error
         if int(row["github_repository_id"]) != repository.github_repository_id:
             raise GitHubIntegrationIntegrityError(
                 "GitHub repository indexed identity disagrees with typed payload"
@@ -74,7 +78,9 @@ class GitHubIntegrationStore:
         try:
             event = GitHubInstallationEvent.model_validate_json(cast(str, row["payload_json"]))
         except (ValidationError, ValueError, TypeError) as error:
-            raise GitHubIntegrationIntegrityError("stored GitHub integration event is invalid") from error
+            raise GitHubIntegrationIntegrityError(
+                "stored GitHub integration event is invalid"
+            ) from error
         if row["event_id"] != event.event_id:
             raise GitHubIntegrationIntegrityError("GitHub event identity disagrees with payload")
         return event

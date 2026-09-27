@@ -40,9 +40,12 @@ def verify_webhook_signature(
     supplied = _header(headers, "X-Hub-Signature-256")
     if supplied is None or not supplied.startswith("sha256="):
         raise GitHubWebhookInvalid("missing or invalid webhook signature")
-    expected = "sha256=" + hmac.new(
-        webhook_secret.get_secret_value().encode("utf-8"), raw_body, hashlib.sha256
-    ).hexdigest()
+    expected = (
+        "sha256="
+        + hmac.new(
+            webhook_secret.get_secret_value().encode("utf-8"), raw_body, hashlib.sha256
+        ).hexdigest()
+    )
     if not hmac.compare_digest(supplied, expected):
         raise GitHubWebhookInvalid("webhook signature verification failed")
 

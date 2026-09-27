@@ -91,7 +91,9 @@ def _repo(repository_id=501):
     )
 
 
-def _seed(store: GitHubIntegrationStore, project_id: str, *, status=GitHubInstallationStatus.ACTIVE):
+def _seed(
+    store: GitHubIntegrationStore, project_id: str, *, status=GitHubInstallationStatus.ACTIVE
+):
     state = GitHubInstallationState(
         installation=_snapshot(project_id, status=status),
         readiness=(
@@ -140,7 +142,9 @@ class FakeGitHubClient:
     def get_installation(self, **kwargs):
         project_id = kwargs["project_id"]
         observed_at = kwargs["observed_at"]
-        return self.snapshot.model_copy(update={"project_id": project_id, "observed_at": observed_at})
+        return self.snapshot.model_copy(
+            update={"project_id": project_id, "observed_at": observed_at}
+        )
 
     def create_installation_token(self, **kwargs):
         return GitHubInstallationToken(
@@ -151,7 +155,9 @@ class FakeGitHubClient:
         if self.before_repository_list is not None:
             self.before_repository_list()
         observed_at = kwargs["observed_at"]
-        return tuple(item.model_copy(update={"observed_at": observed_at}) for item in self.repositories)
+        return tuple(
+            item.model_copy(update={"observed_at": observed_at}) for item in self.repositories
+        )
 
 
 def _service(store, client, webhook_secret=SecretStr("webhook-secret")):
@@ -186,7 +192,9 @@ def test_permission_policy_violation_is_persisted_fail_closed() -> None:
     with _database() as database:
         store = GitHubIntegrationStore(database)
         _seed(store, P1)
-        client = FakeGitHubClient(_snapshot(P1, permissions=_permissions(GitHubPermissionLevel.WRITE)))
+        client = FakeGitHubClient(
+            _snapshot(P1, permissions=_permissions(GitHubPermissionLevel.WRITE))
+        )
         with pytest.raises(GitHubPermissionError):
             _service(store, client).synchronize_installation(
                 project_id=P1,
