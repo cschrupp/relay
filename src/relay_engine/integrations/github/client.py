@@ -191,9 +191,7 @@ class GitHubClient:
             if provider_id != installation_id:
                 raise GitHubRemoteError("GitHub installation response changed requested identity")
             account = _required_mapping(payload.get("account"), "installation account")
-            permissions = _required_mapping(
-                payload.get("permissions"), "installation permissions"
-            )
+            permissions = _required_mapping(payload.get("permissions"), "installation permissions")
             grants: list[GitHubPermissionGrant] = []
             for raw_name, raw_level in sorted(permissions.items()):
                 name = _required_str(raw_name, "permission name")
@@ -278,18 +276,12 @@ class GitHubClient:
                     repository_id = _required_int(repository.get("id"), "repository id")
                     item = GitHubRepositorySnapshot(
                         github_repository_id=repository_id,
-                        node_id=_required_str(
-                            repository.get("node_id"), "repository node id"
-                        ),
+                        node_id=_required_str(repository.get("node_id"), "repository node id"),
                         full_name=_required_str(
                             repository.get("full_name"), "repository full_name"
                         ),
-                        owner_login=_required_str(
-                            owner.get("login"), "repository owner login"
-                        ),
-                        private=_required_bool(
-                            repository.get("private"), "repository private"
-                        ),
+                        owner_login=_required_str(owner.get("login"), "repository owner login"),
+                        private=_required_bool(repository.get("private"), "repository private"),
                         archived=_required_bool(
                             repository.get("archived", False), "repository archived"
                         ),
