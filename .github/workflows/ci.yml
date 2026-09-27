@@ -4,21 +4,27 @@ on:
   push:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   lock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: sidecar/1.1-lockfile-generation
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install Python
         run: uv python install 3.14
-      - name: Generate lock
-        run: uv lock
-      - name: Upload lock
-        uses: actions/upload-artifact@v4
-        with:
-          name: slice-1-1-uv-lock
-          path: uv.lock
+      - name: Generate and publish lock
+        run: |
+          uv lock
+          if git diff --quiet -- uv.lock; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "Sidecar: generated Slice 1.1 uv.lock"
+          git push origin HEAD:sidecar/1.1-lockfile-generation
