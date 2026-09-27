@@ -1,7 +1,8 @@
 """Operational settings for the Relay service.
 
-Project engineering state is intentionally not loaded from ``.relay/`` here.
-That repository contract belongs to a later authorized slice.
+Repository engineering state is governed separately through the accepted
+``.relay/registry.json`` contract. Provider-specific GitHub App configuration
+lives at the integration composition boundary rather than in project state.
 """
 
 from typing import Literal

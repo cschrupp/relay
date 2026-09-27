@@ -124,7 +124,53 @@ INITIAL_MIGRATION = Migration(
     ),
 )
 
-DEFAULT_MIGRATIONS: tuple[Migration, ...] = (INITIAL_MIGRATION,)
+GITHUB_INTEGRATION_MIGRATION = Migration(
+    version=2,
+    name="github app integration state",
+    statements=(
+        """CREATE TABLE github_installations (
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            installation_id INTEGER NOT NULL CHECK (installation_id > 0),
+            state_revision INTEGER NOT NULL CHECK (state_revision >= 1),
+            payload_json TEXT NOT NULL,
+            PRIMARY KEY (project_id, installation_id)
+        )""",
+        """CREATE TABLE github_installation_repositories (
+            project_id TEXT NOT NULL,
+            installation_id INTEGER NOT NULL,
+            github_repository_id INTEGER NOT NULL CHECK (github_repository_id > 0),
+            payload_json TEXT NOT NULL,
+            PRIMARY KEY (project_id, installation_id, github_repository_id),
+            FOREIGN KEY (project_id, installation_id)
+                REFERENCES github_installations(project_id, installation_id)
+                ON DELETE CASCADE
+        )""",
+        """CREATE TABLE github_installation_events (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id TEXT NOT NULL UNIQUE,
+            project_id TEXT NOT NULL,
+            installation_id INTEGER NOT NULL,
+            prior_state_revision INTEGER NOT NULL CHECK (prior_state_revision >= 0),
+            resulting_state_revision INTEGER NOT NULL CHECK (resulting_state_revision >= 1),
+            event_type TEXT NOT NULL,
+            observed_at TEXT NOT NULL,
+            delivery_id TEXT,
+            delivery_digest TEXT,
+            payload_json TEXT NOT NULL,
+            FOREIGN KEY (project_id, installation_id)
+                REFERENCES github_installations(project_id, installation_id),
+            CHECK ((delivery_id IS NULL AND delivery_digest IS NULL)
+                OR (delivery_id IS NOT NULL AND delivery_digest IS NOT NULL)),
+            UNIQUE (project_id, delivery_id)
+        )""",
+        """CREATE INDEX github_installations_by_external_id
+        ON github_installations(installation_id, project_id)""",
+        """CREATE INDEX github_events_by_binding_revision
+        ON github_installation_events(project_id, installation_id, resulting_state_revision, sequence)""",
+    ),
+)
+
+DEFAULT_MIGRATIONS: tuple[Migration, ...] = (INITIAL_MIGRATION, GITHUB_INTEGRATION_MIGRATION)
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
     version INTEGER PRIMARY KEY,
@@ -149,6 +195,9 @@ REQUIRED_TABLES = frozenset(
         "human_decisions",
         "gate_evaluation_records",
         "executions",
+        "github_installations",
+        "github_installation_repositories",
+        "github_installation_events",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -156,6 +205,8 @@ REQUIRED_INDEXES = frozenset(
         "lifecycle_events_by_slice_revision",
         "gates_by_id_revision",
         "executions_by_slice_revision",
+        "github_installations_by_external_id",
+        "github_events_by_binding_revision",
     }
 )
 

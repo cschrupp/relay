@@ -1,0 +1,97 @@
+"""Secure read-only GitHub App integration for Relay Slice 1.1."""
+
+from relay_engine.integrations.github.auth import create_app_jwt
+from relay_engine.integrations.github.client import (
+    GitHubClient,
+    GitHubRequest,
+    GitHubResponse,
+    GitHubTransport,
+    UrllibGitHubTransport,
+)
+from relay_engine.integrations.github.errors import (
+    GitHubAuthenticationError,
+    GitHubInstallationUnavailable,
+    GitHubIntegrationConcurrencyConflict,
+    GitHubIntegrationError,
+    GitHubIntegrationIntegrityError,
+    GitHubPermissionError,
+    GitHubRateLimited,
+    GitHubRemoteError,
+    GitHubRepositoryAccessDenied,
+    GitHubWebhookInvalid,
+)
+from relay_engine.integrations.github.models import (
+    GitHubAccessReadiness,
+    GitHubAccountType,
+    GitHubAppConfig,
+    GitHubInstallationEvent,
+    GitHubInstallationEventType,
+    GitHubInstallationSnapshot,
+    GitHubInstallationState,
+    GitHubInstallationStatus,
+    GitHubInstallationToken,
+    GitHubPermissionGrant,
+    GitHubPermissionLevel,
+    GitHubRepositorySelectionMode,
+    GitHubRepositorySnapshot,
+    GitHubSecretConfig,
+    GitHubWebhookEnvelope,
+    repository_ref_from_github,
+)
+from relay_engine.integrations.github.service import (
+    GitHubIntegrationService,
+    GitHubWebhookProjectOutcome,
+    permission_policy_allows,
+)
+from relay_engine.integrations.github.store import (
+    GitHubIntegrationStore,
+    GitHubMutationResult,
+)
+from relay_engine.integrations.github.webhooks import (
+    parse_supported_webhook,
+    verify_webhook_signature,
+    webhook_delivery_digest,
+)
+
+__all__ = [
+    "GitHubAccessReadiness",
+    "GitHubAccountType",
+    "GitHubAppConfig",
+    "GitHubAuthenticationError",
+    "GitHubClient",
+    "GitHubInstallationEvent",
+    "GitHubInstallationEventType",
+    "GitHubInstallationSnapshot",
+    "GitHubInstallationState",
+    "GitHubInstallationStatus",
+    "GitHubInstallationToken",
+    "GitHubInstallationUnavailable",
+    "GitHubIntegrationConcurrencyConflict",
+    "GitHubIntegrationError",
+    "GitHubIntegrationIntegrityError",
+    "GitHubIntegrationService",
+    "GitHubIntegrationStore",
+    "GitHubMutationResult",
+    "GitHubPermissionError",
+    "GitHubPermissionGrant",
+    "GitHubPermissionLevel",
+    "GitHubRateLimited",
+    "GitHubRemoteError",
+    "GitHubRepositoryAccessDenied",
+    "GitHubRepositorySelectionMode",
+    "GitHubRepositorySnapshot",
+    "GitHubRequest",
+    "GitHubResponse",
+    "GitHubSecretConfig",
+    "GitHubTransport",
+    "GitHubWebhookEnvelope",
+    "GitHubWebhookInvalid",
+    "GitHubWebhookProjectOutcome",
+    "UrllibGitHubTransport",
+    "create_app_jwt",
+    "parse_supported_webhook",
+    "permission_policy_allows",
+    "repository_ref_from_github",
+    "verify_webhook_signature",
+    "webhook_delivery_digest",
+]
