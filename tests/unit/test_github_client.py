@@ -205,5 +205,5 @@ def test_repository_provider_types_are_validated_not_truthy_coerced() -> None:
         (),
         {"token": SecretStr("token"), "expires_at": NOW + timedelta(hours=1)},
     )()
-    with pytest.raises(GitHubRemoteError, match="failed validation"):
+    with pytest.raises(GitHubRemoteError, match="repository private must be boolean"):
         client.list_installation_repositories(token=token, observed_at=NOW)
