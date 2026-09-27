@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.1 design active  
+**Status:** Phase 1 open — Slice 1.1 implementation complete / pending independent evaluation  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -21,12 +21,6 @@ Accepted Phase-0 protocol/document synchronization SHA:
 
 ```text
 cb9edc453442dc639a523ef301e4a258d0394daa
-```
-
-Accepted Slice 0.6 implementation result:
-
-```text
-1903017dd7832dc21f0554be762bac1002891a89
 ```
 
 Phase-0 closure evaluation:
@@ -52,7 +46,7 @@ Human acceptance:
 RLY-P0-PROTOCOL-ACCEPT-001
 ```
 
-Process amendments now in force:
+Process amendments in force:
 
 ```text
 P0-PR-01  registered living-projection impact preflight
@@ -61,62 +55,141 @@ P0-PR-03  design review uses ACCEPT / REVISE / ESCALATE
 P0-PR-04  review acceptance and next-phase authorization are separate
 ```
 
-Phase 0 remains:
-
-```text
-COMPLETE / CLOSED
-```
-
 ---
 
-# 3. Current phase authority
+# 3. Phase-1 authority
 
-Human Authority has separately granted:
+Phase 1:
 
 ```text
 RLY-P1-OPEN-001
-Phase 1 — OPEN
+OPEN
 ```
 
-and:
+Slice 1.1 design authorization:
 
 ```text
 RLY-S11-DESIGN-AUTH-001
-Slice 1.1 — GitHub App Integration
-DESIGN ONLY
 ```
 
-Exact authorized design baseline:
+Accepted reviewed design:
 
 ```text
-cb9edc453442dc639a523ef301e4a258d0394daa
+Revision 1:
+d73daf2ab2a850a4762084e042fa496f7a377e99
+
+Revision 2:
+0cf5436021eeef45f5e6d9fc20fe6dcf76e0a19b
+
+Independent design evaluation:
+RLY-S11-DESIGN-EVAL-002 — ACCEPT
+
+Human design acceptance:
+RLY-S11-DESIGN-ACCEPT-001
+
+Implementation authorization:
+RLY-S11-AUTH-001
 ```
 
-Current engineering role/model:
+Implementation authority is limited to Slice 1.1.
+
+Slice 1.2 remains separately unauthorized.
+
+---
+
+# 4. Current Slice 1.1 state
 
 ```text
-Slice 1.1 Architect — GPT-5.6 Sol
+Slice 1.1:
+IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+
+Technical implementation checkpoint:
+92a65728ab66ededed86d134a845a93fe58ad01d
+
+Technical checkpoint CI:
+36338324389 — SUCCESS
+
+Tests:
+405 passed
 ```
 
-Next governed role/model after Design Revision 1:
+The final repository result SHA is the implementation-result handover commit that includes this candidate documentation and registry synchronization.
+
+That result is not accepted until independent evaluation and a separate Human Authority acceptance.
+
+Current role/model:
 
 ```text
-Independent Design Reviewer — GPT-5.6 Sol
+Implementation Agent — GPT-5.6 Sol
+```
+
+Next role/model:
+
+```text
+Independent Evaluator — GPT-5.6 Sol
 ```
 
 ---
 
-# 4. Authorization state
+# 5. Slice 1.1 implemented capability
+
+The candidate implementation provides:
+
+- GitHub App RS256 JWT authentication with explicit clock input;
+- ephemeral installation access tokens with no durable token storage;
+- pinned GitHub REST headers and a narrow standard-library HTTP transport seam;
+- strict validation of external GitHub JSON before typed persistence;
+- project-scoped installation and accessible-repository state;
+- provider installation status separated from Relay access readiness;
+- fail-closed permission-policy validation;
+- explicit `RepositoryId` input for provider-neutral `RepositoryRef` conversion;
+- signed webhook verification before payload parsing;
+- deterministic semantic delivery digests and project-scoped idempotency;
+- app-level webhook fanout only to existing project bindings;
+- monotonic per-binding `state_revision` optimistic concurrency;
+- atomic repository-set replacement;
+- immutable GitHub integration events;
+- SQLite migration v2 for GitHub integration state.
+
+New runtime dependency:
+
+```text
+PyJWT[crypto]
+```
+
+The frozen lock currently resolves PyJWT 2.15.0 and cryptography 50.0.1.
+
+---
+
+# 6. Explicitly deferred
+
+Slice 1.1 does not implement or authorize:
+
+- provider-neutral project repository registration;
+- branch/tag/ref resolution to immutable commit SHAs;
+- baseline/worktree proof;
+- remote `.relay/` initialization or synchronization;
+- repository content writes;
+- branch, commit, or pull-request creation;
+- user OAuth;
+- generic multi-provider integration infrastructure;
+- agent execution.
+
+These remain separately gated.
+
+---
+
+# 7. Authorization state
 
 ```text
 Phase 1:
 OPEN
 
 Slice 1.1:
-DESIGN AUTHORIZED / IN PROGRESS
+IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
 
-Slice 1.1 implementation:
-NOT AUTHORIZED
+Slice 1.1 accepted:
+NO
 
 Slice 1.2:
 NOT OPEN / NOT AUTHORIZED
@@ -125,37 +198,15 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-A passing Slice 1.1 design review will not by itself authorize implementation.
-
-Human Authority must accept the reviewed design and separately authorize implementation.
-
 **Unblocked ≠ authorized.**
 
 ---
 
-# 5. Accepted Phase-0 capability
-
-Relay currently provides:
-
-- immutable provider-neutral domain values;
-- deterministic lifecycle transitions and replay;
-- deterministic handover gates and traffic lights;
-- validity / authority / autonomy separation;
-- durable authorization and human-decision records;
-- SQLite persistence, migrations, restart recovery, and causal audit records;
-- schema-v1 repository artifact registry;
-- explicit canonical pointers;
-- historical artifact immutability/supersession;
-- raw-byte digest and repository-path integrity;
-- observation-commit provenance without snapshot-varying core `Artifact` construction.
-
----
-
-# 6. Canonical living documents
+# 8. Canonical living documents
 
 Canonical status is defined by `.relay/registry.json`.
 
-Current canonical keys:
+Current canonical keys remain:
 
 ```text
 product-proposal
@@ -165,47 +216,4 @@ documentation-governance
 engineering-simplicity-quality
 ```
 
-Registered living projections must advance through a new ArtifactId/revision when their exact bytes change.
-
----
-
-# 7. Current Slice 1.1 objective
-
-Slice 1.1 designs the GitHub App integration boundary needed to securely identify installations, discover permitted repositories, validate least-privilege read access, process installation lifecycle signals, persist non-secret provider state, and map selected GitHub repositories into explicit provider-neutral `RepositoryRef` values.
-
-The slice does not yet:
-
-- register authoritative project repository/baseline state;
-- resolve branches/tags to immutable commit SHAs;
-- initialize or synchronize `.relay/` through GitHub;
-- mutate repository content;
-- create branches/commits/PRs;
-- execute coding agents.
-
-Those capabilities remain separately gated.
-
----
-
-# 8. Deferred next slices
-
-```text
-Slice 1.2
-Repository Registration and Baseline Resolution
-
-Slice 1.3
-.relay Initialization and Sync
-
-Slice 1.4
-Project and Slice CRUD
-
-Slice 1.5
-Board Projection
-
-Slice 1.6
-Human Authorization and Decision Gates
-
-Slice 1.7
-Manual Evaluation and Acceptance
-```
-
-No later slice is authorized by roadmap presence.
+Registered living projections advance through a new `ArtifactId` and revision when their exact bytes change.

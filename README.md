@@ -11,24 +11,25 @@ Relay is being built inside-out: deterministic engineering governance first, the
 ## Current status
 
 ```text
-Phase 0:                 COMPLETE / CLOSED
-Core domain model:       ACCEPTED
-Lifecycle engine:        ACCEPTED
-Handover governance:     ACCEPTED
-Persistence/events:      ACCEPTED
-Repository contract:     ACCEPTED
-Phase-0 protocol review: ACCEPTED
-Phase 1:                 OPEN
-Slice 1.1:               DESIGN ONLY
-Slice 1.1 implementation: NOT AUTHORIZED
-Agent execution:         NOT IMPLEMENTED
+Phase 0:                  COMPLETE / CLOSED
+Core domain model:        ACCEPTED
+Lifecycle engine:         ACCEPTED
+Handover governance:      ACCEPTED
+Persistence/events:       ACCEPTED
+Repository contract:      ACCEPTED
+Phase-0 protocol review:  ACCEPTED
+Phase 1:                  OPEN
+Slice 1.1 design:         ACCEPTED
+Slice 1.1 implementation: COMPLETE / PENDING INDEPENDENT EVALUATION
+Slice 1.2:                NOT OPEN / NOT AUTHORIZED
+Agent execution:          NOT IMPLEMENTED
 ```
 
 The current authority is recorded in `docs/CURRENT_BASELINE.md`.
 
-## What Phase 0 provides
+## What Relay currently provides
 
-Relay currently implements:
+The accepted Phase-0 foundation includes:
 
 - immutable provider-neutral domain values;
 - deterministic lifecycle transitions and replay;
@@ -40,7 +41,9 @@ Relay currently implements:
 - historical artifact locking/supersession semantics;
 - explicit canonical living projections.
 
-Phase 1 has now opened. Slice 1.1 is **design only** and concerns GitHub App integration. No GitHub product implementation is authorized until that design is independently reviewed and Human Authority separately authorizes implementation.
+Slice 1.1 now has an implementation candidate for read-only GitHub App integration. It adds GitHub App JWT authentication, installation/repository discovery, project-scoped access state, fail-closed permission readiness, signed installation webhooks, optimistic concurrency, and deterministic webhook idempotency. It remains pending independent evaluation and Human Authority acceptance.
+
+Slice 1.1 does **not** authorize or implement repository registration, baseline/ref resolution, remote `.relay/` writes, repository mutation, or agent execution.
 
 ## Canonical documentation
 
@@ -54,22 +57,14 @@ Current canonical projections include:
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality
 
-Phase-0 protocol review:
-
-```text
-docs/reviews/PHASE_0_PROTOCOL_REVIEW.md
-```
-
-Phase-0 review acceptance / Phase-1 opening:
-
-```text
-docs/reviews/PHASE_0_PROTOCOL_REVIEW_ACCEPTANCE.md
-```
-
-Current Slice 1.1 design:
+Current Slice 1.1 records include:
 
 ```text
 docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION.md
+docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION_REV2.md
+docs/architecture/GITHUB_APP_INTEGRATION.md
+docs/decisions/ADR-0007-github-app-authentication.md
+docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION_MEMORY.md
 ```
 
 ## Requirements
@@ -96,16 +91,9 @@ uv build
 ## Repository structure
 
 ```text
-src/relay_engine/          accepted Relay runtime foundation
-tests/                     deterministic regression coverage
-docs/                      product, policy, architecture, slice, and review records
-.relay/registry.json       schema-v1 canonical artifact registry
-AGENTS.md                   coding-agent governance instructions
-.github/workflows/ci.yml   canonical CI checks
+src/relay_engine/              Relay runtime foundation
+src/relay_engine/integrations GitHub/provider-specific integration boundary
+tests/                         deterministic regression coverage
+docs/                          governed architecture, decisions, slices, and projections
+.relay/registry.json           repository artifact/canonical contract
 ```
-
-## Development rule
-
-**Unblocked is not authorized.**
-
-The existence of a design, roadmap entry, passing CI, or passing review does not authorize implementation. Follow the current authority recorded in `docs/CURRENT_BASELINE.md`.
