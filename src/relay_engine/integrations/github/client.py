@@ -96,6 +96,18 @@ def _required_bool(value: object, label: str) -> bool:
     return value
 
 
+def _required_mapping(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise GitHubRemoteError(f"GitHub {label} must be an object with string keys")
+    return cast(Mapping[str, object], value)
+
+
+def _required_list(value: object, label: str) -> list[object]:
+    if not isinstance(value, list):
+        raise GitHubRemoteError(f"GitHub {label} must be a list")
+    return cast(list[object], value)
+
+
 class GitHubClient:
     def __init__(self, config: GitHubAppConfig, transport: GitHubTransport) -> None:
         self._config = config
@@ -136,7 +148,8 @@ class GitHubClient:
             if not response.body:
                 return {}, response.headers
             try:
-                return json.loads(response.body), response.headers
+                decoded = cast(object, json.loads(response.body))
+                return decoded, response.headers
             except (UnicodeDecodeError, json.JSONDecodeError) as error:
                 raise GitHubRemoteError("GitHub returned malformed JSON") from error
 
@@ -166,22 +179,21 @@ class GitHubClient:
         app_jwt: SecretStr,
         observed_at: datetime,
     ) -> GitHubInstallationSnapshot:
-        payload, _ = self._request(
+        raw_payload, _ = self._request(
             method="GET",
             path=f"/app/installations/{installation_id}",
             credential=app_jwt,
             not_found_installation=True,
         )
-        if not isinstance(payload, dict):
-            raise GitHubRemoteError("GitHub installation payload must be an object")
+        payload = _required_mapping(raw_payload, "installation payload")
         try:
             provider_id = _required_int(payload.get("id"), "installation id")
             if provider_id != installation_id:
                 raise GitHubRemoteError("GitHub installation response changed requested identity")
-            account = payload.get("account")
-            permissions = payload.get("permissions")
-            if not isinstance(account, dict) or not isinstance(permissions, dict):
-                raise GitHubRemoteError("GitHub installation nested payload is invalid")
+            account = _required_mapping(payload.get("account"), "installation account")
+            permissions = _required_mapping(
+                payload.get("permissions"), "installation permissions"
+            )
             grants: list[GitHubPermissionGrant] = []
             for raw_name, raw_level in sorted(permissions.items()):
                 name = _required_str(raw_name, "permission name")
@@ -223,15 +235,14 @@ class GitHubClient:
             if repository_id <= 0:
                 raise ValueError("repository_id must be positive")
             body["repository_ids"] = [repository_id]
-        payload, _ = self._request(
+        raw_payload, _ = self._request(
             method="POST",
             path=f"/app/installations/{installation_id}/access_tokens",
             credential=app_jwt,
             body=body,
             not_found_installation=True,
         )
-        if not isinstance(payload, dict):
-            raise GitHubRemoteError("GitHub installation-token payload must be an object")
+        payload = _required_mapping(raw_payload, "installation-token payload")
         try:
             token = _required_str(payload.get("token"), "installation token")
             expires_text = _required_str(payload.get("expires_at"), "token expiration")
@@ -253,31 +264,37 @@ class GitHubClient:
         repositories: dict[int, GitHubRepositorySnapshot] = {}
         page = 1
         while True:
-            payload, _ = self._request(
+            raw_payload, _ = self._request(
                 method="GET",
                 path=f"/installation/repositories?per_page=100&page={page}",
                 credential=token.token,
             )
-            if not isinstance(payload, dict) or not isinstance(payload.get("repositories"), list):
-                raise GitHubRemoteError("GitHub repository-list payload failed validation")
-            page_items = cast(list[object], payload["repositories"])
+            payload = _required_mapping(raw_payload, "repository-list payload")
+            page_items = _required_list(payload.get("repositories"), "repository list")
             for raw in page_items:
-                if not isinstance(raw, dict):
-                    raise GitHubRemoteError("GitHub repository payload must be an object")
+                repository = _required_mapping(raw, "repository payload")
                 try:
-                    owner = raw.get("owner")
-                    if not isinstance(owner, dict):
-                        raise GitHubRemoteError("GitHub repository owner payload is invalid")
-                    repository_id = _required_int(raw.get("id"), "repository id")
+                    owner = _required_mapping(repository.get("owner"), "repository owner")
+                    repository_id = _required_int(repository.get("id"), "repository id")
                     item = GitHubRepositorySnapshot(
                         github_repository_id=repository_id,
-                        node_id=_required_str(raw.get("node_id"), "repository node id"),
-                        full_name=_required_str(raw.get("full_name"), "repository full_name"),
-                        owner_login=_required_str(owner.get("login"), "repository owner login"),
-                        private=_required_bool(raw.get("private"), "repository private"),
-                        archived=_required_bool(raw.get("archived", False), "repository archived"),
+                        node_id=_required_str(
+                            repository.get("node_id"), "repository node id"
+                        ),
+                        full_name=_required_str(
+                            repository.get("full_name"), "repository full_name"
+                        ),
+                        owner_login=_required_str(
+                            owner.get("login"), "repository owner login"
+                        ),
+                        private=_required_bool(
+                            repository.get("private"), "repository private"
+                        ),
+                        archived=_required_bool(
+                            repository.get("archived", False), "repository archived"
+                        ),
                         default_branch=_required_str(
-                            raw.get("default_branch"), "repository default branch"
+                            repository.get("default_branch"), "repository default branch"
                         ),
                         observed_at=observed_at,
                     )

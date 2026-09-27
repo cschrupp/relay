@@ -56,15 +56,26 @@ def _positive_int(value: object, label: str) -> int:
     return value
 
 
+def _required_mapping(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise GitHubWebhookInvalid(f"{label} must be an object with string keys")
+    return cast(Mapping[str, object], value)
+
+
+def _required_list(value: object, label: str) -> list[object]:
+    if not isinstance(value, list):
+        raise GitHubWebhookInvalid(f"{label} must be a list")
+    return cast(list[object], value)
+
+
 def _permissions(value: object) -> tuple[GitHubPermissionGrant, ...]:
     if value is None:
         return ()
-    if not isinstance(value, dict):
-        raise GitHubWebhookInvalid("installation permissions must be an object")
+    permissions = _required_mapping(value, "installation permissions")
     grants: list[GitHubPermissionGrant] = []
     try:
-        for name, level in sorted(value.items()):
-            if not isinstance(name, str) or not isinstance(level, str):
+        for name, level in sorted(permissions.items()):
+            if not isinstance(level, str):
                 raise GitHubWebhookInvalid("installation permission entries must be strings")
             grants.append(
                 GitHubPermissionGrant(name=name, level=GitHubPermissionLevel(level.lower()))
@@ -75,13 +86,11 @@ def _permissions(value: object) -> tuple[GitHubPermissionGrant, ...]:
 
 
 def _repository_ids(value: object) -> tuple[int, ...]:
-    if not isinstance(value, list):
-        raise GitHubWebhookInvalid("repository change payload must be a list")
+    items = _required_list(value, "repository change payload")
     ids: list[int] = []
-    for item in value:
-        if not isinstance(item, dict):
-            raise GitHubWebhookInvalid("repository change entry must be an object")
-        ids.append(_positive_int(item.get("id"), "repository id"))
+    for item in items:
+        repository = _required_mapping(item, "repository change entry")
+        ids.append(_positive_int(repository.get("id"), "repository id"))
     return tuple(sorted(set(ids)))
 
 
@@ -101,18 +110,16 @@ def parse_supported_webhook(
     verify_webhook_signature(headers=headers, raw_body=raw_body, webhook_secret=webhook_secret)
 
     try:
-        payload = json.loads(raw_body)
+        raw_payload = cast(object, json.loads(raw_body))
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise GitHubWebhookInvalid("webhook body is not valid JSON") from error
-    if not isinstance(payload, dict):
-        raise GitHubWebhookInvalid("webhook body must be a JSON object")
+    payload = _required_mapping(raw_payload, "webhook body")
 
-    action = payload.get("action")
-    if not isinstance(action, str) or not action:
+    action_value = payload.get("action")
+    if not isinstance(action_value, str) or not action_value:
         raise GitHubWebhookInvalid("webhook action is missing")
-    installation = payload.get("installation")
-    if not isinstance(installation, dict):
-        raise GitHubWebhookInvalid("webhook installation object is missing")
+    action = action_value
+    installation = _required_mapping(payload.get("installation"), "webhook installation")
     installation_id = _positive_int(installation.get("id"), "installation id")
 
     permissions: tuple[GitHubPermissionGrant, ...] = ()

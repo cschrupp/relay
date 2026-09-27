@@ -122,7 +122,7 @@ class GitHubIntegrationStore:
                WHERE installation_id = ? ORDER BY project_id""",
             (installation_id,),
         ).fetchall()
-        return tuple(cast(ProjectId, str(row["project_id"])) for row in rows)
+        return tuple(str(row["project_id"]) for row in rows)
 
     def apply_mutation(
         self,
