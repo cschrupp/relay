@@ -182,7 +182,9 @@ class GitHubIntegrationService:
                     observed_at=observed_at,
                 ),
             )
-            raise GitHubPermissionError("GitHub installation violates the Slice 1.1 permission policy")
+            raise GitHubPermissionError(
+                "GitHub installation violates the Slice 1.1 permission policy"
+            )
 
         if snapshot.status is GitHubInstallationStatus.SUSPENDED:
             state = GitHubInstallationState(
@@ -246,15 +248,13 @@ class GitHubIntegrationService:
             raise GitHubRepositoryAccessDenied("GitHub installation is not bound to this project")
         repositories = self._store.list_repositories(project_id, installation_id)
         repository = next(
-            (
-                item
-                for item in repositories
-                if item.github_repository_id == github_repository_id
-            ),
+            (item for item in repositories if item.github_repository_id == github_repository_id),
             None,
         )
         if repository is None:
-            raise GitHubRepositoryAccessDenied("GitHub repository is not in the confirmed access set")
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository is not in the confirmed access set"
+            )
         try:
             return repository_ref_from_github(
                 relay_repository_id=relay_repository_id,
@@ -263,7 +263,9 @@ class GitHubIntegrationService:
                 current_repositories=repositories,
             )
         except ValueError as error:
-            raise GitHubRepositoryAccessDenied("GitHub repository is not currently usable") from error
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository is not currently usable"
+            ) from error
 
     def process_webhook(
         self,
@@ -354,9 +356,7 @@ class GitHubIntegrationService:
             if envelope.action == "removed":
                 removed = set(envelope.repository_ids)
                 next_repositories = tuple(
-                    item
-                    for item in repositories
-                    if item.github_repository_id not in removed
+                    item for item in repositories if item.github_repository_id not in removed
                 )
             elif envelope.action == "added":
                 next_repositories = None

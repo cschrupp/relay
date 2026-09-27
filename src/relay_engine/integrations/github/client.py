@@ -145,16 +145,18 @@ class GitHubClient:
         if response.status == 429 or (response.status == 403 and remaining == "0"):
             raise GitHubRateLimited(f"GitHub rate limited request {request_id}")
         if response.status == 401:
-            raise GitHubAuthenticationError(f"GitHub authentication failed for request {request_id}")
+            raise GitHubAuthenticationError(
+                f"GitHub authentication failed for request {request_id}"
+            )
         if response.status == 404 and not_found_installation:
             raise GitHubInstallationUnavailable(
                 f"GitHub installation is unavailable for request {request_id}"
             )
         if response.status == 403:
-            raise GitHubPermissionError(f"GitHub denied required permission for request {request_id}")
-        raise GitHubRemoteError(
-            f"GitHub returned HTTP {response.status} for request {request_id}"
-        )
+            raise GitHubPermissionError(
+                f"GitHub denied required permission for request {request_id}"
+            )
+        raise GitHubRemoteError(f"GitHub returned HTTP {response.status} for request {request_id}")
 
     def get_installation(
         self,
@@ -184,9 +186,7 @@ class GitHubClient:
             for raw_name, raw_level in sorted(permissions.items()):
                 name = _required_str(raw_name, "permission name")
                 level = _required_str(raw_level, "permission level")
-                grants.append(
-                    GitHubPermissionGrant(name=name, level=GitHubPermissionLevel(level))
-                )
+                grants.append(GitHubPermissionGrant(name=name, level=GitHubPermissionLevel(level)))
             status = (
                 GitHubInstallationStatus.SUSPENDED
                 if payload.get("suspended_at") is not None
@@ -198,9 +198,7 @@ class GitHubClient:
                 app_id=_required_int(payload.get("app_id"), "app id"),
                 account_id=_required_int(account.get("id"), "account id"),
                 account_login=_required_str(account.get("login"), "account login"),
-                account_type=GitHubAccountType(
-                    _required_str(account.get("type"), "account type")
-                ),
+                account_type=GitHubAccountType(_required_str(account.get("type"), "account type")),
                 repository_selection=GitHubRepositorySelectionMode(
                     _required_str(payload.get("repository_selection"), "repository selection")
                 ),
@@ -242,7 +240,9 @@ class GitHubClient:
         except GitHubRemoteError:
             raise
         except (TypeError, ValueError, ValidationError) as error:
-            raise GitHubRemoteError("GitHub installation-token payload failed validation") from error
+            raise GitHubRemoteError(
+                "GitHub installation-token payload failed validation"
+            ) from error
 
     def list_installation_repositories(
         self,
@@ -284,10 +284,14 @@ class GitHubClient:
                 except GitHubRemoteError:
                     raise
                 except (TypeError, ValueError, ValidationError) as error:
-                    raise GitHubRemoteError("GitHub repository payload failed validation") from error
+                    raise GitHubRemoteError(
+                        "GitHub repository payload failed validation"
+                    ) from error
                 prior = repositories.get(item.github_repository_id)
                 if prior is not None and prior != item:
-                    raise GitHubRemoteError("GitHub pagination returned conflicting repository identity")
+                    raise GitHubRemoteError(
+                        "GitHub pagination returned conflicting repository identity"
+                    )
                 repositories[item.github_repository_id] = item
             if len(page_items) < 100:
                 break
