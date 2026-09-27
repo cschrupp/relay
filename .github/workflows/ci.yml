@@ -17,5 +17,8 @@ jobs:
         run: uv python install 3.14
       - name: Generate lock
         run: uv lock
-      - name: Emit lock
-        run: python -c "import base64, pathlib; print('UVLOCK_BASE64=' + base64.b64encode(pathlib.Path('uv.lock').read_bytes()).decode())"
+      - name: Upload lock
+        uses: actions/upload-artifact@v4
+        with:
+          name: slice-1-1-uv-lock
+          path: uv.lock
