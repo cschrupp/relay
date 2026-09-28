@@ -42,9 +42,7 @@ def _response(status: int, payload: object) -> GitHubResponse:
 
 
 def _token() -> GitHubInstallationToken:
-    return GitHubInstallationToken(
-        token=SecretStr("token"), expires_at=NOW + timedelta(hours=1)
-    )
+    return GitHubInstallationToken(token=SecretStr("token"), expires_at=NOW + timedelta(hours=1))
 
 
 def test_commit_resolution_uses_explicit_encoded_ref_once() -> None:
@@ -61,9 +59,7 @@ def test_ref_404_is_distinct_from_other_remote_failures() -> None:
     transport = FakeTransport([_response(404, {"message": "not found"})])
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
     with pytest.raises(GitHubRefNotFound):
-        client.resolve_commit_sha(
-            token=_token(), repository_path="owner/repo", ref="tags/missing"
-        )
+        client.resolve_commit_sha(token=_token(), repository_path="owner/repo", ref="tags/missing")
 
 
 def test_git_commit_and_tree_are_strictly_parsed() -> None:
@@ -88,12 +84,8 @@ def test_git_commit_and_tree_are_strictly_parsed() -> None:
         ]
     )
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
-    commit = client.get_git_commit(
-        token=_token(), repository_path="owner/repo", sha=SHA
-    )
-    tree = client.get_git_tree(
-        token=_token(), repository_path="owner/repo", tree_sha=TREE_SHA
-    )
+    commit = client.get_git_commit(token=_token(), repository_path="owner/repo", sha=SHA)
+    tree = client.get_git_tree(token=_token(), repository_path="owner/repo", tree_sha=TREE_SHA)
     assert commit.sha == SHA
     assert commit.tree_sha == TREE_SHA
     assert tree.sha == TREE_SHA
@@ -113,9 +105,7 @@ def test_git_blob_decodes_exact_bytes_and_validates_declared_size() -> None:
         ]
     )
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
-    blob = client.get_git_blob(
-        token=_token(), repository_path="owner/repo", blob_sha=BLOB_SHA
-    )
+    blob = client.get_git_blob(token=_token(), repository_path="owner/repo", blob_sha=BLOB_SHA)
     assert blob.sha == BLOB_SHA
     assert blob.raw_bytes == raw
 
@@ -137,6 +127,4 @@ def test_git_blob_size_mismatch_fails_closed() -> None:
     )
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
     with pytest.raises(GitHubRemoteError, match="size disagrees"):
-        client.get_git_blob(
-            token=_token(), repository_path="owner/repo", blob_sha=BLOB_SHA
-        )
+        client.get_git_blob(token=_token(), repository_path="owner/repo", blob_sha=BLOB_SHA)
