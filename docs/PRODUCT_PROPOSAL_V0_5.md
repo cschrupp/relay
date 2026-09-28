@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 design submitted  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 Design Revision 2 submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -131,7 +131,7 @@ atomic Artifact + Baseline persistence
 
 Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
 
-Slice 1.3 is now in independent design review for the next boundary: safe repository-contract initialization/synchronization through GitHub without weakening the existing authority model.
+Slice 1.3 is now in independent combined design review preparation after Revision 1 received `REVISE` and bounded Revision 2 addressed the six review findings.
 
 ---
 
@@ -204,7 +204,7 @@ Slice 1.3:
 .relay INITIALIZATION AND SYNC — OPEN
 
 Slice 1.3 design:
-AUTHORIZED / REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
+AUTHORIZED / REVISION 2 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -240,11 +240,23 @@ Revision 1 design record:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC.md
 ```
 
-The proposed capability is deliberately narrow:
+Independent Revision 1 review:
 
-> Given an authoritative Relay project/repository binding and a fully validated target schema-v1 repository contract, Relay may recognize an already-current target or commit an initialization/synchronization to the repository's existing default branch as one atomic Git commit, subject to exact write permission, identity, head, transition, and post-write verification guards.
+```text
+RLY-S13-DESIGN-EVAL-001 — REVISE
+```
 
-The design preserves these product rules:
+Revision 2 amendment:
+
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV2_AMENDMENT.md
+```
+
+The combined proposed capability remains deliberately narrow:
+
+> Given authoritative Relay project/repository identity, an exact expected default-branch/base commit, an exact target schema-v1 repository contract, and Human Authority bound to the exact write subject, Relay may recognize an already-current target or commit initialization/synchronization to the existing default branch as one atomic Git commit, subject to exact permission, identity, transition, race, path-preservation, and post-write verification guards.
+
+The combined design preserves these product rules:
 
 - `.relay/registry.json` remains repository-side authority;
 - schema v1 remains unchanged;
@@ -252,17 +264,24 @@ The design preserves these product rules:
 - read-only installations remain valid for existing read workflows;
 - write-capable installations may add only `contents:write` above metadata read;
 - read operations continue using read-scoped tokens;
+- any non-no-op mutation requires a durable Human Authority `AuthorizationGrant` bound to the exact synchronization subject digest;
+- the authorization subject binds repository/provider selection, `state_revision`, expected default branch/base commit, target registry digest, and artifact-write digests;
 - repository mutation is one non-force default-branch ref movement;
 - registry plus changed registered artifact bytes become visible in the same commit;
 - concurrent branch movement causes conflict rather than overwrite/rebase;
+- existing unregistered files are adopted only when their exact bytes/mode already satisfy the target; otherwise the operation conflicts;
+- `.github/workflows/**` content/mode mutation is not attempted under the contents-only permission ceiling;
+- empty repositories with no existing default-branch head are not bootstrapped by Slice 1.3;
+- indeterminate ref-update transport outcomes are reconciled by observation and never by hidden write retry;
 - existing registry transitions remain governed by the accepted transition validator;
 - invalid existing `.relay` state is never automatically repaired;
+- successful state vocabulary is `CURRENT`, with `wrote_remote` distinguishing no-op from mutation;
 - remote synchronization does not certify or persist its own Relay Baseline;
 - no PR permission, branch creation, force push, migration, background worker, or agent execution is introduced.
 
-The proposed write mechanism uses GitHub's Git Data primitives because sequential per-file commits cannot preserve the same-commit registry/artifact invariant for general synchronization.
+The proposed write mechanism continues to use GitHub's Git Data primitives because sequential per-file commits cannot preserve the same-commit registry/artifact invariant for general synchronization.
 
-Design review may still revise or reject this proposal. No GitHub write behavior is authorized for production implementation yet.
+Design review may still revise or reject the combined proposal. No GitHub write behavior is authorized for production implementation yet.
 
 ---
 
@@ -307,11 +326,14 @@ RLY-S13-OPEN-001
 Slice 1.3 design authorization:
 RLY-S13-DESIGN-AUTH-001
 
+Slice 1.3 Revision 1 evaluation:
+RLY-S13-DESIGN-EVAL-001 — REVISE
+
 Slice 1.3:
 OPEN
 
 Slice 1.3 design:
-SUBMITTED / PENDING INDEPENDENT REVIEW
+REVISION 2 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
