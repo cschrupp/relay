@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 Design Revision 3 submitted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 Design Revision 4 submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, explicit authorization of Slice 1.3 architecture / contract / design, independent Revision 1 review, bounded Revision 2 response, independent combined Revision 1 + Revision 2 review, and bounded Revision 3 response to F007.
+This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, explicit authorization of Slice 1.3 architecture / contract / design, independent Revision 1 review, bounded Revision 2 response, independent combined Revision 1 + Revision 2 review, bounded Revision 3 response to F007, independent combined Revision 1 + Revision 2 + Revision 3 review, and bounded Revision 4 response to F008.
 
 Relay continues to be built inside-out:
 
@@ -100,11 +100,14 @@ RLY-S13-DESIGN-EVAL-001 — REVISE
 Slice 1.3 Revision 1 + Revision 2 combined review:
 RLY-S13-DESIGN-EVAL-002 — REVISE
 
+Slice 1.3 Revision 1 + Revision 2 + Revision 3 combined review:
+RLY-S13-DESIGN-EVAL-003 — REVISE
+
 Slice 1.3:
 OPEN
 
 Slice 1.3 architecture / contract / design:
-AUTHORIZED — REVISION 3 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+AUTHORIZED — REVISION 4 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -233,7 +236,8 @@ OPEN
 DESIGN AUTHORIZED
 REVISION 1 REVIEWED — REVISE
 REVISION 2 COMBINED REVIEWED — REVISE
-REVISION 3 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+REVISION 3 COMBINED REVIEWED — REVISE
+REVISION 4 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 IMPLEMENTATION NOT AUTHORIZED
 ```
 
@@ -285,20 +289,33 @@ Revision 3 amendment:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
 ```
 
+Independent combined Revision 1 + Revision 2 + Revision 3 review:
+
+```text
+RLY-S13-DESIGN-EVAL-003 — REVISE
+```
+
+Revision 4 amendment:
+
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV4_AMENDMENT.md
+```
+
 Revision 1 established the bounded Git Data single-commit architecture. Revision 2 resolved F002–F006 and established the exact `RepositorySyncSubjectV1` digest, but its F001 solution incorrectly reused baseline-bound `AuthorizationGrant` / `HandoverGate` semantics for repository mutation.
 
-Revision 3 preserves the transport and subject-digest architecture and resolves F007 by:
+Revision 3 preserved the transport and subject-digest architecture and resolved F007 by introducing a dedicated immutable `RepositoryMutationAuthorization`, read-only preparation, execution-time subject recomputation, and deterministic SQLite migration v3 while leaving existing handover governance unchanged.
 
-- introducing a dedicated immutable `RepositoryMutationAuthorization` rather than altering `AuthorizationGrant` or `HandoverGate`;
-- keeping the exact synchronization subject bound to project/repository/provider identity, `state_revision`, expected branch/base commit, target registry, and artifact bytes;
-- adding a read-only `prepare_repository_sync(...)` step so Human Authority sees and approves an exact subject before any write capability is used;
-- re-running all preparation checks and recomputing the subject at execution time;
-- checking mutation authority before WRITE-token minting and again immediately before ref visibility;
-- supporting valid `UNINITIALIZED` repositories without fabricating a Relay Baseline;
-- preserving the complete existing handover-gate engine unchanged and orthogonal to repository-side-effect authority;
-- adding deterministic local SQLite migration v3 for immutable mutation-authority persistence;
-- keeping repository-contract schema v1 unchanged and adding no runtime dependency;
-- preserving no PR flow, no branch creation, no force push, no automatic Baseline persistence, and no agent execution.
+The combined Revision 1 + Revision 2 + Revision 3 review closed F001–F007 and found one remaining coupling defect: Revision 3 attached a mandatory `SliceId` to mutation authority even though Slice identity was absent from the exact synchronization subject and runtime authorization APIs.
+
+Revision 4 resolves F008 only by:
+
+- removing `slice_id` from `RepositoryMutationAuthorization`;
+- making mutation authority explicitly `project_id` + exact `RepositorySyncSubjectV1` scoped;
+- removing the undefined `current Slice 1.3 authority context` execution check;
+- preserving preparation and authorization APIs without a Slice parameter;
+- removing `slice_id` and the `slices` foreign key from migration v3;
+- keeping future optional Slice/audit provenance outside the repository-mutation authority contract;
+- preserving the complete Git transport, path/race guards, migration-v3 concept, no automatic Baseline persistence, and existing handover governance.
 
 Any passing combined design review remains separate from Human Authority design acceptance and implementation authorization.
 
@@ -377,6 +394,12 @@ Revision 2 submitted head:
 
 Revision 1 + Revision 2 combined evaluation:
 RLY-S13-DESIGN-EVAL-002 — REVISE
+
+Revision 3 submitted head:
+8e8ab70cf8c9b52d628b0b658179c1fe287c93ea
+
+Revision 1 + Revision 2 + Revision 3 combined evaluation:
+RLY-S13-DESIGN-EVAL-003 — REVISE
 ```
 
 Current gate state:
@@ -388,10 +411,12 @@ Current gate state:
 5. Independent Revision 1 design review. **DONE — REVISE**
 6. Bounded Revision 2 amendment resolving F001–F006. **DONE**
 7. Independent combined Revision 1 + Revision 2 design review. **DONE — REVISE**
-8. Bounded Revision 3 amendment resolving F007 only. **DONE / SUBMITTED**
-9. Independent combined Revision 1 + Revision 2 + Revision 3 design review. **PENDING**
-10. Human design acceptance. **NOT REACHED**
-11. Separate implementation authorization. **NOT REACHED**
+8. Bounded Revision 3 amendment resolving F007 only. **DONE**
+9. Independent combined Revision 1 + Revision 2 + Revision 3 design review. **DONE — REVISE**
+10. Bounded Revision 4 amendment resolving F008 only. **DONE / SUBMITTED**
+11. Independent combined Revision 1 + Revision 2 + Revision 3 + Revision 4 design review. **PENDING**
+12. Human design acceptance. **NOT REACHED**
+13. Separate implementation authorization. **NOT REACHED**
 
 No implementation work proceeds from design submission or a future passing design review alone.
 
@@ -457,7 +482,7 @@ Next governed role:
 Independent Design Reviewer — GPT-5.6 Sol
 
 Slice 1.3 architecture / contract / design:
-REVISION 3 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
+REVISION 4 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
