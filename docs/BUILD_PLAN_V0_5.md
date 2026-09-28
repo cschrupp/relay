@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.2 design authorized  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.2 closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.1.
+This is the current execution plan after acceptance and closure of Slice 1.2.
 
 Relay continues to be built inside-out:
 
@@ -65,10 +65,31 @@ Slice 1.1 closure evaluation:
 RLY-S11-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.2:
-OPEN FOR DESIGN / DESIGN AUTHORIZED
+COMPLETE / ACCEPTED / CLOSED
 
-Slice 1.2 implementation:
-NOT AUTHORIZED
+Accepted Slice 1.2 design head:
+4acd6be1f93058d1efcafc66a78fc1a9726c16ba
+
+Accepted Slice 1.2 technical result:
+9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
+
+Independent implementation evaluation:
+RLY-S12-EVAL-002 — ACCEPT
+
+Human acceptance:
+RLY-S12-ACCEPT-001
+
+Acceptance/finalization:
+7e08ad484ce794946ec2e09abf44060879e9fc04
+
+Final canonical head evaluated:
+3cbac05d8aa91b09ce79965a83d9887b76c23978
+
+Closure evaluation:
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
+
+Slice 1.3:
+NOT OPEN / NOT AUTHORIZED
 ```
 
 ---
@@ -161,50 +182,53 @@ Accepted capabilities include:
 - monotonic integration-state concurrency;
 - explicit GitHub repository identity → provider-neutral `RepositoryRef` conversion.
 
-Slice 1.1 does not register a repository as Relay project authority and does not resolve an immutable project baseline.
-
 ## Slice 1.2 — Repository Registration and Baseline Resolution
 
 ```text
-DESIGN AUTHORIZED
-IMPLEMENTATION NOT AUTHORIZED
+COMPLETE / ACCEPTED / CLOSED
 ```
 
-Objective:
+Accepted objective:
 
-> Bind a confirmed provider-neutral `RepositoryRef` to Relay project state and deterministically resolve human-selected repository refs to immutable commit identity without weakening the accepted repository contract.
+> Bind the already accepted provider-neutral project repository identity to a verified GitHub repository snapshot and create immutable Relay baselines whose commit and registered artifact bytes are proven to come from the same repository commit.
 
-Slice 1.2 owns:
+Accepted capabilities include:
 
-- provider-neutral repository registration for a Relay project;
-- explicit branch/tag/full-SHA input semantics;
-- remote ref resolution to canonical immutable commit SHA;
-- repository identity consistency checks against the Slice 1.1 confirmed GitHub repository;
-- construction/use of accepted `CommitRef`;
-- baseline identity and persistence semantics;
-- byte/snapshot provenance required to close the Slice-0.6 baseline/worktree trust-boundary deferral;
-- restart/replay integrity for registered repository/baseline state;
-- deterministic error classification for moved/missing/ambiguous refs.
+- `Project.primary_repository` remains the sole project-repository authority;
+- explicit branch/tag/full-SHA selectors;
+- resolve-once canonical immutable commit identity;
+- exact commit/tree/blob snapshot proof;
+- exact `.relay/registry.json` and registered-byte verification;
+- shared Slice 0.6 repository-contract validation;
+- captured GitHub installation/repository identity and `state_revision`;
+- pre/post provider repository identity bracketing;
+- stable first-binding Artifact semantics preserving F007;
+- atomic local authority re-check plus Artifact/Baseline persistence;
+- explicit Baseline and Decision identity inputs;
+- deterministic fail-closed race/error behavior;
+- no migration v3, new runtime dependency, local Git dependency, or GitHub write permission.
 
-Slice 1.2 must NOT:
+Slice 1.2 does NOT:
 
 - initialize or modify remote `.relay/`;
 - request GitHub write permission;
 - create branches, commits, or pull requests;
-- modify the accepted Slice 1.1 permission ceiling;
+- modify accepted Project repository authority;
 - execute agents;
-- create a generic multi-provider framework without present-tense need.
+- create a generic provider framework.
 
-Any implementation requires independent design review, Human Authority design acceptance, and separate implementation authorization.
+Those boundaries remain future work.
 
 ## Slice 1.3 — `.relay/` Initialization and Sync
 
-Recognize or explicitly initialize the accepted repository contract through GitHub.
+Potential objective:
+
+> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
 
 Any required write permission must be separately designed and approved.
 
 ```text
-NOT OPEN
+NOT OPEN / NOT AUTHORIZED
 ```
 
 ## Slice 1.4 — Project and Slice CRUD
@@ -233,19 +257,38 @@ NOT OPEN
 
 ---
 
-# 6. Slice 1.2 design-entry contract
+# 6. Slice 1.2 completion evidence
 
-Before Slice 1.2 implementation:
+The full Slice 1.2 authority chain is complete:
 
-1. Slice 1.1 is closed and accepted. **DONE**
-2. Human Authority opens Slice 1.2 and authorizes design. **DONE**
-3. Design begins from exact baseline `ccfbfb964064e92aef4e21e11f0ad01290acb16f`. **DONE**
-4. Accepted Slice 0.6 repository-contract deferrals are explicitly traced. **REQUIRED**
-5. Accepted Slice 1.1 `RepositoryRef`/read-access boundary is preserved. **REQUIRED**
-6. Independent Slice 1.2 design review occurs. **PENDING**
-7. Human Authority accepts the reviewed design. **PENDING**
-8. Human Authority separately authorizes implementation. **PENDING**
-9. Passing CI never implies design or implementation acceptance.
+```text
+RLY-S12-OPEN-001
+RLY-S12-DESIGN-AUTH-001
+RLY-S12-DESIGN-EVAL-003 — ACCEPT
+RLY-S12-DESIGN-ACCEPT-001
+RLY-S12-AUTH-001
+RLY-S12-EVAL-001 — REWORK
+RLY-S12-EVAL-002 — ACCEPT
+RLY-S12-ACCEPT-001
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
+```
+
+Completion gates:
+
+1. Slice 1.1 closed and accepted. **DONE**
+2. Human Authority opened Slice 1.2 and authorized design. **DONE**
+3. Revision 1 + Revision 2 + Revision 3 design completed. **DONE**
+4. Independent combined design review accepted the design. **DONE**
+5. Human Authority accepted the design. **DONE**
+6. Human Authority separately authorized implementation. **DONE**
+7. Implementation preserved the accepted Slice 0.6 and Slice 1.1 authority boundaries. **DONE**
+8. Independent implementation evaluation completed after bounded test-only rework. **DONE**
+9. Human Authority accepted exact candidate `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d`. **DONE**
+10. Acceptance/finalization records, ADR-0008, architecture record, and Slice 1.2 memory were produced and locked/accepted. **DONE**
+11. Finalization and promoted-main CI passed. **DONE**
+12. Independent closure audit verified the complete A01–A149 objective surface and accepted closure. **DONE**
+
+Passing CI never by itself implied design, implementation, acceptance, or closure authority.
 
 ---
 
@@ -297,19 +340,19 @@ Slice 1.1:
 CLOSED / ACCEPTED
 
 Slice 1.2:
-DESIGN AUTHORIZED
+CLOSED / ACCEPTED
 
 Current role/model:
-Slice 1.2 Architect — GPT-5.6 Sol
+Human Authority — user
 
-Next role/model:
-Independent Design Reviewer — GPT-5.6 Sol
-
-Slice 1.2 implementation:
-NOT AUTHORIZED
+Next governed action:
+Human Authority may choose whether to open Slice 1.3.
 
 Slice 1.3:
-NOT OPEN
+NOT OPEN / NOT AUTHORIZED
+
+Agent execution:
+NOT AUTHORIZED
 ```
 
 **Unblocked ≠ authorized.**
