@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.2 closed  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 open  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -107,7 +107,7 @@ Slice 1.1 established provider-specific GitHub read access without changing prov
 
 A confirmed GitHub repository is converted only into an explicit caller-supplied Relay `RepositoryRef`; the provider's numeric repository ID never silently becomes Relay identity.
 
-Slice 1.2 establishes the next accepted boundary:
+Slice 1.2 establishes the accepted read-side authority boundary:
 
 ```text
 Project.primary_repository
@@ -130,6 +130,8 @@ atomic Artifact + Baseline persistence
 ```
 
 Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
+
+Slice 1.3 is now open to govern the next boundary: whether and how Relay may recognize, initialize, or synchronize `.relay/` through GitHub while preserving the accepted authority model. Opening does not authorize design or write capability.
 
 ---
 
@@ -199,35 +201,46 @@ Slice 1.2:
 REPOSITORY REGISTRATION AND BASELINE RESOLUTION — COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.3:
-.relay INITIALIZATION AND SYNC — NOT OPEN / NOT AUTHORIZED
+.relay INITIALIZATION AND SYNC — OPEN
+
+Slice 1.3 design:
+NOT AUTHORIZED
+
+Slice 1.3 implementation:
+NOT AUTHORIZED
 ```
 
 Phase 1 builds a useful human-controlled repository workflow before autonomous coding-agent execution.
 
-Slice 1.2 now provides verified read-only remote repository baseline authority. Remote `.relay/` initialization/write synchronization remains a separate possible Slice 1.3 responsibility and is not authorized.
+Slice 1.2 provides verified read-only remote repository baseline authority. Slice 1.3 has now been opened by Human Authority to govern the next repository-contract boundary, but no design or GitHub write behavior is authorized yet.
 
 ---
 
-# 9. Slice 1.2 accepted product boundary
+# 9. Slice 1.3 product boundary at opening
 
-Relay can now answer:
+Opening authority:
 
-> Which provider-neutral repository is authoritative for this Relay project, what immutable commit does the human-selected branch/tag/SHA identify for this operation, and what exact registered repository snapshot was proven before the immutable Baseline was persisted?
+```text
+RLY-S13-OPEN-001
+```
 
-The accepted implementation closes the Slice 0.6 trust-boundary deferral for the GitHub path: an authoritative Baseline is derived from the resolved commit's exact tree and registered blob bytes rather than from caller-asserted snapshot provenance.
+Roadmap objective:
 
-It also preserves two explicit boundaries:
+> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
 
-1. remote snapshot proof does not prove a future agent's local uncommitted worktree cleanliness; and
-2. remote repository initialization or mutation remains outside Slice 1.2.
+The next design, if separately authorized, must determine the minimum mechanism needed to support that behavior while preserving:
 
-Relay still does not answer:
+- `.relay/registry.json` as repository-side authority;
+- existing Artifact identity and living-projection rules;
+- accepted Slice 1.1 provider access semantics;
+- accepted Slice 1.2 snapshot/baseline provenance;
+- explicit Human Authority for any write-capable transition;
+- fail-closed provider identity and permission behavior;
+- Minimum Sufficient Architecture.
 
-> Should Relay initialize or change `.relay/` in that remote repository?
+Potential GitHub write permissions, branch/commit/PR behavior, remote `.relay/` initialization, conflict handling, and synchronization semantics are design questions, not opening-time assumptions.
 
-That potential behavior belongs to separately governed future work. Slice 1.3 is not open.
-
-Slice 1.2 does not create branches, commits, pull requests, broaden GitHub permissions, mutate Project repository authority, or execute agents.
+Opening Slice 1.3 does not authorize any of those mechanisms.
 
 ---
 
@@ -266,8 +279,20 @@ RLY-S12-ACCEPT-001
 Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 
+Slice 1.3 opening:
+RLY-S13-OPEN-001
+
 Slice 1.3:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.3 design:
+NOT AUTHORIZED
+
+Slice 1.3 implementation:
+NOT AUTHORIZED
+
+Slice 1.4:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
