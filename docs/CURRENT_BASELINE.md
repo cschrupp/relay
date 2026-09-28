@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.2 complete / accepted  
+**Status:** Phase 1 open — Slice 1.2 complete / accepted / closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -24,7 +24,7 @@ Slice 1.1 closure evaluation:
 RLY-S11-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Slice 1.2 is complete and accepted.
+Slice 1.2 is complete, accepted, and closed.
 
 ```text
 Accepted Slice 1.2 design head:
@@ -41,6 +41,12 @@ RLY-S12-ACCEPT-001
 
 Acceptance-record/finalization:
 7e08ad484ce794946ec2e09abf44060879e9fc04
+
+Final canonical head evaluated:
+3cbac05d8aa91b09ce79965a83d9887b76c23978
+
+Closure evaluation:
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
 ---
@@ -81,6 +87,7 @@ RLY-S12-AUTH-001
 RLY-S12-EVAL-001 — REWORK
 RLY-S12-EVAL-002 — ACCEPT
 RLY-S12-ACCEPT-001
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
 The initial implementation checkpoint `08676c0332d0f14a190bf217c43b0ee29a3bc636` remains historical provenance. The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d` after bounded test-only evidence rework.
@@ -99,9 +106,11 @@ Accepted behavior includes:
 - atomic final local authority re-check plus Artifact/Baseline persistence;
 - no migration v3.
 
+The independent closure audit verified the complete combined Slice 1.2 acceptance surface: Revision 1 A01–A110, Revision 2 A111–A132, revised A89, and Revision 3 A133–A149.
+
 ---
 
-# 4. Acceptance evidence
+# 4. Acceptance and closure evidence
 
 Exact accepted candidate:
 
@@ -109,7 +118,7 @@ Exact accepted candidate:
 9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
 ```
 
-GitHub Actions:
+Implementation GitHub Actions:
 
 ```text
 36380535532
@@ -134,10 +143,30 @@ Acceptance-record/finalization commit:
 Finalization CI:
 
 ```text
-36435789277
+36435789277 — SUCCESS
+```
+
+Final canonical head evaluated for closure:
+
+```text
+3cbac05d8aa91b09ce79965a83d9887b76c23978
+```
+
+Promoted-main CI:
+
+```text
+36436303513 — SUCCESS
+```
+
+Closure evaluation:
+
+```text
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
 ADR-0008 and the Slice 1.2 memory are locked/accepted.
+
+The locked Revision 1 / Revision 2 / Revision 3 design documents remain historical authority and are not edited in place. Their lock state is represented by `.relay/registry.json`.
 
 ---
 
@@ -167,7 +196,7 @@ Slice 1.1:
 CLOSED / ACCEPTED
 
 Slice 1.2:
-COMPLETE / ACCEPTED
+CLOSED / ACCEPTED
 
 Slice 1.3:
 NOT OPEN / NOT AUTHORIZED
