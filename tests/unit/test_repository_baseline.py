@@ -6,17 +6,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from relay_engine.domain import (
-    Artifact,
-    Baseline,
-    CommitRef,
-    Project,
-    RepositoryRef,
-)
+from relay_engine.domain import Artifact, CommitRef, Project, RepositoryRef
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
     GitHubAccountType,
-    GitHubAppConfig,
     GitHubBlob,
     GitHubCommitObject,
     GitHubCommitResolution,
@@ -27,7 +20,6 @@ from relay_engine.integrations.github import (
     GitHubInstallationState,
     GitHubInstallationStatus,
     GitHubInstallationToken,
-    GitHubIntegrationService,
     GitHubIntegrationStore,
     GitHubPermissionGrant,
     GitHubPermissionLevel,
@@ -37,12 +29,7 @@ from relay_engine.integrations.github import (
     GitHubTree,
     GitHubTreeEntry,
 )
-from relay_engine.persistence import (
-    insert_project,
-    load_artifact,
-    load_baseline,
-    open_database,
-)
+from relay_engine.persistence import insert_project, load_artifact, load_baseline, open_database
 from relay_engine.repository_baseline import (
     RepositoryAccessChanged,
     RepositoryBaselinePersistenceError,
@@ -108,7 +95,9 @@ def _registry() -> RepositoryRegistry:
     )
 
 
-def _snapshot_entries(*, artifact_mode: str = "100644", artifact_raw: bytes | None = None):
+def _snapshot_entries(
+    *, artifact_mode: str = "100644", artifact_raw: bytes | None = None
+) -> tuple[bytes, tuple[RepositorySnapshotEntry, ...]]:
     registry_raw = serialize_repository_registry(_registry())
     content = _artifact_raw() if artifact_raw is None else artifact_raw
     return registry_raw, (
@@ -204,7 +193,9 @@ def _selection(revision: int = 1) -> GitHubRepositoryAccessSelection:
 
 def test_selector_rejects_ambiguous_prefixes_and_abbreviated_sha() -> None:
     with pytest.raises(ValidationError):
-        RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="refs/heads/main")
+        RepositoryRevisionSelector(
+            kind=RepositoryRevisionKind.BRANCH, value="refs/heads/main"
+        )
     with pytest.raises(ValidationError):
         RepositoryRevisionSelector(kind=RepositoryRevisionKind.TAG, value="refs/tags/v1")
     with pytest.raises(ValidationError):
@@ -267,7 +258,8 @@ def test_snapshot_validator_rejects_digest_mismatch() -> None:
 
 
 def test_first_binding_then_later_identical_snapshot_reuses_artifact_commit() -> None:
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         selection = _selection()
         first = persist_verified_baseline(
             database=database,
@@ -293,7 +285,8 @@ def test_first_binding_then_later_identical_snapshot_reuses_artifact_commit() ->
 
 
 def test_existing_artifact_conflict_rolls_back_baseline() -> None:
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         conflicting = Artifact(
             id=ARTIFACT_ID,
             artifact_type="DOCUMENT",
@@ -318,7 +311,8 @@ def test_existing_artifact_conflict_rolls_back_baseline() -> None:
 
 
 def test_missing_decision_rolls_back_new_artifact_and_baseline() -> None:
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         with pytest.raises(RepositoryBaselinePersistenceError, match="Decision does not exist"):
             persist_verified_baseline(
                 database=database,
@@ -366,7 +360,8 @@ def test_state_revision_change_blocks_artifact_and_baseline() -> None:
 
 
 def test_duplicate_baseline_id_is_rejected() -> None:
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         persist_verified_baseline(
             database=database,
             selection=_selection(),
@@ -422,10 +417,16 @@ class FakeSnapshotClient:
                 truncated=False,
                 entries=(
                     GitHubTreeEntry(
-                        path=".relay", mode="040000", object_type=GitHubGitObjectType.TREE, sha=TREE_RELAY
+                        path=".relay",
+                        mode="040000",
+                        object_type=GitHubGitObjectType.TREE,
+                        sha=TREE_RELAY,
                     ),
                     GitHubTreeEntry(
-                        path="docs", mode="040000", object_type=GitHubGitObjectType.TREE, sha=TREE_DOCS
+                        path="docs",
+                        mode="040000",
+                        object_type=GitHubGitObjectType.TREE,
+                        sha=TREE_DOCS,
                     ),
                 ),
             )
@@ -462,7 +463,8 @@ class FakeSnapshotClient:
 
 
 def test_service_brackets_snapshot_identity_and_pins_branch_once() -> None:
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         client = FakeSnapshotClient()
         service = RepositoryBaselineService(
             database=database,
@@ -471,7 +473,9 @@ def test_service_brackets_snapshot_identity_and_pins_branch_once() -> None:
         )
         result = service.resolve_and_persist_github_baseline(
             selection=_selection(),
-            selector=RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="main"),
+            selector=RepositoryRevisionSelector(
+                kind=RepositoryRevisionKind.BRANCH, value="main"
+            ),
             baseline_id=BASELINE_ID,
             decision_ids=(),
             observed_at=NOW,
@@ -484,7 +488,8 @@ def test_service_brackets_snapshot_identity_and_pins_branch_once() -> None:
 
 def test_post_snapshot_provider_identity_change_blocks_persistence() -> None:
     changed = _repo().model_copy(update={"full_name": "cschrupp/renamed"})
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         client = FakeSnapshotClient(post_repository=changed)
         service = RepositoryBaselineService(
             database=database,
@@ -494,7 +499,9 @@ def test_post_snapshot_provider_identity_change_blocks_persistence() -> None:
         with pytest.raises(RepositoryProviderIdentityChanged):
             service.resolve_and_persist_github_baseline(
                 selection=_selection(),
-                selector=RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="main"),
+                selector=RepositoryRevisionSelector(
+                    kind=RepositoryRevisionKind.BRANCH, value="main"
+                ),
                 baseline_id=BASELINE_ID,
                 decision_ids=(),
                 observed_at=NOW,
@@ -511,7 +518,8 @@ def test_truncated_tree_blocks_snapshot() -> None:
                 return result.model_copy(update={"truncated": True})
             return result
 
-    with _seed_database()[0] as database:
+    database, _ = _seed_database()
+    with database:
         service = RepositoryBaselineService(
             database=database,
             github_integration=FakeIntegration(),
@@ -520,7 +528,9 @@ def test_truncated_tree_blocks_snapshot() -> None:
         with pytest.raises(RepositorySnapshotIntegrityError, match="truncated"):
             service.resolve_and_persist_github_baseline(
                 selection=_selection(),
-                selector=RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="main"),
+                selector=RepositoryRevisionSelector(
+                    kind=RepositoryRevisionKind.BRANCH, value="main"
+                ),
                 baseline_id=BASELINE_ID,
                 decision_ids=(),
                 observed_at=NOW,
