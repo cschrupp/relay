@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 open / design not authorized  
+**Status:** Phase 1 open — Slice 1.3 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -49,13 +49,17 @@ Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Slice 1.3 is now open by explicit Human Authority decision:
+Slice 1.3 is open and its architecture / contract / design is explicitly authorized:
 
 ```text
+Opening:
 RLY-S13-OPEN-001
+
+Design authorization:
+RLY-S13-DESIGN-AUTH-001
 ```
 
-Opening does not itself authorize Slice 1.3 design or implementation.
+Implementation remains unauthorized.
 
 ---
 
@@ -98,7 +102,7 @@ RLY-S12-ACCEPT-001
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-The initial implementation checkpoint `08676c0332d0f14a190bf217c43b0ee29a3bc636` remains historical provenance. The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d` after bounded test-only evidence rework.
+The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d` after bounded test-only evidence rework.
 
 Accepted behavior includes:
 
@@ -118,89 +122,31 @@ The independent closure audit verified the complete combined Slice 1.2 acceptanc
 
 ---
 
-# 4. Acceptance and closure evidence
+# 4. Slice 1.3 design authority
 
-Exact accepted candidate:
-
-```text
-9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
-```
-
-Implementation GitHub Actions:
+Exact pre-authorization canonical baseline:
 
 ```text
-36380535532
+3aa2287f497f80854b03fea3005ee867bca51153
 ```
 
-Quality:
+Authority:
 
 ```text
-Ruff format    PASS
-Ruff lint      PASS
-Pyright        PASS — 0 errors / 0 warnings
-pytest         PASS — 436 passed
-uv build       PASS
+RLY-S13-DESIGN-AUTH-001
+Slice 1.3 architecture / contract / design:
+AUTHORIZED
 ```
 
-Acceptance-record/finalization commit:
+Authorized design objective:
 
-```text
-7e08ad484ce794946ec2e09abf44060879e9fc04
-```
+> Design the minimum safe mechanism by which Relay may recognize, initialize, or synchronize the accepted repository contract through GitHub while preserving the accepted authority model from Slices 0.6, 1.1, and 1.2.
 
-Finalization CI:
-
-```text
-36435789277 — SUCCESS
-```
-
-Final canonical head evaluated for closure:
-
-```text
-3cbac05d8aa91b09ce79965a83d9887b76c23978
-```
-
-Promoted-main CI:
-
-```text
-36436303513 — SUCCESS
-```
-
-Closure evaluation:
-
-```text
-RLY-S12-CLOSE-EVAL-001 — ACCEPT
-```
-
-ADR-0008 and the Slice 1.2 memory are locked/accepted.
-
-The locked Revision 1 / Revision 2 / Revision 3 design documents remain historical authority and are not edited in place. Their lock state is represented by `.relay/registry.json`.
+Design may specify required write permissions and write mechanisms, but no production write behavior is authorized by this decision.
 
 ---
 
-# 5. Slice 1.3 opening authority
-
-Human Authority opened Slice 1.3 from exact pre-opening canonical baseline:
-
-```text
-40683b67eb40a28b1ceb8e441804a57d1767cfa1
-```
-
-Opening record:
-
-```text
-RLY-S13-OPEN-001
-```
-
-Current roadmap objective:
-
-> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
-
-Any required GitHub write permission remains subject to separate design, independent review, and Human Authority approval.
-
----
-
-# 6. Current canonical living documents
+# 5. Current canonical living documents
 
 Registry-current projections are:
 
@@ -216,7 +162,7 @@ Canonicality remains a `.relay/registry.json` relationship.
 
 ---
 
-# 7. Authorization state
+# 6. Authorization state
 
 ```text
 Phase 1:
@@ -231,8 +177,8 @@ CLOSED / ACCEPTED
 Slice 1.3:
 OPEN
 
-Slice 1.3 design:
-NOT AUTHORIZED
+Slice 1.3 architecture / contract / design:
+AUTHORIZED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -244,6 +190,8 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next governed transition requires a separate Human Authority decision to authorize Slice 1.3 architecture / contract / design.
+Next governed gate: independent Slice 1.3 design review after architect submission.
+
+A passing design review does not authorize implementation.
 
 **Unblocked ≠ authorized.**
