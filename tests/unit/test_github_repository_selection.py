@@ -140,9 +140,7 @@ def test_access_selection_requires_durable_project_repository_authority() -> Non
         host="github.com",
         path=REPOSITORY.path,
     )
-    with database, pytest.raises(
-        GitHubRepositoryAccessDenied, match="Project.primary_repository"
-    ):
+    with database, pytest.raises(GitHubRepositoryAccessDenied, match="Project.primary_repository"):
         service.repository_access_selection(
             project_id=PROJECT_ID,
             installation_id=1001,
