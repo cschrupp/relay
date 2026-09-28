@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 open  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 design submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2 and Human Authority opening of Slice 1.3.
+This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, and explicit authorization of Slice 1.3 architecture / contract / design.
 
 Relay continues to be built inside-out:
 
@@ -91,11 +91,14 @@ RLY-S12-CLOSE-EVAL-001 — ACCEPT
 Slice 1.3 opening:
 RLY-S13-OPEN-001
 
+Slice 1.3 design authorization:
+RLY-S13-DESIGN-AUTH-001
+
 Slice 1.3:
 OPEN
 
-Slice 1.3 design:
-NOT AUTHORIZED
+Slice 1.3 architecture / contract / design:
+AUTHORIZED — REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -217,22 +220,12 @@ Accepted capabilities include:
 - deterministic fail-closed race/error behavior;
 - no migration v3, new runtime dependency, local Git dependency, or GitHub write permission.
 
-Slice 1.2 does NOT:
-
-- initialize or modify remote `.relay/`;
-- request GitHub write permission;
-- create branches, commits, or pull requests;
-- modify accepted Project repository authority;
-- execute agents;
-- create a generic provider framework.
-
-Those boundaries remain future work.
-
 ## Slice 1.3 — `.relay/` Initialization and Sync
 
 ```text
 OPEN
-DESIGN NOT AUTHORIZED
+DESIGN AUTHORIZED
+REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
 IMPLEMENTATION NOT AUTHORIZED
 ```
 
@@ -242,24 +235,41 @@ Opening authority:
 RLY-S13-OPEN-001
 ```
 
-Roadmap objective:
+Design authority:
 
-> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
+```text
+RLY-S13-DESIGN-AUTH-001
+```
 
-The design, if later authorized, must begin from the accepted Slice 1.2 read-only repository/baseline boundary and must determine the minimum write-capable mechanism required for repository initialization/synchronization without weakening repository authority, Artifact identity, human authorization, or provider-access safety.
+Authorized design baseline:
 
-Any required GitHub write permission must be separately designed, independently reviewed, and explicitly approved.
+```text
+eb6b3797fb1b317e9158444b9c9dbe469b2ee313
+```
 
-Opening Slice 1.3 does not authorize:
+Revision 1 design:
 
-- design work;
-- production implementation;
-- GitHub write permissions;
-- remote `.relay/` creation or mutation;
-- branch, commit, or pull-request creation by Relay product behavior;
-- Project repository mutation;
-- agent execution;
-- Slice 1.4.
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC.md
+```
+
+The design proposes a bounded GitHub write path that:
+
+- keeps schema-v1 `.relay/registry.json` unchanged;
+- permits only exact read or contents-write installation permission profiles;
+- keeps ordinary read tokens read-scoped;
+- targets only the observed repository default branch;
+- creates one Git tree/commit containing registry plus changed registered artifacts;
+- moves the default-branch ref once with non-force semantics;
+- rejects branch/head races instead of rebasing or retrying;
+- validates current → target registry transitions with the accepted repository contract;
+- brackets provider identity, default branch, local access authority, and write permission;
+- performs exact post-write snapshot verification;
+- uses target-state idempotency rather than a new persistence table;
+- does not automatically persist a Baseline;
+- introduces no database migration, new runtime dependency, branch creation, pull request, force push, or agent execution.
+
+Any design-review acceptance remains separate from Human Authority design acceptance and implementation authorization.
 
 ## Slice 1.4 — Project and Slice CRUD
 
@@ -303,26 +313,11 @@ RLY-S12-ACCEPT-001
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Completion gates:
-
-1. Slice 1.1 closed and accepted. **DONE**
-2. Human Authority opened Slice 1.2 and authorized design. **DONE**
-3. Revision 1 + Revision 2 + Revision 3 design completed. **DONE**
-4. Independent combined design review accepted the design. **DONE**
-5. Human Authority accepted the design. **DONE**
-6. Human Authority separately authorized implementation. **DONE**
-7. Implementation preserved the accepted Slice 0.6 and Slice 1.1 authority boundaries. **DONE**
-8. Independent implementation evaluation completed after bounded test-only rework. **DONE**
-9. Human Authority accepted exact candidate `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d`. **DONE**
-10. Acceptance/finalization records, ADR-0008, architecture record, and Slice 1.2 memory were produced and locked/accepted. **DONE**
-11. Finalization and promoted-main CI passed. **DONE**
-12. Independent closure audit verified the complete A01–A149 objective surface and accepted closure. **DONE**
-
 Passing CI never by itself implied design, implementation, acceptance, or closure authority.
 
 ---
 
-# 7. Slice 1.3 opening gate
+# 7. Slice 1.3 design gate
 
 ```text
 Pre-opening canonical baseline:
@@ -330,18 +325,28 @@ Pre-opening canonical baseline:
 
 Opening authority:
 RLY-S13-OPEN-001
+
+Pre-design-authorization canonical baseline:
+3aa2287f497f80854b03fea3005ee867bca51153
+
+Design authority:
+RLY-S13-DESIGN-AUTH-001
+
+Authorized design baseline:
+eb6b3797fb1b317e9158444b9c9dbe469b2ee313
 ```
 
 Current gate state:
 
 1. Slice 1.2 is closed and accepted. **DONE**
 2. Human Authority explicitly opened Slice 1.3. **DONE**
-3. Slice 1.3 architecture / contract / design authorization. **PENDING HUMAN AUTHORITY**
-4. Independent design review. **NOT REACHED**
-5. Human design acceptance. **NOT REACHED**
-6. Separate implementation authorization. **NOT REACHED**
+3. Human Authority explicitly authorized Slice 1.3 architecture / contract / design. **DONE**
+4. Slice 1.3 Revision 1 architecture / contract / design submitted. **DONE**
+5. Independent design review. **PENDING**
+6. Human design acceptance. **NOT REACHED**
+7. Separate implementation authorization. **NOT REACHED**
 
-No design or implementation work proceeds from the opening decision alone.
+No implementation work proceeds from design submission or a future passing design review alone.
 
 ---
 
@@ -399,13 +404,13 @@ Slice 1.3:
 OPEN
 
 Current role/model:
-Human Authority — user
+Architect / Contract Designer — GPT-5.6 Sol
 
-Next governed action:
-Human Authority may separately authorize Slice 1.3 architecture / contract / design.
+Next governed role:
+Independent Design Reviewer — GPT-5.6 Sol
 
-Slice 1.3 design:
-NOT AUTHORIZED
+Slice 1.3 architecture / contract / design:
+SUBMITTED / PENDING INDEPENDENT REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
