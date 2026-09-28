@@ -21,6 +21,18 @@ class GitHubRepositoryAccessDenied(GitHubIntegrationError):
     """A repository is not accessible through the selected installation."""
 
 
+class GitHubRepositoryUnavailable(GitHubIntegrationError):
+    """The requested GitHub repository cannot be read through the selected token."""
+
+
+class GitHubRefNotFound(GitHubIntegrationError):
+    """The explicitly selected branch, tag, or commit does not exist."""
+
+
+class GitHubObjectUnavailable(GitHubIntegrationError):
+    """A required Git commit/tree/blob object is unavailable."""
+
+
 class GitHubRateLimited(GitHubIntegrationError):
     """GitHub rate limiting prevented the requested operation."""
 
