@@ -49,6 +49,18 @@ class GitHubInstallationEventType(StrEnum):
     DELETED = "DELETED"
 
 
+class GitHubGitObjectType(StrEnum):
+    BLOB = "blob"
+    TREE = "tree"
+    COMMIT = "commit"
+
+
+def _canonical_git_sha(value: str) -> str:
+    if re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", value) is None:
+        raise ValueError("Git object SHA must be canonical full lowercase hex")
+    return value
+
+
 class GitHubPermissionGrant(DomainModel):
     name: str = Field(min_length=1)
     level: GitHubPermissionLevel
@@ -105,7 +117,7 @@ class GitHubInstallationState(DomainModel):
     state_revision: int = Field(ge=1)
 
     @model_validator(mode="after")
-    def ready_requires_active(self) -> GitHubInstallationState:
+    def ready_requires_active(self) -> "GitHubInstallationState":
         if (
             self.readiness is GitHubAccessReadiness.READY
             and self.installation.status is not GitHubInstallationStatus.ACTIVE
@@ -159,6 +171,93 @@ class GitHubRepositorySnapshot(DomainModel):
         return value
 
 
+class GitHubRepositoryAccessSelection(DomainModel):
+    """Ephemeral provider evidence captured from one usable Slice-1.1 binding."""
+
+    project_id: ProjectId
+    installation_id: int = Field(gt=0)
+    github_repository_id: int = Field(gt=0)
+    github_node_id: str = Field(min_length=1)
+    repository: RepositoryRef
+    expected_state_revision: int = Field(ge=1)
+
+    @field_validator("github_node_id")
+    @classmethod
+    def node_id_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
+
+    @model_validator(mode="after")
+    def repository_is_public_github(self) -> "GitHubRepositoryAccessSelection":
+        if self.repository.host != "github.com":
+            raise ValueError("Slice 1.2 GitHub selection requires github.com RepositoryRef")
+        return self
+
+
+class GitHubCommitResolution(DomainModel):
+    sha: str
+
+    @field_validator("sha")
+    @classmethod
+    def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+
+class GitHubCommitObject(DomainModel):
+    sha: str
+    tree_sha: str
+
+    @field_validator("sha", "tree_sha")
+    @classmethod
+    def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+
+class GitHubTreeEntry(DomainModel):
+    path: str = Field(min_length=1)
+    mode: str = Field(min_length=1)
+    object_type: GitHubGitObjectType
+    sha: str
+
+    @field_validator("path", "mode")
+    @classmethod
+    def tree_text_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
+
+    @field_validator("sha")
+    @classmethod
+    def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+
+class GitHubTree(DomainModel):
+    sha: str
+    entries: tuple[GitHubTreeEntry, ...]
+    truncated: bool
+
+    @field_validator("sha")
+    @classmethod
+    def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+    @field_validator("entries")
+    @classmethod
+    def paths_are_unique(cls, value: tuple[GitHubTreeEntry, ...]) -> tuple[GitHubTreeEntry, ...]:
+        paths = tuple(item.path for item in value)
+        if len(paths) != len(set(paths)):
+            raise ValueError("GitHub tree paths must be unique")
+        return value
+
+
+class GitHubBlob(DomainModel):
+    sha: str
+    raw_bytes: bytes
+
+    @field_validator("sha")
+    @classmethod
+    def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+
 class GitHubInstallationEvent(DomainModel):
     event_id: str = Field(min_length=1)
     project_id: ProjectId
@@ -197,7 +296,7 @@ class GitHubInstallationEvent(DomainModel):
         return value
 
     @model_validator(mode="after")
-    def delivery_fields_are_paired(self) -> GitHubInstallationEvent:
+    def delivery_fields_are_paired(self) -> "GitHubInstallationEvent":
         if (self.delivery_id is None) != (self.delivery_digest is None):
             raise ValueError("delivery_id and delivery_digest must appear together")
         if self.resulting_state_revision != self.prior_state_revision + 1:
