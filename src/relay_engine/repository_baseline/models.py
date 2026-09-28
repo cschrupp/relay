@@ -26,7 +26,7 @@ class RepositoryRevisionSelector(DomainModel):
         return require_nonblank(value)
 
     @model_validator(mode="after")
-    def selector_is_explicit_and_canonical(self) -> "RepositoryRevisionSelector":
+    def selector_is_explicit_and_canonical(self) -> RepositoryRevisionSelector:
         if self.kind is RepositoryRevisionKind.BRANCH:
             if self.value.startswith("refs/heads/"):
                 raise ValueError("branch selector must omit refs/heads/ prefix")
