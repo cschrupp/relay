@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 open  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 design submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -107,7 +107,7 @@ Slice 1.1 established provider-specific GitHub read access without changing prov
 
 A confirmed GitHub repository is converted only into an explicit caller-supplied Relay `RepositoryRef`; the provider's numeric repository ID never silently becomes Relay identity.
 
-Slice 1.2 establishes the accepted read-side authority boundary:
+Slice 1.2 established the accepted read-side authority boundary:
 
 ```text
 Project.primary_repository
@@ -131,7 +131,7 @@ atomic Artifact + Baseline persistence
 
 Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
 
-Slice 1.3 is now open to govern the next boundary: whether and how Relay may recognize, initialize, or synchronize `.relay/` through GitHub while preserving the accepted authority model. Opening does not authorize design or write capability.
+Slice 1.3 is now in independent design review for the next boundary: safe repository-contract initialization/synchronization through GitHub without weakening the existing authority model.
 
 ---
 
@@ -204,7 +204,7 @@ Slice 1.3:
 .relay INITIALIZATION AND SYNC — OPEN
 
 Slice 1.3 design:
-NOT AUTHORIZED
+AUTHORIZED / REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -212,11 +212,9 @@ NOT AUTHORIZED
 
 Phase 1 builds a useful human-controlled repository workflow before autonomous coding-agent execution.
 
-Slice 1.2 provides verified read-only remote repository baseline authority. Slice 1.3 has now been opened by Human Authority to govern the next repository-contract boundary, but no design or GitHub write behavior is authorized yet.
-
 ---
 
-# 9. Slice 1.3 product boundary at opening
+# 9. Slice 1.3 proposed product boundary
 
 Opening authority:
 
@@ -224,23 +222,47 @@ Opening authority:
 RLY-S13-OPEN-001
 ```
 
-Roadmap objective:
+Design authority:
 
-> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
+```text
+RLY-S13-DESIGN-AUTH-001
+```
 
-The next design, if separately authorized, must determine the minimum mechanism needed to support that behavior while preserving:
+Authorized design baseline:
 
-- `.relay/registry.json` as repository-side authority;
-- existing Artifact identity and living-projection rules;
-- accepted Slice 1.1 provider access semantics;
-- accepted Slice 1.2 snapshot/baseline provenance;
-- explicit Human Authority for any write-capable transition;
-- fail-closed provider identity and permission behavior;
-- Minimum Sufficient Architecture.
+```text
+eb6b3797fb1b317e9158444b9c9dbe469b2ee313
+```
 
-Potential GitHub write permissions, branch/commit/PR behavior, remote `.relay/` initialization, conflict handling, and synchronization semantics are design questions, not opening-time assumptions.
+Revision 1 design record:
 
-Opening Slice 1.3 does not authorize any of those mechanisms.
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC.md
+```
+
+The proposed capability is deliberately narrow:
+
+> Given an authoritative Relay project/repository binding and a fully validated target schema-v1 repository contract, Relay may recognize an already-current target or commit an initialization/synchronization to the repository's existing default branch as one atomic Git commit, subject to exact write permission, identity, head, transition, and post-write verification guards.
+
+The design preserves these product rules:
+
+- `.relay/registry.json` remains repository-side authority;
+- schema v1 remains unchanged;
+- current repository identity remains `Project.primary_repository`;
+- read-only installations remain valid for existing read workflows;
+- write-capable installations may add only `contents:write` above metadata read;
+- read operations continue using read-scoped tokens;
+- repository mutation is one non-force default-branch ref movement;
+- registry plus changed registered artifact bytes become visible in the same commit;
+- concurrent branch movement causes conflict rather than overwrite/rebase;
+- existing registry transitions remain governed by the accepted transition validator;
+- invalid existing `.relay` state is never automatically repaired;
+- remote synchronization does not certify or persist its own Relay Baseline;
+- no PR permission, branch creation, force push, migration, background worker, or agent execution is introduced.
+
+The proposed write mechanism uses GitHub's Git Data primitives because sequential per-file commits cannot preserve the same-commit registry/artifact invariant for general synchronization.
+
+Design review may still revise or reject this proposal. No GitHub write behavior is authorized for production implementation yet.
 
 ---
 
@@ -282,11 +304,14 @@ RLY-S12-CLOSE-EVAL-001 — ACCEPT
 Slice 1.3 opening:
 RLY-S13-OPEN-001
 
+Slice 1.3 design authorization:
+RLY-S13-DESIGN-AUTH-001
+
 Slice 1.3:
 OPEN
 
 Slice 1.3 design:
-NOT AUTHORIZED
+SUBMITTED / PENDING INDEPENDENT REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
