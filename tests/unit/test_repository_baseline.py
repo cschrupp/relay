@@ -193,9 +193,7 @@ def _selection(revision: int = 1) -> GitHubRepositoryAccessSelection:
 
 def test_selector_rejects_ambiguous_prefixes_and_abbreviated_sha() -> None:
     with pytest.raises(ValidationError):
-        RepositoryRevisionSelector(
-            kind=RepositoryRevisionKind.BRANCH, value="refs/heads/main"
-        )
+        RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="refs/heads/main")
     with pytest.raises(ValidationError):
         RepositoryRevisionSelector(kind=RepositoryRevisionKind.TAG, value="refs/tags/v1")
     with pytest.raises(ValidationError):
@@ -473,9 +471,7 @@ def test_service_brackets_snapshot_identity_and_pins_branch_once() -> None:
         )
         result = service.resolve_and_persist_github_baseline(
             selection=_selection(),
-            selector=RepositoryRevisionSelector(
-                kind=RepositoryRevisionKind.BRANCH, value="main"
-            ),
+            selector=RepositoryRevisionSelector(kind=RepositoryRevisionKind.BRANCH, value="main"),
             baseline_id=BASELINE_ID,
             decision_ids=(),
             observed_at=NOW,
