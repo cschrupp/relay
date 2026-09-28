@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.2 Design Revision 2 complete / pending independent review  
+**Status:** Phase 1 open — Slice 1.2 Design Revision 3 complete / pending independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -100,36 +100,55 @@ Revision 2 amendment:
 ```text
 docs/slices/
 SLICE_1_2_REPOSITORY_REGISTRATION_AND_BASELINE_RESOLUTION_REV2_AMENDMENT.md
+
+8667b3e8a20e317fb3c5ccc66278e1a14aebdafd
+```
+
+Independent review:
+
+```text
+RLY-S12-DESIGN-EVAL-002 — REVISE
+
+F001–F003 resolved
+F004 remote repository identity does not bracket snapshot
+```
+
+Revision 3 amendment:
+
+```text
+docs/slices/
+SLICE_1_2_REPOSITORY_REGISTRATION_AND_BASELINE_RESOLUTION_REV3_AMENDMENT.md
 ```
 
 Current design state:
 
 ```text
-REVISION 1 + REVISION 2 AMENDMENT COMPLETE
+REVISION 1 + REVISION 2 + REVISION 3 AMENDMENTS COMPLETE
 PENDING INDEPENDENT DESIGN REVIEW
 ```
 
-Revision 2 resolves the review findings by requiring:
+Revision 3 resolves F004 by requiring:
 
-- an explicit ephemeral GitHub repository-access selection containing project ID, installation ID, GitHub repository ID, GitHub node ID, exact `RepositoryRef`, and captured Slice 1.1 `state_revision`;
-- repository-scoped token minting from the captured provider IDs rather than rediscovery by path;
-- a live read-only GitHub repository identity check before ref resolution;
-- fail-closed comparison of provider repository ID, node ID, and canonical `full_name`;
-- an atomic final SQLite guard that requires the original Slice 1.1 binding revision to remain unchanged and `ACTIVE / READY`;
-- final selected-repository membership and stored provider identity revalidation before any Artifact/Baseline insertion;
-- rollback of both Artifact and Baseline writes if the access guard fails;
-- no hidden retry or implicit refresh of authorization evidence;
-- targeted tree traversal as a permitted minimum-sufficient alternative to whole-repository recursive enumeration.
+- the same captured GitHub provider identity to be checked both before and after all commit/tree/blob/registry/artifact snapshot reads;
+- the pre- and post-snapshot checks to use the same project ID, installation ID, GitHub repository ID, node ID, `RepositoryRef`, and expected Slice 1.1 `state_revision`;
+- repository rename, transfer, redirect change, old-path reuse, or inability to establish provider identity to fail closed before any SQLite persistence;
+- the post-snapshot provider identity check to complete before `BEGIN IMMEDIATE`;
+- all provider network I/O to finish before the final SQLite write transaction;
+- the Revision-2 local atomic access guard to remain the final gate before Artifact/Baseline insertion;
+- explicit acknowledgment that Relay does not claim an atomic transaction spanning GitHub and SQLite;
+- revised A89 wording limited to provider changes that become observable during snapshot/final provider proof and local access changes reflected in Relay before local commit.
 
-The design continues to preserve:
+The combined design continues to preserve:
 
 - `Project.primary_repository` as the sole Relay project-repository authority;
 - no duplicate repository-registration table;
+- explicit provider-access selection with captured Slice 1.1 revision;
+- repository-scoped token minting from captured provider IDs;
 - explicit BRANCH / TAG / COMMIT_SHA selector semantics;
 - resolve-once then immutable commit/tree/blob pinning;
 - Slice-0.6 repository-contract semantics and F007;
 - first-binding immutable core Artifact semantics;
-- atomic Artifact + Baseline persistence;
+- atomic local Artifact + Baseline persistence with a final Slice 1.1 access guard;
 - no migration v3 absent evidence;
 - no GitHub writes, local Git dependency, or Slice 1.3 behavior.
 
@@ -184,7 +203,7 @@ CLOSED / ACCEPTED
 Slice 1.2:
 OPEN
 
-Slice 1.2 Design Revision 1 + Revision 2 Amendment:
+Slice 1.2 Design Revision 1 + Revision 2 + Revision 3:
 COMPLETE / PENDING INDEPENDENT REVIEW
 
 Slice 1.2 implementation:
