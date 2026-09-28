@@ -24,6 +24,10 @@ from relay_engine.repository_contract.registry import (
     validate_registry_transition,
     validate_repository_contract,
 )
+from relay_engine.repository_contract.snapshot import (
+    RepositorySnapshotEntry,
+    validate_repository_snapshot,
+)
 
 __all__ = [
     "ArtifactIntegrityError",
@@ -37,6 +41,7 @@ __all__ = [
     "RepositoryContractError",
     "RepositoryContractInvalid",
     "RepositoryRegistry",
+    "RepositorySnapshotEntry",
     "ResolvedRepositoryArtifact",
     "parse_repository_registry",
     "resolve_artifact_revision",
@@ -44,4 +49,5 @@ __all__ = [
     "serialize_repository_registry",
     "validate_registry_transition",
     "validate_repository_contract",
+    "validate_repository_snapshot",
 ]
