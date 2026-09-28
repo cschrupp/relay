@@ -6,7 +6,10 @@ from dataclasses import dataclass
 
 from relay_engine.domain import ProjectId, RepositoryRef
 from relay_engine.domain._base import require_repository_relative_path
-from relay_engine.repository_contract.errors import ArtifactIntegrityError, RepositoryContractInvalid
+from relay_engine.repository_contract.errors import (
+    ArtifactIntegrityError,
+    RepositoryContractInvalid,
+)
 from relay_engine.repository_contract.models import RepositoryArtifactRevision, RepositoryRegistry
 from relay_engine.repository_contract.registry import parse_repository_registry
 
@@ -31,7 +34,10 @@ class RepositorySnapshotEntry:
             raise ValueError("snapshot entry mode and object type must be nonblank")
         if _SHA_PATTERN.fullmatch(self.tree_object_sha) is None:
             raise ValueError("tree object SHA must be canonical full lowercase hex")
-        if self.blob_object_sha is not None and _SHA_PATTERN.fullmatch(self.blob_object_sha) is None:
+        if (
+            self.blob_object_sha is not None
+            and _SHA_PATTERN.fullmatch(self.blob_object_sha) is None
+        ):
             raise ValueError("blob object SHA must be canonical full lowercase hex")
         if (self.blob_object_sha is None) != (self.raw_bytes is None):
             raise ValueError("blob object SHA and raw bytes must appear together")
@@ -52,11 +58,7 @@ def validate_repository_snapshot(
     by_path = {item.path: item for item in entries}
 
     direct_relay_entries = tuple(
-        sorted(
-            path
-            for path in paths
-            if path.startswith(".relay/") and path.count("/") == 1
-        )
+        sorted(path for path in paths if path.startswith(".relay/") and path.count("/") == 1)
     )
     if direct_relay_entries != (".relay/registry.json",):
         raise RepositoryContractInvalid("schema v1 permits only .relay/registry.json")
