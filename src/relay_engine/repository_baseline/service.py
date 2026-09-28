@@ -9,6 +9,7 @@ from relay_engine.integrations.github import (
     GitHubAuthenticationError,
     GitHubClient,
     GitHubGitObjectType,
+    GitHubInstallationToken,
     GitHubIntegrationService,
     GitHubObjectUnavailable,
     GitHubPermissionError,
@@ -51,7 +52,7 @@ from relay_engine.repository_contract.models import RepositoryRegistry
 @dataclass(slots=True)
 class _TreeWalker:
     client: GitHubClient
-    token: object
+    token: GitHubInstallationToken
     repository_path: str
     cache: dict[str, GitHubTree]
 
@@ -59,17 +60,15 @@ class _TreeWalker:
         existing = self.cache.get(tree_sha)
         if existing is not None:
             return existing
-        from relay_engine.integrations.github.models import GitHubInstallationToken
-
-        if not isinstance(self.token, GitHubInstallationToken):
-            raise RepositorySnapshotIntegrityError("invalid GitHub installation token value")
         tree = self.client.get_git_tree(
             token=self.token,
             repository_path=self.repository_path,
             tree_sha=tree_sha,
         )
         if tree.sha != tree_sha:
-            raise RepositorySnapshotIntegrityError("GitHub tree response changed requested identity")
+            raise RepositorySnapshotIntegrityError(
+                "GitHub tree response changed requested identity"
+            )
         if tree.truncated:
             raise RepositorySnapshotIntegrityError(
                 "GitHub tree response is truncated and cannot prove a complete subtree"
@@ -181,11 +180,17 @@ class RepositoryBaselineService:
         except GitHubRefNotFound as error:
             raise RepositoryRefNotFound("selected repository revision was not found") from error
         except GitHubRepositoryUnavailable as error:
-            raise RepositoryAccessUnavailable("selected GitHub repository is unavailable") from error
+            raise RepositoryAccessUnavailable(
+                "selected GitHub repository is unavailable"
+            ) from error
         except GitHubPermissionError as error:
-            raise RepositoryAccessUnavailable("selected GitHub repository is not readable") from error
+            raise RepositoryAccessUnavailable(
+                "selected GitHub repository is not readable"
+            ) from error
         except GitHubObjectUnavailable as error:
-            raise RepositorySnapshotUnavailable("required GitHub snapshot object is unavailable") from error
+            raise RepositorySnapshotUnavailable(
+                "required GitHub snapshot object is unavailable"
+            ) from error
         except GitHubRemoteError as error:
             raise RepositorySnapshotUnavailable("GitHub snapshot verification failed") from error
 
@@ -232,13 +237,9 @@ class RepositoryBaselineService:
         self,
         *,
         selection: GitHubRepositoryAccessSelection,
-        token: object,
+        token: GitHubInstallationToken,
         root_tree_sha: str,
     ) -> RepositoryRegistry:
-        from relay_engine.integrations.github.models import GitHubInstallationToken
-
-        if not isinstance(token, GitHubInstallationToken):
-            raise RepositorySnapshotIntegrityError("invalid GitHub installation token value")
         walker = _TreeWalker(
             client=self._github_client,
             token=token,
@@ -247,14 +248,20 @@ class RepositoryBaselineService:
         )
         try:
             relay_entry = walker.resolve(root_tree_sha, ".relay")
-            if relay_entry.object_type is not GitHubGitObjectType.TREE or relay_entry.mode != "040000":
+            if (
+                relay_entry.object_type is not GitHubGitObjectType.TREE
+                or relay_entry.mode != "040000"
+            ):
                 raise RepositorySnapshotIntegrityError(".relay must be a real Git tree directory")
             relay_tree = walker.tree(relay_entry.sha)
             entries: list[RepositorySnapshotEntry] = []
             registry_raw: bytes | None = None
             for direct in relay_tree.entries:
                 full_path = f".relay/{direct.path}"
-                if direct.path == "registry.json" and direct.object_type is GitHubGitObjectType.BLOB:
+                if (
+                    direct.path == "registry.json"
+                    and direct.object_type is GitHubGitObjectType.BLOB
+                ):
                     blob = self._github_client.get_git_blob(
                         token=token,
                         repository_path=selection.repository.path,
