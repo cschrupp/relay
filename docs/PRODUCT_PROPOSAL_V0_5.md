@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.2 design authorized  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.2 closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -59,7 +59,7 @@ Relay differentiates through engineering governance and continuity:
 
 Phase 0 is complete and closed.
 
-Slice 1.1 is also complete, accepted, and closed.
+Slice 1.1 and Slice 1.2 are complete, accepted, and closed.
 
 Relay now has accepted implementations for:
 
@@ -74,6 +74,10 @@ repository-side canonical artifact governance
 read-only GitHub App installation/repository integration
 project-scoped provider access readiness
 signed webhook convergence and idempotency
+verified GitHub commit/tree/blob repository snapshot proof
+immutable repository baseline resolution and persistence
+stable first-binding Artifact provenance
+provider/local authority race guards
 ```
 
 The accepted repository representation remains deliberately minimal:
@@ -103,7 +107,29 @@ Slice 1.1 established provider-specific GitHub read access without changing prov
 
 A confirmed GitHub repository is converted only into an explicit caller-supplied Relay `RepositoryRef`; the provider's numeric repository ID never silently becomes Relay identity.
 
-Slice 1.2 now designs the next boundary: when and how that `RepositoryRef` becomes registered Relay project repository state and how human-selected refs resolve to immutable commit identity.
+Slice 1.2 establishes the next accepted boundary:
+
+```text
+Project.primary_repository
+        ↓
+captured ACTIVE / READY GitHub provider-access selection
+        ↓
+pre-snapshot provider identity proof
+        ↓
+branch / tag / full-SHA resolve-once selection
+        ↓
+canonical immutable commit
+        ↓
+exact commit/tree/registry/blob proof
+        ↓
+post-snapshot provider identity proof
+        ↓
+final local access-authority guard
+        ↓
+atomic Artifact + Baseline persistence
+```
+
+Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
 
 ---
 
@@ -170,35 +196,38 @@ Slice 1.1:
 GITHUB APP INTEGRATION — COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.2:
-REPOSITORY REGISTRATION AND BASELINE RESOLUTION — DESIGN AUTHORIZED
+REPOSITORY REGISTRATION AND BASELINE RESOLUTION — COMPLETE / ACCEPTED / CLOSED
 
-Slice 1.2 implementation:
-NOT AUTHORIZED
+Slice 1.3:
+.relay INITIALIZATION AND SYNC — NOT OPEN / NOT AUTHORIZED
 ```
 
 Phase 1 builds a useful human-controlled repository workflow before autonomous coding-agent execution.
 
-Slice 1.2 is responsible for provider-neutral repository registration and immutable commit/baseline resolution.
-
-Remote `.relay/` initialization/write synchronization remains Slice 1.3.
+Slice 1.2 now provides verified read-only remote repository baseline authority. Remote `.relay/` initialization/write synchronization remains a separate possible Slice 1.3 responsibility and is not authorized.
 
 ---
 
-# 9. Slice 1.2 product boundary
+# 9. Slice 1.2 accepted product boundary
 
-Slice 1.2 should allow Relay to answer:
+Relay can now answer:
 
-> Which provider-neutral repository is registered for this Relay project, what immutable commit does the human-selected branch/tag/SHA identify now, and what exact repository snapshot is the baseline referring to?
+> Which provider-neutral repository is authoritative for this Relay project, what immutable commit does the human-selected branch/tag/SHA identify for this operation, and what exact registered repository snapshot was proven before the immutable Baseline was persisted?
 
-It must close the trust-boundary gap intentionally deferred by Slice 0.6: an observed `CommitRef` cannot merely be asserted by a caller if Relay is to use that observation as authoritative baseline provenance.
+The accepted implementation closes the Slice 0.6 trust-boundary deferral for the GitHub path: an authoritative Baseline is derived from the resolved commit's exact tree and registered blob bytes rather than from caller-asserted snapshot provenance.
 
-Slice 1.2 should not yet answer:
+It also preserves two explicit boundaries:
+
+1. remote snapshot proof does not prove a future agent's local uncommitted worktree cleanliness; and
+2. remote repository initialization or mutation remains outside Slice 1.2.
+
+Relay still does not answer:
 
 > Should Relay initialize or change `.relay/` in that remote repository?
 
-That belongs to Slice 1.3.
+That potential behavior belongs to separately governed future work. Slice 1.3 is not open.
 
-It should not create branches, commits, pull requests, or broaden GitHub permissions.
+Slice 1.2 does not create branches, commits, pull requests, broaden GitHub permissions, mutate Project repository authority, or execute agents.
 
 ---
 
@@ -219,7 +248,36 @@ The product value remains governed engineering continuity:
 
 ---
 
-# 11. Historical proposals
+# 11. Current authority state
+
+```text
+Accepted Slice 1.2 design head:
+4acd6be1f93058d1efcafc66a78fc1a9726c16ba
+
+Accepted Slice 1.2 technical result:
+9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
+
+Independent implementation evaluation:
+RLY-S12-EVAL-002 — ACCEPT
+
+Human acceptance:
+RLY-S12-ACCEPT-001
+
+Closure evaluation:
+RLY-S12-CLOSE-EVAL-001 — ACCEPT
+
+Slice 1.3:
+NOT OPEN / NOT AUTHORIZED
+
+Agent execution:
+NOT AUTHORIZED
+```
+
+**Unblocked ≠ authorized.**
+
+---
+
+# 12. Historical proposals
 
 Product Proposal v0.3 and v0.4 remain historical planning/current-truth snapshots from earlier project states.
 
