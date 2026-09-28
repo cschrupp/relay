@@ -8,6 +8,8 @@ from typing import cast
 from pydantic import BaseModel, ValidationError
 
 from relay_engine.domain.ids import ProjectId
+from relay_engine.domain.models import Project
+from relay_engine.domain.references import RepositoryRef
 from relay_engine.integrations.github.errors import (
     GitHubIntegrationConcurrencyConflict,
     GitHubIntegrationIntegrityError,
@@ -84,6 +86,24 @@ class GitHubIntegrationStore:
         if row["event_id"] != event.event_id:
             raise GitHubIntegrationIntegrityError("GitHub event identity disagrees with payload")
         return event
+
+    def load_project_repository(self, project_id: ProjectId) -> RepositoryRef | None:
+        """Read the immutable Relay repository authority for a project."""
+
+        row = self._database.connection.execute(
+            "SELECT id, payload_json FROM projects WHERE id = ?", (project_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            project = Project.model_validate_json(cast(str, row["payload_json"]))
+        except (ValidationError, ValueError, TypeError) as error:
+            raise GitHubIntegrationIntegrityError("stored Relay Project is invalid") from error
+        if row["id"] != project.id or project.id != project_id:
+            raise GitHubIntegrationIntegrityError(
+                "stored Relay Project indexed identity disagrees with typed payload"
+            )
+        return project.primary_repository
 
     def load_state(
         self, project_id: ProjectId, installation_id: int
