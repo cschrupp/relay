@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.2 complete / accepted / closed  
+**Status:** Phase 1 open — Slice 1.3 open / design not authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -48,6 +48,14 @@ Final canonical head evaluated:
 Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
+
+Slice 1.3 is now open by explicit Human Authority decision:
+
+```text
+RLY-S13-OPEN-001
+```
+
+Opening does not itself authorize Slice 1.3 design or implementation.
 
 ---
 
@@ -170,7 +178,29 @@ The locked Revision 1 / Revision 2 / Revision 3 design documents remain historic
 
 ---
 
-# 5. Current canonical living documents
+# 5. Slice 1.3 opening authority
+
+Human Authority opened Slice 1.3 from exact pre-opening canonical baseline:
+
+```text
+40683b67eb40a28b1ceb8e441804a57d1767cfa1
+```
+
+Opening record:
+
+```text
+RLY-S13-OPEN-001
+```
+
+Current roadmap objective:
+
+> Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
+
+Any required GitHub write permission remains subject to separate design, independent review, and Human Authority approval.
+
+---
+
+# 6. Current canonical living documents
 
 Registry-current projections are:
 
@@ -186,7 +216,7 @@ Canonicality remains a `.relay/registry.json` relationship.
 
 ---
 
-# 6. Authorization state
+# 7. Authorization state
 
 ```text
 Phase 1:
@@ -199,12 +229,21 @@ Slice 1.2:
 CLOSED / ACCEPTED
 
 Slice 1.3:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.3 design:
+NOT AUTHORIZED
+
+Slice 1.3 implementation:
+NOT AUTHORIZED
+
+Slice 1.4:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-The next phase/slice requires a new explicit Human Authority decision.
+The next governed transition requires a separate Human Authority decision to authorize Slice 1.3 architecture / contract / design.
 
 **Unblocked ≠ authorized.**
