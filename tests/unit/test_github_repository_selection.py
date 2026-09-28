@@ -56,7 +56,7 @@ def _state(readiness: GitHubAccessReadiness) -> GitHubInstallationState:
             observed_at=NOW,
         ),
         readiness=readiness,
-        state_revision=7,
+        state_revision=1,
     )
 
 
@@ -91,8 +91,8 @@ def _seed(readiness: GitHubAccessReadiness):
             installation_id=1001,
             event_type=GitHubInstallationEventType.INSTALLATION_SYNCED,
             observed_at=NOW,
-            prior_state_revision=6,
-            resulting_state_revision=7,
+            prior_state_revision=0,
+            resulting_state_revision=1,
         ),
     )
     service = GitHubIntegrationService(
@@ -119,7 +119,7 @@ def test_access_selection_captures_exact_provider_binding_and_state_revision() -
         assert selection.github_repository_id == 501
         assert selection.github_node_id == "R_501"
         assert selection.repository == REPOSITORY
-        assert selection.expected_state_revision == 7
+        assert selection.expected_state_revision == 1
 
 
 def test_access_selection_rejects_non_ready_binding() -> None:
