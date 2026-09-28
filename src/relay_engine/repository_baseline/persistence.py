@@ -78,7 +78,10 @@ def persist_verified_baseline(
             if project_row is None:
                 raise RepositoryProjectMismatch("Relay project does not exist")
             project = _parse_project(project_row["payload_json"])
-            if project.id != selection.project_id or project.primary_repository != selection.repository:
+            if (
+                project.id != selection.project_id
+                or project.primary_repository != selection.repository
+            ):
                 raise RepositoryProjectMismatch(
                     "Project.primary_repository changed or differs from selection"
                 )
@@ -92,9 +95,7 @@ def persist_verified_baseline(
                 raise RepositoryAccessChanged(
                     "GitHub access authority changed during baseline resolution"
                 )
-            repositories = store.list_repositories(
-                selection.project_id, selection.installation_id
-            )
+            repositories = store.list_repositories(selection.project_id, selection.installation_id)
             selected = next(
                 (
                     item
