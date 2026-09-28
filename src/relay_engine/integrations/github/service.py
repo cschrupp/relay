@@ -24,8 +24,10 @@ from relay_engine.integrations.github.models import (
     GitHubInstallationSnapshot,
     GitHubInstallationState,
     GitHubInstallationStatus,
+    GitHubInstallationToken,
     GitHubPermissionGrant,
     GitHubPermissionLevel,
+    GitHubRepositoryAccessSelection,
     GitHubRepositorySnapshot,
     GitHubWebhookEnvelope,
     repository_ref_from_github,
@@ -162,8 +164,6 @@ class GitHubIntegrationService:
         next_revision = 1 if expected_revision is None else expected_revision + 1
         prior_revision = 0 if expected_revision is None else expected_revision
 
-        # A structurally valid authoritative permission violation is security evidence.
-        # Persist the fail-closed state before any permission-dependent remote read.
         if not permission_policy_allows(snapshot.permissions):
             state = GitHubInstallationState(
                 installation=snapshot,
@@ -267,6 +267,74 @@ class GitHubIntegrationService:
                 "GitHub repository is not currently usable"
             ) from error
 
+    def repository_access_selection(
+        self,
+        *,
+        project_id: ProjectId,
+        installation_id: int,
+        github_repository_id: int,
+        repository: RepositoryRef,
+    ) -> GitHubRepositoryAccessSelection:
+        """Capture one immutable ACTIVE/READY provider binding for a later operation."""
+
+        state = self._store.load_state(project_id, installation_id)
+        if state is None or not state.usable:
+            raise GitHubRepositoryAccessDenied("GitHub installation is not ACTIVE / READY")
+        repositories = self._store.list_repositories(project_id, installation_id)
+        selected = next(
+            (item for item in repositories if item.github_repository_id == github_repository_id),
+            None,
+        )
+        if selected is None:
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository is not in the confirmed access set"
+            )
+        try:
+            resolved = repository_ref_from_github(
+                relay_repository_id=repository.id,
+                state=state,
+                repository=selected,
+                current_repositories=repositories,
+            )
+        except ValueError as error:
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository is not currently usable"
+            ) from error
+        if resolved != repository:
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository does not match Relay repository authority"
+            )
+        return GitHubRepositoryAccessSelection(
+            project_id=project_id,
+            installation_id=installation_id,
+            github_repository_id=github_repository_id,
+            github_node_id=selected.node_id,
+            repository=repository,
+            expected_state_revision=state.state_revision,
+        )
+
+    def create_repository_token(
+        self,
+        *,
+        selection: GitHubRepositoryAccessSelection,
+        observed_at: datetime,
+    ) -> GitHubInstallationToken:
+        """Mint one ephemeral token narrowed to the captured provider repository."""
+
+        app_jwt = create_app_jwt(
+            config=self._config,
+            private_key_pem=self._private_key_pem,
+            now=observed_at,
+        )
+        token = self._client.create_installation_token(
+            installation_id=selection.installation_id,
+            app_jwt=app_jwt,
+            repository_id=selection.github_repository_id,
+        )
+        if token.expires_at <= observed_at:
+            raise GitHubPermissionError("GitHub returned an already-expired installation token")
+        return token
+
     def process_webhook(
         self,
         *,
@@ -274,7 +342,7 @@ class GitHubIntegrationService:
         raw_body: bytes,
         observed_at: datetime,
         event_id_factory: Callable[[ProjectId, GitHubWebhookEnvelope], str],
-    ) -> tuple[GitHubWebhookProjectOutcome, ...]:
+    ) -> tuple["GitHubWebhookProjectOutcome", ...]:
         envelope = parse_supported_webhook(
             headers=headers,
             raw_body=raw_body,
@@ -318,7 +386,6 @@ class GitHubIntegrationService:
         event_type = GitHubInstallationEventType.INSTALLATION_SYNCED
         permissions: tuple[GitHubPermissionGrant, ...] | None = None
 
-        # A DELETED binding is a tombstone. Only explicit synchronization may reactivate it.
         if prior.installation.status is GitHubInstallationStatus.DELETED:
             status = GitHubInstallationStatus.DELETED
             readiness = GitHubAccessReadiness.RESYNC_REQUIRED
