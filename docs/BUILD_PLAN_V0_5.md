@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.2 closed  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 open  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2.
+This is the current execution plan after acceptance and closure of Slice 1.2 and Human Authority opening of Slice 1.3.
 
 Relay continues to be built inside-out:
 
@@ -88,8 +88,17 @@ Final canonical head evaluated:
 Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 
+Slice 1.3 opening:
+RLY-S13-OPEN-001
+
 Slice 1.3:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.3 design:
+NOT AUTHORIZED
+
+Slice 1.3 implementation:
+NOT AUTHORIZED
 ```
 
 ---
@@ -221,15 +230,36 @@ Those boundaries remain future work.
 
 ## Slice 1.3 — `.relay/` Initialization and Sync
 
-Potential objective:
+```text
+OPEN
+DESIGN NOT AUTHORIZED
+IMPLEMENTATION NOT AUTHORIZED
+```
+
+Opening authority:
+
+```text
+RLY-S13-OPEN-001
+```
+
+Roadmap objective:
 
 > Recognize or explicitly initialize the accepted repository contract through GitHub when write behavior is separately designed and authorized.
 
-Any required write permission must be separately designed and approved.
+The design, if later authorized, must begin from the accepted Slice 1.2 read-only repository/baseline boundary and must determine the minimum write-capable mechanism required for repository initialization/synchronization without weakening repository authority, Artifact identity, human authorization, or provider-access safety.
 
-```text
-NOT OPEN / NOT AUTHORIZED
-```
+Any required GitHub write permission must be separately designed, independently reviewed, and explicitly approved.
+
+Opening Slice 1.3 does not authorize:
+
+- design work;
+- production implementation;
+- GitHub write permissions;
+- remote `.relay/` creation or mutation;
+- branch, commit, or pull-request creation by Relay product behavior;
+- Project repository mutation;
+- agent execution;
+- Slice 1.4.
 
 ## Slice 1.4 — Project and Slice CRUD
 
@@ -292,7 +322,30 @@ Passing CI never by itself implied design, implementation, acceptance, or closur
 
 ---
 
-# 7. Phase-1 hard stop — M0 validation
+# 7. Slice 1.3 opening gate
+
+```text
+Pre-opening canonical baseline:
+40683b67eb40a28b1ceb8e441804a57d1767cfa1
+
+Opening authority:
+RLY-S13-OPEN-001
+```
+
+Current gate state:
+
+1. Slice 1.2 is closed and accepted. **DONE**
+2. Human Authority explicitly opened Slice 1.3. **DONE**
+3. Slice 1.3 architecture / contract / design authorization. **PENDING HUMAN AUTHORITY**
+4. Independent design review. **NOT REACHED**
+5. Human design acceptance. **NOT REACHED**
+6. Separate implementation authorization. **NOT REACHED**
+
+No design or implementation work proceeds from the opening decision alone.
+
+---
+
+# 8. Phase-1 hard stop — M0 validation
 
 Phase 1 ends only after Relay can govern a real human-controlled project workflow.
 
@@ -307,7 +360,7 @@ Required dogfood questions remain:
 
 ---
 
-# 8. Later roadmap
+# 9. Later roadmap
 
 Strategic sequence remains:
 
@@ -330,7 +383,7 @@ No roadmap entry is authorization.
 
 ---
 
-# 9. Current authorization boundary
+# 10. Current authorization boundary
 
 ```text
 Phase 1:
@@ -342,14 +395,23 @@ CLOSED / ACCEPTED
 Slice 1.2:
 CLOSED / ACCEPTED
 
+Slice 1.3:
+OPEN
+
 Current role/model:
 Human Authority — user
 
 Next governed action:
-Human Authority may choose whether to open Slice 1.3.
+Human Authority may separately authorize Slice 1.3 architecture / contract / design.
 
-Slice 1.3:
-NOT OPEN / NOT AUTHORIZED
+Slice 1.3 design:
+NOT AUTHORIZED
+
+Slice 1.3 implementation:
+NOT AUTHORIZED
+
+Slice 1.4:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
