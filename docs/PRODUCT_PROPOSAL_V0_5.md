@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 Design Revision 2 submitted  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 Design Revision 3 submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -131,7 +131,7 @@ atomic Artifact + Baseline persistence
 
 Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
 
-Slice 1.3 is now in independent combined design review preparation after Revision 1 received `REVISE` and bounded Revision 2 addressed the six review findings.
+Slice 1.3 is now in independent combined design review preparation after Revision 1 and Revision 2 each received bounded `REVISE` outcomes and Revision 3 addressed the remaining F007 mutation-authority issue.
 
 ---
 
@@ -162,6 +162,8 @@ accepted baseline
       ↓
 durable engineering memory
 ```
+
+Repository side-effect authority is distinct from lifecycle handover authority: approving one exact repository synchronization does not make a lifecycle gate GREEN, authorize implementation, or accept a resulting Baseline.
 
 ---
 
@@ -204,7 +206,7 @@ Slice 1.3:
 .relay INITIALIZATION AND SYNC — OPEN
 
 Slice 1.3 design:
-AUTHORIZED / REVISION 2 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+AUTHORIZED / REVISION 3 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -252,9 +254,21 @@ Revision 2 amendment:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV2_AMENDMENT.md
 ```
 
+Independent combined Revision 1 + Revision 2 review:
+
+```text
+RLY-S13-DESIGN-EVAL-002 — REVISE
+```
+
+Revision 3 amendment:
+
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
+```
+
 The combined proposed capability remains deliberately narrow:
 
-> Given authoritative Relay project/repository identity, an exact expected default-branch/base commit, an exact target schema-v1 repository contract, and Human Authority bound to the exact write subject, Relay may recognize an already-current target or commit initialization/synchronization to the existing default branch as one atomic Git commit, subject to exact permission, identity, transition, race, path-preservation, and post-write verification guards.
+> Given authoritative Relay project/repository identity, an exact expected default-branch/base commit, an exact target schema-v1 repository contract, and explicit Human Authority over the exact prepared mutation subject, Relay may recognize an already-current target or commit initialization/synchronization to the existing default branch as one atomic Git commit, subject to exact permission, identity, transition, race, path-preservation, and post-write verification guards.
 
 The combined design preserves these product rules:
 
@@ -264,8 +278,14 @@ The combined design preserves these product rules:
 - read-only installations remain valid for existing read workflows;
 - write-capable installations may add only `contents:write` above metadata read;
 - read operations continue using read-scoped tokens;
-- any non-no-op mutation requires a durable Human Authority `AuthorizationGrant` bound to the exact synchronization subject digest;
+- a read-only preparation step computes the exact `RepositorySyncSubjectV1` and digest before any write token or Git object exists;
+- any non-no-op mutation requires an immutable HUMAN `RepositoryMutationAuthorization` for that exact subject;
+- mutation authority is intentionally not an `AuthorizationGrant`, `HandoverGate`, or `HumanGateDecision` and contains no fabricated `BaselineId`;
 - the authorization subject binds repository/provider selection, `state_revision`, expected default branch/base commit, target registry digest, and artifact-write digests;
+- execution re-runs preparation checks and recomputes the exact subject rather than trusting stale preparation state;
+- mutation authority is checked before WRITE-token minting and again immediately before ref visibility;
+- valid `UNINITIALIZED` repositories with an existing head can be authorized without inventing a repository Baseline;
+- existing lifecycle/handover governance remains unchanged and must still be satisfied independently wherever applicable;
 - repository mutation is one non-force default-branch ref movement;
 - registry plus changed registered artifact bytes become visible in the same commit;
 - concurrent branch movement causes conflict rather than overwrite/rebase;
@@ -277,9 +297,13 @@ The combined design preserves these product rules:
 - invalid existing `.relay` state is never automatically repaired;
 - successful state vocabulary is `CURRENT`, with `wrote_remote` distinguishing no-op from mutation;
 - remote synchronization does not certify or persist its own Relay Baseline;
-- no PR permission, branch creation, force push, migration, background worker, or agent execution is introduced.
+- deterministic local SQLite migration v3 adds immutable repository-mutation authorization persistence;
+- no PR permission, branch creation, force push, background worker, or agent execution is introduced;
+- no new runtime dependency is introduced.
 
 The proposed write mechanism continues to use GitHub's Git Data primitives because sequential per-file commits cannot preserve the same-commit registry/artifact invariant for general synchronization.
+
+The local migration does not alter the repository-side schema-v1 contract; it stores Human Authority over a provider side effect in runtime state where that authority belongs.
 
 Design review may still revise or reject the combined proposal. No GitHub write behavior is authorized for production implementation yet.
 
@@ -329,11 +353,14 @@ RLY-S13-DESIGN-AUTH-001
 Slice 1.3 Revision 1 evaluation:
 RLY-S13-DESIGN-EVAL-001 — REVISE
 
+Slice 1.3 Revision 1 + Revision 2 evaluation:
+RLY-S13-DESIGN-EVAL-002 — REVISE
+
 Slice 1.3:
 OPEN
 
 Slice 1.3 design:
-REVISION 2 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
+REVISION 3 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
