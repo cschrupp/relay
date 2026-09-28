@@ -117,7 +117,7 @@ class GitHubInstallationState(DomainModel):
     state_revision: int = Field(ge=1)
 
     @model_validator(mode="after")
-    def ready_requires_active(self) -> "GitHubInstallationState":
+    def ready_requires_active(self) -> GitHubInstallationState:
         if (
             self.readiness is GitHubAccessReadiness.READY
             and self.installation.status is not GitHubInstallationStatus.ACTIVE
@@ -187,7 +187,7 @@ class GitHubRepositoryAccessSelection(DomainModel):
         return require_nonblank(value)
 
     @model_validator(mode="after")
-    def repository_is_public_github(self) -> "GitHubRepositoryAccessSelection":
+    def repository_is_public_github(self) -> GitHubRepositoryAccessSelection:
         if self.repository.host != "github.com":
             raise ValueError("Slice 1.2 GitHub selection requires github.com RepositoryRef")
         return self
@@ -296,7 +296,7 @@ class GitHubInstallationEvent(DomainModel):
         return value
 
     @model_validator(mode="after")
-    def delivery_fields_are_paired(self) -> "GitHubInstallationEvent":
+    def delivery_fields_are_paired(self) -> GitHubInstallationEvent:
         if (self.delivery_id is None) != (self.delivery_digest is None):
             raise ValueError("delivery_id and delivery_digest must appear together")
         if self.resulting_state_revision != self.prior_state_revision + 1:
