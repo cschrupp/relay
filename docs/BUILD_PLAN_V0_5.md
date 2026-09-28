@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 Design Revision 2 submitted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 Design Revision 3 submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, explicit authorization of Slice 1.3 architecture / contract / design, independent Revision 1 review, and bounded Revision 2 response.
+This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, explicit authorization of Slice 1.3 architecture / contract / design, independent Revision 1 review, bounded Revision 2 response, independent combined Revision 1 + Revision 2 review, and bounded Revision 3 response to F007.
 
 Relay continues to be built inside-out:
 
@@ -97,11 +97,14 @@ RLY-S13-DESIGN-AUTH-001
 Slice 1.3 Revision 1 review:
 RLY-S13-DESIGN-EVAL-001 — REVISE
 
+Slice 1.3 Revision 1 + Revision 2 combined review:
+RLY-S13-DESIGN-EVAL-002 — REVISE
+
 Slice 1.3:
 OPEN
 
 Slice 1.3 architecture / contract / design:
-AUTHORIZED — REVISION 2 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+AUTHORIZED — REVISION 3 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -229,7 +232,8 @@ Accepted capabilities include:
 OPEN
 DESIGN AUTHORIZED
 REVISION 1 REVIEWED — REVISE
-REVISION 2 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+REVISION 2 COMBINED REVIEWED — REVISE
+REVISION 3 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
 IMPLEMENTATION NOT AUTHORIZED
 ```
 
@@ -269,16 +273,32 @@ Revision 2 amendment:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV2_AMENDMENT.md
 ```
 
-Revision 1 established the bounded Git Data single-commit architecture. Revision 2 preserves that architecture and resolves the review findings by:
+Independent combined Revision 1 + Revision 2 review:
 
-- binding every non-no-op remote mutation to an exact Human Authority `AuthorizationGrant.subject_digest`;
-- requiring exact expected default branch and base commit for the authorized write subject;
-- preserving pre-existing unregistered files through exact-byte adoption or conflict;
-- defining observation-based reconciliation for indeterminate ref-update transport failures;
-- rejecting repositories with no existing default-branch head rather than creating a branch;
-- prohibiting `.github/workflows/**` content/mode mutation under the contents-only permission ceiling while allowing exact unchanged adoption;
-- standardizing successful state vocabulary on `CURRENT` plus `wrote_remote`;
-- preserving schema v1, no migration, no new runtime dependency, no PR flow, no force push, and no automatic Baseline persistence.
+```text
+RLY-S13-DESIGN-EVAL-002 — REVISE
+```
+
+Revision 3 amendment:
+
+```text
+docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
+```
+
+Revision 1 established the bounded Git Data single-commit architecture. Revision 2 resolved F002–F006 and established the exact `RepositorySyncSubjectV1` digest, but its F001 solution incorrectly reused baseline-bound `AuthorizationGrant` / `HandoverGate` semantics for repository mutation.
+
+Revision 3 preserves the transport and subject-digest architecture and resolves F007 by:
+
+- introducing a dedicated immutable `RepositoryMutationAuthorization` rather than altering `AuthorizationGrant` or `HandoverGate`;
+- keeping the exact synchronization subject bound to project/repository/provider identity, `state_revision`, expected branch/base commit, target registry, and artifact bytes;
+- adding a read-only `prepare_repository_sync(...)` step so Human Authority sees and approves an exact subject before any write capability is used;
+- re-running all preparation checks and recomputing the subject at execution time;
+- checking mutation authority before WRITE-token minting and again immediately before ref visibility;
+- supporting valid `UNINITIALIZED` repositories without fabricating a Relay Baseline;
+- preserving the complete existing handover-gate engine unchanged and orthogonal to repository-side-effect authority;
+- adding deterministic local SQLite migration v3 for immutable mutation-authority persistence;
+- keeping repository-contract schema v1 unchanged and adding no runtime dependency;
+- preserving no PR flow, no branch creation, no force push, no automatic Baseline persistence, and no agent execution.
 
 Any passing combined design review remains separate from Human Authority design acceptance and implementation authorization.
 
@@ -351,6 +371,12 @@ Revision 1 submitted head:
 
 Revision 1 evaluation:
 RLY-S13-DESIGN-EVAL-001 — REVISE
+
+Revision 2 submitted head:
+6070b04ca5b38bd5c4687bb0ec4799f4f782e355
+
+Revision 1 + Revision 2 combined evaluation:
+RLY-S13-DESIGN-EVAL-002 — REVISE
 ```
 
 Current gate state:
@@ -360,10 +386,12 @@ Current gate state:
 3. Human Authority explicitly authorized Slice 1.3 architecture / contract / design. **DONE**
 4. Slice 1.3 Revision 1 architecture / contract / design submitted. **DONE**
 5. Independent Revision 1 design review. **DONE — REVISE**
-6. Bounded Revision 2 amendment resolving F001–F006. **DONE / SUBMITTED**
-7. Independent combined Revision 1 + Revision 2 design review. **PENDING**
-8. Human design acceptance. **NOT REACHED**
-9. Separate implementation authorization. **NOT REACHED**
+6. Bounded Revision 2 amendment resolving F001–F006. **DONE**
+7. Independent combined Revision 1 + Revision 2 design review. **DONE — REVISE**
+8. Bounded Revision 3 amendment resolving F007 only. **DONE / SUBMITTED**
+9. Independent combined Revision 1 + Revision 2 + Revision 3 design review. **PENDING**
+10. Human design acceptance. **NOT REACHED**
+11. Separate implementation authorization. **NOT REACHED**
 
 No implementation work proceeds from design submission or a future passing design review alone.
 
@@ -429,7 +457,7 @@ Next governed role:
 Independent Design Reviewer — GPT-5.6 Sol
 
 Slice 1.3 architecture / contract / design:
-REVISION 2 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
+REVISION 3 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
