@@ -1,12 +1,15 @@
 """Narrow GitHub REST client and standard-library HTTPS transport."""
 
+import base64
+import binascii
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol, cast
+from typing import Literal, Protocol, cast
 
 from pydantic import SecretStr, ValidationError
 
@@ -14,13 +17,20 @@ from relay_engine.domain.ids import ProjectId
 from relay_engine.integrations.github.errors import (
     GitHubAuthenticationError,
     GitHubInstallationUnavailable,
+    GitHubObjectUnavailable,
     GitHubPermissionError,
     GitHubRateLimited,
+    GitHubRefNotFound,
     GitHubRemoteError,
+    GitHubRepositoryUnavailable,
 )
 from relay_engine.integrations.github.models import (
     GitHubAccountType,
     GitHubAppConfig,
+    GitHubBlob,
+    GitHubCommitObject,
+    GitHubCommitResolution,
+    GitHubGitObjectType,
     GitHubInstallationSnapshot,
     GitHubInstallationStatus,
     GitHubInstallationToken,
@@ -28,6 +38,8 @@ from relay_engine.integrations.github.models import (
     GitHubPermissionLevel,
     GitHubRepositorySelectionMode,
     GitHubRepositorySnapshot,
+    GitHubTree,
+    GitHubTreeEntry,
 )
 
 
@@ -84,6 +96,12 @@ def _required_int(value: object, label: str) -> int:
     return value
 
 
+def _required_nonnegative_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise GitHubRemoteError(f"GitHub {label} must be a non-negative integer")
+    return value
+
+
 def _required_str(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise GitHubRemoteError(f"GitHub {label} must be a nonblank string")
@@ -111,6 +129,14 @@ def _required_list(value: object, label: str) -> list[object]:
     return cast(list[object], value)
 
 
+def _repository_path(full_name: str) -> str:
+    parts = full_name.split("/")
+    if len(parts) != 2 or any(not part for part in parts):
+        raise ValueError("GitHub repository path must be owner/repository")
+    owner, repository = parts
+    return f"/repos/{urllib.parse.quote(owner, safe='')}/{urllib.parse.quote(repository, safe='')}"
+
+
 class GitHubClient:
     def __init__(self, config: GitHubAppConfig, transport: GitHubTransport) -> None:
         self._config = config
@@ -131,7 +157,7 @@ class GitHubClient:
         path: str,
         credential: SecretStr,
         body: object | None = None,
-        not_found_installation: bool = False,
+        not_found: Literal["installation", "repository", "ref", "object"] | None = None,
     ) -> tuple[object, Mapping[str, str]]:
         encoded: bytes | None = None
         headers = self._headers(credential)
@@ -164,10 +190,21 @@ class GitHubClient:
             raise GitHubAuthenticationError(
                 f"GitHub authentication failed for request {request_id}"
             )
-        if response.status == 404 and not_found_installation:
-            raise GitHubInstallationUnavailable(
-                f"GitHub installation is unavailable for request {request_id}"
-            )
+        if response.status == 404:
+            if not_found == "installation":
+                raise GitHubInstallationUnavailable(
+                    f"GitHub installation is unavailable for request {request_id}"
+                )
+            if not_found == "repository":
+                raise GitHubRepositoryUnavailable(
+                    f"GitHub repository is unavailable for request {request_id}"
+                )
+            if not_found == "ref":
+                raise GitHubRefNotFound(f"GitHub ref is unavailable for request {request_id}")
+            if not_found == "object":
+                raise GitHubObjectUnavailable(
+                    f"GitHub object is unavailable for request {request_id}"
+                )
         if response.status == 403:
             raise GitHubPermissionError(
                 f"GitHub denied required permission for request {request_id}"
@@ -186,7 +223,7 @@ class GitHubClient:
             method="GET",
             path=f"/app/installations/{installation_id}",
             credential=app_jwt,
-            not_found_installation=True,
+            not_found="installation",
         )
         payload = _required_mapping(raw_payload, "installation payload")
         try:
@@ -241,7 +278,7 @@ class GitHubClient:
             path=f"/app/installations/{installation_id}/access_tokens",
             credential=app_jwt,
             body=body,
-            not_found_installation=True,
+            not_found="installation",
         )
         payload = _required_mapping(raw_payload, "installation-token payload")
         try:
@@ -274,31 +311,7 @@ class GitHubClient:
             page_items = _required_list(payload.get("repositories"), "repository list")
             for raw in page_items:
                 repository = _required_mapping(raw, "repository payload")
-                try:
-                    owner = _required_mapping(repository.get("owner"), "repository owner")
-                    repository_id = _required_int(repository.get("id"), "repository id")
-                    item = GitHubRepositorySnapshot(
-                        github_repository_id=repository_id,
-                        node_id=_required_str(repository.get("node_id"), "repository node id"),
-                        full_name=_required_str(
-                            repository.get("full_name"), "repository full_name"
-                        ),
-                        owner_login=_required_str(owner.get("login"), "repository owner login"),
-                        private=_required_bool(repository.get("private"), "repository private"),
-                        archived=_required_bool(
-                            repository.get("archived", False), "repository archived"
-                        ),
-                        default_branch=_required_str(
-                            repository.get("default_branch"), "repository default branch"
-                        ),
-                        observed_at=observed_at,
-                    )
-                except GitHubRemoteError:
-                    raise
-                except (TypeError, ValueError, ValidationError) as error:
-                    raise GitHubRemoteError(
-                        "GitHub repository payload failed validation"
-                    ) from error
+                item = self._parse_repository(repository, observed_at)
                 prior = repositories.get(item.github_repository_id)
                 if prior is not None and prior != item:
                     raise GitHubRemoteError(
@@ -309,3 +322,160 @@ class GitHubClient:
                 break
             page += 1
         return tuple(repositories[key] for key in sorted(repositories))
+
+    def get_repository(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        observed_at: datetime,
+    ) -> GitHubRepositorySnapshot:
+        raw_payload, _ = self._request(
+            method="GET",
+            path=_repository_path(repository_path),
+            credential=token.token,
+            not_found="repository",
+        )
+        return self._parse_repository(
+            _required_mapping(raw_payload, "repository payload"), observed_at
+        )
+
+    def resolve_commit_sha(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        ref: str,
+    ) -> GitHubCommitResolution:
+        encoded_ref = urllib.parse.quote(ref, safe="")
+        raw_payload, _ = self._request(
+            method="GET",
+            path=f"{_repository_path(repository_path)}/commits/{encoded_ref}",
+            credential=token.token,
+            not_found="ref",
+        )
+        payload = _required_mapping(raw_payload, "commit-resolution payload")
+        try:
+            return GitHubCommitResolution(sha=_required_str(payload.get("sha"), "commit SHA"))
+        except (ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub commit-resolution payload failed validation") from error
+
+    def get_git_commit(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        sha: str,
+    ) -> GitHubCommitObject:
+        raw_payload, _ = self._request(
+            method="GET",
+            path=f"{_repository_path(repository_path)}/git/commits/{sha}",
+            credential=token.token,
+            not_found="object",
+        )
+        payload = _required_mapping(raw_payload, "Git commit payload")
+        tree = _required_mapping(payload.get("tree"), "Git commit tree")
+        try:
+            return GitHubCommitObject(
+                sha=_required_str(payload.get("sha"), "Git commit SHA"),
+                tree_sha=_required_str(tree.get("sha"), "Git root tree SHA"),
+            )
+        except (ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub Git commit payload failed validation") from error
+
+    def get_git_tree(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        tree_sha: str,
+    ) -> GitHubTree:
+        raw_payload, _ = self._request(
+            method="GET",
+            path=f"{_repository_path(repository_path)}/git/trees/{tree_sha}",
+            credential=token.token,
+            not_found="object",
+        )
+        payload = _required_mapping(raw_payload, "Git tree payload")
+        raw_entries = _required_list(payload.get("tree"), "Git tree entries")
+        entries: list[GitHubTreeEntry] = []
+        try:
+            for raw in raw_entries:
+                item = _required_mapping(raw, "Git tree entry")
+                entries.append(
+                    GitHubTreeEntry(
+                        path=_required_str(item.get("path"), "Git tree path"),
+                        mode=_required_str(item.get("mode"), "Git tree mode"),
+                        object_type=GitHubGitObjectType(
+                            _required_str(item.get("type"), "Git tree object type")
+                        ),
+                        sha=_required_str(item.get("sha"), "Git tree object SHA"),
+                    )
+                )
+            return GitHubTree(
+                sha=_required_str(payload.get("sha"), "Git tree SHA"),
+                entries=tuple(entries),
+                truncated=_required_bool(payload.get("truncated", False), "Git tree truncated"),
+            )
+        except GitHubRemoteError:
+            raise
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub Git tree payload failed validation") from error
+
+    def get_git_blob(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        blob_sha: str,
+    ) -> GitHubBlob:
+        raw_payload, _ = self._request(
+            method="GET",
+            path=f"{_repository_path(repository_path)}/git/blobs/{blob_sha}",
+            credential=token.token,
+            not_found="object",
+        )
+        payload = _required_mapping(raw_payload, "Git blob payload")
+        try:
+            encoding = _required_str(payload.get("encoding"), "Git blob encoding")
+            if encoding != "base64":
+                raise GitHubRemoteError("GitHub Git blob encoding must be base64")
+            content = _required_str(payload.get("content"), "Git blob content")
+            expected_size = _required_nonnegative_int(payload.get("size"), "Git blob size")
+            compact = "".join(content.split())
+            try:
+                raw_bytes = base64.b64decode(compact, validate=True)
+            except (binascii.Error, ValueError) as error:
+                raise GitHubRemoteError("GitHub Git blob content is not valid base64") from error
+            if len(raw_bytes) != expected_size:
+                raise GitHubRemoteError("GitHub Git blob size disagrees with decoded content")
+            return GitHubBlob(
+                sha=_required_str(payload.get("sha"), "Git blob SHA"), raw_bytes=raw_bytes
+            )
+        except GitHubRemoteError:
+            raise
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub Git blob payload failed validation") from error
+
+    @staticmethod
+    def _parse_repository(
+        repository: Mapping[str, object], observed_at: datetime
+    ) -> GitHubRepositorySnapshot:
+        try:
+            owner = _required_mapping(repository.get("owner"), "repository owner")
+            return GitHubRepositorySnapshot(
+                github_repository_id=_required_int(repository.get("id"), "repository id"),
+                node_id=_required_str(repository.get("node_id"), "repository node id"),
+                full_name=_required_str(repository.get("full_name"), "repository full_name"),
+                owner_login=_required_str(owner.get("login"), "repository owner login"),
+                private=_required_bool(repository.get("private"), "repository private"),
+                archived=_required_bool(repository.get("archived", False), "repository archived"),
+                default_branch=_required_str(
+                    repository.get("default_branch"), "repository default branch"
+                ),
+                observed_at=observed_at,
+            )
+        except GitHubRemoteError:
+            raise
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub repository payload failed validation") from error
