@@ -124,11 +124,10 @@ def test_access_selection_captures_exact_provider_binding_and_state_revision() -
 
 def test_access_selection_rejects_non_ready_binding() -> None:
     database, service = _seed(GitHubAccessReadiness.RESYNC_REQUIRED)
-    with database:
-        with pytest.raises(GitHubRepositoryAccessDenied, match="ACTIVE / READY"):
-            service.repository_access_selection(
-                project_id=PROJECT_ID,
-                installation_id=1001,
-                github_repository_id=501,
-                repository=REPOSITORY,
-            )
+    with database, pytest.raises(GitHubRepositoryAccessDenied, match="ACTIVE / READY"):
+        service.repository_access_selection(
+            project_id=PROJECT_ID,
+            installation_id=1001,
+            github_repository_id=501,
+            repository=REPOSITORY,
+        )
