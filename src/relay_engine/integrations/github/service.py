@@ -275,8 +275,15 @@ class GitHubIntegrationService:
         github_repository_id: int,
         repository: RepositoryRef,
     ) -> GitHubRepositoryAccessSelection:
-        """Capture one immutable ACTIVE/READY provider binding for a later operation."""
+        """Capture one immutable ACTIVE/READY binding matching durable Project authority."""
 
+        project_repository = self._store.load_project_repository(project_id)
+        if project_repository is None:
+            raise GitHubRepositoryAccessDenied("Relay project does not exist")
+        if project_repository != repository:
+            raise GitHubRepositoryAccessDenied(
+                "GitHub repository does not match durable Project.primary_repository"
+            )
         state = self._store.load_state(project_id, installation_id)
         if state is None or not state.usable:
             raise GitHubRepositoryAccessDenied("GitHub installation is not ACTIVE / READY")
