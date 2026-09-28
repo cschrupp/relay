@@ -131,3 +131,21 @@ def test_access_selection_rejects_non_ready_binding() -> None:
             github_repository_id=501,
             repository=REPOSITORY,
         )
+
+
+def test_access_selection_requires_durable_project_repository_authority() -> None:
+    database, service = _seed(GitHubAccessReadiness.READY)
+    different_relay_identity = RepositoryRef(
+        id="repo_018f47c1-7b2c-7abc-8def-123456789999",
+        host="github.com",
+        path=REPOSITORY.path,
+    )
+    with database, pytest.raises(
+        GitHubRepositoryAccessDenied, match="Project.primary_repository"
+    ):
+        service.repository_access_selection(
+            project_id=PROJECT_ID,
+            installation_id=1001,
+            github_repository_id=501,
+            repository=different_relay_identity,
+        )
