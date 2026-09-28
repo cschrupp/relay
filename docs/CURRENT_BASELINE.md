@@ -38,6 +38,9 @@ RLY-S12-EVAL-002 — ACCEPT
 
 Human acceptance:
 RLY-S12-ACCEPT-001
+
+Acceptance-record/finalization:
+7e08ad484ce794946ec2e09abf44060879e9fc04
 ```
 
 ---
@@ -122,7 +125,19 @@ pytest         PASS — 436 passed
 uv build       PASS
 ```
 
-ADR-0008 and the Slice 1.2 memory are locked/accepted during bounded finalization.
+Acceptance-record/finalization commit:
+
+```text
+7e08ad484ce794946ec2e09abf44060879e9fc04
+```
+
+Finalization CI:
+
+```text
+36435789277
+```
+
+ADR-0008 and the Slice 1.2 memory are locked/accepted.
 
 ---
 
