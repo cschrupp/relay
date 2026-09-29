@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 design accepted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2 and completion of the Slice 1.3 design cycle through Human Authority acceptance.
+This is the current execution plan after acceptance and closure of Slice 1.2, completion of the Slice 1.3 design cycle through Human Authority acceptance, and explicit Slice 1.3 implementation authorization `RLY-S13-AUTH-001`.
 
 Relay continues to be built inside-out:
 
@@ -65,10 +65,10 @@ Slice 1.3 design:
 ACCEPTED
 
 Slice 1.3 implementation:
-NOT AUTHORIZED
+AUTHORIZED
 ```
 
-Accepted Slice 1.3 design authority chain:
+Accepted Slice 1.3 authority chain:
 
 ```text
 Opening:
@@ -94,6 +94,16 @@ RLY-S13-DESIGN-ACCEPT-001
 
 Exact accepted design head:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+
+Implementation authorization:
+RLY-S13-AUTH-001
+```
+
+Preferred bounded implementation role/model:
+
+```text
+IMPLEMENTATION_AGENT
+GPT-5.6 Luna
 ```
 
 ---
@@ -130,7 +140,7 @@ ESCALATE
 
 Review acceptance and authorization are separate Human Authority decisions.
 
-**Unblocked ≠ authorized.**
+**Authorized ≠ accepted.**
 
 ---
 
@@ -184,7 +194,7 @@ Accepted capabilities include commit-pinned repository snapshot proof, exact reg
 ```text
 OPEN
 DESIGN ACCEPTED
-IMPLEMENTATION NOT AUTHORIZED
+IMPLEMENTATION AUTHORIZED
 ```
 
 Accepted design records:
@@ -203,23 +213,23 @@ Revision 4:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV4_AMENDMENT.md
 ```
 
-The accepted combined design establishes:
+The authorized implementation must realize the accepted combined design without material redesign. Required behavior includes:
 
 - schema-v1 repository-contract preservation;
 - exact `RepositorySyncSubjectV1`;
 - read-only `prepare_repository_sync(...)`;
 - explicit HUMAN `RepositoryMutationAuthorization` scoped by `project_id` + exact subject;
 - deterministic SQLite migration v3 for immutable repository-mutation authority;
-- exact WRITE-token gating;
+- exact READ/WRITE installation permission profiles and repository-scoped token narrowing;
 - one Git tree, one commit, one non-force default-branch ref movement;
-- stale-head, identity, permission, path, and post-write verification guards;
+- stale-head, identity, permission, `state_revision`, path, and post-write verification guards;
 - unregistered-file adoption-or-conflict semantics;
 - workflow-path mutation prohibition under the contents-only ceiling;
 - no bootstrap for repositories without an existing default-branch head;
 - observation-based reconciliation for indeterminate ref updates;
 - `CURRENT` + `wrote_remote` success semantics;
 - no automatic Baseline persistence;
-- no PR flow, force push, background worker, or agent execution;
+- no PR flow, force push, branch creation, background worker, generic provider framework, or agent execution;
 - no new runtime dependency.
 
 All design-review findings F001–F008 are closed.
@@ -266,11 +276,11 @@ RLY-S12-ACCEPT-001
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Passing CI never by itself implied design, implementation, acceptance, or closure authority.
+Passing CI never by itself implies technical acceptance or closure authority.
 
 ---
 
-# 7. Slice 1.3 design gate
+# 7. Slice 1.3 implementation gate
 
 ```text
 Authorized design baseline:
@@ -293,21 +303,24 @@ RLY-S13-DESIGN-EVAL-004 — ACCEPT
 
 Human design acceptance:
 RLY-S13-DESIGN-ACCEPT-001
+
+Implementation authorization:
+RLY-S13-AUTH-001
 ```
 
 Current gate state:
 
 1. Slice 1.3 opened. **DONE**
 2. Slice 1.3 design authorized. **DONE**
-3. Revision 1 submitted/reviewed. **DONE — REVISE**
-4. Revision 2 submitted/reviewed. **DONE — REVISE**
-5. Revision 3 submitted/reviewed. **DONE — REVISE**
-6. Revision 4 submitted. **DONE**
-7. Combined Revision 1 + 2 + 3 + 4 independent review. **DONE — ACCEPT**
-8. Human design acceptance. **DONE**
-9. Separate implementation authorization. **NOT REACHED**
+3. Revisions 1–4 designed and independently reviewed. **DONE**
+4. Combined Revision 1 + 2 + 3 + 4 independent review. **DONE — ACCEPT**
+5. Human design acceptance. **DONE**
+6. Separate implementation authorization. **DONE — AUTHORIZED**
+7. Bounded implementation. **AUTHORIZED / PENDING**
+8. Independent implementation evaluation. **NOT REACHED**
+9. Human technical acceptance. **NOT REACHED**
 
-No implementation work proceeds from design acceptance alone.
+Implementation completion does not imply acceptance.
 
 ---
 
@@ -366,10 +379,13 @@ Slice 1.3 architecture / contract / design:
 ACCEPTED
 
 Slice 1.3 implementation:
-NOT AUTHORIZED
+AUTHORIZED
 
-Next governed role:
-HUMAN AUTHORITY — implementation authorization decision
+Current governed role:
+IMPLEMENTATION_AGENT — GPT-5.6 Luna preferred
+
+Next governed gate after implementation:
+INDEPENDENT_EVALUATOR — GPT-5.6 Sol
 
 Slice 1.4:
 NOT OPEN
@@ -378,4 +394,4 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-**Unblocked ≠ authorized.**
+**Authorized ≠ accepted.**
