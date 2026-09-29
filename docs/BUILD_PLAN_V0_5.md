@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 accepted, closure evaluation pending  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 complete / accepted / closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -57,8 +57,7 @@ Slice 1.2:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.3:
-COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
 NOT OPEN
@@ -176,8 +175,7 @@ COMPLETE / ACCEPTED / CLOSED
 ## Slice 1.3 — `.relay/` Initialization and Sync
 
 ```text
-COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 ```
 
 Accepted capability includes:
@@ -249,10 +247,10 @@ Promoted-main CI:
 36612444758 — SUCCESS
 
 Independent closure evaluation:
-PENDING
+RLY-S13-CLOSE-EVAL-001 — ACCEPT
 ```
 
-No Slice 1.4 work is valid until Slice 1.3 closure is independently accepted.
+Slice 1.3 closure is independently accepted. Slice 1.4 remains unopened until a separate Human Authority opening.
 
 ---
 
@@ -284,8 +282,7 @@ Slice 1.2:
 CLOSED / ACCEPTED
 
 Slice 1.3:
-COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
 NOT OPEN / NOT AUTHORIZED

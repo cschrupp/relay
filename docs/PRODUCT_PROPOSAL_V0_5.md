@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 accepted, closure evaluation pending  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 complete / accepted / closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -27,7 +27,7 @@ Relay differentiates through durable engineering memory, explicit role/authority
 
 # 3. Accepted technical foundation
 
-Phase 0 is complete and closed. Slice 1.1 and Slice 1.2 are complete, accepted, and closed. Slice 1.3 is technically complete and accepted; its independent closure audit is the remaining gate before any Slice 1.4 opening becomes effective.
+Phase 0 is complete and closed. Slice 1.1 and Slice 1.2 are complete, accepted, and closed. Slice 1.3 is complete, accepted, and independently closed. Slice 1.4 remains unopened until a separate Human Authority decision.
 
 Accepted foundations now include deterministic lifecycle/governance, authorization/human-decision persistence, repository-side canonical artifact governance, GitHub App integration, exact GitHub commit/tree/blob snapshot proof, immutable Baseline resolution, stable Artifact provenance, provider/local race guards, and Human-authorized repository initialization/synchronization.
 
@@ -122,8 +122,7 @@ Slice 1.2:
 REPOSITORY REGISTRATION AND BASELINE RESOLUTION — COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.3:
-.relay INITIALIZATION AND SYNC — COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+.relay INITIALIZATION AND SYNC — COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
 PROJECT AND SLICE CRUD — NOT OPEN
@@ -191,8 +190,7 @@ Slice 1.3 does not add PR orchestration, branch creation, force pushes, ruleset 
 
 ```text
 Slice 1.3:
-COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
 NOT OPEN / NOT AUTHORIZED
@@ -201,7 +199,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next valid gate is independent Slice 1.3 closure evaluation.
+Slice 1.3 closure is complete. The next valid Phase-1 transition is a separate Human Authority opening of Slice 1.4.
 
 **Unblocked ≠ authorized.**
 

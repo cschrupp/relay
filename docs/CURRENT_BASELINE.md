@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 complete / accepted; closure evaluation pending  
+**Status:** Phase 1 open — Slice 1.3 complete / accepted / closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -101,12 +101,14 @@ ADR-0009 and the Slice 1.3 memory are locked/accepted.
 
 # 4. Closure state
 
-The accepted technical and documentation state is ready for independent closure evaluation.
+Independent closure evaluation accepted the synchronized Slice 1.3 state.
 
 ```text
 Slice 1.3:
-COMPLETE / ACCEPTED
-CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
+
+Closure evaluation:
+RLY-S13-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.4:
 NOT OPEN / NOT AUTHORIZED
@@ -115,6 +117,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-No Slice 1.4 design or implementation authority exists yet.
+Slice 1.4 remains NOT OPEN. No Slice 1.4 design or implementation authority exists yet.
 
 **Unblocked ≠ authorized.**
