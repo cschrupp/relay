@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 Design Revision 4 submitted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.3 design accepted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after acceptance and closure of Slice 1.2, Human Authority opening of Slice 1.3, explicit authorization of Slice 1.3 architecture / contract / design, independent Revision 1 review, bounded Revision 2 response, independent combined Revision 1 + Revision 2 review, bounded Revision 3 response to F007, independent combined Revision 1 + Revision 2 + Revision 3 review, and bounded Revision 4 response to F008.
+This is the current execution plan after acceptance and closure of Slice 1.2 and completion of the Slice 1.3 design cycle through Human Authority acceptance.
 
 Relay continues to be built inside-out:
 
@@ -55,62 +55,45 @@ OPEN
 Slice 1.1:
 COMPLETE / ACCEPTED / CLOSED
 
-Accepted Slice 1.1 technical result:
-ae79b15170c88e776af99944eab9b2fdd6872c2e
-
-Slice 1.1 acceptance-record:
-ccfbfb964064e92aef4e21e11f0ad01290acb16f
-
-Slice 1.1 closure evaluation:
-RLY-S11-CLOSE-EVAL-001 — ACCEPT
-
 Slice 1.2:
 COMPLETE / ACCEPTED / CLOSED
-
-Accepted Slice 1.2 design head:
-4acd6be1f93058d1efcafc66a78fc1a9726c16ba
-
-Accepted Slice 1.2 technical result:
-9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
-
-Independent implementation evaluation:
-RLY-S12-EVAL-002 — ACCEPT
-
-Human acceptance:
-RLY-S12-ACCEPT-001
-
-Acceptance/finalization:
-7e08ad484ce794946ec2e09abf44060879e9fc04
-
-Final canonical head evaluated:
-3cbac05d8aa91b09ce79965a83d9887b76c23978
-
-Closure evaluation:
-RLY-S12-CLOSE-EVAL-001 — ACCEPT
-
-Slice 1.3 opening:
-RLY-S13-OPEN-001
-
-Slice 1.3 design authorization:
-RLY-S13-DESIGN-AUTH-001
-
-Slice 1.3 Revision 1 review:
-RLY-S13-DESIGN-EVAL-001 — REVISE
-
-Slice 1.3 Revision 1 + Revision 2 combined review:
-RLY-S13-DESIGN-EVAL-002 — REVISE
-
-Slice 1.3 Revision 1 + Revision 2 + Revision 3 combined review:
-RLY-S13-DESIGN-EVAL-003 — REVISE
 
 Slice 1.3:
 OPEN
 
-Slice 1.3 architecture / contract / design:
-AUTHORIZED — REVISION 4 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+Slice 1.3 design:
+ACCEPTED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
+```
+
+Accepted Slice 1.3 design authority chain:
+
+```text
+Opening:
+RLY-S13-OPEN-001
+
+Design authorization:
+RLY-S13-DESIGN-AUTH-001
+
+Revision 1 evaluation:
+RLY-S13-DESIGN-EVAL-001 — REVISE
+
+Revision 1 + Revision 2 evaluation:
+RLY-S13-DESIGN-EVAL-002 — REVISE
+
+Revision 1 + Revision 2 + Revision 3 evaluation:
+RLY-S13-DESIGN-EVAL-003 — REVISE
+
+Revision 1 + Revision 2 + Revision 3 + Revision 4 evaluation:
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S13-DESIGN-ACCEPT-001
+
+Exact accepted design head:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 ```
 
 ---
@@ -135,11 +118,7 @@ bounded implementation / rework / finalization:
 GPT-5.6 Luna preferred
 ```
 
-When preferred and executing models differ, both are recorded explicitly.
-
 ## P0-PR-03 — Design-review outcome vocabulary
-
-Design review uses:
 
 ```text
 ACCEPT
@@ -182,9 +161,7 @@ Historical locked/immutable records remain immutable.
 
 # 5. Phase 1 — GitHub and human-controlled project workflow
 
-Phase 1 is OPEN.
-
-Work remains one governed slice at a time.
+Phase 1 is OPEN. Work remains one governed slice at a time.
 
 ## Slice 1.1 — GitHub App Integration
 
@@ -192,16 +169,7 @@ Work remains one governed slice at a time.
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Accepted capabilities include:
-
-- GitHub App RS256 authentication;
-- read-only installation-token use;
-- project-scoped installation and repository-access state;
-- fail-closed permission readiness;
-- signed installation webhooks;
-- semantic delivery idempotency;
-- monotonic integration-state concurrency;
-- explicit GitHub repository identity → provider-neutral `RepositoryRef` conversion.
+Accepted capabilities include read-only GitHub App authentication, repository-access state, provider identity, fail-closed readiness, webhooks, idempotency, and provider-neutral repository identity conversion.
 
 ## Slice 1.2 — Repository Registration and Baseline Resolution
 
@@ -209,115 +177,52 @@ Accepted capabilities include:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Accepted objective:
-
-> Bind the already accepted provider-neutral project repository identity to a verified GitHub repository snapshot and create immutable Relay baselines whose commit and registered artifact bytes are proven to come from the same repository commit.
-
-Accepted capabilities include:
-
-- `Project.primary_repository` remains the sole project-repository authority;
-- explicit branch/tag/full-SHA selectors;
-- resolve-once canonical immutable commit identity;
-- exact commit/tree/blob snapshot proof;
-- exact `.relay/registry.json` and registered-byte verification;
-- shared Slice 0.6 repository-contract validation;
-- captured GitHub installation/repository identity and `state_revision`;
-- pre/post provider repository identity bracketing;
-- stable first-binding Artifact semantics preserving F007;
-- atomic local authority re-check plus Artifact/Baseline persistence;
-- explicit Baseline and Decision identity inputs;
-- deterministic fail-closed race/error behavior;
-- no migration v3, new runtime dependency, local Git dependency, or GitHub write permission.
+Accepted capabilities include commit-pinned repository snapshot proof, exact registry/artifact verification, immutable Baseline persistence, stable Artifact provenance, and provider/local race guards.
 
 ## Slice 1.3 — `.relay/` Initialization and Sync
 
 ```text
 OPEN
-DESIGN AUTHORIZED
-REVISION 1 REVIEWED — REVISE
-REVISION 2 COMBINED REVIEWED — REVISE
-REVISION 3 COMBINED REVIEWED — REVISE
-REVISION 4 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+DESIGN ACCEPTED
 IMPLEMENTATION NOT AUTHORIZED
 ```
 
-Opening authority:
+Accepted design records:
 
 ```text
-RLY-S13-OPEN-001
-```
-
-Design authority:
-
-```text
-RLY-S13-DESIGN-AUTH-001
-```
-
-Authorized design baseline:
-
-```text
-eb6b3797fb1b317e9158444b9c9dbe469b2ee313
-```
-
-Revision 1 design:
-
-```text
+Revision 1:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC.md
-```
 
-Independent Revision 1 review:
-
-```text
-RLY-S13-DESIGN-EVAL-001 — REVISE
-```
-
-Revision 2 amendment:
-
-```text
+Revision 2:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV2_AMENDMENT.md
-```
 
-Independent combined Revision 1 + Revision 2 review:
-
-```text
-RLY-S13-DESIGN-EVAL-002 — REVISE
-```
-
-Revision 3 amendment:
-
-```text
+Revision 3:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
-```
 
-Independent combined Revision 1 + Revision 2 + Revision 3 review:
-
-```text
-RLY-S13-DESIGN-EVAL-003 — REVISE
-```
-
-Revision 4 amendment:
-
-```text
+Revision 4:
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV4_AMENDMENT.md
 ```
 
-Revision 1 established the bounded Git Data single-commit architecture. Revision 2 resolved F002–F006 and established the exact `RepositorySyncSubjectV1` digest, but its F001 solution incorrectly reused baseline-bound `AuthorizationGrant` / `HandoverGate` semantics for repository mutation.
+The accepted combined design establishes:
 
-Revision 3 preserved the transport and subject-digest architecture and resolved F007 by introducing a dedicated immutable `RepositoryMutationAuthorization`, read-only preparation, execution-time subject recomputation, and deterministic SQLite migration v3 while leaving existing handover governance unchanged.
+- schema-v1 repository-contract preservation;
+- exact `RepositorySyncSubjectV1`;
+- read-only `prepare_repository_sync(...)`;
+- explicit HUMAN `RepositoryMutationAuthorization` scoped by `project_id` + exact subject;
+- deterministic SQLite migration v3 for immutable repository-mutation authority;
+- exact WRITE-token gating;
+- one Git tree, one commit, one non-force default-branch ref movement;
+- stale-head, identity, permission, path, and post-write verification guards;
+- unregistered-file adoption-or-conflict semantics;
+- workflow-path mutation prohibition under the contents-only ceiling;
+- no bootstrap for repositories without an existing default-branch head;
+- observation-based reconciliation for indeterminate ref updates;
+- `CURRENT` + `wrote_remote` success semantics;
+- no automatic Baseline persistence;
+- no PR flow, force push, background worker, or agent execution;
+- no new runtime dependency.
 
-The combined Revision 1 + Revision 2 + Revision 3 review closed F001–F007 and found one remaining coupling defect: Revision 3 attached a mandatory `SliceId` to mutation authority even though Slice identity was absent from the exact synchronization subject and runtime authorization APIs.
-
-Revision 4 resolves F008 only by:
-
-- removing `slice_id` from `RepositoryMutationAuthorization`;
-- making mutation authority explicitly `project_id` + exact `RepositorySyncSubjectV1` scoped;
-- removing the undefined `current Slice 1.3 authority context` execution check;
-- preserving preparation and authorization APIs without a Slice parameter;
-- removing `slice_id` and the `slices` foreign key from migration v3;
-- keeping future optional Slice/audit provenance outside the repository-mutation authority contract;
-- preserving the complete Git transport, path/race guards, migration-v3 concept, no automatic Baseline persistence, and existing handover governance.
-
-Any passing combined design review remains separate from Human Authority design acceptance and implementation authorization.
+All design-review findings F001–F008 are closed.
 
 ## Slice 1.4 — Project and Slice CRUD
 
@@ -347,7 +252,7 @@ NOT OPEN
 
 # 6. Slice 1.2 completion evidence
 
-The full Slice 1.2 authority chain is complete:
+The full Slice 1.2 authority chain remains complete:
 
 ```text
 RLY-S12-OPEN-001
@@ -368,57 +273,41 @@ Passing CI never by itself implied design, implementation, acceptance, or closur
 # 7. Slice 1.3 design gate
 
 ```text
-Pre-opening canonical baseline:
-40683b67eb40a28b1ceb8e441804a57d1767cfa1
-
-Opening authority:
-RLY-S13-OPEN-001
-
-Pre-design-authorization canonical baseline:
-3aa2287f497f80854b03fea3005ee867bca51153
-
-Design authority:
-RLY-S13-DESIGN-AUTH-001
-
 Authorized design baseline:
 eb6b3797fb1b317e9158444b9c9dbe469b2ee313
 
-Revision 1 submitted head:
+Revision 1:
 433910d0b2df7f0f0a3104cbe97f6df5ebba609a
 
-Revision 1 evaluation:
-RLY-S13-DESIGN-EVAL-001 — REVISE
-
-Revision 2 submitted head:
+Revision 2:
 6070b04ca5b38bd5c4687bb0ec4799f4f782e355
 
-Revision 1 + Revision 2 combined evaluation:
-RLY-S13-DESIGN-EVAL-002 — REVISE
-
-Revision 3 submitted head:
+Revision 3:
 8e8ab70cf8c9b52d628b0b658179c1fe287c93ea
 
-Revision 1 + Revision 2 + Revision 3 combined evaluation:
-RLY-S13-DESIGN-EVAL-003 — REVISE
+Revision 4 / exact accepted design head:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+
+Independent combined review:
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S13-DESIGN-ACCEPT-001
 ```
 
 Current gate state:
 
-1. Slice 1.2 is closed and accepted. **DONE**
-2. Human Authority explicitly opened Slice 1.3. **DONE**
-3. Human Authority explicitly authorized Slice 1.3 architecture / contract / design. **DONE**
-4. Slice 1.3 Revision 1 architecture / contract / design submitted. **DONE**
-5. Independent Revision 1 design review. **DONE — REVISE**
-6. Bounded Revision 2 amendment resolving F001–F006. **DONE**
-7. Independent combined Revision 1 + Revision 2 design review. **DONE — REVISE**
-8. Bounded Revision 3 amendment resolving F007 only. **DONE**
-9. Independent combined Revision 1 + Revision 2 + Revision 3 design review. **DONE — REVISE**
-10. Bounded Revision 4 amendment resolving F008 only. **DONE / SUBMITTED**
-11. Independent combined Revision 1 + Revision 2 + Revision 3 + Revision 4 design review. **PENDING**
-12. Human design acceptance. **NOT REACHED**
-13. Separate implementation authorization. **NOT REACHED**
+1. Slice 1.3 opened. **DONE**
+2. Slice 1.3 design authorized. **DONE**
+3. Revision 1 submitted/reviewed. **DONE — REVISE**
+4. Revision 2 submitted/reviewed. **DONE — REVISE**
+5. Revision 3 submitted/reviewed. **DONE — REVISE**
+6. Revision 4 submitted. **DONE**
+7. Combined Revision 1 + 2 + 3 + 4 independent review. **DONE — ACCEPT**
+8. Human design acceptance. **DONE**
+9. Separate implementation authorization. **NOT REACHED**
 
-No implementation work proceeds from design submission or a future passing design review alone.
+No implementation work proceeds from design acceptance alone.
 
 ---
 
@@ -438,8 +327,6 @@ Required dogfood questions remain:
 ---
 
 # 9. Later roadmap
-
-Strategic sequence remains:
 
 ```text
 Phase 2  provider and agent foundation
@@ -475,17 +362,14 @@ CLOSED / ACCEPTED
 Slice 1.3:
 OPEN
 
-Current role/model:
-Architect / Contract Designer — GPT-5.6 Sol
-
-Next governed role:
-Independent Design Reviewer — GPT-5.6 Sol
-
 Slice 1.3 architecture / contract / design:
-REVISION 4 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
+ACCEPTED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
+
+Next governed role:
+HUMAN AUTHORITY — implementation authorization decision
 
 Slice 1.4:
 NOT OPEN
