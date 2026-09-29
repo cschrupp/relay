@@ -1,54 +1,108 @@
 # Slice 1.3 — `.relay/` Initialization and Sync Memory
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION  
-**Record state:** WORKING / NOT LOCKED  
+**Status:** COMPLETE / ACCEPTED  
+**Record state:** LOCKED / ACCEPTED  
 **Phase:** 1  
 **Slice:** 1.3  
 **Accepted design head:** `0ba9d3ded4b068c61ca7095b02c751daf0a98fc9`  
 **Implementation authorization:** `RLY-S13-AUTH-001`  
-**Implementation branch:** `implementation/1.3-relay-initialization-sync`
+**Accepted technical result:** `9b5166d1e95aefeb177d30c29f943f45a591ea05`  
+**Independent implementation evaluation:** `RLY-S13-EVAL-002 — ACCEPT`  
+**Human implementation acceptance:** `RLY-S13-ACCEPT-001`
 
 ## Authority
 
-The implementation follows the accepted Slice 1.3 design chain:
+The accepted authority chain is:
+
+```text
+RLY-S13-OPEN-001
+RLY-S13-DESIGN-AUTH-001
+RLY-S13-DESIGN-EVAL-001 — REVISE
+RLY-S13-DESIGN-EVAL-002 — REVISE
+RLY-S13-DESIGN-EVAL-003 — REVISE
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+RLY-S13-DESIGN-ACCEPT-001
+RLY-S13-AUTH-001
+RLY-S13-EVAL-001 — REWORK
+RLY-S13-EVAL-002 — ACCEPT
+RLY-S13-ACCEPT-001
+```
+
+Accepted design sequence:
 
 ```text
 Revision 1: 433910d0b2df7f0f0a3104cbe97f6df5ebba609a
 Revision 2: 6070b04ca5b38bd5c4687bb0ec4799f4f782e355
 Revision 3: 8e8ab70cf8c9b52d628b0b658179c1fe287c93ea
 Revision 4: 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
-Human acceptance: RLY-S13-DESIGN-ACCEPT-001
-Implementation authorization: RLY-S13-AUTH-001
 ```
 
-The branch descends from the authorized implementation baseline `c4dd5484c9b90894f3a4ca06a4f7ccde76e1f2bd`. Both the accepted design head and authorized baseline are ancestors of the candidate.
-
-## Implementation summary
-
-- Added exact-subject `RepositoryMutationAuthorization` values and deterministic SQLite migration v3; the authorization has no BaselineId, GateId, or SliceId.
-- Preserved exact READ and WRITE installation permission profiles. Ordinary repository tokens remain contents-read scoped; a separate repository-scoped contents-write token is minted only for authorized synchronization.
-- Added GitHub Git Data blob, tree, commit, ref-read, and non-force ref-update operations.
-- Added read-only `prepare_repository_sync`, explicit Human authorization persistence, and fresh-state `execute_repository_sync` with provider/local/head rechecks and exact post-write verification.
-- Initialization requires an existing default-branch head. The target `.relay/registry.json` and registered artifact writes share one commit. Unsupported paths, registry transitions, modes, workflow-file mutations, and unregistered-path overwrites fail closed.
-- Exact-current retries are no-ops and do not require mutation authorization or a write token. Successful synchronization does not create or update a Relay Baseline.
-
-## Validation evidence
+Authorized implementation baseline:
 
 ```text
-Ruff format check: PASS
+c4dd5484c9b90894f3a4ca06a4f7ccde76e1f2bd
+```
+
+Accepted technical result:
+
+```text
+9b5166d1e95aefeb177d30c29f943f45a591ea05
+```
+
+## Accepted implementation
+
+- exact-subject `RepositoryMutationAuthorization` with deterministic SQLite migration v3;
+- no BaselineId, GateId, or SliceId in repository-mutation authority;
+- exact READ and WRITE installation profiles with separately scoped repository tokens;
+- read-only preparation before Human authorization;
+- fresh-state execution with repeated provider/local/head checks;
+- Git Data blob/tree/commit construction and one non-force default-branch ref update;
+- exact-current no-op recognition;
+- exact registry-byte equality for CURRENT recognition and post-write success;
+- initialization only when an existing default-branch head exists;
+- unregistered-path adoption-or-conflict;
+- workflow-path mutation prohibition under the contents-only ceiling;
+- observation-based indeterminate-ref reconciliation;
+- exact post-write commit/tree/registry/artifact verification;
+- no automatic Relay Baseline persistence.
+
+## Evaluation history
+
+Initial implementation checkpoint:
+
+```text
+9456b31344d6dd880943eef04e99a9f5dc5da0d2
+```
+
+`RLY-S13-EVAL-001 — REWORK` required:
+
+```text
+F001  exact deterministic target registry bytes at CURRENT/post-write boundaries
+F002  fuller deterministic failure/race/reconciliation evidence
+```
+
+Bounded rework produced the accepted result `9b5166d1e95aefeb177d30c29f943f45a591ea05` and closed both findings under `RLY-S13-EVAL-002 — ACCEPT`.
+
+## Acceptance evidence
+
+```text
+GitHub Actions run: 36600301960
+Ruff format: PASS
 Ruff lint: PASS
 Pyright: PASS — 0 errors / 0 warnings
-pytest: PASS — 458 passed
+pytest: PASS — 490 passed
+repository_sync tests: 50 passed
 uv build: PASS
-git diff --check: PASS
 ```
 
 ## Model provenance
 
 ```text
 Preferred implementation model: GPT-5.6 Luna
-Executing model: GPT-6 (exact variant not exposed in this environment)
-Model deviation: preferred model was unavailable in this execution session.
+Executing implementation model: GPT-6 (exact variant not exposed)
+Implementation deviation: preferred model was unavailable in that execution session
+
+Independent evaluation model: GPT-5.6 Sol
 ```
 
 ## Scope boundaries preserved
@@ -67,13 +121,12 @@ background synchronization
 new runtime dependencies
 ```
 
-## Governance state
+## Final governance state
 
 ```text
-Slice 1.3 implementation: COMPLETE / PENDING INDEPENDENT EVALUATION
-Human implementation acceptance: NOT RECORDED
+Slice 1.3: COMPLETE / ACCEPTED
 Slice 1.4: NOT OPEN
 Agent execution: NOT AUTHORIZED
 ```
 
-This memory is a working implementation record. It is not locked or accepted; independent evaluation and Human Authority decisions remain pending.
+This memory is locked accepted Slice 1.3 engineering history. Future changes require a separately governed successor slice or decision.

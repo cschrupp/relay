@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 implementation complete / pending independent evaluation
+**Status:** Phase 1 open — Slice 1.3 complete / accepted  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -42,33 +42,24 @@ RLY-S12-ACCEPT-001
 Acceptance-record/finalization:
 7e08ad484ce794946ec2e09abf44060879e9fc04
 
-Final canonical head evaluated:
-3cbac05d8aa91b09ce79965a83d9887b76c23978
-
 Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Slice 1.3 is open. Its combined architecture / contract / design has been independently reviewed and accepted by Human Authority, and implementation is explicitly authorized.
+Slice 1.3 is complete and accepted.
 
 ```text
-Opening:
-RLY-S13-OPEN-001
-
-Design authorization:
-RLY-S13-DESIGN-AUTH-001
-
-Independent combined design evaluation:
-RLY-S13-DESIGN-EVAL-004 — ACCEPT
-
-Human design acceptance:
-RLY-S13-DESIGN-ACCEPT-001
-
-Exact accepted design head:
+Accepted Slice 1.3 design head:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 
-Implementation authorization:
-RLY-S13-AUTH-001
+Accepted Slice 1.3 technical result:
+9b5166d1e95aefeb177d30c29f943f45a591ea05
+
+Independent implementation evaluation:
+RLY-S13-EVAL-002 — ACCEPT
+
+Human acceptance:
+RLY-S13-ACCEPT-001
 ```
 
 ---
@@ -96,79 +87,77 @@ If preferred and executing models differ, both are recorded.
 
 ---
 
-# 3. Slice 1.2 accepted authority
+# 3. Slice 1.3 accepted authority
 
 Authority chain:
 
 ```text
-RLY-S12-OPEN-001
-RLY-S12-DESIGN-AUTH-001
-RLY-S12-DESIGN-EVAL-003 — ACCEPT
-RLY-S12-DESIGN-ACCEPT-001
-RLY-S12-AUTH-001
-RLY-S12-EVAL-001 — REWORK
-RLY-S12-EVAL-002 — ACCEPT
-RLY-S12-ACCEPT-001
-RLY-S12-CLOSE-EVAL-001 — ACCEPT
+RLY-S13-OPEN-001
+RLY-S13-DESIGN-AUTH-001
+RLY-S13-DESIGN-EVAL-001 — REVISE
+RLY-S13-DESIGN-EVAL-002 — REVISE
+RLY-S13-DESIGN-EVAL-003 — REVISE
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+RLY-S13-DESIGN-ACCEPT-001
+RLY-S13-AUTH-001
+RLY-S13-EVAL-001 — REWORK
+RLY-S13-EVAL-002 — ACCEPT
+RLY-S13-ACCEPT-001
 ```
 
-The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d`.
+Authorized implementation baseline:
 
-Accepted behavior includes repository authority, commit/tree/blob proof, exact `.relay/registry.json` validation, provider/local race guards, stable Artifact provenance, and atomic local Artifact/Baseline persistence.
+```text
+c4dd5484c9b90894f3a4ca06a4f7ccde76e1f2bd
+```
+
+The initial implementation checkpoint `9456b31344d6dd880943eef04e99a9f5dc5da0d2` remains historical provenance. The exact accepted implementation is `9b5166d1e95aefeb177d30c29f943f45a591ea05` after bounded rework closing the exact-registry-byte and test-evidence findings.
+
+Accepted behavior includes:
+
+- schema-v1 `.relay/registry.json` preservation;
+- exact read-only preparation and `RepositorySyncSubjectV1`;
+- project/exact-subject HUMAN `RepositoryMutationAuthorization`;
+- deterministic SQLite migration v3 for immutable mutation authority;
+- separate repository-scoped READ and WRITE tokens;
+- one Git tree, one exact-parent commit, one non-force default-branch ref movement;
+- exact provider/local/head race guards;
+- unregistered-path adoption-or-conflict;
+- workflow-path mutation prohibition under the current permission ceiling;
+- no bootstrap for repositories without an existing default-branch head;
+- observation-based indeterminate-ref reconciliation;
+- exact visible registry-byte and artifact verification;
+- `CURRENT` plus `wrote_remote` result semantics;
+- no automatic Relay Baseline persistence.
 
 ---
 
-# 4. Slice 1.3 accepted design and implementation authority
+# 4. Acceptance evidence
 
-Exact authorized design baseline:
-
-```text
-eb6b3797fb1b317e9158444b9c9dbe469b2ee313
-```
-
-Accepted reviewed design sequence:
+Exact accepted candidate:
 
 ```text
-Revision 1:
-433910d0b2df7f0f0a3104cbe97f6df5ebba609a
-
-Revision 2:
-6070b04ca5b38bd5c4687bb0ec4799f4f782e355
-
-Revision 3:
-8e8ab70cf8c9b52d628b0b658179c1fe287c93ea
-
-Revision 4 / exact accepted design head:
-0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+9b5166d1e95aefeb177d30c29f943f45a591ea05
 ```
 
-Implementation authorization:
+GitHub Actions:
 
 ```text
-RLY-S13-AUTH-001
-Implementation status:
-IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
+36600301960
 ```
 
-Accepted project baseline remains the closed Slice 1.2 baseline until Human Authority accepts the Slice 1.3 implementation result. The implementation branch is `implementation/1.3-relay-initialization-sync`; its result is submitted separately for independent evaluation.
+Quality:
 
-The accepted design specifies the minimum safe mechanism for recognizing, initializing, or synchronizing the accepted repository contract through GitHub while preserving authority, provenance, race safety, and fail-closed behavior.
+```text
+Ruff format    PASS
+Ruff lint      PASS
+Pyright        PASS — 0 errors / 0 warnings
+pytest         PASS — 490 passed
+repository_sync tests — 50 passed
+uv build       PASS
+```
 
-Accepted design highlights include:
-
-- schema-v1 `.relay/registry.json` remains unchanged;
-- exact `RepositorySyncSubjectV1`;
-- read-only preparation before Human Authority approval;
-- project + exact-subject scoped `RepositoryMutationAuthorization`;
-- deterministic SQLite migration v3 for immutable mutation authority;
-- GitHub Git Data single-tree / single-commit / non-force default-branch ref movement;
-- provider, local-state, branch-head, path, permission, and post-write verification guards;
-- no automatic Baseline persistence;
-- no PR flow, force push, background worker, or agent execution.
-
-All independent design-review findings F001–F008 are closed.
-
-Implementation is authorized against the accepted design only. Material design deviation requires escalation rather than silent redesign.
+ADR-0009 and the Slice 1.3 memory are locked/accepted during bounded finalization.
 
 ---
 
@@ -201,24 +190,15 @@ Slice 1.2:
 CLOSED / ACCEPTED
 
 Slice 1.3:
-OPEN
-
-Slice 1.3 architecture / contract / design:
-ACCEPTED
-
-Slice 1.3 implementation:
-COMPLETE / PENDING INDEPENDENT EVALUATION
-
-Preferred implementation role/model:
-IMPLEMENTATION_AGENT — GPT-5.6 Luna
+COMPLETE / ACCEPTED
 
 Slice 1.4:
-NOT OPEN
+NOT OPEN / NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Next governed gate: independent evaluation of the Slice 1.3 implementation result, followed by Human Authority acceptance or rework direction.
+The next governed action is independent Slice 1.3 closure evaluation. Slice 1.4 requires a new explicit Human Authority opening after closure.
 
-**Authorized ≠ accepted.**
+**Unblocked ≠ authorized.**
