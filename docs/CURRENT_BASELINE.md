@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 design accepted / implementation not authorized  
+**Status:** Phase 1 open — Slice 1.3 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -49,7 +49,7 @@ Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Slice 1.3 is open. Its combined architecture / contract / design has been independently reviewed and accepted by Human Authority.
+Slice 1.3 is open. Its combined architecture / contract / design has been independently reviewed and accepted by Human Authority, and implementation is explicitly authorized.
 
 ```text
 Opening:
@@ -66,9 +66,10 @@ RLY-S13-DESIGN-ACCEPT-001
 
 Exact accepted design head:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
-```
 
-Slice 1.3 implementation remains unauthorized.
+Implementation authorization:
+RLY-S13-AUTH-001
+```
 
 ---
 
@@ -117,7 +118,7 @@ Accepted behavior includes repository authority, commit/tree/blob proof, exact `
 
 ---
 
-# 4. Slice 1.3 accepted design authority
+# 4. Slice 1.3 accepted design and implementation authority
 
 Exact authorized design baseline:
 
@@ -141,6 +142,14 @@ Revision 4 / exact accepted design head:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 ```
 
+Implementation authority:
+
+```text
+RLY-S13-AUTH-001
+Slice 1.3 implementation:
+AUTHORIZED
+```
+
 The accepted design specifies the minimum safe mechanism for recognizing, initializing, or synchronizing the accepted repository contract through GitHub while preserving authority, provenance, race safety, and fail-closed behavior.
 
 Accepted design highlights include:
@@ -157,7 +166,7 @@ Accepted design highlights include:
 
 All independent design-review findings F001–F008 are closed.
 
-Design acceptance does not authorize implementation.
+Implementation is authorized against the accepted design only. Material design deviation requires escalation rather than silent redesign.
 
 ---
 
@@ -196,7 +205,10 @@ Slice 1.3 architecture / contract / design:
 ACCEPTED
 
 Slice 1.3 implementation:
-NOT AUTHORIZED
+AUTHORIZED
+
+Preferred implementation role/model:
+IMPLEMENTATION_AGENT — GPT-5.6 Luna
 
 Slice 1.4:
 NOT OPEN
@@ -205,6 +217,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Next governed gate: separate Human Authority decision on Slice 1.3 implementation authorization.
+Next governed gate: bounded Slice 1.3 implementation result returned to an independent evaluator.
 
-**Unblocked ≠ authorized.**
+**Authorized ≠ accepted.**
