@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 Design Revision 4 submitted  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 design accepted  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -61,7 +61,7 @@ Phase 0 is complete and closed.
 
 Slice 1.1 and Slice 1.2 are complete, accepted, and closed.
 
-Relay now has accepted implementations for:
+Relay has accepted implementations for:
 
 ```text
 core domain contracts
@@ -105,8 +105,6 @@ derived UI/search/agent-context projections
 
 Slice 1.1 established provider-specific GitHub read access without changing provider-neutral repository identity.
 
-A confirmed GitHub repository is converted only into an explicit caller-supplied Relay `RepositoryRef`; the provider's numeric repository ID never silently becomes Relay identity.
-
 Slice 1.2 established the accepted read-side authority boundary:
 
 ```text
@@ -131,7 +129,7 @@ atomic Artifact + Baseline persistence
 
 Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
 
-Slice 1.3 is now in independent combined design review preparation after Revision 1, Revision 2, and Revision 3 each received bounded `REVISE` outcomes and Revision 4 addressed the remaining F008 mutation-authority scope issue.
+Slice 1.3 now has an independently reviewed and Human-accepted design for bounded repository initialization/synchronization. Implementation is not yet authorized.
 
 ---
 
@@ -206,7 +204,7 @@ Slice 1.3:
 .relay INITIALIZATION AND SYNC — OPEN
 
 Slice 1.3 design:
-AUTHORIZED / REVISION 4 SUBMITTED FOR INDEPENDENT COMBINED REVIEW
+ACCEPTED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -216,7 +214,7 @@ Phase 1 builds a useful human-controlled repository workflow before autonomous c
 
 ---
 
-# 9. Slice 1.3 proposed product boundary
+# 9. Slice 1.3 accepted product boundary
 
 Opening authority:
 
@@ -230,59 +228,38 @@ Design authority:
 RLY-S13-DESIGN-AUTH-001
 ```
 
-Authorized design baseline:
+Independent combined design evaluation:
 
 ```text
-eb6b3797fb1b317e9158444b9c9dbe469b2ee313
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
 ```
 
-Revision 1 design record:
+Human design acceptance:
+
+```text
+RLY-S13-DESIGN-ACCEPT-001
+```
+
+Exact accepted design head:
+
+```text
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+```
+
+Accepted design records:
 
 ```text
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC.md
-```
-
-Independent Revision 1 review:
-
-```text
-RLY-S13-DESIGN-EVAL-001 — REVISE
-```
-
-Revision 2 amendment:
-
-```text
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV2_AMENDMENT.md
-```
-
-Independent combined Revision 1 + Revision 2 review:
-
-```text
-RLY-S13-DESIGN-EVAL-002 — REVISE
-```
-
-Revision 3 amendment:
-
-```text
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
-```
-
-Independent combined Revision 1 + Revision 2 + Revision 3 review:
-
-```text
-RLY-S13-DESIGN-EVAL-003 — REVISE
-```
-
-Revision 4 amendment:
-
-```text
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV4_AMENDMENT.md
 ```
 
-The combined proposed capability remains deliberately narrow:
+The accepted capability remains deliberately narrow:
 
 > Given authoritative Relay project/repository identity, an exact expected default-branch/base commit, an exact target schema-v1 repository contract, and explicit Human Authority over the exact prepared mutation subject, Relay may recognize an already-current target or commit initialization/synchronization to the existing default branch as one atomic Git commit, subject to exact permission, identity, transition, race, path-preservation, and post-write verification guards.
 
-The combined design preserves these product rules:
+The accepted design preserves these product rules:
 
 - `.relay/registry.json` remains repository-side authority;
 - schema v1 remains unchanged;
@@ -290,36 +267,36 @@ The combined design preserves these product rules:
 - read-only installations remain valid for existing read workflows;
 - write-capable installations may add only `contents:write` above metadata read;
 - read operations continue using read-scoped tokens;
-- a read-only preparation step computes the exact `RepositorySyncSubjectV1` and digest before any write token or Git object exists;
-- any non-no-op mutation requires an immutable HUMAN `RepositoryMutationAuthorization` for that exact subject;
-- mutation authority is intentionally not an `AuthorizationGrant`, `HandoverGate`, or `HumanGateDecision` and contains no fabricated `BaselineId`, `GateId`, or `SliceId`;
-- mutation authority is scoped by `project_id` plus the exact synchronization subject, which already binds repository/provider selection, `state_revision`, expected default branch/base commit, target registry digest, and artifact-write digests;
+- a read-only preparation step computes exact `RepositorySyncSubjectV1` before any write token or Git object exists;
+- any non-no-op mutation requires immutable HUMAN `RepositoryMutationAuthorization`;
+- mutation authority is not an `AuthorizationGrant`, `HandoverGate`, or `HumanGateDecision`;
+- mutation authority contains no fabricated `BaselineId`, `GateId`, or `SliceId`;
+- mutation authority is scoped by `project_id` plus exact synchronization subject;
+- the exact subject binds repository/provider selection, `state_revision`, expected branch/base commit, target registry digest, and artifact-write digests;
 - preparation and authorization APIs require no Slice context;
-- execution re-runs preparation checks and recomputes the exact subject rather than trusting stale preparation state;
+- execution re-runs preparation checks and recomputes the exact subject;
 - mutation authority is checked before WRITE-token minting and again immediately before ref visibility;
-- valid `UNINITIALIZED` repositories with an existing head can be authorized without inventing a repository Baseline or engineering Slice identity;
-- existing lifecycle/handover governance remains unchanged and must still be satisfied independently wherever applicable;
-- future optional Slice/audit provenance is a higher-level workflow concern and does not alter repository-mutation authority in Slice 1.3;
+- valid `UNINITIALIZED` repositories with an existing head can be authorized without inventing a Baseline;
+- existing lifecycle/handover governance remains unchanged and independently applicable;
+- future optional Slice/audit provenance remains outside the mutation-authority contract;
 - repository mutation is one non-force default-branch ref movement;
 - registry plus changed registered artifact bytes become visible in the same commit;
-- concurrent branch movement causes conflict rather than overwrite/rebase;
-- existing unregistered files are adopted only when their exact bytes/mode already satisfy the target; otherwise the operation conflicts;
-- `.github/workflows/**` content/mode mutation is not attempted under the contents-only permission ceiling;
-- empty repositories with no existing default-branch head are not bootstrapped by Slice 1.3;
-- indeterminate ref-update transport outcomes are reconciled by observation and never by hidden write retry;
+- concurrent branch movement conflicts rather than overwrites/rebases;
+- existing unregistered files are adopted only when exact bytes/mode already satisfy the target;
+- `.github/workflows/**` content/mode mutation is outside the contents-only permission ceiling;
+- repositories with no existing default-branch head are not bootstrapped in Slice 1.3;
+- indeterminate ref-update outcomes are reconciled by observation, never hidden write retry;
 - existing registry transitions remain governed by the accepted transition validator;
 - invalid existing `.relay` state is never automatically repaired;
 - successful state vocabulary is `CURRENT`, with `wrote_remote` distinguishing no-op from mutation;
 - remote synchronization does not certify or persist its own Relay Baseline;
-- deterministic local SQLite migration v3 adds immutable repository-mutation authorization persistence with project and subject indexing only, no Slice foreign key;
+- deterministic local SQLite migration v3 stores immutable repository-mutation authority using project + subject indexing only;
 - no PR permission, branch creation, force push, background worker, or agent execution is introduced;
 - no new runtime dependency is introduced.
 
-The proposed write mechanism continues to use GitHub's Git Data primitives because sequential per-file commits cannot preserve the same-commit registry/artifact invariant for general synchronization.
+All independent design-review findings F001–F008 are closed.
 
-The local migration does not alter the repository-side schema-v1 contract; it stores Human Authority over a provider side effect in runtime state where that authority belongs.
-
-Design review may still revise or reject the combined proposal. No GitHub write behavior is authorized for production implementation yet.
+The accepted design does not authorize production behavior. A separate Human Authority implementation authorization is required.
 
 ---
 
@@ -343,41 +320,26 @@ The product value remains governed engineering continuity:
 # 11. Current authority state
 
 ```text
-Accepted Slice 1.2 design head:
-4acd6be1f93058d1efcafc66a78fc1a9726c16ba
-
-Accepted Slice 1.2 technical result:
-9ed4a8da4d989fd41674ae59ef68ba4238c09b5d
-
-Independent implementation evaluation:
-RLY-S12-EVAL-002 — ACCEPT
-
-Human acceptance:
-RLY-S12-ACCEPT-001
-
-Closure evaluation:
-RLY-S12-CLOSE-EVAL-001 — ACCEPT
-
 Slice 1.3 opening:
 RLY-S13-OPEN-001
 
 Slice 1.3 design authorization:
 RLY-S13-DESIGN-AUTH-001
 
-Slice 1.3 Revision 1 evaluation:
-RLY-S13-DESIGN-EVAL-001 — REVISE
+Slice 1.3 independent combined design evaluation:
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
 
-Slice 1.3 Revision 1 + Revision 2 evaluation:
-RLY-S13-DESIGN-EVAL-002 — REVISE
+Slice 1.3 Human design acceptance:
+RLY-S13-DESIGN-ACCEPT-001
 
-Slice 1.3 Revision 1 + Revision 2 + Revision 3 evaluation:
-RLY-S13-DESIGN-EVAL-003 — REVISE
+Exact accepted design:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 
 Slice 1.3:
 OPEN
 
 Slice 1.3 design:
-REVISION 4 SUBMITTED / PENDING INDEPENDENT COMBINED REVIEW
+ACCEPTED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
