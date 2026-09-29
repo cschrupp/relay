@@ -21,6 +21,7 @@ from relay_engine.domain.ids import (
     HandoverGateId,
     HumanDecisionId,
     ProjectId,
+    RepositoryMutationAuthorizationId,
     SliceId,
 )
 from relay_engine.domain.models import Artifact, Baseline, Decision, Evidence, Project, Slice
@@ -53,6 +54,7 @@ from relay_engine.persistence.errors import (
     PersistenceIntegrityError,
 )
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
+from relay_engine.repository_sync.models import RepositoryMutationAuthorization
 
 _EVENT_ADAPTER: TypeAdapter[LifecycleEvent] = TypeAdapter(LifecycleEvent)
 _DECISION_ADAPTER: TypeAdapter[HumanGateDecision] = TypeAdapter(HumanGateDecision)
@@ -565,6 +567,44 @@ def load_authorization_grant(
             authorization_id,
             AuthorizationGrant,
             {"authorization_id": "authorization_id", "baseline_id": "baseline_id"},
+        ),
+    )
+
+
+def insert_repository_mutation_authorization(
+    database: RelayDatabase, value: RepositoryMutationAuthorization
+) -> None:
+    """Persist one immutable HUMAN authorization for an exact repository-sync subject."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_mutation_authorizations",
+            "authorization_id",
+            value.authorization_id,
+            value,
+            {"project_id": value.project_id, "subject_digest": value.subject_digest},
+        )
+
+
+def load_repository_mutation_authorization(
+    database: RelayDatabase, authorization_id: RepositoryMutationAuthorizationId
+) -> RepositoryMutationAuthorization | None:
+    """Load and integrity-check indexed identity/digest against the immutable payload."""
+
+    return _read(
+        database,
+        lambda connection: _read_one(
+            connection,
+            "repository_mutation_authorizations",
+            "authorization_id",
+            authorization_id,
+            RepositoryMutationAuthorization,
+            {
+                "authorization_id": "authorization_id",
+                "project_id": "project_id",
+                "subject_digest": "subject_digest",
+            },
         ),
     )
 

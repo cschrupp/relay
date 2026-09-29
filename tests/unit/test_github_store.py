@@ -89,7 +89,7 @@ def _event(project_id: str, revision: int, *, event_id: str, delivery=None, dige
     )
 
 
-def test_migration_v2_creates_github_tables_and_indexes() -> None:
+def test_migration_v3_preserves_github_tables_and_adds_sync_authority() -> None:
     with _database() as database:
         tables = {
             row[0]
@@ -101,11 +101,12 @@ def test_migration_v2_creates_github_tables_and_indexes() -> None:
             "github_installations",
             "github_installation_repositories",
             "github_installation_events",
+            "repository_mutation_authorizations",
         } <= tables
         versions = database.connection.execute(
             "SELECT version FROM relay_schema_migrations ORDER BY version"
         ).fetchall()
-        assert [row[0] for row in versions] == [1, 2]
+        assert [row[0] for row in versions] == [1, 2, 3]
 
 
 def test_store_creates_binding_and_round_trips_current_state() -> None:

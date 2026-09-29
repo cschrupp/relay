@@ -1,4 +1,4 @@
-"""Secure read-only GitHub App integration for Relay Phase 1."""
+"""Secure repository-scoped GitHub App integration for Relay Phase 1."""
 
 from relay_engine.integrations.github.auth import create_app_jwt
 from relay_engine.integrations.github.client import (
@@ -18,9 +18,12 @@ from relay_engine.integrations.github.errors import (
     GitHubPermissionError,
     GitHubRateLimited,
     GitHubRefNotFound,
+    GitHubRefUpdateIndeterminate,
+    GitHubRefUpdateRejected,
     GitHubRemoteError,
     GitHubRepositoryAccessDenied,
     GitHubRepositoryUnavailable,
+    GitHubTransportError,
     GitHubWebhookInvalid,
 )
 from relay_engine.integrations.github.models import (
@@ -30,6 +33,7 @@ from relay_engine.integrations.github.models import (
     GitHubBlob,
     GitHubCommitObject,
     GitHubCommitResolution,
+    GitHubCreatedObject,
     GitHubGitObjectType,
     GitHubInstallationEvent,
     GitHubInstallationEventType,
@@ -39,6 +43,7 @@ from relay_engine.integrations.github.models import (
     GitHubInstallationToken,
     GitHubPermissionGrant,
     GitHubPermissionLevel,
+    GitHubRefTarget,
     GitHubRepositoryAccessSelection,
     GitHubRepositorySelectionMode,
     GitHubRepositorySnapshot,
@@ -52,6 +57,7 @@ from relay_engine.integrations.github.service import (
     GitHubIntegrationService,
     GitHubWebhookProjectOutcome,
     permission_policy_allows,
+    permission_profile,
 )
 from relay_engine.integrations.github.store import (
     GitHubIntegrationStore,
@@ -72,6 +78,7 @@ __all__ = [
     "GitHubClient",
     "GitHubCommitObject",
     "GitHubCommitResolution",
+    "GitHubCreatedObject",
     "GitHubGitObjectType",
     "GitHubInstallationEvent",
     "GitHubInstallationEventType",
@@ -92,7 +99,11 @@ __all__ = [
     "GitHubPermissionLevel",
     "GitHubRateLimited",
     "GitHubRefNotFound",
+    "GitHubRefTarget",
+    "GitHubRefUpdateIndeterminate",
+    "GitHubRefUpdateRejected",
     "GitHubRemoteError",
+    "GitHubTransportError",
     "GitHubRepositoryAccessDenied",
     "GitHubRepositoryAccessSelection",
     "GitHubRepositorySelectionMode",
@@ -111,6 +122,7 @@ __all__ = [
     "create_app_jwt",
     "parse_supported_webhook",
     "permission_policy_allows",
+    "permission_profile",
     "repository_ref_from_github",
     "verify_webhook_signature",
     "webhook_delivery_digest",

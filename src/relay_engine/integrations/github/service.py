@@ -3,6 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 from pydantic import SecretStr
 
@@ -38,17 +39,32 @@ from relay_engine.integrations.github.webhooks import (
     webhook_delivery_digest,
 )
 
-_REQUIRED_PERMISSIONS = {
+_READ_PERMISSIONS = {
     "contents": GitHubPermissionLevel.READ,
+    "metadata": GitHubPermissionLevel.READ,
+}
+_WRITE_PERMISSIONS = {
+    "contents": GitHubPermissionLevel.WRITE,
     "metadata": GitHubPermissionLevel.READ,
 }
 
 
 def permission_policy_allows(permissions: tuple[GitHubPermissionGrant, ...]) -> bool:
-    """Require exactly the Slice-1.1 read-only permission ceiling."""
+    """Allow exactly one of the accepted READ or WRITE installation profiles."""
 
     observed = {item.name: item.level for item in permissions}
-    return observed == _REQUIRED_PERMISSIONS
+    return observed in (_READ_PERMISSIONS, _WRITE_PERMISSIONS)
+
+
+def permission_profile(
+    permissions: tuple[GitHubPermissionGrant, ...],
+) -> Literal["READ", "WRITE"] | None:
+    observed = {item.name: item.level for item in permissions}
+    if observed == _READ_PERMISSIONS:
+        return "READ"
+    if observed == _WRITE_PERMISSIONS:
+        return "WRITE"
+    return None
 
 
 def _snapshot_with(
@@ -326,7 +342,38 @@ class GitHubIntegrationService:
         selection: GitHubRepositoryAccessSelection,
         observed_at: datetime,
     ) -> GitHubInstallationToken:
-        """Mint one ephemeral token narrowed to the captured provider repository."""
+        """Mint one repository-scoped token with contents read, even for WRITE installs."""
+
+        return self._create_repository_token(
+            selection=selection,
+            observed_at=observed_at,
+            contents_permission="read",
+        )
+
+    def create_repository_write_token(
+        self,
+        *,
+        selection: GitHubRepositoryAccessSelection,
+        observed_at: datetime,
+    ) -> GitHubInstallationToken:
+        """Mint a separate repository-scoped contents-write token for explicit sync."""
+
+        state = self._store.load_state(selection.project_id, selection.installation_id)
+        if state is None or permission_profile(state.installation.permissions) != "WRITE":
+            raise GitHubPermissionError("GitHub installation does not have the exact WRITE profile")
+        return self._create_repository_token(
+            selection=selection,
+            observed_at=observed_at,
+            contents_permission="write",
+        )
+
+    def _create_repository_token(
+        self,
+        *,
+        selection: GitHubRepositoryAccessSelection,
+        observed_at: datetime,
+        contents_permission: Literal["read", "write"],
+    ) -> GitHubInstallationToken:
 
         app_jwt = create_app_jwt(
             config=self._config,
@@ -337,6 +384,7 @@ class GitHubIntegrationService:
             installation_id=selection.installation_id,
             app_jwt=app_jwt,
             repository_id=selection.github_repository_id,
+            contents_permission=contents_permission,
         )
         if token.expires_at <= observed_at:
             raise GitHubPermissionError("GitHub returned an already-expired installation token")

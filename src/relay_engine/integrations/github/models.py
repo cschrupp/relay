@@ -205,10 +205,47 @@ class GitHubCommitResolution(DomainModel):
 class GitHubCommitObject(DomainModel):
     sha: str
     tree_sha: str
+    parents: tuple[str, ...] = ()
 
     @field_validator("sha", "tree_sha")
     @classmethod
     def sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+    @field_validator("parents")
+    @classmethod
+    def parent_shas_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for sha in value:
+            _canonical_git_sha(sha)
+        return value
+
+
+class GitHubRefTarget(DomainModel):
+    """One provider ref and its exact Git object target."""
+
+    ref: str = Field(min_length=1)
+    sha: str
+    object_type: GitHubGitObjectType
+
+    @field_validator("ref")
+    @classmethod
+    def ref_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
+
+    @field_validator("sha")
+    @classmethod
+    def ref_sha_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+
+class GitHubCreatedObject(DomainModel):
+    """Identity returned by one Git Data API object-creation call."""
+
+    sha: str
+
+    @field_validator("sha")
+    @classmethod
+    def created_sha_is_canonical(cls, value: str) -> str:
         return _canonical_git_sha(value)
 
 

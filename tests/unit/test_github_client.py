@@ -10,11 +10,16 @@ from relay_engine.integrations.github import (
     GitHubAppConfig,
     GitHubAuthenticationError,
     GitHubClient,
+    GitHubGitObjectType,
+    GitHubInstallationToken,
     GitHubPermissionError,
     GitHubRateLimited,
+    GitHubRefUpdateIndeterminate,
+    GitHubRefUpdateRejected,
     GitHubRemoteError,
     GitHubRequest,
     GitHubResponse,
+    GitHubTreeEntry,
 )
 
 PROJECT_ID = "prj_018f47c1-7b2c-7abc-8def-123456789001"
@@ -130,6 +135,136 @@ def test_installation_token_request_scopes_selected_repository_and_read_only_per
     assert request.body is not None
     body = json.loads(request.body)
     assert body == {"permissions": {"contents": "read"}, "repository_ids": [501]}
+
+
+def test_installation_token_can_request_only_selected_repository_write_contents() -> None:
+    transport = FakeTransport(
+        [
+            _response(
+                201,
+                {
+                    "token": "installation-token",
+                    "expires_at": (NOW + timedelta(hours=1)).isoformat().replace("+00:00", "Z"),
+                },
+            )
+        ]
+    )
+    client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
+    client.create_installation_token(
+        installation_id=1001,
+        app_jwt=SecretStr("jwt"),
+        repository_id=501,
+        contents_permission="write",
+    )
+    body = json.loads(transport.requests[0].body or b"{}")
+    assert body == {"permissions": {"contents": "write"}, "repository_ids": [501]}
+
+
+def test_git_data_write_calls_create_blobs_tree_commit_and_move_ref_nonforce() -> None:
+    token = GitHubInstallationToken(
+        token=SecretStr("installation-token"),
+        expires_at=NOW + timedelta(hours=1),
+    )
+    transport = FakeTransport(
+        [
+            _response(201, {"sha": "a" * 40}),
+            _response(201, {"sha": "b" * 40}),
+            _response(
+                201,
+                {
+                    "sha": "c" * 40,
+                    "tree": {"sha": "d" * 40},
+                    "parents": [{"sha": "e" * 40}],
+                },
+            ),
+            _response(
+                200,
+                {
+                    "ref": "refs/heads/main",
+                    "object": {"sha": "c" * 40, "type": "commit"},
+                },
+            ),
+        ]
+    )
+    client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
+    blob = client.create_git_blob(
+        token=token, repository_path="cschrupp/relay", raw_bytes=b"document\n"
+    )
+    tree = client.create_git_tree(
+        token=token,
+        repository_path="cschrupp/relay",
+        base_tree_sha="f" * 40,
+        entries=(
+            GitHubTreeEntry(
+                path="docs/example.md",
+                mode="100644",
+                object_type=GitHubGitObjectType.BLOB,
+                sha=blob.sha,
+            ),
+        ),
+    )
+    commit = client.create_git_commit(
+        token=token,
+        repository_path="cschrupp/relay",
+        message="Relay sync",
+        tree_sha=tree.sha,
+        parent_sha="e" * 40,
+    )
+    ref = client.update_git_ref(
+        token=token,
+        repository_path="cschrupp/relay",
+        branch="main",
+        commit_sha=commit.sha,
+        force=False,
+    )
+    assert commit.parents == ("e" * 40,)
+    assert ref.sha == commit.sha
+    assert [request.method for request in transport.requests] == ["POST"] * 3 + ["PATCH"]
+    assert json.loads(transport.requests[-1].body or b"{}") == {
+        "force": False,
+        "sha": commit.sha,
+    }
+
+
+def test_ref_update_distinguishes_rejection_from_indeterminate_response() -> None:
+    token = GitHubInstallationToken(
+        token=SecretStr("installation-token"),
+        expires_at=NOW + timedelta(hours=1),
+    )
+    rejected = GitHubClient(
+        GitHubAppConfig(client_id="Iv1.test"),
+        FakeTransport([_response(422, {"message": "protected"})]),
+    )
+    with pytest.raises(GitHubRefUpdateRejected):
+        rejected.update_git_ref(
+            token=token,
+            repository_path="cschrupp/relay",
+            branch="main",
+            commit_sha="a" * 40,
+        )
+
+    malformed = GitHubClient(
+        GitHubAppConfig(client_id="Iv1.test"), FakeTransport([_response(200, {"ref": "bad"})])
+    )
+    with pytest.raises(GitHubRefUpdateIndeterminate):
+        malformed.update_git_ref(
+            token=token,
+            repository_path="cschrupp/relay",
+            branch="main",
+            commit_sha="a" * 40,
+        )
+
+    failed_after_processing = GitHubClient(
+        GitHubAppConfig(client_id="Iv1.test"),
+        FakeTransport([_response(500, {"message": "server error"})]),
+    )
+    with pytest.raises(GitHubRefUpdateIndeterminate):
+        failed_after_processing.update_git_ref(
+            token=token,
+            repository_path="cschrupp/relay",
+            branch="main",
+            commit_sha="a" * 40,
+        )
 
 
 def test_repository_listing_paginates_before_returning_complete_sorted_set() -> None:

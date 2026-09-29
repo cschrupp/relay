@@ -21,8 +21,11 @@ from relay_engine.integrations.github.errors import (
     GitHubPermissionError,
     GitHubRateLimited,
     GitHubRefNotFound,
+    GitHubRefUpdateIndeterminate,
+    GitHubRefUpdateRejected,
     GitHubRemoteError,
     GitHubRepositoryUnavailable,
+    GitHubTransportError,
 )
 from relay_engine.integrations.github.models import (
     GitHubAccountType,
@@ -30,12 +33,14 @@ from relay_engine.integrations.github.models import (
     GitHubBlob,
     GitHubCommitObject,
     GitHubCommitResolution,
+    GitHubCreatedObject,
     GitHubGitObjectType,
     GitHubInstallationSnapshot,
     GitHubInstallationStatus,
     GitHubInstallationToken,
     GitHubPermissionGrant,
     GitHubPermissionLevel,
+    GitHubRefTarget,
     GitHubRepositorySelectionMode,
     GitHubRepositorySnapshot,
     GitHubTree,
@@ -87,7 +92,9 @@ class UrllibGitHubTransport:
                 body=error.read(),
             )
         except urllib.error.URLError as error:
-            raise GitHubRemoteError("GitHub request could not reach the remote service") from error
+            raise GitHubTransportError(
+                "GitHub request could not reach the remote service"
+            ) from error
 
 
 def _required_int(value: object, label: str) -> int:
@@ -209,6 +216,18 @@ class GitHubClient:
             raise GitHubPermissionError(
                 f"GitHub denied required permission for request {request_id}"
             )
+        if method == "PATCH" and "/git/refs/heads/" in path and response.status in {409, 422}:
+            raise GitHubRefUpdateRejected(
+                f"GitHub rejected the non-force ref update for request {request_id}"
+            )
+        if (
+            method == "PATCH"
+            and "/git/refs/heads/" in path
+            and (response.status == 408 or response.status >= 500)
+        ):
+            raise GitHubRefUpdateIndeterminate(
+                f"GitHub ref update outcome is indeterminate for request {request_id}"
+            )
         raise GitHubRemoteError(f"GitHub returned HTTP {response.status} for request {request_id}")
 
     def get_installation(
@@ -267,8 +286,11 @@ class GitHubClient:
         installation_id: int,
         app_jwt: SecretStr,
         repository_id: int | None = None,
+        contents_permission: Literal["read", "write"] = "read",
     ) -> GitHubInstallationToken:
-        body: dict[str, object] = {"permissions": {"contents": "read"}}
+        if contents_permission not in {"read", "write"}:
+            raise ValueError("contents_permission must be read or write")
+        body: dict[str, object] = {"permissions": {"contents": contents_permission}}
         if repository_id is not None:
             if repository_id <= 0:
                 raise ValueError("repository_id must be positive")
@@ -374,14 +396,7 @@ class GitHubClient:
             not_found="object",
         )
         payload = _required_mapping(raw_payload, "Git commit payload")
-        tree = _required_mapping(payload.get("tree"), "Git commit tree")
-        try:
-            return GitHubCommitObject(
-                sha=_required_str(payload.get("sha"), "Git commit SHA"),
-                tree_sha=_required_str(tree.get("sha"), "Git root tree SHA"),
-            )
-        except (ValueError, ValidationError) as error:
-            raise GitHubRemoteError("GitHub Git commit payload failed validation") from error
+        return self._parse_git_commit(payload)
 
     def get_git_tree(
         self,
@@ -456,6 +471,164 @@ class GitHubClient:
             raise
         except (TypeError, ValueError, ValidationError) as error:
             raise GitHubRemoteError("GitHub Git blob payload failed validation") from error
+
+    def get_git_ref(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        branch: str,
+    ) -> GitHubRefTarget:
+        """Resolve one existing branch ref without creating or changing it."""
+
+        encoded_branch = urllib.parse.quote(branch, safe="/")
+        raw_payload, _ = self._request(
+            method="GET",
+            path=f"{_repository_path(repository_path)}/git/ref/heads/{encoded_branch}",
+            credential=token.token,
+            not_found="ref",
+        )
+        payload = _required_mapping(raw_payload, "Git ref payload")
+        target = _required_mapping(payload.get("object"), "Git ref object")
+        try:
+            return GitHubRefTarget(
+                ref=_required_str(payload.get("ref"), "Git ref name"),
+                sha=_required_str(target.get("sha"), "Git ref object SHA"),
+                object_type=GitHubGitObjectType(
+                    _required_str(target.get("type"), "Git ref object type")
+                ),
+            )
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub Git ref payload failed validation") from error
+
+    def create_git_blob(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        raw_bytes: bytes,
+    ) -> GitHubCreatedObject:
+        raw_payload, _ = self._request(
+            method="POST",
+            path=f"{_repository_path(repository_path)}/git/blobs",
+            credential=token.token,
+            body={
+                "content": base64.b64encode(raw_bytes).decode("ascii"),
+                "encoding": "base64",
+            },
+        )
+        payload = _required_mapping(raw_payload, "created Git blob payload")
+        try:
+            return GitHubCreatedObject(sha=_required_str(payload.get("sha"), "created blob SHA"))
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub created Git blob payload failed validation") from error
+
+    def create_git_tree(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        base_tree_sha: str,
+        entries: tuple[GitHubTreeEntry, ...],
+    ) -> GitHubCreatedObject:
+        raw_payload, _ = self._request(
+            method="POST",
+            path=f"{_repository_path(repository_path)}/git/trees",
+            credential=token.token,
+            body={
+                "base_tree": base_tree_sha,
+                "tree": [
+                    {
+                        "path": item.path,
+                        "mode": item.mode,
+                        "type": item.object_type.value,
+                        "sha": item.sha,
+                    }
+                    for item in entries
+                ],
+            },
+        )
+        payload = _required_mapping(raw_payload, "created Git tree payload")
+        try:
+            return GitHubCreatedObject(sha=_required_str(payload.get("sha"), "created tree SHA"))
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub created Git tree payload failed validation") from error
+
+    def create_git_commit(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        message: str,
+        tree_sha: str,
+        parent_sha: str,
+    ) -> GitHubCommitObject:
+        raw_payload, _ = self._request(
+            method="POST",
+            path=f"{_repository_path(repository_path)}/git/commits",
+            credential=token.token,
+            body={"message": message, "tree": tree_sha, "parents": [parent_sha]},
+        )
+        return self._parse_git_commit(_required_mapping(raw_payload, "created Git commit payload"))
+
+    def update_git_ref(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        branch: str,
+        commit_sha: str,
+        force: Literal[False] = False,
+    ) -> GitHubRefTarget:
+        """Move one branch ref non-force; ambiguous transport failures are not retried."""
+
+        if force is not False:
+            raise ValueError("force ref updates are forbidden")
+        encoded_branch = urllib.parse.quote(branch, safe="/")
+        try:
+            raw_payload, _ = self._request(
+                method="PATCH",
+                path=f"{_repository_path(repository_path)}/git/refs/heads/{encoded_branch}",
+                credential=token.token,
+                body={"sha": commit_sha, "force": False},
+            )
+        except GitHubTransportError as error:
+            raise GitHubRefUpdateIndeterminate(
+                "GitHub ref update response was lost; observe the branch before reconciliation"
+            ) from error
+        try:
+            payload = _required_mapping(raw_payload, "updated Git ref payload")
+            target = _required_mapping(payload.get("object"), "updated Git ref object")
+            return GitHubRefTarget(
+                ref=_required_str(payload.get("ref"), "updated Git ref name"),
+                sha=_required_str(target.get("sha"), "updated Git ref object SHA"),
+                object_type=GitHubGitObjectType(
+                    _required_str(target.get("type"), "updated Git ref object type")
+                ),
+            )
+        except (GitHubRemoteError, TypeError, ValueError, ValidationError) as error:
+            raise GitHubRefUpdateIndeterminate(
+                "GitHub ref update may have applied but its response was not verifiable"
+            ) from error
+
+    def _parse_git_commit(self, payload: Mapping[str, object]) -> GitHubCommitObject:
+        tree = _required_mapping(payload.get("tree"), "Git commit tree")
+        raw_parents = _required_list(payload.get("parents", []), "Git commit parents")
+        try:
+            parents = tuple(
+                _required_str(
+                    _required_mapping(item, "Git commit parent").get("sha"),
+                    "Git parent SHA",
+                )
+                for item in raw_parents
+            )
+            return GitHubCommitObject(
+                sha=_required_str(payload.get("sha"), "Git commit SHA"),
+                tree_sha=_required_str(tree.get("sha"), "Git root tree SHA"),
+                parents=parents,
+            )
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub Git commit payload failed validation") from error
 
     @staticmethod
     def _parse_repository(

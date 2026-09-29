@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 implementation authorized  
+**Status:** Phase 1 open — Slice 1.3 implementation complete / pending independent evaluation
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -142,13 +142,15 @@ Revision 4 / exact accepted design head:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 ```
 
-Implementation authority:
+Implementation authorization:
 
 ```text
 RLY-S13-AUTH-001
-Slice 1.3 implementation:
-AUTHORIZED
+Implementation status:
+IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
 ```
+
+Accepted project baseline remains the closed Slice 1.2 baseline until Human Authority accepts the Slice 1.3 implementation result. The implementation branch is `implementation/1.3-relay-initialization-sync`; its result is submitted separately for independent evaluation.
 
 The accepted design specifies the minimum safe mechanism for recognizing, initializing, or synchronizing the accepted repository contract through GitHub while preserving authority, provenance, race safety, and fail-closed behavior.
 
@@ -205,7 +207,7 @@ Slice 1.3 architecture / contract / design:
 ACCEPTED
 
 Slice 1.3 implementation:
-AUTHORIZED
+COMPLETE / PENDING INDEPENDENT EVALUATION
 
 Preferred implementation role/model:
 IMPLEMENTATION_AGENT — GPT-5.6 Luna
@@ -217,6 +219,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Next governed gate: bounded Slice 1.3 implementation result returned to an independent evaluator.
+Next governed gate: independent evaluation of the Slice 1.3 implementation result, followed by Human Authority acceptance or rework direction.
 
 **Authorized ≠ accepted.**

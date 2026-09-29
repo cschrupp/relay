@@ -45,6 +45,18 @@ class GitHubRemoteError(GitHubIntegrationError):
     """GitHub returned an unexpected remote error."""
 
 
+class GitHubTransportError(GitHubRemoteError):
+    """The HTTP transport failed without establishing the provider response."""
+
+
+class GitHubRefUpdateRejected(GitHubIntegrationError):
+    """GitHub definitively rejected a non-force branch-ref update."""
+
+
+class GitHubRefUpdateIndeterminate(GitHubIntegrationError):
+    """The ref-update request lost its response and must be reconciled by observation."""
+
+
 class GitHubIntegrationIntegrityError(GitHubIntegrationError):
     """Stored or delivered GitHub integration state violates invariants."""
 

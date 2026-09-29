@@ -189,24 +189,45 @@ def test_synchronize_installation_persists_ready_full_set() -> None:
         )
 
 
-def test_permission_policy_violation_is_persisted_fail_closed() -> None:
+def test_write_permission_profile_is_persisted_ready() -> None:
     with _database() as database:
         store = GitHubIntegrationStore(database)
         _seed(store, P1)
         client = FakeGitHubClient(
             _snapshot(P1, permissions=_permissions(GitHubPermissionLevel.WRITE))
         )
+        state = _service(store, client).synchronize_installation(
+            project_id=P1,
+            installation_id=1001,
+            observed_at=NOW + timedelta(minutes=1),
+            event_id="sync-write-profile",
+        )
+        assert state.readiness is GitHubAccessReadiness.READY
+        assert state.state_revision == 2
+
+
+def test_unrelated_permission_remains_policy_violation() -> None:
+    with _database() as database:
+        store = GitHubIntegrationStore(database)
+        client = FakeGitHubClient(
+            _snapshot(
+                P1,
+                permissions=(
+                    *_permissions(),
+                    GitHubPermissionGrant(name="workflows", level=GitHubPermissionLevel.WRITE),
+                ),
+            )
+        )
         with pytest.raises(GitHubPermissionError):
             _service(store, client).synchronize_installation(
                 project_id=P1,
                 installation_id=1001,
-                observed_at=NOW + timedelta(minutes=1),
-                event_id="sync-policy",
+                observed_at=NOW,
+                event_id="sync-extra-permission",
             )
         state = store.load_state(P1, 1001)
         assert state is not None
         assert state.readiness is GitHubAccessReadiness.PERMISSION_POLICY_VIOLATION
-        assert state.state_revision == 2
 
 
 def test_stale_sync_cannot_overwrite_suspend_webhook() -> None:

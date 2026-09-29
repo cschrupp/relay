@@ -172,7 +172,26 @@ GITHUB_INTEGRATION_MIGRATION = Migration(
     ),
 )
 
-DEFAULT_MIGRATIONS: tuple[Migration, ...] = (INITIAL_MIGRATION, GITHUB_INTEGRATION_MIGRATION)
+REPOSITORY_MUTATION_AUTHORITY_MIGRATION = Migration(
+    version=3,
+    name="repository mutation authorization",
+    statements=(
+        """CREATE TABLE repository_mutation_authorizations (
+            authorization_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            subject_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_mutation_authorizations_by_project_subject
+        ON repository_mutation_authorizations(project_id, subject_digest)""",
+    ),
+)
+
+DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
+    INITIAL_MIGRATION,
+    GITHUB_INTEGRATION_MIGRATION,
+    REPOSITORY_MUTATION_AUTHORITY_MIGRATION,
+)
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
     version INTEGER PRIMARY KEY,
@@ -200,6 +219,7 @@ REQUIRED_TABLES = frozenset(
         "github_installations",
         "github_installation_repositories",
         "github_installation_events",
+        "repository_mutation_authorizations",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -209,6 +229,7 @@ REQUIRED_INDEXES = frozenset(
         "executions_by_slice_revision",
         "github_installations_by_external_id",
         "github_events_by_binding_revision",
+        "repository_mutation_authorizations_by_project_subject",
     }
 )
 

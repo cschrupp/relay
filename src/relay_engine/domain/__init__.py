@@ -15,6 +15,7 @@ from relay_engine.domain.ids import (
     IdPrefix,
     ProjectId,
     RepositoryId,
+    RepositoryMutationAuthorizationId,
     SliceId,
     new_id,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "Project",
     "ProjectId",
     "RepositoryId",
+    "RepositoryMutationAuthorizationId",
     "RepositoryRef",
     "ScopeSpec",
     "Slice",
