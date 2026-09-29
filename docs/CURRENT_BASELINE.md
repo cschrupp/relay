@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 design authorized  
+**Status:** Phase 1 open — Slice 1.3 design accepted / implementation not authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -49,7 +49,7 @@ Closure evaluation:
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-Slice 1.3 is open and its architecture / contract / design is explicitly authorized:
+Slice 1.3 is open. Its combined architecture / contract / design has been independently reviewed and accepted by Human Authority.
 
 ```text
 Opening:
@@ -57,9 +57,18 @@ RLY-S13-OPEN-001
 
 Design authorization:
 RLY-S13-DESIGN-AUTH-001
+
+Independent combined design evaluation:
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S13-DESIGN-ACCEPT-001
+
+Exact accepted design head:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 ```
 
-Implementation remains unauthorized.
+Slice 1.3 implementation remains unauthorized.
 
 ---
 
@@ -102,47 +111,53 @@ RLY-S12-ACCEPT-001
 RLY-S12-CLOSE-EVAL-001 — ACCEPT
 ```
 
-The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d` after bounded test-only evidence rework.
+The exact accepted implementation is `9ed4a8da4d989fd41674ae59ef68ba4238c09b5d`.
 
-Accepted behavior includes:
-
-- `Project.primary_repository` as the sole repository authority;
-- captured GitHub installation/repository identity and `state_revision`;
-- explicit BRANCH / TAG / COMMIT_SHA selectors;
-- resolve-once immutable commit/tree/blob pinning;
-- pre/post provider identity bracketing;
-- exact `.relay/registry.json` and registered-byte proof;
-- shared Slice 0.6 repository-contract validation;
-- F007 first-binding preservation;
-- all provider I/O before the final SQLite write transaction;
-- atomic final local authority re-check plus Artifact/Baseline persistence;
-- no migration v3.
-
-The independent closure audit verified the complete combined Slice 1.2 acceptance surface: Revision 1 A01–A110, Revision 2 A111–A132, revised A89, and Revision 3 A133–A149.
+Accepted behavior includes repository authority, commit/tree/blob proof, exact `.relay/registry.json` validation, provider/local race guards, stable Artifact provenance, and atomic local Artifact/Baseline persistence.
 
 ---
 
-# 4. Slice 1.3 design authority
+# 4. Slice 1.3 accepted design authority
 
-Exact pre-authorization canonical baseline:
-
-```text
-3aa2287f497f80854b03fea3005ee867bca51153
-```
-
-Authority:
+Exact authorized design baseline:
 
 ```text
-RLY-S13-DESIGN-AUTH-001
-Slice 1.3 architecture / contract / design:
-AUTHORIZED
+eb6b3797fb1b317e9158444b9c9dbe469b2ee313
 ```
 
-Authorized design objective:
+Accepted reviewed design sequence:
 
-> Design the minimum safe mechanism by which Relay may recognize, initialize, or synchronize the accepted repository contract through GitHub while preserving the accepted authority model from Slices 0.6, 1.1, and 1.2.
+```text
+Revision 1:
+433910d0b2df7f0f0a3104cbe97f6df5ebba609a
 
-Design may specify required write permissions and write mechanisms, but no production write behavior is authorized by this decision.
+Revision 2:
+6070b04ca5b38bd5c4687bb0ec4799f4f782e355
+
+Revision 3:
+8e8ab70cf8c9b52d628b0b658179c1fe287c93ea
+
+Revision 4 / exact accepted design head:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+```
+
+The accepted design specifies the minimum safe mechanism for recognizing, initializing, or synchronizing the accepted repository contract through GitHub while preserving authority, provenance, race safety, and fail-closed behavior.
+
+Accepted design highlights include:
+
+- schema-v1 `.relay/registry.json` remains unchanged;
+- exact `RepositorySyncSubjectV1`;
+- read-only preparation before Human Authority approval;
+- project + exact-subject scoped `RepositoryMutationAuthorization`;
+- deterministic SQLite migration v3 for immutable mutation authority;
+- GitHub Git Data single-tree / single-commit / non-force default-branch ref movement;
+- provider, local-state, branch-head, path, permission, and post-write verification guards;
+- no automatic Baseline persistence;
+- no PR flow, force push, background worker, or agent execution.
+
+All independent design-review findings F001–F008 are closed.
+
+Design acceptance does not authorize implementation.
 
 ---
 
@@ -178,7 +193,7 @@ Slice 1.3:
 OPEN
 
 Slice 1.3 architecture / contract / design:
-AUTHORIZED
+ACCEPTED
 
 Slice 1.3 implementation:
 NOT AUTHORIZED
@@ -190,8 +205,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Next governed gate: independent Slice 1.3 design review after architect submission.
-
-A passing design review does not authorize implementation.
+Next governed gate: separate Human Authority decision on Slice 1.3 implementation authorization.
 
 **Unblocked ≠ authorized.**
