@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 design accepted  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -17,68 +17,21 @@ Its central thesis is:
 
 > **Nondeterministic agents should operate inside a deterministic engineering state machine.**
 
-Relay is not primarily a coding agent and is not primarily a Kanban board.
-
-It governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, and remembered.
-
-The board is a human-readable projection of governed state, not the source of truth.
+Relay governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, and remembered. The board is a human-readable projection of governed state, not the source of truth.
 
 ---
 
-# 2. Target users
+# 2. Core differentiation
 
-Relay is designed first for professional developers, technical leads, scientists, and engineers working on long-lived, high-context software where correctness, architecture, evidence, and traceability matter.
-
-The strongest early beachhead remains scientific and engineering software:
-
-- scientific computing;
-- industrial and energy software;
-- simulation and numerical modeling;
-- ML/AI infrastructure;
-- optimization;
-- robotics;
-- technical platforms with substantial domain logic.
+Relay differentiates through durable engineering memory, explicit role/authority separation, governed handovers, independent evaluation, exact baselines/provenance, controlled research/experiments, and Human Authority at strategic boundaries.
 
 ---
 
-# 3. Core differentiation
+# 3. Accepted technical foundation
 
-Relay differentiates through engineering governance and continuity:
+Phase 0 is complete and closed. Slice 1.1 and Slice 1.2 are complete, accepted, and closed.
 
-1. **Durable engineering memory** — accepted reasoning travels with the code.
-2. **Explicit roles and authority** — architect, researcher, implementer, evaluator, and Human Authority are not interchangeable.
-3. **Governed handovers** — readiness, authority, and autonomy are separate.
-4. **Independent evaluation** — implementers do not certify their own substantive work.
-5. **Exact baselines and provenance** — acceptance is tied to explicit repository state and evidence.
-6. **Research and experiments as evidence** — uncertainty can branch into controlled investigation rather than guesswork.
-7. **Human agency at strategic boundaries** — technically unblocked work does not automatically proceed.
-
----
-
-# 4. Accepted technical foundation
-
-Phase 0 is complete and closed.
-
-Slice 1.1 and Slice 1.2 are complete, accepted, and closed.
-
-Relay has accepted implementations for:
-
-```text
-core domain contracts
-deterministic lifecycle semantics
-handover gates and traffic lights
-authorization / human-decision persistence
-event and materialized-state persistence
-schema migrations and restart integrity
-repository-side canonical artifact governance
-read-only GitHub App installation/repository integration
-project-scoped provider access readiness
-signed webhook convergence and idempotency
-verified GitHub commit/tree/blob repository snapshot proof
-immutable repository baseline resolution and persistence
-stable first-binding Artifact provenance
-provider/local authority race guards
-```
+Accepted foundations include deterministic lifecycle/governance, authorization/human-decision persistence, repository-side canonical artifact governance, GitHub App read integration, exact GitHub commit/tree/blob snapshot proof, immutable Baseline resolution, stable Artifact provenance, and provider/local race guards.
 
 The accepted repository representation remains deliberately minimal:
 
@@ -92,48 +45,29 @@ Runtime/cloud state and credentials remain separate from repository authority.
 
 ---
 
-# 5. Provider and repository authority
+# 4. Provider and repository authority
 
-Relay distinguishes:
+Relay distinguishes provider-observed repository/access state, repository-authoritative engineering artifacts, runtime/cloud operational state, and derived UI/search/agent-context projections.
 
-```text
-provider-observed repository/access state
-repository-authoritative engineering artifacts
-runtime/cloud operational state
-derived UI/search/agent-context projections
-```
-
-Slice 1.1 established provider-specific GitHub read access without changing provider-neutral repository identity.
-
-Slice 1.2 established the accepted read-side authority boundary:
+Slice 1.3 has an independently reviewed, Human-accepted design and explicit implementation authorization.
 
 ```text
-Project.primary_repository
-        ↓
-captured ACTIVE / READY GitHub provider-access selection
-        ↓
-pre-snapshot provider identity proof
-        ↓
-branch / tag / full-SHA resolve-once selection
-        ↓
-canonical immutable commit
-        ↓
-exact commit/tree/registry/blob proof
-        ↓
-post-snapshot provider identity proof
-        ↓
-final local access-authority guard
-        ↓
-atomic Artifact + Baseline persistence
+Independent combined design evaluation:
+RLY-S13-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S13-DESIGN-ACCEPT-001
+
+Implementation authorization:
+RLY-S13-AUTH-001
+
+Exact accepted design head:
+0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 ```
-
-Provider evidence remains subordinate to accepted Relay authority. Relay does not claim an atomic transaction spanning GitHub and SQLite.
-
-Slice 1.3 now has an independently reviewed and Human-accepted design for bounded repository initialization/synchronization. Implementation is not yet authorized.
 
 ---
 
-# 6. Product workflow
+# 5. Product workflow
 
 The governed workflow remains:
 
@@ -161,17 +95,13 @@ accepted baseline
 durable engineering memory
 ```
 
-Repository side-effect authority is distinct from lifecycle handover authority: approving one exact repository synchronization does not make a lifecycle gate GREEN, authorize implementation, or accept a resulting Baseline.
+Repository side-effect authority remains distinct from lifecycle handover authority.
 
 ---
 
-# 7. Model and provider philosophy
+# 6. Model and provider philosophy
 
-Relay project semantics do not depend on one model vendor.
-
-Role authority belongs to Relay contracts, not model identity.
-
-During dogfooding, preferred assignment and actual execution provenance are kept distinct when they differ.
+Relay project semantics do not depend on one model vendor. Role authority belongs to Relay contracts, not model identity.
 
 Working convention:
 
@@ -185,7 +115,7 @@ GPT-5.6 Luna preferred
 
 ---
 
-# 8. Current roadmap
+# 7. Current roadmap
 
 ```text
 Phase 0:
@@ -207,44 +137,18 @@ Slice 1.3 design:
 ACCEPTED
 
 Slice 1.3 implementation:
+AUTHORIZED
+
+Slice 1.4:
+NOT OPEN
+
+Agent execution:
 NOT AUTHORIZED
 ```
 
-Phase 1 builds a useful human-controlled repository workflow before autonomous coding-agent execution.
-
 ---
 
-# 9. Slice 1.3 accepted product boundary
-
-Opening authority:
-
-```text
-RLY-S13-OPEN-001
-```
-
-Design authority:
-
-```text
-RLY-S13-DESIGN-AUTH-001
-```
-
-Independent combined design evaluation:
-
-```text
-RLY-S13-DESIGN-EVAL-004 — ACCEPT
-```
-
-Human design acceptance:
-
-```text
-RLY-S13-DESIGN-ACCEPT-001
-```
-
-Exact accepted design head:
-
-```text
-0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
-```
+# 8. Slice 1.3 accepted and authorized product boundary
 
 Accepted design records:
 
@@ -255,69 +159,40 @@ docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV3_AMENDMENT.md
 docs/slices/SLICE_1_3_RELAY_INITIALIZATION_AND_SYNC_REV4_AMENDMENT.md
 ```
 
-The accepted capability remains deliberately narrow:
+Authorized implementation capability remains deliberately narrow:
 
 > Given authoritative Relay project/repository identity, an exact expected default-branch/base commit, an exact target schema-v1 repository contract, and explicit Human Authority over the exact prepared mutation subject, Relay may recognize an already-current target or commit initialization/synchronization to the existing default branch as one atomic Git commit, subject to exact permission, identity, transition, race, path-preservation, and post-write verification guards.
 
-The accepted design preserves these product rules:
+Required rules include:
 
-- `.relay/registry.json` remains repository-side authority;
-- schema v1 remains unchanged;
-- current repository identity remains `Project.primary_repository`;
-- read-only installations remain valid for existing read workflows;
-- write-capable installations may add only `contents:write` above metadata read;
-- read operations continue using read-scoped tokens;
-- a read-only preparation step computes exact `RepositorySyncSubjectV1` before any write token or Git object exists;
-- any non-no-op mutation requires immutable HUMAN `RepositoryMutationAuthorization`;
-- mutation authority is not an `AuthorizationGrant`, `HandoverGate`, or `HumanGateDecision`;
+- `.relay/registry.json` remains repository-side authority and schema v1 remains unchanged;
+- read-only installations remain valid for read workflows;
+- accepted WRITE profile adds only `contents:write` above metadata read;
+- read operations remain read-token scoped;
+- `prepare_repository_sync(...)` computes exact `RepositorySyncSubjectV1` before write capability is used;
+- any non-no-op mutation requires immutable HUMAN `RepositoryMutationAuthorization` scoped by `project_id` + exact subject;
 - mutation authority contains no fabricated `BaselineId`, `GateId`, or `SliceId`;
-- mutation authority is scoped by `project_id` plus exact synchronization subject;
-- the exact subject binds repository/provider selection, `state_revision`, expected branch/base commit, target registry digest, and artifact-write digests;
-- preparation and authorization APIs require no Slice context;
-- execution re-runs preparation checks and recomputes the exact subject;
-- mutation authority is checked before WRITE-token minting and again immediately before ref visibility;
-- valid `UNINITIALIZED` repositories with an existing head can be authorized without inventing a Baseline;
-- existing lifecycle/handover governance remains unchanged and independently applicable;
-- future optional Slice/audit provenance remains outside the mutation-authority contract;
-- repository mutation is one non-force default-branch ref movement;
-- registry plus changed registered artifact bytes become visible in the same commit;
-- concurrent branch movement conflicts rather than overwrites/rebases;
-- existing unregistered files are adopted only when exact bytes/mode already satisfy the target;
-- `.github/workflows/**` content/mode mutation is outside the contents-only permission ceiling;
-- repositories with no existing default-branch head are not bootstrapped in Slice 1.3;
+- execution recomputes exact subject and rechecks authority before WRITE-token minting and before ref visibility;
+- deterministic SQLite migration v3 persists immutable repository-mutation authority using project + subject indexing only;
+- repository mutation uses GitHub Git Data as one target tree, one commit, and one non-force update of the existing default-branch ref;
+- concurrent branch movement conflicts rather than overwriting/rebasing;
+- existing unregistered files use adoption-or-conflict semantics;
+- `.github/workflows/**` content/mode mutation is outside the permission ceiling;
+- repositories without an existing default-branch head are not bootstrapped;
 - indeterminate ref-update outcomes are reconciled by observation, never hidden write retry;
-- existing registry transitions remain governed by the accepted transition validator;
 - invalid existing `.relay` state is never automatically repaired;
-- successful state vocabulary is `CURRENT`, with `wrote_remote` distinguishing no-op from mutation;
-- remote synchronization does not certify or persist its own Relay Baseline;
-- deterministic local SQLite migration v3 stores immutable repository-mutation authority using project + subject indexing only;
-- no PR permission, branch creation, force push, background worker, or agent execution is introduced;
-- no new runtime dependency is introduced.
+- successful state is `CURRENT`, with `wrote_remote` distinguishing no-op from mutation;
+- synchronization does not certify or persist its own Relay Baseline;
+- no PR permission, branch creation, force push, admin bypass, background worker, generic provider framework, local Git/worktree, or agent execution is introduced;
+- no new runtime dependency is introduced without explicit architecture escalation.
 
 All independent design-review findings F001–F008 are closed.
 
-The accepted design does not authorize production behavior. A separate Human Authority implementation authorization is required.
+Implementation authority does not imply technical acceptance. The completed candidate must undergo independent implementation evaluation and later Human technical acceptance.
 
 ---
 
-# 10. Product non-goals remain
-
-Relay should not compete mainly on:
-
-- generic agent chat;
-- vibe coding;
-- running many coding agents;
-- free-form Kanban;
-- preview environments;
-- replacing GitHub/Linear/Jira wholesale.
-
-The product value remains governed engineering continuity:
-
-> Can a human or fresh agent determine what is authoritative, what may proceed, why a decision exists, what exact baseline was evaluated, and what evidence justified acceptance?
-
----
-
-# 11. Current authority state
+# 9. Current authority state
 
 ```text
 Slice 1.3 opening:
@@ -332,6 +207,9 @@ RLY-S13-DESIGN-EVAL-004 — ACCEPT
 Slice 1.3 Human design acceptance:
 RLY-S13-DESIGN-ACCEPT-001
 
+Slice 1.3 implementation authorization:
+RLY-S13-AUTH-001
+
 Exact accepted design:
 0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
 
@@ -342,7 +220,10 @@ Slice 1.3 design:
 ACCEPTED
 
 Slice 1.3 implementation:
-NOT AUTHORIZED
+AUTHORIZED
+
+Preferred implementation role/model:
+IMPLEMENTATION_AGENT — GPT-5.6 Luna
 
 Slice 1.4:
 NOT OPEN
@@ -351,14 +232,10 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-**Unblocked ≠ authorized.**
+**Authorized ≠ accepted.**
 
 ---
 
-# 12. Historical proposals
+# 10. Historical proposals
 
-Product Proposal v0.3 and v0.4 remain historical planning/current-truth snapshots from earlier project states.
-
-They are preserved rather than rewritten.
-
-Canonical current status is determined exclusively by `.relay/registry.json`.
+Product Proposal v0.3 and v0.4 remain historical planning/current-truth snapshots from earlier project states. Canonical current status is determined exclusively by `.relay/registry.json`.
