@@ -10,6 +10,17 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, Project, RepositoryRef
+from relay_engine.governance import (
+    AuthorizationGrant,
+    ChangeSurfaceStatus,
+    HandoverContext,
+    HandoverGate,
+    HandoverPolicy,
+    RiskStatus,
+    ToolchainChangeStatus,
+    TrafficLight,
+    evaluate_handover_gates,
+)
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
     GitHubAccountType,
@@ -27,15 +38,25 @@ from relay_engine.integrations.github import (
     GitHubPermissionLevel,
     GitHubRefNotFound,
     GitHubRefTarget,
+    GitHubRefUpdateIndeterminate,
+    GitHubRefUpdateRejected,
     GitHubRepositoryAccessSelection,
     GitHubRepositorySelectionMode,
     GitHubRepositorySnapshot,
     GitHubTree,
     GitHubTreeEntry,
 )
+from relay_engine.lifecycle import (
+    Blockage,
+    BlockageStatus,
+    LifecyclePhase,
+    LifecycleValidity,
+    SliceLifecycle,
+)
 from relay_engine.persistence import (
     PersistenceIntegrityError,
     insert_project,
+    insert_repository_mutation_authorization,
     load_repository_mutation_authorization,
     open_database,
 )
@@ -47,6 +68,7 @@ from relay_engine.repository_contract import (
     serialize_repository_registry,
 )
 from relay_engine.repository_sync import (
+    ArtifactWriteDigest,
     RepositoryArtifactWrite,
     RepositoryContractState,
     RepositoryMutationAuthorization,
@@ -54,11 +76,20 @@ from relay_engine.repository_sync import (
     RepositorySyncAuthorizationRequired,
     RepositorySyncAuthorizationStale,
     RepositorySyncConflict,
+    RepositorySyncDefaultBranchChanged,
+    RepositorySyncInvalidRemote,
     RepositorySyncNoDefaultHead,
+    RepositorySyncPostWriteVerificationError,
+    RepositorySyncProtectedBranch,
+    RepositorySyncProviderIdentityChanged,
+    RepositorySyncRefUpdateNotVisible,
     RepositorySyncRequest,
     RepositorySyncService,
+    RepositorySyncSubjectV1,
     RepositorySyncWorkflowMutationUnsupported,
+    RepositorySyncWritePermissionRequired,
     artifact_write_digest,
+    repository_registry_digest,
     repository_sync_subject_digest,
 )
 
@@ -196,6 +227,14 @@ class _FakeGitHub:
         self.default_branch = "main"
         self.missing_head = False
         self.before_ref_check: Callable[[], None] | None = None
+        self.registry_bytes_override: bytes | None = None
+        self.provider_id = 501
+        self.provider_node_id = "R_501"
+        self.provider_full_name = REPOSITORY.path
+        self.archived = False
+        self.ref_update_behavior: str | None = None
+        self.ref_unreadable = False
+        self.after_ref_update: Callable[[str], None] | None = None
         self._base_tree = self._store_tree(
             {"README.md": ("100644", GitHubGitObjectType.BLOB, _git_blob_sha(b"README\n"))}
         )
@@ -249,18 +288,18 @@ class _FakeGitHub:
 
     def get_repository(self, *, token, repository_path, observed_at):
         return GitHubRepositorySnapshot(
-            github_repository_id=501,
-            node_id="R_501",
-            full_name=REPOSITORY.path,
+            github_repository_id=self.provider_id,
+            node_id=self.provider_node_id,
+            full_name=self.provider_full_name,
             owner_login="cschrupp",
             private=False,
-            archived=False,
+            archived=self.archived,
             default_branch=self.default_branch,
             observed_at=observed_at,
         )
 
     def get_git_ref(self, *, token, repository_path, branch):
-        if self.missing_head:
+        if self.missing_head or self.ref_unreadable:
             raise GitHubRefNotFound("no existing branch")
         return GitHubRefTarget(
             ref=f"refs/heads/{branch}",
@@ -291,7 +330,11 @@ class _FakeGitHub:
         self.tree_creations += 1
         files = self._flatten(base_tree_sha)
         for entry in entries:
-            files[entry.path] = (entry.mode, entry.object_type, entry.sha)
+            sha = entry.sha
+            if entry.path == ".relay/registry.json" and self.registry_bytes_override is not None:
+                sha = _git_blob_sha(self.registry_bytes_override)
+                self.blobs[sha] = self.registry_bytes_override
+            files[entry.path] = (entry.mode, entry.object_type, sha)
         return GitHubCreatedObject(sha=self._store_tree(files))
 
     def create_git_commit(self, *, token, repository_path, message, tree_sha, parent_sha):
@@ -308,7 +351,21 @@ class _FakeGitHub:
         assert force is False
         assert branch == "main"
         self.ref_updates += 1
+        if self.ref_update_behavior == "rejected":
+            raise GitHubRefUpdateRejected("protected branch")
+        if self.ref_update_behavior == "ambiguous_base":
+            raise GitHubRefUpdateIndeterminate("response lost at base")
+        if self.ref_update_behavior == "ambiguous_other":
+            self.head = "f" * 40
+            raise GitHubRefUpdateIndeterminate("response lost after third-party move")
+        if self.ref_update_behavior == "ambiguous_unreadable":
+            self.ref_unreadable = True
+            raise GitHubRefUpdateIndeterminate("response lost and ref is unreadable")
         self.head = commit_sha
+        if self.after_ref_update is not None:
+            self.after_ref_update(commit_sha)
+        if self.ref_update_behavior == "ambiguous_new":
+            raise GitHubRefUpdateIndeterminate("response lost after successful move")
         return GitHubRefTarget(
             ref="refs/heads/main", sha=commit_sha, object_type=GitHubGitObjectType.COMMIT
         )
@@ -365,6 +422,64 @@ def fixture_env():
         yield database, service, integration, github, request
     finally:
         database.close()
+
+
+def _install_registry_snapshot(
+    github: _FakeGitHub,
+    registry: RepositoryRegistry,
+    artifact_contents: dict[str, bytes],
+    *,
+    registry_raw: bytes | None = None,
+    artifact_objects: dict[str, tuple[str, GitHubGitObjectType, str]] | None = None,
+) -> None:
+    raw_registry = serialize_repository_registry(registry) if registry_raw is None else registry_raw
+    registry_sha = _git_blob_sha(raw_registry)
+    github.blobs[registry_sha] = raw_registry
+    files = github._flatten(github._base_tree)
+    files[".relay/registry.json"] = ("100644", GitHubGitObjectType.BLOB, registry_sha)
+    for path, raw_bytes in artifact_contents.items():
+        sha = _git_blob_sha(raw_bytes)
+        github.blobs[sha] = raw_bytes
+        files[path] = ("100644", GitHubGitObjectType.BLOB, sha)
+    if artifact_objects is not None:
+        files.update(artifact_objects)
+    github._base_tree = github._store_tree(files)
+    github.commits[BASE_SHA] = GitHubCommitObject(sha=BASE_SHA, tree_sha=github._base_tree)
+
+
+def _set_local_state(
+    database,
+    *,
+    write: bool = True,
+    revision: int = 2,
+    repositories: tuple[GitHubRepositorySnapshot, ...] | None = None,
+) -> None:
+    store = GitHubIntegrationStore(database)
+    existing = store.list_repositories(PROJECT_ID, 1001)
+    store.apply_mutation(
+        expected_revision=revision - 1,
+        state=_make_state(write=write, revision=revision),
+        repositories=existing if repositories is None else repositories,
+        event=_event(
+            _make_state(write=write, revision=revision),
+            event_id=f"state-change-{revision}-{write}-{repositories is None}",
+            prior_revision=revision - 1,
+        ),
+    )
+
+
+def _authorize_exact_subject(
+    service: RepositorySyncService, request: RepositorySyncRequest
+) -> None:
+    preparation = service.prepare_repository_sync(request, observed_at=NOW)
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    service.authorize_repository_sync(
+        authorization_id=AUTHORIZATION_ID,
+        preparation=preparation,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Approve this exact repository synchronization subject.",
+    )
 
 
 def test_subject_digest_is_deterministic_and_authorization_has_no_slice_fields(
@@ -635,6 +750,508 @@ def test_exact_current_retry_is_a_noop_without_authorization(fixture_env) -> Non
     assert integration.write_tokens == 1
 
 
+def test_semantically_equal_but_noncanonical_registry_bytes_are_not_current(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    canonical = serialize_repository_registry(request.target_registry)
+    noncanonical = json.dumps(json.loads(canonical), indent=2).encode("utf-8")
+    assert noncanonical != canonical
+    registry_sha = _git_blob_sha(noncanonical)
+    artifact_sha = _git_blob_sha(RAW)
+    github.blobs[registry_sha] = noncanonical
+    github.blobs[artifact_sha] = RAW
+    files = github._flatten(github._base_tree)
+    files[".relay/registry.json"] = ("100644", GitHubGitObjectType.BLOB, registry_sha)
+    files["docs/test.md"] = ("100644", GitHubGitObjectType.BLOB, artifact_sha)
+    github._base_tree = github._store_tree(files)
+    github.commits[BASE_SHA] = GitHubCommitObject(sha=BASE_SHA, tree_sha=github._base_tree)
+
+    preparation = service.prepare_repository_sync(request, observed_at=NOW)
+
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    assert preparation.changed_paths == (".relay/registry.json",)
+    assert preparation.prior_commit is not None
+
+
+def test_postwrite_rejects_semantically_equal_but_byte_different_visible_registry(
+    fixture_env,
+) -> None:
+    _, service, _, github, request = fixture_env
+    canonical = serialize_repository_registry(request.target_registry)
+    noncanonical = json.dumps(json.loads(canonical), indent=2).encode("utf-8")
+    assert noncanonical != canonical
+    preparation = service.prepare_repository_sync(request, observed_at=NOW)
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    service.authorize_repository_sync(
+        authorization_id=AUTHORIZATION_ID,
+        preparation=preparation,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Approve the exact deterministic target registry bytes.",
+    )
+    github.registry_bytes_override = noncanonical
+
+    with pytest.raises(RepositorySyncPostWriteVerificationError) as error:
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}),
+            observed_at=NOW,
+        )
+
+    assert error.value.created_commit_sha == github.head
+    assert github.head != BASE_SHA
+
+
+def test_initialized_registry_valid_addition_is_synchronizable(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _install_registry_snapshot(github, request.target_registry, {"docs/test.md": RAW})
+    new_raw = b"New registered document\n"
+    new_artifact = RepositoryArtifactRevision(
+        artifact_id="art_018f47c1-7b2c-7abc-8def-123456789007",
+        revision=1,
+        title="New document",
+        artifact_type="DOCUMENT",
+        artifact_class=RepositoryArtifactClass.WORKING,
+        artifact_state=RepositoryArtifactState.DRAFT,
+        path="docs/new.md",
+        content_digest=artifact_write_digest(new_raw),
+        updated_at=NOW,
+        scope="Initialized valid transition fixture",
+    )
+    target = request.target_registry.model_copy(
+        update={"artifacts": (new_artifact, request.target_registry.artifacts[0])}
+    )
+    initialized_request = request.model_copy(
+        update={
+            "target_registry": target,
+            "artifact_writes": (RepositoryArtifactWrite(path="docs/new.md", raw_bytes=new_raw),),
+        }
+    )
+
+    preparation = service.prepare_repository_sync(initialized_request, observed_at=NOW)
+
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    assert preparation.changed_paths == (".relay/registry.json", "docs/new.md")
+
+
+def test_initialized_incompatible_same_id_byte_transition_is_conflict(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _install_registry_snapshot(github, request.target_registry, {"docs/test.md": RAW})
+    changed_raw = b"Replacement bytes under an existing identity\n"
+    changed_artifact = request.target_registry.artifacts[0].model_copy(
+        update={"content_digest": artifact_write_digest(changed_raw)}
+    )
+    target = request.target_registry.model_copy(update={"artifacts": (changed_artifact,)})
+    conflict_request = request.model_copy(
+        update={
+            "target_registry": target,
+            "artifact_writes": (
+                RepositoryArtifactWrite(path="docs/test.md", raw_bytes=changed_raw),
+            ),
+        }
+    )
+
+    with pytest.raises(RepositorySyncConflict, match="valid transition"):
+        service.prepare_repository_sync(conflict_request, observed_at=NOW)
+
+    assert github.git_object_writes == 0
+
+
+def test_extra_direct_child_makes_existing_relay_contract_invalid(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _install_registry_snapshot(github, request.target_registry, {"docs/test.md": RAW})
+    extra_raw = b"not allowed\n"
+    extra_sha = _git_blob_sha(extra_raw)
+    github.blobs[extra_sha] = extra_raw
+    files = github._flatten(github._base_tree)
+    files[".relay/extra.json"] = ("100644", GitHubGitObjectType.BLOB, extra_sha)
+    github._base_tree = github._store_tree(files)
+    github.commits[BASE_SHA] = GitHubCommitObject(sha=BASE_SHA, tree_sha=github._base_tree)
+
+    with pytest.raises(RepositorySyncInvalidRemote):
+        service.prepare_repository_sync(request, observed_at=NOW)
+
+    assert github.git_object_writes == 0
+
+
+@pytest.mark.parametrize(
+    ("mode", "object_type"),
+    [
+        ("120000", GitHubGitObjectType.BLOB),
+        ("160000", GitHubGitObjectType.COMMIT),
+        ("100600", GitHubGitObjectType.BLOB),
+    ],
+)
+def test_registered_symlink_submodule_and_nonregular_modes_are_rejected(
+    fixture_env, mode: str, object_type: GitHubGitObjectType
+) -> None:
+    _, service, _, github, request = fixture_env
+    wrong_object_sha = BASE_SHA if object_type is GitHubGitObjectType.COMMIT else _git_blob_sha(RAW)
+    if object_type is GitHubGitObjectType.BLOB:
+        github.blobs[wrong_object_sha] = RAW
+    _install_registry_snapshot(
+        github,
+        request.target_registry,
+        {},
+        artifact_objects={"docs/test.md": (mode, object_type, wrong_object_sha)},
+    )
+
+    with pytest.raises(RepositorySyncInvalidRemote):
+        service.prepare_repository_sync(request, observed_at=NOW)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("provider_id", 502), ("provider_node_id", "R_OTHER"), ("provider_full_name", "other/repo")],
+)
+def test_provider_identity_mismatch_is_rejected_before_write(
+    fixture_env, field: str, value: object
+) -> None:
+    _, service, _, github, request = fixture_env
+    setattr(github, field, value)
+
+    with pytest.raises(RepositorySyncProviderIdentityChanged):
+        service.prepare_repository_sync(request, observed_at=NOW)
+
+    assert github.git_object_writes == 0
+    assert github.ref_updates == 0
+
+
+def test_archived_repository_is_refused_before_write(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    github.archived = True
+
+    with pytest.raises(RepositorySyncAccessChanged, match="archived"):
+        service.prepare_repository_sync(request, observed_at=NOW)
+
+    assert github.git_object_writes == 0
+
+
+def test_default_branch_change_after_commit_creation_blocks_visibility(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    github.before_ref_check = lambda: setattr(github, "default_branch", "release")
+
+    with pytest.raises(RepositorySyncDefaultBranchChanged):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert github.git_object_writes > 0
+    assert github.ref_updates == 0
+
+
+@pytest.mark.parametrize("race", ["permission_downgrade", "membership_removed"])
+def test_local_permission_and_membership_races_block_visibility(fixture_env, race: str) -> None:
+    database, service, integration, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+
+    def change_local_state() -> None:
+        if race == "permission_downgrade":
+            _set_local_state(database, write=False)
+        else:
+            _set_local_state(database, repositories=())
+
+    integration.after_write_token = change_local_state
+
+    with pytest.raises(RepositorySyncAccessChanged):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert github.git_object_writes > 0
+    assert github.ref_updates == 0
+
+
+def test_read_profile_cannot_mint_write_token_or_create_git_objects(fixture_env) -> None:
+    database, service, integration, github, request = fixture_env
+    _set_local_state(database, write=False)
+    selection = request.selection.model_copy(update={"expected_state_revision": 2})
+    read_request = request.model_copy(update={"selection": selection})
+    preparation = service.prepare_repository_sync(read_request, observed_at=NOW)
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    service.authorize_repository_sync(
+        authorization_id=AUTHORIZATION_ID,
+        preparation=preparation,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="This approval does not expand the installed permission profile.",
+    )
+
+    with pytest.raises(RepositorySyncWritePermissionRequired):
+        service.execute_repository_sync(
+            read_request.model_copy(update={"authorization_id": AUTHORIZATION_ID}),
+            observed_at=NOW,
+        )
+
+    assert integration.write_tokens == 0
+    assert github.git_object_writes == 0
+    assert github.ref_updates == 0
+
+
+def test_artifact_write_digest_mismatch_is_refused_before_git_object_creation(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    mismatched = request.model_copy(
+        update={
+            "artifact_writes": (
+                RepositoryArtifactWrite(path="docs/test.md", raw_bytes=b"different bytes\n"),
+            )
+        }
+    )
+
+    with pytest.raises(RepositorySyncConflict, match="digest"):
+        service.prepare_repository_sync(mismatched, observed_at=NOW)
+
+    assert github.git_object_writes == 0
+
+
+def test_wrong_project_mutation_authorization_is_rejected_before_write_token(fixture_env) -> None:
+    database, service, integration, github, request = fixture_env
+    preparation = service.prepare_repository_sync(request, observed_at=NOW)
+    assert preparation.subject is not None
+    wrong_project_id = "prj_018f47c1-7b2c-7abc-8def-123456789099"
+    insert_project(
+        database,
+        Project(id=wrong_project_id, name="Other project", primary_repository=REPOSITORY),
+    )
+    wrong_subject = preparation.subject.model_copy(update={"project_id": wrong_project_id})
+    wrong_authorization = RepositoryMutationAuthorization(
+        authorization_id=AUTHORIZATION_ID,
+        project_id=wrong_project_id,
+        subject=wrong_subject,
+        subject_digest=repository_sync_subject_digest(wrong_subject),
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="This is valid authority for a different project only.",
+    )
+    insert_repository_mutation_authorization(database, wrong_authorization)
+
+    with pytest.raises(RepositorySyncAuthorizationStale, match="exact sync subject"):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert integration.write_tokens == 0
+    assert github.git_object_writes == 0
+
+
+def test_exact_unchanged_workflow_file_is_adopted_without_rewrite(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    workflow = ".github/workflows/ci.yml"
+    workflow_bytes = b"name: existing\n"
+    workflow_sha = _git_blob_sha(workflow_bytes)
+    github.blobs[workflow_sha] = workflow_bytes
+    files = github._flatten(github._base_tree)
+    files[workflow] = ("100644", GitHubGitObjectType.BLOB, workflow_sha)
+    github._base_tree = github._store_tree(files)
+    github.commits[BASE_SHA] = GitHubCommitObject(sha=BASE_SHA, tree_sha=github._base_tree)
+    workflow_request = _request_with_target(request, workflow, workflow_bytes)
+
+    preparation = service.prepare_repository_sync(workflow_request, observed_at=NOW)
+
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    assert preparation.changed_paths == (".relay/registry.json",)
+    service.authorize_repository_sync(
+        authorization_id=AUTHORIZATION_ID,
+        preparation=preparation,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Adopt the exact already-present workflow bytes without mutation.",
+    )
+    service.execute_repository_sync(
+        workflow_request.model_copy(update={"authorization_id": AUTHORIZATION_ID}),
+        observed_at=NOW,
+    )
+    assert github.blob_creations == 1
+
+
+def test_minimal_empty_registry_initializes_without_artifact_writes(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    empty = RepositoryRegistry(
+        project_id=PROJECT_ID, repository=REPOSITORY, artifacts=(), canonical=()
+    )
+    empty_request = request.model_copy(update={"target_registry": empty, "artifact_writes": ()})
+    preparation = service.prepare_repository_sync(empty_request, observed_at=NOW)
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    assert preparation.changed_paths == (".relay/registry.json",)
+    service.authorize_repository_sync(
+        authorization_id=AUTHORIZATION_ID,
+        preparation=preparation,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Initialize the minimal empty registry.",
+    )
+
+    result = service.execute_repository_sync(
+        empty_request.model_copy(update={"authorization_id": AUTHORIZATION_ID}),
+        observed_at=NOW,
+    )
+
+    assert result.wrote_remote is True
+    assert github.blob_creations == 1
+    assert github.head != BASE_SHA
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected_error"),
+    [
+        ("ambiguous_base", RepositorySyncRefUpdateNotVisible),
+        ("ambiguous_other", RepositorySyncPostWriteVerificationError),
+        ("ambiguous_unreadable", RepositorySyncPostWriteVerificationError),
+    ],
+)
+def test_ambiguous_ref_update_reconciliation_never_retries_write(
+    fixture_env, behavior: str, expected_error: type[Exception]
+) -> None:
+    _, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    github.ref_update_behavior = behavior
+
+    with pytest.raises(expected_error) as error:
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert getattr(error.value, "created_commit_sha", None) is not None
+    assert github.ref_updates == 1
+    assert github.commit_creations == 1
+
+
+def test_ambiguous_ref_update_observed_at_created_sha_is_verified_success(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    github.ref_update_behavior = "ambiguous_new"
+
+    result = service.execute_repository_sync(
+        request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+    )
+
+    assert result.wrote_remote is True
+    assert result.resulting_commit.sha == github.head
+    assert github.ref_updates == 1
+    assert github.commit_creations == 1
+
+
+def test_protected_branch_rejection_is_surfaced_without_workaround(fixture_env) -> None:
+    _, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    github.ref_update_behavior = "rejected"
+
+    with pytest.raises(RepositorySyncProtectedBranch):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert github.ref_updates == 1
+    assert github.head == BASE_SHA
+
+
+@pytest.mark.parametrize("failure", ["head", "snapshot", "access", "provider"])
+def test_postwrite_failures_carry_created_commit_sha(fixture_env, failure: str) -> None:
+    database, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    created: list[str] = []
+
+    def corrupt_after_ref_update(commit_sha: str) -> None:
+        created.append(commit_sha)
+        if failure == "head":
+            github.head = "f" * 40
+        elif failure == "snapshot":
+            commit = github.commits[commit_sha]
+            github.commits[commit_sha] = commit.model_copy(
+                update={"tree_sha": github.commits[BASE_SHA].tree_sha}
+            )
+        elif failure == "access":
+            _set_local_state(database, revision=2)
+        else:
+            github.provider_node_id = "R_CHANGED"
+
+    github.after_ref_update = corrupt_after_ref_update
+
+    with pytest.raises(RepositorySyncPostWriteVerificationError) as error:
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert len(created) == 1
+    assert error.value.created_commit_sha == created[0]
+    assert github.ref_updates == 1
+
+
+def test_mutation_authorization_is_rechecked_before_ref_visibility(fixture_env) -> None:
+    database, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+
+    def remove_authority() -> None:
+        database.connection.execute(
+            "DELETE FROM repository_mutation_authorizations WHERE authorization_id = ?",
+            (AUTHORIZATION_ID,),
+        )
+
+    github.before_ref_check = remove_authority
+
+    with pytest.raises(RepositorySyncAuthorizationRequired):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+
+    assert github.git_object_writes > 0
+    assert github.ref_updates == 0
+
+
+def test_existing_handover_authorization_remains_independent_from_sync_authority(
+    fixture_env,
+) -> None:
+    _, service, integration, github, request = fixture_env
+    lifecycle = SliceLifecycle(
+        slice_id="slc_00000000-0000-0000-0000-000000000001",
+        phase=LifecyclePhase.READY,
+        validity=LifecycleValidity.CURRENT,
+        blockage=Blockage(status=BlockageStatus.CLEAR, reasons=()),
+        revision=1,
+        updated_at=NOW,
+        superseded_by_slice_id=None,
+    )
+    gate = HandoverGate(
+        gate_id="gate_00000000-0000-0000-0000-000000000001",
+        revision=1,
+        key="sync-independence",
+        slice_id=lifecycle.slice_id,
+        baseline_id="base_00000000-0000-0000-0000-000000000001",
+        source_phase=LifecyclePhase.READY,
+        target_phase=LifecyclePhase.IMPLEMENTING,
+        policy=HandoverPolicy.AUTO,
+        authorization_required=True,
+    )
+    handover_grant = AuthorizationGrant(
+        authorization_id="auth_00000000-0000-0000-0000-000000000001",
+        slice_id=lifecycle.slice_id,
+        baseline_id=gate.baseline_id,
+        gate_id=gate.gate_id,
+        gate_revision=gate.revision,
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Existing handover authorization remains valid for its gate.",
+    )
+    context = HandoverContext(
+        baseline_id=gate.baseline_id,
+        governance_revision=1,
+        lifecycle=lifecycle,
+        authorization_grants=(handover_grant,),
+        change_surface_status=ChangeSurfaceStatus.WITHIN_DECLARED,
+        risk_status=RiskStatus.CLEAR,
+        toolchain_change_status=ToolchainChangeStatus.NONE,
+    )
+    assert evaluate_handover_gates((gate,), context)[0].light is TrafficLight.GREEN
+
+    preparation = service.prepare_repository_sync(request, observed_at=NOW)
+    assert preparation.state is RepositoryContractState.SYNCHRONIZABLE
+    with pytest.raises(RepositorySyncAuthorizationRequired):
+        service.execute_repository_sync(
+            request.model_copy(update={"authorization_id": AUTHORIZATION_ID}), observed_at=NOW
+        )
+    assert integration.write_tokens == 0
+    assert github.git_object_writes == 0
+
+
 def test_authorization_rejects_non_human_and_digest_tampering(fixture_env) -> None:
     _, service, _, _, request = fixture_env
     preparation = service.prepare_repository_sync(request, observed_at=NOW)
@@ -695,6 +1312,51 @@ def test_migration_v3_has_project_subject_index_and_no_slice_authority(fixture_e
         )
     }
     assert "repository_mutation_authorizations_by_project_subject" in indexes
+
+
+def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
+    path = tmp_path / "relay.sqlite"
+    database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    insert_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
+    registry = _target_registry()
+    subject = RepositorySyncSubjectV1(
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        installation_id=1001,
+        github_repository_id=501,
+        github_node_id="R_501",
+        expected_state_revision=1,
+        expected_default_branch="main",
+        expected_base_commit=CommitRef(repository=REPOSITORY, sha=BASE_SHA),
+        target_registry_digest=repository_registry_digest(registry),
+        artifact_write_digests=(
+            ArtifactWriteDigest(path="docs/test.md", content_digest=artifact_write_digest(RAW)),
+        ),
+    )
+    authorization = RepositoryMutationAuthorization(
+        authorization_id=AUTHORIZATION_ID,
+        project_id=PROJECT_ID,
+        subject=subject,
+        subject_digest=repository_sync_subject_digest(subject),
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Survive a local database restart with exact subject integrity.",
+    )
+    insert_repository_mutation_authorization(database, authorization)
+    database.close()
+
+    restarted = open_database(path, apply_migrations=False)
+    try:
+        assert load_repository_mutation_authorization(restarted, AUTHORIZATION_ID) == authorization
+        versions = tuple(
+            row[0]
+            for row in restarted.connection.execute(
+                "SELECT version FROM relay_schema_migrations ORDER BY version"
+            )
+        )
+        assert versions[-1] == 3
+    finally:
+        restarted.close()
 
 
 def test_target_registry_wire_bytes_are_deterministic() -> None:

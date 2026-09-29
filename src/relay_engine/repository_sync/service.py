@@ -450,9 +450,12 @@ class RepositorySyncService:
                 )
 
         target_registry_raw = serialize_repository_registry(request.target_registry)
+        current_registry_file = current.files.get(_REGISTRY_PATH)
         if (
             current.state is RepositoryContractState.CURRENT
             and current.registry == request.target_registry
+            and current_registry_file is not None
+            and current_registry_file.raw_bytes == target_registry_raw
         ):
             assert current.files
             self._validate_logical_snapshot(
@@ -971,17 +974,20 @@ class RepositorySyncService:
                 root_tree_sha=commit.tree_sha,
                 selection=request.selection,
             )
+            visible_registry = current.files.get(_REGISTRY_PATH)
             if (
                 current.state is not RepositoryContractState.CURRENT
                 or current.registry != request.target_registry
+                or visible_registry is None
+                or visible_registry.raw_bytes != operation.target_registry_raw
             ):
                 raise RepositorySyncPostWriteVerificationError(
-                    "visible repository snapshot does not match the exact target registry",
+                    "visible repository snapshot does not match the exact target registry bytes",
                     created_commit_sha,
                 )
             self._validate_logical_snapshot(
                 request.target_registry,
-                operation.target_registry_raw,
+                visible_registry.raw_bytes,
                 {
                     path: item.raw_bytes
                     for path, item in current.files.items()
