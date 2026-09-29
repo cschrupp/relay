@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.3 complete / accepted / closed  
+**Status:** Phase 1 open — Slice 1.4 open; design not authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -11,112 +11,79 @@
 
 Phase 0 is complete and closed.
 
-Slice 1.1 and Slice 1.2 are complete, accepted, and closed.
-
-Slice 1.3 is complete and technically accepted.
-
 ```text
-Accepted Slice 1.3 design head:
-0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
-
-Accepted Slice 1.3 technical result:
-9b5166d1e95aefeb177d30c29f943f45a591ea05
-
-Independent implementation evaluation:
-RLY-S13-EVAL-002 — ACCEPT
-
-Human acceptance:
-RLY-S13-ACCEPT-001
-
-Acceptance/finalization:
-5164f1a8532e1ca05007531cdfd1f5084755092a
-
-Finalization branch CI:
-36612232489 — SUCCESS
-
-Promoted-main CI:
-36612444758 — SUCCESS
-```
-
----
-
-# 2. Slice 1.3 accepted authority
-
-```text
-RLY-S13-OPEN-001
-RLY-S13-DESIGN-AUTH-001
-RLY-S13-DESIGN-EVAL-001 — REVISE
-RLY-S13-DESIGN-EVAL-002 — REVISE
-RLY-S13-DESIGN-EVAL-003 — REVISE
-RLY-S13-DESIGN-EVAL-004 — ACCEPT
-RLY-S13-DESIGN-ACCEPT-001
-RLY-S13-AUTH-001
-RLY-S13-EVAL-001 — REWORK
-RLY-S13-EVAL-002 — ACCEPT
-RLY-S13-ACCEPT-001
-```
-
-Accepted behavior includes:
-
-- schema-v1 `.relay/registry.json` preservation;
-- exact `RepositorySyncSubjectV1`;
-- read-only preparation;
-- project/exact-subject HUMAN `RepositoryMutationAuthorization`;
-- deterministic SQLite migration v3;
-- separate repository-scoped READ/WRITE tokens;
-- one Git tree, one exact-parent commit, one non-force default-branch ref movement;
-- provider/local/head fail-closed race guards;
-- unregistered-path adoption-or-conflict;
-- workflow mutation prohibition under the contents-only ceiling;
-- no empty-repository bootstrap;
-- observation-based indeterminate-ref reconciliation;
-- exact visible registry/artifact verification;
-- target-state idempotency;
-- no automatic Relay Baseline persistence.
-
----
-
-# 3. Acceptance evidence
-
-```text
-Accepted implementation:
-9b5166d1e95aefeb177d30c29f943f45a591ea05
-
-Implementation CI:
-36600301960 — SUCCESS
-490 tests passed
-repository_sync tests: 50 passed
-Ruff / Pyright / build passed
-
-Acceptance/finalization:
-5164f1a8532e1ca05007531cdfd1f5084755092a
-
-Promoted-main CI:
-36612444758 — SUCCESS
-```
-
-ADR-0009 and the Slice 1.3 memory are locked/accepted.
-
----
-
-# 4. Closure state
-
-Independent closure evaluation accepted the synchronized Slice 1.3 state.
-
-```text
-Slice 1.3:
+Slice 1.1:
 COMPLETE / ACCEPTED / CLOSED
 
-Closure evaluation:
-RLY-S13-CLOSE-EVAL-001 — ACCEPT
+Slice 1.2:
+COMPLETE / ACCEPTED / CLOSED
 
+Slice 1.3:
+COMPLETE / ACCEPTED / CLOSED
+```
+
+Slice 1.3 closure:
+
+```text
+RLY-S13-CLOSE-EVAL-001 — ACCEPT
+Canonical closure head:
+7d266aef282c6d678e059754d2eb6a5ff297d83a
+Promoted-main closure CI:
+36641745333 — SUCCESS
+```
+
+---
+
+# 2. Slice 1.4 opening
+
+Human Authority opening:
+
+```text
+RLY-S14-OPEN-001
+```
+
+Roadmap scope:
+
+```text
+Project and Slice CRUD
+```
+
+Current gate:
+
+```text
 Slice 1.4:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.4 design:
+NOT AUTHORIZED
+
+Slice 1.4 implementation:
+NOT AUTHORIZED
+
+Slice 1.5:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.4 remains NOT OPEN. No Slice 1.4 design or implementation authority exists yet.
+Opening Slice 1.4 creates no design or implementation authority.
+
+---
+
+# 3. Protocol rules in force
+
+```text
+registered living-projection change
+→ registry advancement in same governed change
+
+architecture / design / review / evaluation
+→ GPT-5.6 Sol
+
+bounded implementation / rework / finalization
+→ GPT-5.6 Luna preferred
+```
+
+Exact authority boundaries and exact SHAs remain controlling.
 
 **Unblocked ≠ authorized.**

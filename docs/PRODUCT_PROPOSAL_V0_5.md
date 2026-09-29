@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.3 complete / accepted / closed  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 open  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -19,50 +19,35 @@ Relay governs how engineering work is defined, authorized, handed over, implemen
 
 ---
 
-# 2. Core differentiation
+# 2. Accepted technical foundation
 
-Relay differentiates through durable engineering memory, explicit role/authority separation, governed handovers, independent evaluation, exact baselines/provenance, controlled research/experiments, and Human Authority at strategic boundaries.
+Phase 0 is complete and closed.
 
----
-
-# 3. Accepted technical foundation
-
-Phase 0 is complete and closed. Slice 1.1 and Slice 1.2 are complete, accepted, and closed. Slice 1.3 is complete, accepted, and independently closed. Slice 1.4 remains unopened until a separate Human Authority decision.
-
-Accepted foundations now include deterministic lifecycle/governance, authorization/human-decision persistence, repository-side canonical artifact governance, GitHub App integration, exact GitHub commit/tree/blob snapshot proof, immutable Baseline resolution, stable Artifact provenance, provider/local race guards, and Human-authorized repository initialization/synchronization.
-
-The accepted repository representation remains deliberately minimal:
+Phase 1 accepted slices:
 
 ```text
-ordinary engineering documents at natural repository paths
-+
-.relay/registry.json
+Slice 1.1 — GitHub App Integration:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.2 — Repository Registration and Baseline Resolution:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.3 — .relay Initialization and Sync:
+COMPLETE / ACCEPTED / CLOSED
 ```
 
-Runtime/cloud state and credentials remain separate from repository authority.
-
----
-
-# 4. Provider and repository authority
-
-`Project.primary_repository` remains the durable Relay project-repository authority.
-
-Slice 1.3 adds a distinct remote side-effect authority:
+Slice 1.3 canonical closure:
 
 ```text
-read-only preparation
-→ exact RepositorySyncSubjectV1
-→ HUMAN RepositoryMutationAuthorization
-→ fresh execution guards
-→ one non-force default-branch commit
-→ exact post-write proof
+RLY-S13-CLOSE-EVAL-001 — ACCEPT
+7d266aef282c6d678e059754d2eb6a5ff297d83a
 ```
 
-Repository-mutation authority remains orthogonal to lifecycle/handover authority and never certifies a Relay Baseline.
+Accepted foundations include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, and Human-authorized repository initialization/synchronization.
 
 ---
 
-# 5. Product workflow
+# 3. Product workflow
 
 ```text
 problem / objective
@@ -88,44 +73,20 @@ accepted baseline
 durable engineering memory
 ```
 
-Review, Human acceptance, closure, and next-slice opening remain separate transitions.
+Opening a slice does not authorize its design or implementation.
 
 ---
 
-# 6. Model and provider philosophy
-
-Relay project semantics do not depend on one model vendor. Role authority belongs to Relay contracts, not model identity.
+# 4. Current roadmap
 
 ```text
-architecture / design / review / evaluation:
-GPT-5.6 Sol
-
-bounded implementation / rework / finalization:
-GPT-5.6 Luna preferred
-```
-
----
-
-# 7. Current roadmap
-
-```text
-Phase 0:
-COMPLETE / CLOSED
-
 Phase 1:
 OPEN
 
-Slice 1.1:
-GITHUB APP INTEGRATION — COMPLETE / ACCEPTED / CLOSED
-
-Slice 1.2:
-REPOSITORY REGISTRATION AND BASELINE RESOLUTION — COMPLETE / ACCEPTED / CLOSED
-
-Slice 1.3:
-.relay INITIALIZATION AND SYNC — COMPLETE / ACCEPTED / CLOSED
-
 Slice 1.4:
-PROJECT AND SLICE CRUD — NOT OPEN
+PROJECT AND SLICE CRUD — OPEN
+DESIGN NOT AUTHORIZED
+IMPLEMENTATION NOT AUTHORIZED
 
 Slice 1.5:
 BOARD PROJECTION — NOT OPEN
@@ -140,71 +101,42 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
----
-
-# 8. Slice 1.3 accepted product boundary
-
-Accepted design:
+Slice 1.4 was opened by Human Authority under:
 
 ```text
-0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
+RLY-S14-OPEN-001
 ```
 
-Accepted technical result:
-
-```text
-9b5166d1e95aefeb177d30c29f943f45a591ea05
-```
-
-Independent implementation evaluation:
-
-```text
-RLY-S13-EVAL-002 — ACCEPT
-```
-
-Human technical acceptance:
-
-```text
-RLY-S13-ACCEPT-001
-```
-
-Acceptance/finalization head:
-
-```text
-5164f1a8532e1ca05007531cdfd1f5084755092a
-```
-
-Promoted-main CI:
-
-```text
-36612444758 — SUCCESS
-```
-
-The accepted capability is deliberately narrow: exact read-only preparation, exact HUMAN mutation authority, contents-only write permission, one-tree/one-commit/non-force ref visibility, fail-closed races, exact post-write proof, target-state idempotency, and no automatic Baseline persistence.
-
-Slice 1.3 does not add PR orchestration, branch creation, force pushes, ruleset bypass, background synchronization, generic provider abstraction, local Git/worktree management, Project/Slice CRUD, board projection, or agent execution.
+Its roadmap scope area is **Project and Slice CRUD**. Detailed requirements, architecture, contracts, persistence changes, and implementation remain subject to later explicit governance decisions.
 
 ---
 
-# 9. Current authority state
+# 5. Current authority state
 
 ```text
 Slice 1.3:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.4 design:
+NOT AUTHORIZED
+
+Slice 1.4 implementation:
+NOT AUTHORIZED
+
+Slice 1.5:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.3 closure is complete. The next valid Phase-1 transition is a separate Human Authority opening of Slice 1.4.
-
 **Unblocked ≠ authorized.**
 
 ---
 
-# 10. Historical proposals
+# 6. Historical proposals
 
 Product Proposal v0.3 and v0.4 remain historical snapshots. Canonical current status is determined exclusively by `.relay/registry.json`.

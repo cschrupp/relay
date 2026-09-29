@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.3 complete / accepted / closed  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 open  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after Human technical acceptance and bounded finalization of Slice 1.3.
+This is the current execution plan after independent closure of Slice 1.3 and explicit Human Authority opening of Slice 1.4.
 
 Relay continues to be built inside-out:
 
@@ -34,7 +34,7 @@ agent execution
 multi-agent orchestration
 ```
 
-The governance model remains the product. Historical Build Plans remain context only where they do not conflict with accepted records, the current registry, or later Human Authority decisions.
+The governance model remains the product.
 
 ---
 
@@ -43,9 +43,6 @@ The governance model remains the product. Historical Build Plans remain context 
 ```text
 Phase 0:
 COMPLETE / CLOSED
-
-Slices 0.1–0.6:
-CLOSED / ACCEPTED
 
 Phase 1:
 OPEN
@@ -60,54 +57,36 @@ Slice 1.3:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
-NOT OPEN
+OPEN
+
+Slice 1.4 design:
+NOT AUTHORIZED
+
+Slice 1.4 implementation:
+NOT AUTHORIZED
 ```
 
-Slice 1.3 authority chain:
+Slice 1.3 closure:
 
 ```text
-RLY-S13-OPEN-001
-RLY-S13-DESIGN-AUTH-001
-RLY-S13-DESIGN-EVAL-001 — REVISE
-RLY-S13-DESIGN-EVAL-002 — REVISE
-RLY-S13-DESIGN-EVAL-003 — REVISE
-RLY-S13-DESIGN-EVAL-004 — ACCEPT
-RLY-S13-DESIGN-ACCEPT-001
-RLY-S13-AUTH-001
-RLY-S13-EVAL-001 — REWORK
-RLY-S13-EVAL-002 — ACCEPT
-RLY-S13-ACCEPT-001
+RLY-S13-CLOSE-EVAL-001 — ACCEPT
+Canonical closure head:
+7d266aef282c6d678e059754d2eb6a5ff297d83a
 ```
 
-Exact accepted Slice 1.3 technical result:
+Slice 1.4 opening:
 
 ```text
-9b5166d1e95aefeb177d30c29f943f45a591ea05
-```
-
-Acceptance/finalization head:
-
-```text
-5164f1a8532e1ca05007531cdfd1f5084755092a
-```
-
-Promoted-main CI:
-
-```text
-36612444758 — SUCCESS
+RLY-S14-OPEN-001
 ```
 
 ---
 
 # 3. Process rules in force
 
-## P0-PR-01 — Registered living-projection preflight
+Registered living-projection changes advance `.relay/registry.json` in the same governed change.
 
-Any authorized change surface modifying a registered living projection includes the corresponding `.relay/registry.json` advancement in the same governed change.
-
-## P0-PR-02 — Role/model visibility
-
-Substantive handovers distinguish role/model assignment from actual execution provenance.
+Role/model convention:
 
 ```text
 architecture / design / review / evaluation:
@@ -117,17 +96,7 @@ bounded implementation / rework / finalization:
 GPT-5.6 Luna preferred
 ```
 
-## P0-PR-03 — Design-review outcome vocabulary
-
-```text
-ACCEPT
-REVISE
-ESCALATE
-```
-
-## P0-PR-04 — Transition discipline
-
-Review acceptance, Human acceptance, closure, and next-slice opening are distinct governed transitions.
+Opening, design authorization, design acceptance, implementation authorization, technical acceptance, and closure are distinct transitions.
 
 **Unblocked ≠ authorized.**
 
@@ -142,23 +111,11 @@ The accepted schema-v1 repository contract remains:
 └── registry.json
 ```
 
-Canonical status is a registry relationship, not a filename.
-
-Registered living projections advance through:
-
-```text
-changed current projection
-→ new ArtifactId
-→ revision N + 1
-→ exact content digest
-→ canonical pointer advances
-```
-
-Historical locked/immutable records remain immutable.
+Canonical status is a registry relationship, not a filename. Historical locked/immutable records remain immutable.
 
 ---
 
-# 5. Phase 1 — GitHub and human-controlled project workflow
+# 5. Phase 1 roadmap
 
 ## Slice 1.1 — GitHub App Integration
 
@@ -178,41 +135,19 @@ COMPLETE / ACCEPTED / CLOSED
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Accepted capability includes:
-
-- schema-v1 repository-contract preservation;
-- deterministic `RepositorySyncSubjectV1`;
-- read-only preparation;
-- exact HUMAN repository-mutation authorization;
-- deterministic SQLite migration v3;
-- separate READ/WRITE token scopes;
-- one Git tree, one exact-parent commit, one non-force default-branch ref movement;
-- fail-closed local/provider/head race guards;
-- unregistered-path adoption-or-conflict;
-- workflow-path mutation prohibition under the current permission ceiling;
-- no empty-repository bootstrap;
-- observation-based reconciliation for indeterminate ref updates;
-- exact visible registry/artifact verification;
-- target-state idempotency;
-- no automatic Baseline persistence.
-
-Accepted design head:
-
-```text
-0ba9d3ded4b068c61ca7095b02c751daf0a98fc9
-```
-
-Accepted technical result:
-
-```text
-9b5166d1e95aefeb177d30c29f943f45a591ea05
-```
-
 ## Slice 1.4 — Project and Slice CRUD
 
 ```text
-NOT OPEN
+OPEN
+DESIGN NOT AUTHORIZED
+IMPLEMENTATION NOT AUTHORIZED
 ```
+
+Roadmap objective area:
+
+> Project and Slice CRUD
+
+The opening itself does not elaborate requirements or authorize architecture/contract/design.
 
 ## Slice 1.5 — Board Projection
 
@@ -234,61 +169,25 @@ NOT OPEN
 
 ---
 
-# 6. Slice 1.3 closure gate
+# 6. Current gate
 
 ```text
-Technical acceptance:
-RLY-S13-ACCEPT-001 — DONE
+Slice 1.4 opening:
+RLY-S14-OPEN-001 — DONE
 
-Acceptance/finalization:
-5164f1a8532e1ca05007531cdfd1f5084755092a — DONE
+Slice 1.4 design authorization:
+NOT GRANTED
 
-Promoted-main CI:
-36612444758 — SUCCESS
+Slice 1.4 implementation:
+NOT AUTHORIZED
 
-Independent closure evaluation:
-RLY-S13-CLOSE-EVAL-001 — ACCEPT
-```
-
-Slice 1.3 closure is independently accepted. Slice 1.4 remains unopened until a separate Human Authority opening.
-
----
-
-# 7. Phase-1 hard stop — M0 validation
-
-Phase 1 ends only after Relay can govern a real human-controlled project workflow.
-
-Required dogfood questions remain:
-
-- Does the board clarify real project state?
-- Are deterministic traffic lights useful?
-- Does READY versus AUTHORIZED matter in practice?
-- Does durable memory reduce repeated context explanation?
-- Are gates useful rather than bureaucratic?
-- Can a fresh reviewer reconstruct why an accepted baseline exists?
-
----
-
-# 8. Current authorization boundary
-
-```text
-Phase 1:
-OPEN
-
-Slice 1.1:
-CLOSED / ACCEPTED
-
-Slice 1.2:
-CLOSED / ACCEPTED
-
-Slice 1.3:
-COMPLETE / ACCEPTED / CLOSED
-
-Slice 1.4:
-NOT OPEN / NOT AUTHORIZED
+Slice 1.5:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
+
+Next valid Slice 1.4 transition is a separate Human Authority decision on architecture / contract / design authorization.
 
 **Unblocked ≠ authorized.**
