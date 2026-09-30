@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.4 design authorized  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 Design Revision 1 submitted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after independent closure of Slice 1.3, Human opening of Slice 1.4, and explicit authorization of the Slice 1.4 architecture / contract / design phase.
+This is the current execution plan after independent closure of Slice 1.3, Human opening of Slice 1.4, explicit Slice 1.4 design authorization, and submission of Slice 1.4 Design Revision 1 for independent review.
 
 Relay continues to be built inside-out:
 
@@ -60,35 +60,56 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-AUTHORIZED
+AUTHORIZED / REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
 ```
 
-Slice 1.3 closure:
-
-```text
-RLY-S13-CLOSE-EVAL-001 — ACCEPT
-7d266aef282c6d678e059754d2eb6a5ff297d83a
-```
-
-Slice 1.4 authority chain:
+Authority chain:
 
 ```text
 RLY-S14-OPEN-001
 RLY-S14-DESIGN-AUTH-001
 ```
 
-Authorized design baseline:
+Exact authorized design baseline:
 
 ```text
-670996ec43d77526adb0ea540c81a57d6e83453b
+1eaece23e31d831bfd2b27e55a898df389cc45fc
+```
+
+Design record:
+
+```text
+docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD.md
 ```
 
 ---
 
-# 3. Process rules in force
+# 3. Slice 1.4 design direction
+
+Revision 1 preserves the accepted immutable `Project` and `Slice` domain values and adds a bounded human administration layer.
+
+Normative direction:
+
+- Project/Slice identity and ownership remain immutable.
+- Project `primary_repository` remains immutable repository authority.
+- Project name is editable.
+- Slice title/scope/acceptance criteria/parent/dependencies are editable only within a bounded early-definition window.
+- Slice workflow state remains owned by the lifecycle subsystem.
+- Definition changes use integer optimistic revisions and append-only definition history.
+- SQLite migration v4 supplies definition revisions/history with no new runtime dependency.
+- Parent and dependency graphs remain same-project and acyclic.
+- A Slice already consumed by downstream dependency or governed state is frozen rather than silently invalidated.
+- Delete is a guarded cleanup of unused current entities only; governed work is cancelled/superseded through lifecycle.
+- Delete leaves an immutable tombstone/history and never cascades accepted authority.
+- Artifact attachment remains owned by accepted Artifact/Baseline/gate contracts rather than being added to `Slice`.
+- No board, provider, agent, or autonomous work is authorized.
+
+---
+
+# 4. Process rules in force
 
 Registered living-projection changes advance `.relay/registry.json` in the same governed change.
 
@@ -108,70 +129,26 @@ Opening, design authorization, independent review, Human design acceptance, impl
 
 ---
 
-# 4. Slice 1.4 — Project and Slice CRUD
+# 5. Current gate
 
 ```text
-OPEN
-DESIGN AUTHORIZED
-IMPLEMENTATION NOT AUTHORIZED
-```
+Current governed role:
+INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
 
-The design phase must derive its contract from accepted Relay semantics rather than inventing a parallel project-management model.
+Review input:
+Slice 1.4 Design Revision 1
 
-The architect must define:
+Design authority:
+RLY-S14-DESIGN-AUTH-001
 
-- exact Project and Slice create/read/update/delete semantics;
-- immutable identity and project ownership rules;
-- preservation of Baseline, lifecycle, governance, GitHub, repository-sync, and audit history;
-- which fields may be updated and under what preconditions;
-- whether “delete” means hard deletion, guarded deletion of never-used records, archival/retirement, or another bounded semantic;
-- parent/dependency graph integrity;
-- concurrency and stale-write behavior;
-- persistence/migration requirements;
-- typed failures and deterministic idempotency;
-- acceptance criteria and expected implementation change surface.
+Slice 1.4 implementation:
+NOT AUTHORIZED
 
-The minimum safe architecture must preserve the accepted fact that `Slice` contains intended engineering scope and has no workflow state; lifecycle state remains owned by the lifecycle subsystem.
-
----
-
-# 5. Later Phase-1 slices
-
-```text
-Slice 1.5 — Board Projection:
-NOT OPEN
-
-Slice 1.6 — Human Authorization and Decision Gates:
-NOT OPEN
-
-Slice 1.7 — Manual Evaluation and Acceptance:
+Slice 1.5:
 NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
----
-
-# 6. Current gate
-
-```text
-Slice 1.4 opening:
-RLY-S14-OPEN-001 — DONE
-
-Slice 1.4 design authorization:
-RLY-S14-DESIGN-AUTH-001 — AUTHORIZED
-
-Current governed role:
-ARCHITECT / CONTRACT DESIGNER — GPT-5.6 Sol
-
-Next gate:
-INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
-
-Slice 1.4 implementation:
-NOT AUTHORIZED
-```
-
-The design reviewer must stop for Human design acceptance after an ACCEPT outcome.
-
-**Unblocked ≠ authorized.**
+The independent reviewer must return ACCEPT, REVISE, or ESCALATE and stop at the Human design-acceptance gate after ACCEPT.
