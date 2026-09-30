@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 design under independent review  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 Revision 2 under independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -15,7 +15,9 @@ Relay is a control plane for governed agentic software engineering.
 
 > **Nondeterministic agents should operate inside a deterministic engineering state machine.**
 
-Relay governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, and remembered. The board is a human-readable projection of governed state, not the source of truth.
+Relay governs how engineering work is defined, authorized, handed over,
+implemented, evaluated, accepted, and remembered. The board is a human-readable
+projection of governed state, not the source of truth.
 
 ---
 
@@ -32,9 +34,13 @@ Slice 1.3 — .relay Initialization and Sync:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Accepted foundations include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, and Human-authorized repository initialization/synchronization.
+Accepted foundations include deterministic lifecycle/governance, durable
+authority and decision state, repository canonical-artifact governance, GitHub
+App integration, immutable repository snapshot/Baseline proof, and
+Human-authorized repository initialization/synchronization.
 
-Accepted domain semantics define `Project` as an engineering project with one primary repository and `Slice` as a bounded intended engineering change with no workflow state.
+Accepted domain semantics keep `Project` and `Slice` definition data separate
+from Slice lifecycle/governance state.
 
 ---
 
@@ -45,40 +51,41 @@ Slice 1.4 — Project and Slice CRUD
 OPEN
 
 Design:
-AUTHORIZED / REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
+AUTHORIZED / REVISION 2 SUBMITTED FOR INDEPENDENT REVIEW
 
 Implementation:
 NOT AUTHORIZED
 ```
 
-Authority:
+Authority lineage:
 
 ```text
 RLY-S14-OPEN-001
 RLY-S14-DESIGN-AUTH-001
-```
 
-Exact authorized design baseline:
+Human-authorized subject baseline:
+670996ec43d77526adb0ea540c81a57d6e83453b
 
-```text
+Authority-recording design parent:
 1eaece23e31d831bfd2b27e55a898df389cc45fc
+
+Revision 1:
+430b1e1ff5eb06c26d4c63225b455feda14b6710
+
+Independent review:
+RLY-S14-DESIGN-EVAL-001 — REVISE
 ```
 
-Revision 1 defines human-controlled definition administration without turning CRUD into an alternate governance engine.
+Revision 2 preserves human-controlled definition administration and adds four
+tightened guarantees:
 
-The proposed boundary preserves:
+- product/runtime creation cannot bypass the audited administration service;
+- stale definition revisions never succeed merely because payloads converge;
+- lifecycle initialization freezes subsequent Slice-definition mutation;
+- exact authority lineage is unambiguous.
 
-- immutable Relay IDs and Slice project ownership;
-- immutable Project repository authority;
-- auditable, optimistic definition revisions;
-- bounded early Slice definition editing;
-- same-project acyclic parent/dependency graphs;
-- conservative freeze before stale downstream authority can arise;
-- guarded deletion only for unused/draft entities;
-- lifecycle ownership of block/unblock/cancel/supersede;
-- existing Artifact/Baseline/gate ownership of artifact authority.
-
-The design intentionally does not implement dependency invalidation, board projection, provider mutation, or agent execution.
+Guarded physical delete remains limited to unused current entities and keeps
+append-only retired-identity history.
 
 ---
 
@@ -89,7 +96,7 @@ Phase 1:
 OPEN
 
 Slice 1.4:
-PROJECT AND SLICE CRUD — DESIGN REVISION 1 UNDER REVIEW
+PROJECT AND SLICE CRUD — DESIGN REVISION 2 UNDER REVIEW
 
 Slice 1.5:
 BOARD PROJECTION — NOT OPEN
@@ -104,6 +111,9 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
+Slice 1.4 still does not implement dependency invalidation, board projection,
+provider mutation, repository sync, or agent execution.
+
 ---
 
 # 5. Current authority state
@@ -112,8 +122,8 @@ NOT AUTHORIZED
 Current role:
 INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
 
-Design review outcome:
-PENDING
+Review input:
+Revision 1 + Revision 2 Amendment
 
 Human design acceptance:
 NOT REACHED
@@ -128,6 +138,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Passing CI or independent-review acceptance does not authorize implementation.
+Passing CI or an independent design-review ACCEPT does not authorize
+implementation.
 
 **Unblocked ≠ authorized.**
