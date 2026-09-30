@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 design authorized  
+**Status:** Phase 1 open — Slice 1.4 Design Revision 1 submitted for independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -31,22 +31,24 @@ RLY-S13-CLOSE-EVAL-001 — ACCEPT
 
 # 2. Slice 1.4 authority
 
-Human opening:
-
 ```text
+Opening:
 RLY-S14-OPEN-001
-```
 
-Human design authorization:
-
-```text
+Design authorization:
 RLY-S14-DESIGN-AUTH-001
-```
 
 Exact authorized design baseline:
+1eaece23e31d831bfd2b27e55a898df389cc45fc
+```
+
+Design Revision 1:
 
 ```text
-670996ec43d77526adb0ea540c81a57d6e83453b
+docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD.md
+
+Status:
+SUBMITTED FOR INDEPENDENT REVIEW
 ```
 
 Current gate:
@@ -56,10 +58,10 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-AUTHORIZED
+AUTHORIZED / REVIEW PENDING
 
 Current role:
-ARCHITECT / CONTRACT DESIGNER — GPT-5.6 Sol
+INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -73,17 +75,21 @@ NOT AUTHORIZED
 
 ---
 
-# 3. Accepted contracts relevant to Slice 1.4
+# 3. Revision 1 design summary
 
-The accepted domain layer defines:
+The proposed contract:
 
-- `Project`: immutable typed identity, nonblank name, one primary repository;
-- `Slice`: immutable typed identity, owning `project_id`, title, scope, acceptance criteria, optional parent, dependencies;
-- `Slice` deliberately contains no workflow state.
-
-The accepted persistence layer currently provides insert/load operations for Project and Slice. Existing downstream tables reference Project/Slice records for Baselines, lifecycle, governance, GitHub integration, executions, and repository mutation authority.
-
-Slice 1.4 design must preserve those ownership boundaries and historical references.
+- leaves accepted `Project` and `Slice` schemas unchanged;
+- introduces independent definition revisions/history in persistence;
+- uses exact optimistic revision checks and target-state idempotency;
+- keeps Project repository authority immutable;
+- validates same-project parent/dependency graphs and cycles;
+- permits Slice definition edits only before governed/downstream use makes them unsafe;
+- guards physical delete to unused entities and preserves tombstones/history;
+- routes block/unblock/cancel/supersede through accepted lifecycle/governance;
+- adds SQLite migration v4 only;
+- adds no runtime dependency;
+- performs no board, provider, repository-sync, or agent work.
 
 ---
 
@@ -100,6 +106,6 @@ bounded implementation / rework / finalization
 → GPT-5.6 Luna preferred
 ```
 
-Passing CI is evidence only.
+Exact authority boundaries and exact SHAs remain controlling.
 
 **Unblocked ≠ authorized.**
