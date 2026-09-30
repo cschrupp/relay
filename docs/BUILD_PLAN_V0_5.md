@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.4 Design Revision 2 submitted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 design accepted  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,9 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after Slice 1.4 Design Revision 1 received
-independent outcome `RLY-S14-DESIGN-EVAL-001 — REVISE` and bounded Revision 2
-was prepared to resolve its four findings.
+This is the current execution plan after independent acceptance and Human Authority acceptance of the combined Slice 1.4 Revision 1 + Revision 2 design.
 
 Relay continues to be built inside-out:
 
@@ -56,7 +54,7 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-AUTHORIZED / REVISION 2 SUBMITTED FOR INDEPENDENT REVIEW
+ACCEPTED
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -67,6 +65,9 @@ Authority/provenance chain:
 ```text
 RLY-S14-OPEN-001
 RLY-S14-DESIGN-AUTH-001
+RLY-S14-DESIGN-EVAL-001 — REVISE
+RLY-S14-DESIGN-EVAL-002 — ACCEPT
+RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
 
 Human-authorized subject baseline:
 670996ec43d77526adb0ea540c81a57d6e83453b
@@ -77,43 +78,34 @@ Authority-recording design parent:
 Revision 1:
 430b1e1ff5eb06c26d4c63225b455feda14b6710
 
-Independent review:
-RLY-S14-DESIGN-EVAL-001 — REVISE
-```
-
-Revision 2 amendment:
-
-```text
-docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_REV2_AMENDMENT.md
+Accepted Revision 2 design head:
+f5a678da360b96701a1f9635d3703b49dc16e779
 ```
 
 ---
 
-# 3. Revision 2 design direction
+# 3. Accepted Slice 1.4 design direction
 
-Revision 2 preserves Revision 1 architecture and tightens four boundaries:
+The accepted combined design:
 
-- exact authority-lineage terminology is corrected without changing Human
-  Authority;
-- post-v4 Project/Slice runtime creation has one audited product mutation path:
-  the Slice 1.4 administration service;
-- expected-definition-revision comparison is strict even for exact-target
-  updates;
-- Slice definition mutation ends once lifecycle is initialized, avoiding a new
-  lifecycle/definition-revision binding.
-
-It also makes destructive delete blockers explicit rather than relying on a
-catch-all or database cascade.
-
-No lifecycle schema redesign, command-id subsystem, provider change, board work,
-or agent work is introduced.
+- preserves accepted immutable `Project` and `Slice` domain values;
+- keeps Project repository authority immutable;
+- makes the Slice 1.4 administration service the only post-v4 product/runtime creation path;
+- introduces integer definition revisions and append-only definition history through SQLite migration v4;
+- requires strict compare-and-swap before both material and exact-target updates;
+- validates same-project parent/dependency graphs and cycles;
+- freezes Slice definition mutation once lifecycle is initialized;
+- freezes a Slice definition once another current Slice depends on it;
+- permits physical delete only for unused current entities after explicit blocker checks;
+- preserves retired identity/history through DELETE tombstones;
+- keeps block/unblock/cancel/supersede in lifecycle/governance;
+- adds no runtime dependency.
 
 ---
 
 # 4. Process rules in force
 
-Registered living-projection changes advance `.relay/registry.json` in the same
-governed change.
+Registered living-projection changes advance `.relay/registry.json` in the same governed change.
 
 Role/model convention:
 
@@ -125,8 +117,7 @@ bounded implementation / rework / finalization:
 GPT-5.6 Luna preferred
 ```
 
-Opening, design authorization, independent review, Human design acceptance,
-implementation authorization, technical acceptance, and closure remain distinct.
+Opening, design authorization, independent review, Human design acceptance, implementation authorization, technical acceptance, and closure remain distinct transitions.
 
 **Unblocked ≠ authorized.**
 
@@ -136,19 +127,16 @@ implementation authorization, technical acceptance, and closure remain distinct.
 
 ```text
 Current governed role:
-INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
+HUMAN AUTHORITY / ORCHESTRATOR
 
-Review input:
-Slice 1.4 Revision 1 + Revision 2 Amendment
-
-Design authority:
-RLY-S14-DESIGN-AUTH-001
-
-Human design acceptance:
-NOT REACHED
+Slice 1.4 design:
+ACCEPTED
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
+
+Next gate:
+Explicit Human Authority implementation authorization
 
 Slice 1.5:
 NOT OPEN
@@ -157,4 +145,4 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The reviewer must return ACCEPT, REVISE, or ESCALATE and stop after the review.
+Design acceptance does not authorize implementation.
