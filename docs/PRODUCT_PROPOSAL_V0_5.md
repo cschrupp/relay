@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 design authorized  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 design under independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -34,7 +34,7 @@ COMPLETE / ACCEPTED / CLOSED
 
 Accepted foundations include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, and Human-authorized repository initialization/synchronization.
 
-Accepted domain semantics already define `Project` as an engineering project with one primary repository and `Slice` as a bounded intended engineering change with no workflow state.
+Accepted domain semantics define `Project` as an engineering project with one primary repository and `Slice` as a bounded intended engineering change with no workflow state.
 
 ---
 
@@ -43,8 +43,12 @@ Accepted domain semantics already define `Project` as an engineering project wit
 ```text
 Slice 1.4 — Project and Slice CRUD
 OPEN
-DESIGN AUTHORIZED
-IMPLEMENTATION NOT AUTHORIZED
+
+Design:
+AUTHORIZED / REVISION 1 SUBMITTED FOR INDEPENDENT REVIEW
+
+Implementation:
+NOT AUTHORIZED
 ```
 
 Authority:
@@ -54,22 +58,27 @@ RLY-S14-OPEN-001
 RLY-S14-DESIGN-AUTH-001
 ```
 
-Authorized design baseline:
+Exact authorized design baseline:
 
 ```text
-670996ec43d77526adb0ea540c81a57d6e83453b
+1eaece23e31d831bfd2b27e55a898df389cc45fc
 ```
 
-The design must make Project and Slice administration usable without weakening Relay’s authority model. CRUD semantics must not become an alternate path for lifecycle transitions, authority changes, Baseline rewriting, repository mutation, or historical erasure.
+Revision 1 defines human-controlled definition administration without turning CRUD into an alternate governance engine.
 
-Minimum design questions include:
+The proposed boundary preserves:
 
-- immutable identity and ownership;
-- safe mutable metadata;
-- Slice parent/dependency integrity;
-- how deletion interacts with durable history and foreign-key references;
-- deterministic stale-write and idempotency semantics;
-- the minimum persistence evolution needed to support safe mutation.
+- immutable Relay IDs and Slice project ownership;
+- immutable Project repository authority;
+- auditable, optimistic definition revisions;
+- bounded early Slice definition editing;
+- same-project acyclic parent/dependency graphs;
+- conservative freeze before stale downstream authority can arise;
+- guarded deletion only for unused/draft entities;
+- lifecycle ownership of block/unblock/cancel/supersede;
+- existing Artifact/Baseline/gate ownership of artifact authority.
+
+The design intentionally does not implement dependency invalidation, board projection, provider mutation, or agent execution.
 
 ---
 
@@ -80,7 +89,7 @@ Phase 1:
 OPEN
 
 Slice 1.4:
-PROJECT AND SLICE CRUD — DESIGN AUTHORIZED
+PROJECT AND SLICE CRUD — DESIGN REVISION 1 UNDER REVIEW
 
 Slice 1.5:
 BOARD PROJECTION — NOT OPEN
@@ -100,11 +109,14 @@ NOT AUTHORIZED
 # 5. Current authority state
 
 ```text
-Current governed role:
-ARCHITECT / CONTRACT DESIGNER — GPT-5.6 Sol
-
-Next governed gate:
+Current role:
 INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
+
+Design review outcome:
+PENDING
+
+Human design acceptance:
+NOT REACHED
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -116,6 +128,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Independent design-review acceptance, if achieved, still requires a separate Human design-acceptance decision before implementation can be authorized.
+Passing CI or independent-review acceptance does not authorize implementation.
 
 **Unblocked ≠ authorized.**
