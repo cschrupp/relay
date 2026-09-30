@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 Design Revision 1 submitted for independent review  
+**Status:** Phase 1 open — Slice 1.4 Design Revision 2 submitted for independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -29,7 +29,7 @@ RLY-S13-CLOSE-EVAL-001 — ACCEPT
 
 ---
 
-# 2. Slice 1.4 authority
+# 2. Slice 1.4 authority and design lineage
 
 ```text
 Opening:
@@ -38,14 +38,23 @@ RLY-S14-OPEN-001
 Design authorization:
 RLY-S14-DESIGN-AUTH-001
 
-Exact authorized design baseline:
+Human-authorized subject baseline:
+670996ec43d77526adb0ea540c81a57d6e83453b
+
+Authority-recording canonical commit / design parent:
 1eaece23e31d831bfd2b27e55a898df389cc45fc
-```
 
 Design Revision 1:
+430b1e1ff5eb06c26d4c63225b455feda14b6710
+
+Independent Revision 1 review:
+RLY-S14-DESIGN-EVAL-001 — REVISE
+```
+
+Revision 2 amendment:
 
 ```text
-docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD.md
+docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_REV2_AMENDMENT.md
 
 Status:
 SUBMITTED FOR INDEPENDENT REVIEW
@@ -58,10 +67,13 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-AUTHORIZED / REVIEW PENDING
+AUTHORIZED / REVISION 2 REVIEW PENDING
 
 Current role:
 INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
+
+Human design acceptance:
+NOT REACHED
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -75,19 +87,22 @@ NOT AUTHORIZED
 
 ---
 
-# 3. Revision 1 design summary
+# 3. Combined Revision 1 + Revision 2 design summary
 
-The proposed contract:
+The proposed combined contract:
 
 - leaves accepted `Project` and `Slice` schemas unchanged;
-- introduces independent definition revisions/history in persistence;
-- uses exact optimistic revision checks and target-state idempotency;
+- introduces definition revisions/history through migration v4;
+- makes the administration service the only post-v4 product/runtime creation
+  path for Project/Slice current state;
+- uses strict optimistic compare-and-swap for material and no-op updates;
 - keeps Project repository authority immutable;
 - validates same-project parent/dependency graphs and cycles;
-- permits Slice definition edits only before governed/downstream use makes them unsafe;
+- freezes Slice definitions once lifecycle is initialized;
+- freezes definitions consumed by downstream dependencies;
 - guards physical delete to unused entities and preserves tombstones/history;
+- explicitly checks destructive-delete blockers;
 - routes block/unblock/cancel/supersede through accepted lifecycle/governance;
-- adds SQLite migration v4 only;
 - adds no runtime dependency;
 - performs no board, provider, repository-sync, or agent work.
 
