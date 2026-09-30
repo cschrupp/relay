@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.4 open  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after independent closure of Slice 1.3 and explicit Human Authority opening of Slice 1.4.
+This is the current execution plan after independent closure of Slice 1.3, Human opening of Slice 1.4, and explicit authorization of the Slice 1.4 architecture / contract / design phase.
 
 Relay continues to be built inside-out:
 
@@ -60,7 +60,7 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-NOT AUTHORIZED
+AUTHORIZED
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -70,14 +70,20 @@ Slice 1.3 closure:
 
 ```text
 RLY-S13-CLOSE-EVAL-001 — ACCEPT
-Canonical closure head:
 7d266aef282c6d678e059754d2eb6a5ff297d83a
 ```
 
-Slice 1.4 opening:
+Slice 1.4 authority chain:
 
 ```text
 RLY-S14-OPEN-001
+RLY-S14-DESIGN-AUTH-001
+```
+
+Authorized design baseline:
+
+```text
+670996ec43d77526adb0ea540c81a57d6e83453b
 ```
 
 ---
@@ -96,75 +102,53 @@ bounded implementation / rework / finalization:
 GPT-5.6 Luna preferred
 ```
 
-Opening, design authorization, design acceptance, implementation authorization, technical acceptance, and closure are distinct transitions.
+Opening, design authorization, independent review, Human design acceptance, implementation authorization, technical acceptance, and closure remain distinct transitions.
 
 **Unblocked ≠ authorized.**
 
 ---
 
-# 4. Repository and documentation governance
-
-The accepted schema-v1 repository contract remains:
-
-```text
-.relay/
-└── registry.json
-```
-
-Canonical status is a registry relationship, not a filename. Historical locked/immutable records remain immutable.
-
----
-
-# 5. Phase 1 roadmap
-
-## Slice 1.1 — GitHub App Integration
-
-```text
-COMPLETE / ACCEPTED / CLOSED
-```
-
-## Slice 1.2 — Repository Registration and Baseline Resolution
-
-```text
-COMPLETE / ACCEPTED / CLOSED
-```
-
-## Slice 1.3 — `.relay/` Initialization and Sync
-
-```text
-COMPLETE / ACCEPTED / CLOSED
-```
-
-## Slice 1.4 — Project and Slice CRUD
+# 4. Slice 1.4 — Project and Slice CRUD
 
 ```text
 OPEN
-DESIGN NOT AUTHORIZED
+DESIGN AUTHORIZED
 IMPLEMENTATION NOT AUTHORIZED
 ```
 
-Roadmap objective area:
+The design phase must derive its contract from accepted Relay semantics rather than inventing a parallel project-management model.
 
-> Project and Slice CRUD
+The architect must define:
 
-The opening itself does not elaborate requirements or authorize architecture/contract/design.
+- exact Project and Slice create/read/update/delete semantics;
+- immutable identity and project ownership rules;
+- preservation of Baseline, lifecycle, governance, GitHub, repository-sync, and audit history;
+- which fields may be updated and under what preconditions;
+- whether “delete” means hard deletion, guarded deletion of never-used records, archival/retirement, or another bounded semantic;
+- parent/dependency graph integrity;
+- concurrency and stale-write behavior;
+- persistence/migration requirements;
+- typed failures and deterministic idempotency;
+- acceptance criteria and expected implementation change surface.
 
-## Slice 1.5 — Board Projection
+The minimum safe architecture must preserve the accepted fact that `Slice` contains intended engineering scope and has no workflow state; lifecycle state remains owned by the lifecycle subsystem.
+
+---
+
+# 5. Later Phase-1 slices
 
 ```text
+Slice 1.5 — Board Projection:
 NOT OPEN
-```
 
-## Slice 1.6 — Human Authorization and Decision Gates
-
-```text
+Slice 1.6 — Human Authorization and Decision Gates:
 NOT OPEN
-```
 
-## Slice 1.7 — Manual Evaluation and Acceptance
-
-```text
+Slice 1.7 — Manual Evaluation and Acceptance:
 NOT OPEN
+
+Agent execution:
+NOT AUTHORIZED
 ```
 
 ---
@@ -176,18 +160,18 @@ Slice 1.4 opening:
 RLY-S14-OPEN-001 — DONE
 
 Slice 1.4 design authorization:
-NOT GRANTED
+RLY-S14-DESIGN-AUTH-001 — AUTHORIZED
+
+Current governed role:
+ARCHITECT / CONTRACT DESIGNER — GPT-5.6 Sol
+
+Next gate:
+INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
-
-Slice 1.5:
-NOT OPEN
-
-Agent execution:
-NOT AUTHORIZED
 ```
 
-Next valid Slice 1.4 transition is a separate Human Authority decision on architecture / contract / design authorization.
+The design reviewer must stop for Human design acceptance after an ACCEPT outcome.
 
 **Unblocked ≠ authorized.**
