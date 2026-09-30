@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 Design Revision 2 submitted for independent review  
+**Status:** Phase 1 open — Slice 1.4 Design Revision 3 submitted for independent review  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -10,26 +10,17 @@
 # 1. Accepted foundation
 
 ```text
-Slice 1.1:
+Slices 1.1–1.3:
 COMPLETE / ACCEPTED / CLOSED
 
-Slice 1.2:
-COMPLETE / ACCEPTED / CLOSED
-
-Slice 1.3:
-COMPLETE / ACCEPTED / CLOSED
-```
-
-Slice 1.3 canonical closure:
-
-```text
+Slice 1.3 closure:
 RLY-S13-CLOSE-EVAL-001 — ACCEPT
 7d266aef282c6d678e059754d2eb6a5ff297d83a
 ```
 
 ---
 
-# 2. Slice 1.4 authority and design lineage
+# 2. Slice 1.4 lineage
 
 ```text
 Opening:
@@ -44,30 +35,51 @@ Human-authorized subject baseline:
 Authority-recording canonical commit / design parent:
 1eaece23e31d831bfd2b27e55a898df389cc45fc
 
-Design Revision 1:
+Revision 1:
 430b1e1ff5eb06c26d4c63225b455feda14b6710
-
-Independent Revision 1 review:
 RLY-S14-DESIGN-EVAL-001 — REVISE
+
+Revision 2:
+f5a678da360b96701a1f9635d3703b49dc16e779
+RLY-S14-DESIGN-EVAL-002 — REVISE
 ```
 
-Revision 2 amendment:
+Revision 3:
 
 ```text
-docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_REV2_AMENDMENT.md
-
-Status:
+docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_REV3_AMENDMENT.md
 SUBMITTED FOR INDEPENDENT REVIEW
 ```
 
-Current gate:
+---
+
+# 3. Combined design summary
+
+Revision 1–3:
+
+- preserves accepted immutable `Project` / `Slice` domain schemas;
+- adds definition revision/history through SQLite migration v4;
+- requires audited HUMAN product/runtime creation through the administration
+  service;
+- uses strict optimistic compare-and-swap;
+- freezes Slice definition mutation once lifecycle exists;
+- freezes Slice definitions consumed as current parent/dependency or immutable
+  gate/lifecycle dependency/successor;
+- permits physical delete only for ungoverned, durably unreferenced current
+  entities while retaining immutable definition history/tombstones;
+- performs semantic reference checks through typed persisted records;
+- adds no runtime dependency and no board/provider/agent work.
+
+---
+
+# 4. Current gate
 
 ```text
 Slice 1.4:
 OPEN
 
-Slice 1.4 design:
-AUTHORIZED / REVISION 2 REVIEW PENDING
+Design:
+AUTHORIZED / REVISION 3 REVIEW PENDING
 
 Current role:
 INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
@@ -75,7 +87,7 @@ INDEPENDENT DESIGN REVIEWER — GPT-5.6 Sol
 Human design acceptance:
 NOT REACHED
 
-Slice 1.4 implementation:
+Implementation:
 NOT AUTHORIZED
 
 Slice 1.5:
@@ -84,43 +96,5 @@ NOT OPEN
 Agent execution:
 NOT AUTHORIZED
 ```
-
----
-
-# 3. Combined Revision 1 + Revision 2 design summary
-
-The proposed combined contract:
-
-- leaves accepted `Project` and `Slice` schemas unchanged;
-- introduces definition revisions/history through migration v4;
-- makes the administration service the only post-v4 product/runtime creation
-  path for Project/Slice current state;
-- uses strict optimistic compare-and-swap for material and no-op updates;
-- keeps Project repository authority immutable;
-- validates same-project parent/dependency graphs and cycles;
-- freezes Slice definitions once lifecycle is initialized;
-- freezes definitions consumed by downstream dependencies;
-- guards physical delete to unused entities and preserves tombstones/history;
-- explicitly checks destructive-delete blockers;
-- routes block/unblock/cancel/supersede through accepted lifecycle/governance;
-- adds no runtime dependency;
-- performs no board, provider, repository-sync, or agent work.
-
----
-
-# 4. Protocol rules in force
-
-```text
-registered living-projection change
-→ registry advancement in same governed change
-
-architecture / design / review / evaluation
-→ GPT-5.6 Sol
-
-bounded implementation / rework / finalization
-→ GPT-5.6 Luna preferred
-```
-
-Exact authority boundaries and exact SHAs remain controlling.
 
 **Unblocked ≠ authorized.**
