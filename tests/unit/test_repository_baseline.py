@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from relay_engine.domain import Artifact, CommitRef, Project, RepositoryRef
+from relay_engine.domain import ActorKind, ActorRef, Artifact, CommitRef, Project, RepositoryRef
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
     GitHubAccountType,
@@ -29,7 +29,8 @@ from relay_engine.integrations.github import (
     GitHubTree,
     GitHubTreeEntry,
 )
-from relay_engine.persistence import insert_project, load_artifact, load_baseline, open_database
+from relay_engine.persistence import load_artifact, load_baseline, open_database
+from relay_engine.project_slice import MutationMetadata, create_project
 from relay_engine.repository_baseline import (
     RepositoryAccessChanged,
     RepositoryBaselinePersistenceError,
@@ -66,6 +67,18 @@ TREE_DOCS = "5" * 40
 REGISTRY_BLOB_SHA = "6" * 40
 ARTIFACT_BLOB_SHA = "7" * 40
 REPOSITORY = RepositoryRef(id=REPOSITORY_ID, host="github.com", path="cschrupp/relay")
+
+
+def _create_project(database: object, value: Project) -> None:
+    create_project(
+        database,
+        value,
+        MutationMetadata(
+            actor=ActorRef(id="act_018f47c1-7b2c-7abc-8def-123456789008", kind=ActorKind.HUMAN),
+            occurred_at=NOW,
+            reason="Test setup.",
+        ),
+    )
 
 
 def _artifact_raw() -> bytes:
@@ -157,7 +170,7 @@ def _installation(state_revision: int = 1) -> GitHubInstallationState:
 
 def _seed_database():
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=NOW)
-    insert_project(
+    _create_project(
         database,
         Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY),
     )

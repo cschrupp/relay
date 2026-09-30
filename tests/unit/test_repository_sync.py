@@ -55,11 +55,11 @@ from relay_engine.lifecycle import (
 )
 from relay_engine.persistence import (
     PersistenceIntegrityError,
-    insert_project,
     insert_repository_mutation_authorization,
     load_repository_mutation_authorization,
     open_database,
 )
+from relay_engine.project_slice import MutationMetadata, create_project
 from relay_engine.repository_contract import (
     RepositoryArtifactClass,
     RepositoryArtifactRevision,
@@ -102,6 +102,14 @@ BASE_SHA = "1" * 40
 REPOSITORY = RepositoryRef(id=REPOSITORY_ID, host="github.com", path="cschrupp/relay")
 ACTOR = ActorRef(kind=ActorKind.HUMAN, id="act_018f47c1-7b2c-7abc-8def-123456789005")
 RAW = b"Relay test artifact\n"
+
+
+def _create_project(database: object, value: Project) -> None:
+    create_project(
+        database,
+        value,
+        MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Test setup."),
+    )
 
 
 def _git_blob_sha(raw: bytes) -> str:
@@ -374,7 +382,7 @@ class _FakeGitHub:
 @pytest.fixture
 def fixture_env():
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=NOW)
-    insert_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
+    _create_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
     github_store = GitHubIntegrationStore(database)
     state = _make_state(write=True)
     github_store.apply_mutation(
@@ -1008,7 +1016,7 @@ def test_wrong_project_mutation_authorization_is_rejected_before_write_token(fix
     preparation = service.prepare_repository_sync(request, observed_at=NOW)
     assert preparation.subject is not None
     wrong_project_id = "prj_018f47c1-7b2c-7abc-8def-123456789099"
-    insert_project(
+    _create_project(
         database,
         Project(id=wrong_project_id, name="Other project", primary_repository=REPOSITORY),
     )
@@ -1317,7 +1325,7 @@ def test_migration_v3_has_project_subject_index_and_no_slice_authority(fixture_e
 def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
     path = tmp_path / "relay.sqlite"
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
-    insert_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
+    _create_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
     registry = _target_registry()
     subject = RepositorySyncSubjectV1(
         project_id=PROJECT_ID,
@@ -1354,7 +1362,7 @@ def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions[-1] == 3
+        assert versions[-1] == 4
     finally:
         restarted.close()
 

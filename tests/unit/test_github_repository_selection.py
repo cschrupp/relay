@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import SecretStr
 
-from relay_engine.domain import Project, RepositoryRef
+from relay_engine.domain import ActorKind, ActorRef, Project, RepositoryRef
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
     GitHubAccountType,
@@ -23,7 +23,8 @@ from relay_engine.integrations.github import (
     GitHubRepositorySelectionMode,
     GitHubRepositorySnapshot,
 )
-from relay_engine.persistence import insert_project, open_database
+from relay_engine.persistence import open_database
+from relay_engine.project_slice import MutationMetadata, create_project
 
 NOW = datetime(2026, 9, 28, 1, 0, tzinfo=UTC)
 PROJECT_ID = "prj_018f47c1-7b2c-7abc-8def-123456789001"
@@ -32,6 +33,18 @@ REPOSITORY = RepositoryRef(
     host="github.com",
     path="cschrupp/relay",
 )
+
+
+def _create_project(database: object, value: Project) -> None:
+    create_project(
+        database,
+        value,
+        MutationMetadata(
+            actor=ActorRef(id="act_018f47c1-7b2c-7abc-8def-123456789008", kind=ActorKind.HUMAN),
+            occurred_at=NOW,
+            reason="Test setup.",
+        ),
+    )
 
 
 class DummyClient:
@@ -75,7 +88,7 @@ def _repository() -> GitHubRepositorySnapshot:
 
 def _seed(readiness: GitHubAccessReadiness):
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=NOW)
-    insert_project(
+    _create_project(
         database,
         Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY),
     )

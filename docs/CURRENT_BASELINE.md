@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 design accepted / implementation not authorized  
+**Status:** Phase 1 open — Slice 1.4 implementation candidate pending independent evaluation
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -70,10 +70,27 @@ Slice 1.4 design:
 ACCEPTED
 
 Current role:
-HUMAN AUTHORITY / ORCHESTRATOR
+IMPLEMENTATION AGENT — CANDIDATE SUBMITTED FOR EVALUATION
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED — CANDIDATE PENDING INDEPENDENT EVALUATION
+
+Accepted implementation baseline:
+d9d78350b9ae605c44191330047a8a697ad1b121
+
+Implementation branch:
+implementation/1.4-project-slice-crud
+
+Candidate result SHA:
+carried by RLY-S14-IMPLEMENTATION-RESULT-001
+
+Candidate capability:
+human-controlled Project and Slice definition CRUD with SQLite v4 definition
+revisions, append-only history, optimistic concurrency, graph validation,
+human mutation provenance, guarded deletion, and retired identities
+
+Slice 1.4 technical acceptance:
+NOT REACHED
 
 Slice 1.5:
 NOT OPEN

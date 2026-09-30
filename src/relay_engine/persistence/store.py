@@ -164,11 +164,6 @@ def _is_busy(error: sqlite3.OperationalError) -> bool:
     return "locked" in message or "busy" in message
 
 
-def insert_project(database: RelayDatabase, value: Project) -> None:
-    with _write(database) as connection:
-        _insert_payload(connection, "projects", "id", value.id, value)
-
-
 def load_project(database: RelayDatabase, project_id: ProjectId) -> Project | None:
     return _read(
         database,
@@ -202,13 +197,6 @@ def load_baseline(database: RelayDatabase, baseline_id: BaselineId) -> Baseline 
             {"id": "id", "project_id": "project_id"},
         ),
     )
-
-
-def insert_slice(database: RelayDatabase, value: Slice) -> None:
-    with _write(database) as connection:
-        _insert_payload(
-            connection, "slices", "id", value.id, value, {"project_id": value.project_id}
-        )
 
 
 def load_slice(database: RelayDatabase, slice_id: SliceId) -> Slice | None:

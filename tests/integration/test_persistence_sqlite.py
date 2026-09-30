@@ -45,6 +45,7 @@ from relay_engine.lifecycle import (
     transition_phase,
 )
 from relay_engine.persistence import (
+    DEFAULT_MIGRATIONS,
     ConcurrencyConflict,
     Migration,
     MigrationError,
@@ -59,8 +60,6 @@ from relay_engine.persistence import (
     insert_evidence,
     insert_handover_gate,
     insert_human_decision,
-    insert_project,
-    insert_slice,
     load_artifact,
     load_authorization_grant,
     load_baseline,
@@ -79,6 +78,14 @@ from relay_engine.persistence import (
     persist_lifecycle_change,
     persist_lifecycle_initialization,
     verify_slice_history,
+)
+from relay_engine.project_slice import (
+    MutationMetadata,
+    ProjectAlreadyExists,
+    create_project,
+    create_slice,
+    get_project,
+    get_project_revision,
 )
 
 NOW = datetime(2026, 9, 23, 12, tzinfo=UTC)
@@ -99,9 +106,10 @@ def _fixture(name: str, model: type[object]) -> object:
 
 
 def _setup(database: object) -> None:
-    insert_project(database, cast(Project, _fixture("project", Project)))
+    metadata = MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Test setup.")
+    create_project(database, cast(Project, _fixture("project", Project)), metadata)
     insert_baseline(database, cast(Baseline, _fixture("baseline", Baseline)))
-    insert_slice(database, cast(Slice, _fixture("slice", Slice)))
+    create_slice(database, cast(Slice, _fixture("slice", Slice)), metadata)
 
 
 def _initialized(database: object) -> tuple[SliceLifecycle, LifecycleInitialized]:
@@ -294,8 +302,12 @@ def test_index_column_payload_mismatch_is_integrity_error(db: object) -> None:
 
 def test_duplicate_static_domain_identity_is_rejected(db: object) -> None:
     project = cast(Project, _fixture("project", Project))
-    with pytest.raises(PersistenceError):
-        insert_project(db, project)
+    with pytest.raises(ProjectAlreadyExists):
+        create_project(
+            db,
+            project.model_copy(update={"name": "Different"}),
+            MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Test duplicate."),
+        )
 
 
 def test_migration_pending_batch_rolls_back_as_one_unit(tmp_path: Path) -> None:
@@ -349,6 +361,83 @@ def test_open_database_apply_mode_rejects_missing_required_table(tmp_path: Path)
     connection.close()
     with pytest.raises(MigrationError):
         open_database(path, apply_migrations=True, migration_applied_at=NOW)
+
+
+def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_audited(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "v3-populated.sqlite"
+    connection = sqlite3.connect(path, isolation_level=None)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    apply_migrations(connection, DEFAULT_MIGRATIONS[:3], applied_at=NOW)
+    project = cast(Project, _fixture("project", Project))
+    slice_value = cast(Slice, _fixture("slice", Slice))
+    connection.execute(
+        "INSERT INTO projects(id, payload_json) VALUES (?, ?)",
+        (project.id, project.model_dump_json()),
+    )
+    connection.execute(
+        "INSERT INTO slices(id, project_id, payload_json) VALUES (?, ?, ?)",
+        (slice_value.id, slice_value.project_id, slice_value.model_dump_json()),
+    )
+    apply_migrations(connection, DEFAULT_MIGRATIONS, applied_at=NOW)
+    connection.close()
+
+    migrated = open_database(path, apply_migrations=False)
+    try:
+        project_seed = migrated.connection.execute(
+            "SELECT definition_revision, operation, payload_json "
+            "FROM project_definition_revisions WHERE project_id = ?",
+            (project.id,),
+        ).fetchone()
+        slice_seed = migrated.connection.execute(
+            "SELECT definition_revision, operation, payload_json "
+            "FROM slice_definition_revisions WHERE slice_id = ?",
+            (slice_value.id,),
+        ).fetchone()
+        assert tuple(project_seed[:2]) == (1, "SEED")
+        assert tuple(slice_seed[:2]) == (1, "SEED")
+        assert Project.model_validate_json(project_seed["payload_json"]) == project
+        assert Slice.model_validate_json(slice_seed["payload_json"]) == slice_value
+
+        new_project = project.model_copy(
+            update={"id": "prj_018f47c1-7b2c-7abc-8def-123456789099", "name": "New"}
+        )
+        create_project(
+            migrated,
+            new_project,
+            MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Create after v4."),
+        )
+        operation = migrated.connection.execute(
+            "SELECT operation FROM project_definition_revisions WHERE project_id = ?",
+            (new_project.id,),
+        ).fetchone()[0]
+        assert operation == "CREATE"
+        assert (
+            migrated.connection.execute(
+                "SELECT version FROM relay_schema_migrations ORDER BY version DESC LIMIT 1"
+            ).fetchone()[0]
+            == 4
+        )
+    finally:
+        migrated.close()
+
+
+def test_definition_history_survives_database_restart(tmp_path: Path) -> None:
+    path = tmp_path / "restart.sqlite"
+    database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    project = cast(Project, _fixture("project", Project))
+    create_project(
+        database, project, MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Create.")
+    )
+    database.close()
+    reopened = open_database(path, apply_migrations=False)
+    try:
+        assert get_project(reopened, project.id).definition_revision == 1
+        assert get_project_revision(reopened, project.id, 1).operation.value == "CREATE"
+    finally:
+        reopened.close()
 
 
 def test_apply_migrations_rejects_noncontiguous_applied_history(tmp_path: Path) -> None:
@@ -594,7 +683,11 @@ def test_persisted_execution_rejects_stale_dependency_projection(db: object) -> 
     dependency = cast(Slice, _fixture("slice", Slice)).model_copy(
         update={"id": dependency_id, "title": "Dependency"}
     )
-    insert_slice(db, dependency)
+    create_slice(
+        db,
+        dependency,
+        MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Test setup."),
+    )
     durable, event = initialize_lifecycle(
         dependency_id, cast(EventId, _id("evt_", 20)), ACTOR, NOW, "Initialize dependency."
     )
