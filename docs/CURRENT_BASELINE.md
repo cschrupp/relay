@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 open; design not authorized  
+**Status:** Phase 1 open — Slice 1.4 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -8,8 +8,6 @@
 ---
 
 # 1. Accepted foundation
-
-Phase 0 is complete and closed.
 
 ```text
 Slice 1.1:
@@ -22,30 +20,33 @@ Slice 1.3:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Slice 1.3 closure:
+Slice 1.3 canonical closure:
 
 ```text
 RLY-S13-CLOSE-EVAL-001 — ACCEPT
-Canonical closure head:
 7d266aef282c6d678e059754d2eb6a5ff297d83a
-Promoted-main closure CI:
-36641745333 — SUCCESS
 ```
 
 ---
 
-# 2. Slice 1.4 opening
+# 2. Slice 1.4 authority
 
-Human Authority opening:
+Human opening:
 
 ```text
 RLY-S14-OPEN-001
 ```
 
-Roadmap scope:
+Human design authorization:
 
 ```text
-Project and Slice CRUD
+RLY-S14-DESIGN-AUTH-001
+```
+
+Exact authorized design baseline:
+
+```text
+670996ec43d77526adb0ea540c81a57d6e83453b
 ```
 
 Current gate:
@@ -55,7 +56,10 @@ Slice 1.4:
 OPEN
 
 Slice 1.4 design:
-NOT AUTHORIZED
+AUTHORIZED
+
+Current role:
+ARCHITECT / CONTRACT DESIGNER — GPT-5.6 Sol
 
 Slice 1.4 implementation:
 NOT AUTHORIZED
@@ -67,11 +71,23 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Opening Slice 1.4 creates no design or implementation authority.
+---
+
+# 3. Accepted contracts relevant to Slice 1.4
+
+The accepted domain layer defines:
+
+- `Project`: immutable typed identity, nonblank name, one primary repository;
+- `Slice`: immutable typed identity, owning `project_id`, title, scope, acceptance criteria, optional parent, dependencies;
+- `Slice` deliberately contains no workflow state.
+
+The accepted persistence layer currently provides insert/load operations for Project and Slice. Existing downstream tables reference Project/Slice records for Baselines, lifecycle, governance, GitHub integration, executions, and repository mutation authority.
+
+Slice 1.4 design must preserve those ownership boundaries and historical references.
 
 ---
 
-# 3. Protocol rules in force
+# 4. Protocol rules in force
 
 ```text
 registered living-projection change
@@ -84,6 +100,6 @@ bounded implementation / rework / finalization
 → GPT-5.6 Luna preferred
 ```
 
-Exact authority boundaries and exact SHAs remain controlling.
+Passing CI is evidence only.
 
 **Unblocked ≠ authorized.**
