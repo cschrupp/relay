@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 finalized; closure evaluation pending  
+**Status:** Current living product and architecture proposal — Phase 1 / Slices 1.1–1.4 accepted and closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -15,43 +15,41 @@ Relay is a control plane for governed agentic software engineering.
 
 > **Nondeterministic agents should operate inside a deterministic engineering state machine.**
 
-Relay governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, and remembered. The board is a projection of governed state, not the source of truth.
+Relay governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, closed, and remembered.
 
 # 2. Accepted technical foundation
 
 ```text
-Slices 1.1–1.3:
+Slices 1.1–1.4:
 COMPLETE / ACCEPTED / CLOSED
-
-Slice 1.4 — Project and Slice CRUD:
-DESIGN ACCEPTED
-IMPLEMENTATION ACCEPTED
-FINALIZED
-CLOSURE EVALUATION PENDING
 ```
 
-Slice 1.4 adds auditable human-controlled Project/Slice definition administration without creating an alternate lifecycle or governance engine.
+Slice 1.4 adds human-controlled Project/Slice definition administration while preserving the existing lifecycle, governance, repository, and provider authority boundaries.
 
-# 3. Accepted Slice 1.4 boundary
+# 3. Accepted Slice 1.4 capability
 
-The accepted capability preserves:
+The accepted and closed capability includes:
 
-- immutable Relay identity and ownership;
-- immutable Project repository authority;
-- one audited post-v4 runtime creation path;
-- append-only definition history and strict optimistic concurrency;
-- migration-only `SEED` and runtime `CREATE`;
-- lifecycle/gate/downstream freeze boundaries;
-- same-Project acyclic Slice graphs;
-- guarded deletion of unused definitions only;
-- fail-closed durable-state integrity checking;
-- lifecycle ownership of block/unblock/cancel/supersede;
-- existing Artifact/Baseline/gate authority.
+- immutable Relay identity and Project repository authority;
+- migration v4 definition revisions and append-only history;
+- one audited post-v4 runtime Project/Slice creation path;
+- strict revision compare-and-swap;
+- same-Project acyclic parent/dependency graphs;
+- conservative lifecycle/gate/downstream definition freezes;
+- guarded deletion with tombstones and retired identity;
+- fail-closed durable-state integrity verification;
+- no new runtime dependency.
 
 Exact accepted technical result:
 
 ```text
 ae582c52ec4a6451b54e9d6e018932e93e72e013
+```
+
+Closure evaluation:
+
+```text
+RLY-S14-CLOSE-EVAL-001 — ACCEPT
 ```
 
 # 4. Current roadmap
@@ -61,10 +59,10 @@ Phase 1:
 OPEN
 
 Slice 1.4:
-FINALIZED — CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-BOARD PROJECTION — NOT OPEN
+BOARD PROJECTION — NOT OPEN / NOT AUTHORIZED
 
 Slice 1.6:
 HUMAN AUTHORIZATION AND DECISION GATES — NOT OPEN
@@ -78,20 +76,8 @@ NOT AUTHORIZED
 
 # 5. Authority boundary
 
-```text
-Independent implementation evaluation:
-RLY-S14-EVAL-002 — ACCEPT
+The next Slice may begin only through a separate Human Authority opening/design decision.
 
-Human technical acceptance:
-RLY-S14-ACCEPT-001 — ACCEPTED
-
-Finalization / closure authorization:
-RLY-S14-CLOSE-AUTH-001 — AUTHORIZED
-
-Next governed gate:
-Independent closure evaluation
-```
-
-Closure authority does not authorize Slice 1.5 or any new product implementation.
+Closure of Slice 1.4 grants no board, next-slice, or agent-execution authority.
 
 **Unblocked ≠ authorized.**

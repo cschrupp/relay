@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 finalized; independent closure evaluation pending  
+**Status:** Phase 1 open — Slices 1.1–1.4 complete, accepted, and closed  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** October 2026
@@ -18,16 +18,12 @@ COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.3:
 COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.4:
+COMPLETE / ACCEPTED / CLOSED
 ```
 
-Slice 1.3 canonical closure:
-
-```text
-RLY-S13-CLOSE-EVAL-001 — ACCEPT
-7d266aef282c6d678e059754d2eb6a5ff297d83a
-```
-
-# 2. Slice 1.4 authority and accepted result
+# 2. Slice 1.4 canonical authority and closure
 
 ```text
 Opening:
@@ -71,61 +67,53 @@ RLY-S14-ACCEPT-001 — ACCEPTED
 
 Finalization / closure authorization:
 RLY-S14-CLOSE-AUTH-001 — AUTHORIZED
+
+Finalization baseline:
+ba31db3ace9d99f573e26611637c567b3f1e8d44
+
+Independent closure evaluation:
+RLY-S14-CLOSE-EVAL-001 — ACCEPT
 ```
 
-# 3. Current gate
+# 3. Accepted Slice 1.4 technical result
+
+The exact accepted implementation result remains:
 
 ```text
-Slice 1.4:
-TECHNICAL RESULT ACCEPTED / FINALIZED
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+```
 
-Locked development memory:
-docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_MEMORY.md
+Final locked development memory:
 
+`docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_MEMORY.md`
+
+Finalization evidence:
+
+```text
+Finalization branch CI 36907196036 — SUCCESS
+Promoted-main CI 36907265025 — SUCCESS
+525 tests — PASS
+Ruff format/lint — PASS
+Pyright — PASS
+uv build — PASS
+```
+
+# 4. Current authority boundary
+
+```text
 Current role:
-INDEPENDENT CLOSURE EVALUATOR — GPT-5.6 Sol
+HUMAN AUTHORITY / ORCHESTRATOR
 
-Closure evaluation:
-PENDING
+Slice 1.4:
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-NOT OPEN
+NOT OPEN / NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-# 4. Accepted Slice 1.4 technical summary
-
-The accepted implementation:
-
-- leaves accepted `Project` and `Slice` domain schemas unchanged;
-- introduces definition revisions/history through migration v4;
-- establishes the administration service as the only post-v4 runtime Project/Slice creation path;
-- requires HUMAN mutation provenance and strict revision CAS;
-- keeps Project repository authority and Slice project ownership immutable;
-- validates same-Project acyclic parent/dependency graphs;
-- freezes Slice definitions after lifecycle initialization, gate creation, or downstream dependency consumption;
-- guards physical deletion and preserves tombstones/retired identities;
-- detects malformed durable history and fails closed;
-- adds no runtime dependency;
-- performs no board, provider, repository-sync, lifecycle-schema, or agent work.
-
-Accepted candidate evidence:
-
-```text
-GitHub Actions 36899665799 — SUCCESS
-pytest — 525 passed
-Project/Slice service suite — 33 passed
-Ruff format/lint — PASS
-Pyright — PASS, 0 errors / 0 warnings
-uv build — PASS
-```
-
-# 5. Protocol boundary
-
-Technical acceptance and finalization do not automatically open the next Slice.
-
-Exact authority boundaries and exact SHAs remain controlling.
+Opening Slice 1.5 requires a separate explicit Human Authority decision.
 
 **Unblocked ≠ authorized.**
