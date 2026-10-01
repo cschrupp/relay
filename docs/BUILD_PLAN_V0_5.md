@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slices 1.1–1.4 complete, accepted, and closed  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 open; design not authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -23,67 +23,59 @@ Slices 1.1–1.4:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-NOT OPEN / NOT AUTHORIZED
+OPEN
+
+Slice 1.5 design:
+NOT AUTHORIZED
+
+Slice 1.5 implementation:
+NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-# 2. Slice 1.4 authority and closure lineage
+# 2. Slice 1.5 opening
+
+Human opening authority:
 
 ```text
-RLY-S14-OPEN-001
-RLY-S14-DESIGN-AUTH-001
-RLY-S14-DESIGN-EVAL-001 — REVISE
-RLY-S14-DESIGN-EVAL-002 — ACCEPT
-RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
-RLY-S14-AUTH-001 — AUTHORIZED
-RLY-S14-EVAL-001 — REWORK
-RLY-S14-EVAL-002 — ACCEPT
-RLY-S14-ACCEPT-001 — ACCEPTED
-RLY-S14-CLOSE-AUTH-001 — AUTHORIZED
-RLY-S14-CLOSE-EVAL-001 — ACCEPT
-
-Human-authorized subject baseline:
-670996ec43d77526adb0ea540c81a57d6e83453b
-
-Authority-recording design parent:
-1eaece23e31d831bfd2b27e55a898df389cc45fc
-
-Revision 1:
-430b1e1ff5eb06c26d4c63225b455feda14b6710
-
-Accepted Revision 2 design head:
-f5a678da360b96701a1f9635d3703b49dc16e779
-
-Canonical rework baseline:
-dfe6c20c8f65b42fe69b7d315956a91d2a29487c
-
-Accepted technical result:
-ae582c52ec4a6451b54e9d6e018932e93e72e013
-
-Finalization baseline:
-ba31db3ace9d99f573e26611637c567b3f1e8d44
+RLY-S15-OPEN-001
 ```
 
-# 3. Accepted Slice 1.4 capability
+Exact opening baseline:
 
-Slice 1.4 now provides the accepted Project/Slice definition-administration layer:
+```text
+e44d63c15b7a4941146db5ad42bfcd414b71b444
+```
 
-- migration v4 definition revisions and append-only history;
-- audited HUMAN create/update/delete;
-- strict optimistic concurrency;
-- deterministic reads/lists;
-- same-Project acyclic parent/dependency validation;
-- lifecycle/gate/downstream definition freezes;
-- guarded physical deletion with tombstones and retired identity;
-- fail-closed durable-history integrity checking;
-- no new runtime dependency;
-- no board, provider, repository-sync, lifecycle-schema, or agent behavior.
+Slice 1.4 closure immediately preceding the opening:
 
-The development memory is locked at:
+```text
+RLY-S14-CLOSE-EVAL-001 — ACCEPT
+```
 
-`docs/slices/SLICE_1_4_PROJECT_AND_SLICE_CRUD_MEMORY.md`
+Canonical roadmap objective:
+
+> Build the first human-facing board strictly as a projection of governed state.
+
+Opening Slice 1.5 is administrative only. It does not authorize architecture, contract design, implementation, board construction, new state-authority semantics, Slice 1.6, or agent execution.
+
+# 3. Accepted foundation
+
+Slices 1.1–1.4 remain complete, accepted, and closed.
+
+Slice 1.4 accepted technical result remains:
+
+```text
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+```
+
+Slice 1.4 closure evaluation remains:
+
+```text
+RLY-S14-CLOSE-EVAL-001 — ACCEPT
+```
 
 # 4. Current gate
 
@@ -91,19 +83,25 @@ The development memory is locked at:
 Current governed role:
 HUMAN AUTHORITY / ORCHESTRATOR
 
-Slice 1.4:
-COMPLETE / ACCEPTED / CLOSED
+Slice 1.5:
+OPEN
 
 Next possible transition:
-Explicit Human Authority opening/design authorization for Slice 1.5
+Explicit Human Authority design authorization for Slice 1.5
 
-Slice 1.5:
-NOT OPEN / NOT AUTHORIZED
+Slice 1.5 design:
+NOT AUTHORIZED
+
+Slice 1.5 implementation:
+NOT AUTHORIZED
+
+Slice 1.6:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Closure of Slice 1.4 does not itself open Slice 1.5.
+Opening the slice does not authorize its design.
 
 **Unblocked ≠ authorized.**

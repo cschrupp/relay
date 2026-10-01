@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slices 1.1–1.4 accepted and closed  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 open; design not authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -24,33 +24,27 @@ Slices 1.1–1.4:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-Slice 1.4 adds human-controlled Project/Slice definition administration while preserving the existing lifecycle, governance, repository, and provider authority boundaries.
+Slice 1.4 remains the accepted human-controlled Project/Slice definition-administration layer.
 
-# 3. Accepted Slice 1.4 capability
+# 3. Slice 1.5 — Board Projection
 
-The accepted and closed capability includes:
-
-- immutable Relay identity and Project repository authority;
-- migration v4 definition revisions and append-only history;
-- one audited post-v4 runtime Project/Slice creation path;
-- strict revision compare-and-swap;
-- same-Project acyclic parent/dependency graphs;
-- conservative lifecycle/gate/downstream definition freezes;
-- guarded deletion with tombstones and retired identity;
-- fail-closed durable-state integrity verification;
-- no new runtime dependency.
-
-Exact accepted technical result:
+Slice 1.5 is now administratively open under:
 
 ```text
-ae582c52ec4a6451b54e9d6e018932e93e72e013
+RLY-S15-OPEN-001
 ```
 
-Closure evaluation:
+Exact opening baseline:
 
 ```text
-RLY-S14-CLOSE-EVAL-001 — ACCEPT
+e44d63c15b7a4941146db5ad42bfcd414b71b444
 ```
+
+Roadmap objective:
+
+> Build the first human-facing board strictly as a projection of governed state.
+
+This opening does not yet select architecture, UI technology, projection contracts, traffic-light semantics, refresh/synchronization behavior, or implementation shape. Those belong to the separately authorized design phase.
 
 # 4. Current roadmap
 
@@ -58,11 +52,14 @@ RLY-S14-CLOSE-EVAL-001 — ACCEPT
 Phase 1:
 OPEN
 
-Slice 1.4:
-COMPLETE / ACCEPTED / CLOSED
-
 Slice 1.5:
-BOARD PROJECTION — NOT OPEN / NOT AUTHORIZED
+BOARD PROJECTION — OPEN
+
+Slice 1.5 design:
+NOT AUTHORIZED
+
+Slice 1.5 implementation:
+NOT AUTHORIZED
 
 Slice 1.6:
 HUMAN AUTHORIZATION AND DECISION GATES — NOT OPEN
@@ -76,8 +73,8 @@ NOT AUTHORIZED
 
 # 5. Authority boundary
 
-The next Slice may begin only through a separate Human Authority opening/design decision.
+The next governed transition is a separate Human Authority design authorization for Slice 1.5.
 
-Closure of Slice 1.4 grants no board, next-slice, or agent-execution authority.
+Opening Slice 1.5 grants no implementation, next-slice, or agent-execution authority.
 
 **Unblocked ≠ authorized.**
