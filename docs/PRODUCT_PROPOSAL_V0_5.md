@@ -1,11 +1,11 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 implementation authorized  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 technical result accepted  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
-**Date:** September 2026
+**Date:** October 2026
 
 ---
 
@@ -27,10 +27,10 @@ COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4 — Project and Slice CRUD:
 DESIGN ACCEPTED
-IMPLEMENTATION AUTHORIZED
+TECHNICAL RESULT ACCEPTED
 ```
 
-Accepted foundations include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, Human-authorized repository initialization/synchronization, and the accepted Slice 1.4 Project/Slice administration design.
+Accepted foundations now include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, Human-authorized repository initialization/synchronization, and the accepted Slice 1.4 Project/Slice administration implementation.
 
 ---
 
@@ -44,6 +44,9 @@ RLY-S14-DESIGN-AUTH-001
 RLY-S14-DESIGN-EVAL-002 — ACCEPT
 RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
 RLY-S14-AUTH-001 — AUTHORIZED
+RLY-S14-EVAL-001 — REWORK
+RLY-S14-EVAL-002 — ACCEPT
+RLY-S14-ACCEPT-001 — ACCEPTED
 ```
 
 Exact accepted design head:
@@ -52,7 +55,13 @@ Exact accepted design head:
 f5a678da360b96701a1f9635d3703b49dc16e779
 ```
 
-The accepted design provides human-controlled definition administration without turning CRUD into an alternate governance engine.
+Exact accepted technical result:
+
+```text
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+```
+
+The accepted implementation provides human-controlled definition administration without turning CRUD into an alternate governance engine.
 
 The accepted boundary preserves:
 
@@ -66,7 +75,8 @@ The accepted boundary preserves:
 - conservative freeze before downstream dependency semantics become stale;
 - guarded deletion only for unused/draft entities;
 - lifecycle ownership of block/unblock/cancel/supersede;
-- accepted Artifact/Baseline/gate ownership of artifact authority.
+- accepted Artifact/Baseline/gate ownership of artifact authority;
+- fail-closed durable-history integrity checks.
 
 Slice 1.4 does not implement dependency invalidation, board projection, provider mutation, repository sync, or agent execution.
 
@@ -79,10 +89,10 @@ Phase 1:
 OPEN
 
 Slice 1.4:
-PROJECT AND SLICE CRUD — IMPLEMENTATION AUTHORIZED
+PROJECT AND SLICE CRUD — TECHNICAL RESULT ACCEPTED
 
-Slice 1.4 implementation:
-AUTHORIZED
+Slice 1.4 finalization / closure:
+NOT AUTHORIZED
 
 Slice 1.5:
 BOARD PROJECTION — NOT OPEN
@@ -102,22 +112,25 @@ NOT AUTHORIZED
 # 5. Current authority state
 
 ```text
-Human design acceptance:
-RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
+Human technical acceptance:
+RLY-S14-ACCEPT-001 — ACCEPTED
+
+Independent evaluation:
+RLY-S14-EVAL-002 — ACCEPT
+
+Accepted candidate:
+ae582c52ec4a6451b54e9d6e018932e93e72e013
 
 Current role:
-IMPLEMENTATION AGENT
+HUMAN AUTHORITY / ORCHESTRATOR
 
 Next governed gate:
-Implementation result → independent technical evaluation
+Explicit bounded finalization / closure authorization
 
-Implementation baseline:
-d9d78350b9ae605c44191330047a8a697ad1b121
-
-Slice 1.4 implementation:
-AUTHORIZED
+Slice 1.4 finalization / closure:
+NOT AUTHORIZED
 ```
 
-Implementation is explicitly authorized by `RLY-S14-AUTH-001`; technical acceptance remains a separate Human Authority gate after independent evaluation.
+Human technical acceptance is complete. Closure, Slice 1.5, and agent execution remain separate authority decisions.
 
 **Unblocked ≠ authorized.**
