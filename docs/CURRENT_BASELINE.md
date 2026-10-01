@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 design accepted / implementation not authorized  
+**Status:** Phase 1 open — Slice 1.4 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** September 2026
@@ -58,6 +58,9 @@ RLY-S14-DESIGN-EVAL-002 — ACCEPT
 
 Human design acceptance:
 RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
+
+Implementation authorization:
+RLY-S14-AUTH-001 — AUTHORIZED
 ```
 
 Current gate:
@@ -70,10 +73,16 @@ Slice 1.4 design:
 ACCEPTED
 
 Current role:
-HUMAN AUTHORITY / ORCHESTRATOR
+IMPLEMENTATION AGENT
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED
+
+Implementation baseline:
+d9d78350b9ae605c44191330047a8a697ad1b121
+
+Technical acceptance:
+NOT REACHED
 
 Slice 1.5:
 NOT OPEN
