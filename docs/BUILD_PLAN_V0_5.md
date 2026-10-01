@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 open; design not authorized  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -26,7 +26,7 @@ Slice 1.5:
 OPEN
 
 Slice 1.5 design:
-NOT AUTHORIZED
+AUTHORIZED
 
 Slice 1.5 implementation:
 NOT AUTHORIZED
@@ -35,7 +35,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-# 2. Slice 1.5 opening
+# 2. Slice 1.5 authority
 
 Human opening authority:
 
@@ -43,23 +43,29 @@ Human opening authority:
 RLY-S15-OPEN-001
 ```
 
-Exact opening baseline:
+Human design authorization:
 
 ```text
-e44d63c15b7a4941146db5ad42bfcd414b71b444
+RLY-S15-DESIGN-AUTH-001
 ```
 
-Slice 1.4 closure immediately preceding the opening:
+Human-authorized design subject baseline:
 
 ```text
-RLY-S14-CLOSE-EVAL-001 — ACCEPT
+359cd61f0c05815390a6822739c0c68d3f020c32
 ```
 
 Canonical roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
 
-Opening Slice 1.5 is administrative only. It does not authorize architecture, contract design, implementation, board construction, new state-authority semantics, Slice 1.6, or agent execution.
+Authorized design role:
+
+```text
+Slice 1.5 Board Projection Architect — GPT-5.6 Sol
+```
+
+The design must preserve the board as a deterministic, read-only projection of governed state. Slice 1.5 does not own human authorization mutations, new lifecycle/governance semantics, repository/provider mutations, or agent execution.
 
 # 3. Accepted foundation and preserved Slice 1.4 lineage
 
@@ -82,32 +88,44 @@ Implementation authorization:
 RLY-S14-AUTH-001 — AUTHORIZED
 ```
 
-Slice 1.4 accepted technical result remains:
+Slice 1.4 accepted technical result:
 
 ```text
 ae582c52ec4a6451b54e9d6e018932e93e72e013
 ```
 
-Slice 1.4 closure evaluation remains:
+Slice 1.4 closure evaluation:
 
 ```text
 RLY-S14-CLOSE-EVAL-001 — ACCEPT
 ```
 
-# 4. Current gate
+# 4. Slice 1.5 design gate
+
+The Slice 1.5 architect may now produce architecture/contract/design artifacts only.
+
+Required next design sequence:
+
+```text
+Design Revision 1
+→ Independent Design Review
+→ Human Design Acceptance
+→ Separate Implementation Authorization
+```
+
+Passing CI never constitutes design acceptance or implementation authority.
+
+# 5. Current authority boundary
 
 ```text
 Current governed role:
-HUMAN AUTHORITY / ORCHESTRATOR
+SLICE 1.5 BOARD PROJECTION ARCHITECT — GPT-5.6 SOL
 
 Slice 1.5:
 OPEN
 
-Next possible transition:
-Explicit Human Authority design authorization for Slice 1.5
-
 Slice 1.5 design:
-NOT AUTHORIZED
+AUTHORIZED
 
 Slice 1.5 implementation:
 NOT AUTHORIZED
@@ -118,7 +136,5 @@ NOT OPEN
 Agent execution:
 NOT AUTHORIZED
 ```
-
-Opening the slice does not authorize its design.
 
 **Unblocked ≠ authorized.**

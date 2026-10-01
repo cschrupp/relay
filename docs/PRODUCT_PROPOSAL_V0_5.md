@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 open; design not authorized  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -28,23 +28,39 @@ Slice 1.4 remains the accepted human-controlled Project/Slice definition-adminis
 
 # 3. Slice 1.5 — Board Projection
 
-Slice 1.5 is now administratively open under:
+Slice 1.5 is open under:
 
 ```text
 RLY-S15-OPEN-001
 ```
 
-Exact opening baseline:
+Design is authorized under:
 
 ```text
-e44d63c15b7a4941146db5ad42bfcd414b71b444
+RLY-S15-DESIGN-AUTH-001
+```
+
+Human-authorized design subject baseline:
+
+```text
+359cd61f0c05815390a6822739c0c68d3f020c32
+```
+
+Authorized architect:
+
+```text
+Slice 1.5 Board Projection Architect — GPT-5.6 Sol
 ```
 
 Roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
 
-This opening does not yet select architecture, UI technology, projection contracts, traffic-light semantics, refresh/synchronization behavior, or implementation shape. Those belong to the separately authorized design phase.
+The design must make the board useful without turning it into authority. Governed durable state remains the source of truth; the board derives deterministic human-facing views from that state.
+
+Slice 1.5 may design projection contracts, deterministic display/traffic-light rules, board structure, read-model/application boundaries, refresh/freshness/error behavior, and minimum UI architecture.
+
+It may not design Slice 1.6 human-decision mutation behavior as if already authorized, nor introduce new lifecycle/governance truth.
 
 # 4. Current roadmap
 
@@ -53,10 +69,7 @@ Phase 1:
 OPEN
 
 Slice 1.5:
-BOARD PROJECTION — OPEN
-
-Slice 1.5 design:
-NOT AUTHORIZED
+BOARD PROJECTION — OPEN / DESIGN AUTHORIZED
 
 Slice 1.5 implementation:
 NOT AUTHORIZED
@@ -71,10 +84,10 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-# 5. Authority boundary
+# 5. Design governance
 
-The next governed transition is a separate Human Authority design authorization for Slice 1.5.
+Design Revision 1 must receive independent design review before Human design acceptance.
 
-Opening Slice 1.5 grants no implementation, next-slice, or agent-execution authority.
+Implementation requires a separate explicit Human Authority decision after design acceptance.
 
 **Unblocked ≠ authorized.**

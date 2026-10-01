@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 open; design not authorized  
+**Status:** Phase 1 open — Slice 1.5 design authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** October 2026
@@ -23,7 +23,7 @@ Slice 1.4:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
-# 2. Slice 1.5 opening
+# 2. Slice 1.5 authority
 
 ```text
 Slice:
@@ -32,18 +32,22 @@ Slice:
 Opening authority:
 RLY-S15-OPEN-001
 
-Exact opening baseline:
+Opening baseline:
 e44d63c15b7a4941146db5ad42bfcd414b71b444
 
-Preceding closure:
-RLY-S14-CLOSE-EVAL-001 — ACCEPT
+Design authorization:
+RLY-S15-DESIGN-AUTH-001 — AUTHORIZED
+
+Human-authorized design subject baseline:
+359cd61f0c05815390a6822739c0c68d3f020c32
+
+Authorized design role:
+Slice 1.5 Board Projection Architect — GPT-5.6 Sol
 ```
 
 Roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
-
-The opening is administrative only and grants no design or implementation authority.
 
 # 3. Preserved Slice 1.4 accepted state
 
@@ -67,17 +71,23 @@ Canonical closure head:
 e44d63c15b7a4941146db5ad42bfcd414b71b444
 ```
 
-# 4. Current authority boundary
+# 4. Current design boundary
+
+Slice 1.5 design may define the deterministic read-only board projection, its view model, derived display rules, application/read boundary, refresh/freshness/error behavior, UI architecture, and implementation acceptance criteria.
+
+It may not authorize or implement board mutations, human decision gates, new state semantics, provider/repository mutations, agent execution, or Slice 1.6 behavior.
+
+# 5. Current authority boundary
 
 ```text
 Current role:
-HUMAN AUTHORITY / ORCHESTRATOR
+SLICE 1.5 BOARD PROJECTION ARCHITECT — GPT-5.6 SOL
 
 Slice 1.5:
 OPEN
 
 Slice 1.5 design:
-NOT AUTHORIZED
+AUTHORIZED
 
 Slice 1.5 implementation:
 NOT AUTHORIZED
@@ -89,6 +99,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next governed gate is a separate explicit Human Authority decision authorizing Slice 1.5 design.
+The next governed gate after Design Revision 1 is independent design review.
 
 **Unblocked ≠ authorized.**
