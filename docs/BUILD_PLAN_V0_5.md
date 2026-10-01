@@ -61,9 +61,26 @@ Canonical roadmap objective:
 
 Opening Slice 1.5 is administrative only. It does not authorize architecture, contract design, implementation, board construction, new state-authority semantics, Slice 1.6, or agent execution.
 
-# 3. Accepted foundation
+# 3. Accepted foundation and preserved Slice 1.4 lineage
 
 Slices 1.1–1.4 remain complete, accepted, and closed.
+
+```text
+Human-authorized subject baseline:
+670996ec43d77526adb0ea540c81a57d6e83453b
+
+Authority-recording design parent:
+1eaece23e31d831bfd2b27e55a898df389cc45fc
+
+Revision 1:
+430b1e1ff5eb06c26d4c63225b455feda14b6710
+
+Accepted Revision 2 design head:
+f5a678da360b96701a1f9635d3703b49dc16e779
+
+Implementation authorization:
+RLY-S14-AUTH-001 — AUTHORIZED
+```
 
 Slice 1.4 accepted technical result remains:
 

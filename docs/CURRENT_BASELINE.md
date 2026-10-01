@@ -48,6 +48,15 @@ The opening is administrative only and grants no design or implementation author
 # 3. Preserved Slice 1.4 accepted state
 
 ```text
+Canonical rework baseline:
+dfe6c20c8f65b42fe69b7d315956a91d2a29487c
+
+Prior implementation candidate:
+e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
+
+Prior implementation evaluation:
+RLY-S14-EVAL-001 — REWORK
+
 Accepted technical result:
 ae582c52ec4a6451b54e9d6e018932e93e72e013
 
