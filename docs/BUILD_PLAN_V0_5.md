@@ -46,11 +46,23 @@ RLY-S14-EVAL-001 — REWORK
 RLY-S14-EVAL-002 — ACCEPT
 RLY-S14-ACCEPT-001 — ACCEPTED
 RLY-S14-CLOSE-AUTH-001 — AUTHORIZED
-```
 
-Exact accepted technical result:
+Human-authorized subject baseline:
+670996ec43d77526adb0ea540c81a57d6e83453b
 
-```text
+Authority-recording design parent:
+1eaece23e31d831bfd2b27e55a898df389cc45fc
+
+Revision 1:
+430b1e1ff5eb06c26d4c63225b455feda14b6710
+
+Accepted Revision 2 design head:
+f5a678da360b96701a1f9635d3703b49dc16e779
+
+Canonical rework baseline:
+dfe6c20c8f65b42fe69b7d315956a91d2a29487c
+
+Accepted technical result:
 ae582c52ec4a6451b54e9d6e018932e93e72e013
 ```
 
