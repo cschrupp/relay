@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 design accepted  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.4 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `product-proposal`  
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -27,7 +27,7 @@ COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4 — Project and Slice CRUD:
 DESIGN ACCEPTED
-IMPLEMENTATION NOT AUTHORIZED
+IMPLEMENTATION AUTHORIZED
 ```
 
 Accepted foundations include deterministic lifecycle/governance, durable authority and decision state, repository canonical-artifact governance, GitHub App integration, immutable repository snapshot/Baseline proof, Human-authorized repository initialization/synchronization, and the accepted Slice 1.4 Project/Slice administration design.
@@ -43,6 +43,7 @@ RLY-S14-OPEN-001
 RLY-S14-DESIGN-AUTH-001
 RLY-S14-DESIGN-EVAL-002 — ACCEPT
 RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
+RLY-S14-AUTH-001 — AUTHORIZED
 ```
 
 Exact accepted design head:
@@ -78,10 +79,10 @@ Phase 1:
 OPEN
 
 Slice 1.4:
-PROJECT AND SLICE CRUD — DESIGN ACCEPTED
+PROJECT AND SLICE CRUD — IMPLEMENTATION AUTHORIZED
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED
 
 Slice 1.5:
 BOARD PROJECTION — NOT OPEN
@@ -105,15 +106,18 @@ Human design acceptance:
 RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
 
 Current role:
-HUMAN AUTHORITY / ORCHESTRATOR
+IMPLEMENTATION AGENT
 
 Next governed gate:
-Explicit Slice 1.4 implementation authorization
+Implementation result → independent technical evaluation
+
+Implementation baseline:
+d9d78350b9ae605c44191330047a8a697ad1b121
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED
 ```
 
-Passing design review and Human design acceptance do not themselves authorize implementation.
+Implementation is explicitly authorized by `RLY-S14-AUTH-001`; technical acceptance remains a separate Human Authority gate after independent evaluation.
 
 **Unblocked ≠ authorized.**
