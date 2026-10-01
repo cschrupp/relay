@@ -1,9 +1,9 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 implementation authorized  
+**Status:** Phase 1 open — Slice 1.4 rework candidate pending independent reevaluation
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
-**Date:** September 2026
+**Date:** October 2026
 
 ---
 
@@ -73,13 +73,31 @@ Slice 1.4 design:
 ACCEPTED
 
 Current role:
-IMPLEMENTATION AGENT
+IMPLEMENTATION AGENT — BOUNDED REWORK
 
 Slice 1.4 implementation:
-AUTHORIZED
+AUTHORIZED — RLY-S14-EVAL-001 BOUNDED REWORK
 
-Implementation baseline:
-d9d78350b9ae605c44191330047a8a697ad1b121
+Canonical rework baseline:
+dfe6c20c8f65b42fe69b7d315956a91d2a29487c
+
+Prior implementation candidate:
+e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
+
+Independent evaluation:
+RLY-S14-EVAL-001 — REWORK
+
+F001 governance provenance:
+CLOSED by durable authorization record in the canonical rework baseline
+
+F002 implementation evidence:
+BOUNDED REWORK IN PROGRESS
+
+Rework branch:
+implementation/1.4-project-slice-crud-rework
+
+Rework candidate SHA:
+carried by RLY-S14-IMPLEMENTATION-REWORK-RESULT-001
 
 Technical acceptance:
 NOT REACHED

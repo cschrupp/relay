@@ -187,10 +187,81 @@ REPOSITORY_MUTATION_AUTHORITY_MIGRATION = Migration(
     ),
 )
 
+PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION = Migration(
+    version=4,
+    name="project and slice definition history",
+    statements=(
+        "ALTER TABLE projects ADD COLUMN definition_revision INTEGER NOT NULL DEFAULT 1 "
+        "CHECK (definition_revision >= 1)",
+        "ALTER TABLE slices ADD COLUMN definition_revision INTEGER NOT NULL DEFAULT 1 "
+        "CHECK (definition_revision >= 1)",
+        """CREATE TABLE project_definition_revisions (
+            project_id TEXT NOT NULL,
+            definition_revision INTEGER NOT NULL CHECK (definition_revision >= 1),
+            operation TEXT NOT NULL CHECK (operation IN ('SEED', 'CREATE', 'UPDATE', 'DELETE')),
+            payload_json TEXT,
+            actor_json TEXT,
+            occurred_at TEXT,
+            reason TEXT,
+            PRIMARY KEY (project_id, definition_revision),
+            CHECK ((operation = 'DELETE' AND payload_json IS NULL)
+                OR (operation <> 'DELETE' AND payload_json IS NOT NULL)),
+            CHECK ((operation = 'SEED' AND actor_json IS NULL AND occurred_at IS NULL
+                    AND reason IS NULL)
+                OR (operation <> 'SEED' AND actor_json IS NOT NULL
+                    AND occurred_at IS NOT NULL AND reason IS NOT NULL))
+        )""",
+        """CREATE TABLE slice_definition_revisions (
+            slice_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            definition_revision INTEGER NOT NULL CHECK (definition_revision >= 1),
+            operation TEXT NOT NULL CHECK (operation IN ('SEED', 'CREATE', 'UPDATE', 'DELETE')),
+            payload_json TEXT,
+            actor_json TEXT,
+            occurred_at TEXT,
+            reason TEXT,
+            PRIMARY KEY (slice_id, definition_revision),
+            CHECK ((operation = 'DELETE' AND payload_json IS NULL)
+                OR (operation <> 'DELETE' AND payload_json IS NOT NULL)),
+            CHECK ((operation = 'SEED' AND actor_json IS NULL AND occurred_at IS NULL
+                    AND reason IS NULL)
+                OR (operation <> 'SEED' AND actor_json IS NOT NULL
+                    AND occurred_at IS NOT NULL AND reason IS NOT NULL))
+        )""",
+        """INSERT INTO project_definition_revisions(
+            project_id, definition_revision, operation, payload_json
+        ) SELECT id, 1, 'SEED', payload_json FROM projects ORDER BY id""",
+        """INSERT INTO slice_definition_revisions(
+            slice_id, project_id, definition_revision, operation, payload_json
+        ) SELECT id, project_id, 1, 'SEED', payload_json FROM slices ORDER BY id""",
+        "CREATE INDEX project_definition_revisions_by_revision "
+        "ON project_definition_revisions(project_id, definition_revision)",
+        "CREATE INDEX slice_definition_revisions_by_project_revision "
+        "ON slice_definition_revisions(project_id, slice_id, definition_revision)",
+        """CREATE TRIGGER project_definition_revisions_no_update
+        BEFORE UPDATE ON project_definition_revisions BEGIN
+            SELECT RAISE(ABORT, 'Project definition history is append-only');
+        END""",
+        """CREATE TRIGGER project_definition_revisions_no_delete
+        BEFORE DELETE ON project_definition_revisions BEGIN
+            SELECT RAISE(ABORT, 'Project definition history is append-only');
+        END""",
+        """CREATE TRIGGER slice_definition_revisions_no_update
+        BEFORE UPDATE ON slice_definition_revisions BEGIN
+            SELECT RAISE(ABORT, 'Slice definition history is append-only');
+        END""",
+        """CREATE TRIGGER slice_definition_revisions_no_delete
+        BEFORE DELETE ON slice_definition_revisions BEGIN
+            SELECT RAISE(ABORT, 'Slice definition history is append-only');
+        END""",
+    ),
+)
+
 DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     INITIAL_MIGRATION,
     GITHUB_INTEGRATION_MIGRATION,
     REPOSITORY_MUTATION_AUTHORITY_MIGRATION,
+    PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION,
 )
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
@@ -220,6 +291,8 @@ REQUIRED_TABLES = frozenset(
         "github_installation_repositories",
         "github_installation_events",
         "repository_mutation_authorizations",
+        "project_definition_revisions",
+        "slice_definition_revisions",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -230,6 +303,16 @@ REQUIRED_INDEXES = frozenset(
         "github_installations_by_external_id",
         "github_events_by_binding_revision",
         "repository_mutation_authorizations_by_project_subject",
+        "project_definition_revisions_by_revision",
+        "slice_definition_revisions_by_project_revision",
+    }
+)
+REQUIRED_TRIGGERS = frozenset(
+    {
+        "project_definition_revisions_no_update",
+        "project_definition_revisions_no_delete",
+        "slice_definition_revisions_no_update",
+        "slice_definition_revisions_no_delete",
     }
 )
 
@@ -339,6 +422,12 @@ def verify_schema(
                 "SELECT name FROM sqlite_master WHERE type = 'index'"
             ).fetchall()
         }
+        triggers = {
+            cast(str, row["name"])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'trigger'"
+            ).fetchall()
+        }
     except sqlite3.Error as error:
         raise MigrationError("could not verify SQLite schema") from error
     missing = REQUIRED_TABLES - names
@@ -348,6 +437,11 @@ def verify_schema(
     if missing_indexes:
         raise MigrationError(
             f"database is missing required indexes: {', '.join(sorted(missing_indexes))}"
+        )
+    missing_triggers = REQUIRED_TRIGGERS - triggers
+    if missing_triggers:
+        raise MigrationError(
+            f"database is missing required triggers: {', '.join(sorted(missing_triggers))}"
         )
 
 
