@@ -54,7 +54,7 @@ RLY-S14-AUTH-001 — AUTHORIZED
 Canonical rework baseline:
 dfe6c20c8f65b42fe69b7d315956a91d2a29487c
 
-Historical implementation candidate:
+Prior implementation candidate:
 e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
 
 Prior implementation evaluation:
