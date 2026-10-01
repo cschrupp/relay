@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.4 rework candidate pending independent reevaluation
+**Status:** Phase 1 open — Slice 1.4 technical result accepted; finalization/closure pending separate authorization
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** October 2026
@@ -29,7 +29,7 @@ RLY-S13-CLOSE-EVAL-001 — ACCEPT
 
 ---
 
-# 2. Slice 1.4 authority and accepted design
+# 2. Slice 1.4 authority, design, and accepted technical result
 
 ```text
 Opening:
@@ -53,7 +53,7 @@ RLY-S14-DESIGN-EVAL-001 — REVISE
 Revision 2 / exact reviewed design head:
 f5a678da360b96701a1f9635d3703b49dc16e779
 
-Independent combined review:
+Independent combined design review:
 RLY-S14-DESIGN-EVAL-002 — ACCEPT
 
 Human design acceptance:
@@ -61,6 +61,24 @@ RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
 
 Implementation authorization:
 RLY-S14-AUTH-001 — AUTHORIZED
+
+Canonical rework baseline:
+dfe6c20c8f65b42fe69b7d315956a91d2a29487c
+
+Prior implementation candidate:
+e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
+
+Prior implementation evaluation:
+RLY-S14-EVAL-001 — REWORK
+
+Accepted rework candidate:
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+
+Independent implementation evaluation:
+RLY-S14-EVAL-002 — ACCEPT
+
+Human technical acceptance:
+RLY-S14-ACCEPT-001 — ACCEPTED
 ```
 
 Current gate:
@@ -72,35 +90,17 @@ OPEN
 Slice 1.4 design:
 ACCEPTED
 
+Slice 1.4 technical result:
+ACCEPTED
+
+Accepted technical result SHA:
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+
 Current role:
-IMPLEMENTATION AGENT — BOUNDED REWORK
+HUMAN AUTHORITY / ORCHESTRATOR
 
-Slice 1.4 implementation:
-AUTHORIZED — RLY-S14-EVAL-001 BOUNDED REWORK
-
-Canonical rework baseline:
-dfe6c20c8f65b42fe69b7d315956a91d2a29487c
-
-Prior implementation candidate:
-e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
-
-Independent evaluation:
-RLY-S14-EVAL-001 — REWORK
-
-F001 governance provenance:
-CLOSED by durable authorization record in the canonical rework baseline
-
-F002 implementation evidence:
-BOUNDED REWORK IN PROGRESS
-
-Rework branch:
-implementation/1.4-project-slice-crud-rework
-
-Rework candidate SHA:
-carried by RLY-S14-IMPLEMENTATION-REWORK-RESULT-001
-
-Technical acceptance:
-NOT REACHED
+Finalization / closure:
+NOT AUTHORIZED
 
 Slice 1.5:
 NOT OPEN
@@ -111,9 +111,9 @@ NOT AUTHORIZED
 
 ---
 
-# 3. Accepted Slice 1.4 design summary
+# 3. Accepted Slice 1.4 technical summary
 
-The accepted combined contract:
+The accepted implementation:
 
 - leaves accepted `Project` and `Slice` domain schemas unchanged;
 - introduces definition revisions/history through migration v4;
@@ -125,9 +125,12 @@ The accepted combined contract:
 - freezes definitions consumed by downstream dependencies;
 - guards physical delete to unused current entities and preserves tombstones/history;
 - explicitly checks destructive-delete blockers;
+- detects malformed durable definition history and fails closed;
 - routes block/unblock/cancel/supersede through accepted lifecycle/governance;
 - adds no runtime dependency;
 - performs no board, provider, repository-sync, or agent work.
+
+The accepted bounded rework closes `RLY-S14-EVAL-001` evidence findings and corrects graph-validation error-classification ordering without architectural redesign.
 
 ---
 
@@ -143,6 +146,8 @@ architecture / design / review / evaluation
 bounded implementation / rework / finalization
 → GPT-5.6 Luna preferred
 ```
+
+Technical acceptance does not imply closure or authorize the next Slice.
 
 Exact authority boundaries and exact SHAs remain controlling.
 
