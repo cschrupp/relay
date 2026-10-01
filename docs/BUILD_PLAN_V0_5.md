@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.4 design accepted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -12,7 +12,7 @@
 
 # 1. Purpose
 
-This is the current execution plan after independent acceptance and Human Authority acceptance of the combined Slice 1.4 Revision 1 + Revision 2 design.
+This is the current execution plan after independent acceptance and Human Authority acceptance of the combined Slice 1.4 Revision 1 + Revision 2 design, followed by explicit bounded implementation authorization.
 
 Relay continues to be built inside-out:
 
@@ -57,7 +57,7 @@ Slice 1.4 design:
 ACCEPTED
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED
 ```
 
 Authority/provenance chain:
@@ -68,6 +68,7 @@ RLY-S14-DESIGN-AUTH-001
 RLY-S14-DESIGN-EVAL-001 — REVISE
 RLY-S14-DESIGN-EVAL-002 — ACCEPT
 RLY-S14-DESIGN-ACCEPT-001 — ACCEPTED
+RLY-S14-AUTH-001 — AUTHORIZED
 
 Human-authorized subject baseline:
 670996ec43d77526adb0ea540c81a57d6e83453b
@@ -127,16 +128,19 @@ Opening, design authorization, independent review, Human design acceptance, impl
 
 ```text
 Current governed role:
-HUMAN AUTHORITY / ORCHESTRATOR
+IMPLEMENTATION AGENT
 
 Slice 1.4 design:
 ACCEPTED
 
 Slice 1.4 implementation:
-NOT AUTHORIZED
+AUTHORIZED
+
+Implementation baseline:
+d9d78350b9ae605c44191330047a8a697ad1b121
 
 Next gate:
-Explicit Human Authority implementation authorization
+Implementation result → independent technical evaluation
 
 Slice 1.5:
 NOT OPEN
@@ -145,4 +149,4 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Design acceptance does not authorize implementation.
+Implementation authority is bounded by `RLY-S14-AUTH-001`; it does not grant technical acceptance.
