@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.4 technical result accepted  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.4 finalized; closure evaluation pending  
 **Document class:** Living canonical projection  
 **Canonical key:** `build-plan`  
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -10,35 +10,7 @@
 
 ---
 
-# 1. Purpose
-
-This is the current execution plan after independent acceptance and Human Authority acceptance of the exact Slice 1.4 technical result.
-
-Relay continues to be built inside-out:
-
-```text
-deterministic domain contracts
-        ↓
-lifecycle / governance
-        ↓
-persistence / auditability
-        ↓
-repository contract
-        ↓
-provider repository integration
-        ↓
-human workflow
-        ↓
-agent execution
-        ↓
-multi-agent orchestration
-```
-
-The governance model remains the product.
-
----
-
-# 2. Current project state
+# 1. Current project state
 
 ```text
 Phase 0:
@@ -51,16 +23,17 @@ Slices 1.1–1.3:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
-OPEN
+TECHNICAL RESULT ACCEPTED / FINALIZED
+CLOSURE EVALUATION PENDING
 
-Slice 1.4 design:
-ACCEPTED
+Slice 1.5:
+NOT OPEN
 
-Slice 1.4 implementation:
-TECHNICAL RESULT ACCEPTED
+Agent execution:
+NOT AUTHORIZED
 ```
 
-Authority/provenance chain:
+# 2. Slice 1.4 authority and accepted result
 
 ```text
 RLY-S14-OPEN-001
@@ -72,84 +45,51 @@ RLY-S14-AUTH-001 — AUTHORIZED
 RLY-S14-EVAL-001 — REWORK
 RLY-S14-EVAL-002 — ACCEPT
 RLY-S14-ACCEPT-001 — ACCEPTED
+RLY-S14-CLOSE-AUTH-001 — AUTHORIZED
+```
 
-Human-authorized subject baseline:
-670996ec43d77526adb0ea540c81a57d6e83453b
+Exact accepted technical result:
 
-Authority-recording design parent:
-1eaece23e31d831bfd2b27e55a898df389cc45fc
-
-Revision 1:
-430b1e1ff5eb06c26d4c63225b455feda14b6710
-
-Accepted Revision 2 design head:
-f5a678da360b96701a1f9635d3703b49dc16e779
-
-Canonical rework baseline:
-dfe6c20c8f65b42fe69b7d315956a91d2a29487c
-
-Accepted technical result:
+```text
 ae582c52ec4a6451b54e9d6e018932e93e72e013
 ```
 
----
-
-# 3. Accepted Slice 1.4 technical result
-
-The accepted implementation preserves the combined Slice 1.4 design and provides:
-
-- the sole audited post-v4 Project/Slice runtime creation path;
-- migration v4 definition revisions and append-only history;
-- strict expected-revision compare-and-swap semantics;
-- deterministic read/list behavior;
-- same-project parent/dependency validation and cycle rejection;
-- lifecycle/gate/downstream-definition freezes;
-- explicit guarded delete blockers with tombstones and retired IDs;
-- corruption detection that fails closed;
-- no new runtime dependency;
-- no board, provider, repository-sync, or agent-execution expansion.
-
-The bounded rework also corrected graph-validation ordering so malformed proposed graphs receive the accepted cycle-specific error classification before downstream freeze classification.
-
----
-
-# 4. Process rules in force
-
-Registered living-projection changes advance `.relay/registry.json` in the same governed change.
-
-Role/model convention:
+Canonical technical-acceptance main before finalization:
 
 ```text
-architecture / design / review / evaluation:
-GPT-5.6 Sol
-
-bounded implementation / rework / finalization:
-GPT-5.6 Luna preferred
+f5b593a50947a306a7a53ddae98184a4f7f546f5
 ```
 
-Opening, design authorization, independent review, Human design acceptance, implementation authorization, technical acceptance, finalization, and closure remain distinct transitions.
+# 3. Accepted Slice 1.4 capability
 
-**Unblocked ≠ authorized.**
+The accepted Slice 1.4 implementation:
 
----
+- preserves immutable Project/Slice domain schemas and authority fields;
+- introduces SQLite migration v4 definition revisions/history;
+- makes the administration service the sole post-v4 runtime Project/Slice creation path;
+- requires HUMAN audit metadata;
+- enforces strict definition-revision CAS;
+- validates same-Project acyclic parent/dependency graphs;
+- freezes governed or downstream-consumed Slice definitions;
+- guards physical deletion and preserves tombstones/retired identity;
+- fails closed on malformed durable definition history;
+- adds no runtime dependency;
+- adds no board, provider, repository-sync, lifecycle-schema, or agent behavior.
 
-# 5. Current gate
+# 4. Current gate
 
 ```text
 Current governed role:
-HUMAN AUTHORITY / ORCHESTRATOR
+INDEPENDENT CLOSURE EVALUATOR — GPT-5.6 Sol
 
 Slice 1.4 technical result:
-ACCEPTED — RLY-S14-ACCEPT-001
+ACCEPTED
 
-Accepted candidate:
-ae582c52ec4a6451b54e9d6e018932e93e72e013
-
-Finalization / closure:
-NOT AUTHORIZED
+Slice 1.4 finalization:
+COMPLETE
 
 Next gate:
-Explicit bounded finalization / closure authorization
+Independent closure evaluation
 
 Slice 1.5:
 NOT OPEN
@@ -158,4 +98,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Technical acceptance does not itself authorize Slice 1.4 closure, Slice 1.5, or agent execution.
+Closing Slice 1.4 does not authorize Slice 1.5.
+
+**Unblocked ≠ authorized.**

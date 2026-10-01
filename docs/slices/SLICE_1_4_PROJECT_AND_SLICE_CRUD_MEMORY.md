@@ -1,102 +1,123 @@
 # Slice 1.4 Development Memory — Project and Slice CRUD
 
-**Status:** IMPLEMENTATION COMPLETE / PENDING INDEPENDENT EVALUATION
-**Record state:** WORKING / NOT LOCKED
+**Status:** COMPLETE / ACCEPTED / FINALIZED
+**Record state:** LOCKED
 **Authority:** `RLY-S14-AUTH-001`
+**Closure authority:** `RLY-S14-CLOSE-AUTH-001`
 **Accepted design:** Revision 2 — `f5a678da360b96701a1f9635d3703b49dc16e779`
-**Rework baseline:** `dfe6c20c8f65b42fe69b7d315956a91d2a29487c`
-**Rework branch:** `implementation/1.4-project-slice-crud-rework`
-**Prior candidate:** `e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d`
-**Prior evaluation:** `RLY-S14-EVAL-001 — REWORK`
+**Accepted technical result:** `ae582c52ec4a6451b54e9d6e018932e93e72e013`
+**Independent evaluation:** `RLY-S14-EVAL-002 — ACCEPT`
+**Human technical acceptance:** `RLY-S14-ACCEPT-001 — ACCEPTED`
 
 ## Objective and boundary
 
-Implemented human-controlled Project and Slice definition create/read/list/
-update/guarded-delete, exact definition revisions, append-only history,
-optimistic concurrency, graph validation, and mutation provenance.
+Slice 1.4 implemented human-controlled Project and Slice definition create/read/list/update/guarded-delete, exact definition revisions, append-only history, optimistic concurrency, graph validation, and Human mutation provenance.
 
-The accepted domain `Project` and `Slice` models remain unchanged. No lifecycle,
-governance, repository, provider, UI, dependency invalidation, Slice 1.5, or agent
-execution behavior was added.
+The accepted domain `Project` and `Slice` models remain unchanged. No lifecycle, governance, repository, provider, UI, dependency invalidation, Slice 1.5, or agent-execution behavior was added.
 
-## Implementation
+## Accepted implementation
 
-- Migration v4 adds definition revisions and project/slice revision tables.
-- Pre-v4 current records are deterministically seeded at revision 1 with
-  migration-only `SEED` operations.
-- Runtime CREATE/UPDATE/DELETE flows through `relay_engine.project_slice` with
-  HUMAN actor, aware UTC occurrence time, and nonblank reason.
-- Revision history uses canonical typed payloads and append-only database
-  triggers; DELETE tombstones remain after current-row removal.
-- CAS is checked before exact-target no-op behavior.
-- Slice graph validation enforces same-Project references and acyclic parent and
-  dependency graphs. Lifecycle, gate, and downstream dependency guards freeze
-  Slice definitions.
-- E1 exposed an error-classification ordering defect: validate the proposed
-  graph before applying the downstream-dependency freeze rejection. Invalid
-  cycles now return `SliceDependencyCycle`; valid mutations remain blocked when
-  a downstream Slice depends on the target.
-- Project and Slice deletion explicitly checks accepted references and rolls
-  back tombstone/current-row changes on residual integrity failure.
+- SQLite migration v4 adds definition revisions and append-only Project/Slice definition history.
+- Pre-v4 current records are deterministically seeded at revision 1 with migration-only `SEED`.
+- Post-v4 runtime CREATE/UPDATE/DELETE flows through `relay_engine.project_slice` with HUMAN actor, aware UTC time, and nonblank reason.
+- Public raw Project/Slice insertion bypasses were removed.
+- Strict CAS is checked before exact-target no-op behavior; stale exact-target commands conflict.
+- Slice parent/dependency references are same-Project and acyclic.
+- Lifecycle initialization, handover-gate revisions, and downstream dependencies freeze Slice definition mutation under the accepted contract.
+- Graph validation precedes the downstream-dependent guard so malformed proposed cycles produce the contract-specific cycle errors.
+- Project repository authority and Slice project ownership remain immutable.
+- Guarded physical delete explicitly checks accepted blockers, appends DELETE tombstones, preserves retired identity/history, and fails closed on residual integrity errors.
+- Durable definition corruption is detected and never auto-repaired.
 
-## Design lineage
+## Authority and implementation lineage
 
 ```text
-Human-authorized subject baseline: 670996ec43d77526adb0ea540c81a57d6e83453b
-Authority-recording design parent: 1eaece23e31d831bfd2b27e55a898df389cc45fc
-Revision 1: 430b1e1ff5eb06c26d4c63225b455feda14b6710
-Revision 2 accepted design: f5a678da360b96701a1f9635d3703b49dc16e779
-Combined design review: RLY-S14-DESIGN-EVAL-002 — ACCEPT
-Human design acceptance: RLY-S14-DESIGN-ACCEPT-001
-Implementation authorization: RLY-S14-AUTH-001
+Human-authorized subject baseline:
+670996ec43d77526adb0ea540c81a57d6e83453b
+
+Authority-recording design parent:
+1eaece23e31d831bfd2b27e55a898df389cc45fc
+
+Design Revision 1:
+430b1e1ff5eb06c26d4c63225b455feda14b6710
+
+Accepted Revision 2 design:
+f5a678da360b96701a1f9635d3703b49dc16e779
+
+Implementation authorization:
+RLY-S14-AUTH-001
+
+Repaired implementation baseline:
+dfe6c20c8f65b42fe69b7d315956a91d2a29487c
+
+Historical first candidate:
+e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
+
+First implementation evaluation:
+RLY-S14-EVAL-001 — REWORK
+
+Accepted rework candidate:
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+
+Independent implementation evaluation:
+RLY-S14-EVAL-002 — ACCEPT
+
+Human technical acceptance:
+RLY-S14-ACCEPT-001 — ACCEPTED
 ```
 
-## Validation evidence
-
-The prior candidate passed the following local checks and exact-SHA CI before
-independent evaluation identified the bounded evidence gaps:
+## Accepted evidence
 
 ```text
-uv sync --frozen --group dev     PASS
-ruff format --check              PASS
-ruff check                       PASS
-pyright                          PASS — 0 errors / 0 warnings
-pytest                           PASS — 521 passed
-uv build                         PASS
-git diff --check                 PASS
-GitHub Actions                   PASS — run 36881760825, prior SHA e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
+Exact candidate:
+ae582c52ec4a6451b54e9d6e018932e93e72e013
+
+GitHub Actions:
+36899665799 — SUCCESS
+
+Ruff format:
+PASS
+
+Ruff lint:
+PASS
+
+Pyright:
+PASS — 0 errors / 0 warnings
+
+pytest:
+PASS — 525 tests
+
+Project/Slice administration service suite:
+PASS — 33 tests
+
+uv build:
+PASS
+
+New runtime dependencies:
+NONE
 ```
 
-The prior Slice 1.4-specific service suite contained 29 tests; the integration
-suite added two migration-v4/restart tests. Rework evidence adds public-path
-dependency-cycle rejection, Project/Slice history-index corruption, a
-two-connection update/delete race, exact authority-lineage checks, and an
-explicit post-v4 Slice `CREATE` assertion. The rework-specific service suite
-contains 33 tests.
+The bounded rework closed all `RLY-S14-EVAL-001` findings: durable authority provenance, public-path cycle classification, Project/Slice history-corruption fail-closed evidence, two-connection update/delete concurrency, exact authority/design-lineage assertions, and explicit post-v4 Slice `CREATE` versus migration-only `SEED`.
 
-Rework local validation:
+## Finalized boundary
+
+This development memory is locked at Slice 1.4 finalization. Historical candidates, accepted design records, authority records, evaluation records, and the accepted technical SHA remain immutable provenance.
 
 ```text
-uv sync --frozen --group dev     PASS
-ruff format --check              PASS
-ruff check                       PASS
-pyright                          PASS — 0 errors / 0 warnings
-pytest                           PASS — 525 passed
-uv build                         PASS
-git diff --check                 PASS
-GitHub Actions                   pending publication of the rework result
+Slice 1.4 technical result:
+ACCEPTED
+
+Slice 1.4 finalization:
+COMPLETE
+
+Closure evaluation:
+PENDING at finalization boundary
+
+Slice 1.5:
+NOT OPEN
+
+Agent execution:
+NOT AUTHORIZED
 ```
 
-## Governance state
-
-```text
-Accepted project baseline before rework: dfe6c20c8f65b42fe69b7d315956a91d2a29487c
-Historical initial implementation: e5cfc5aeeb4abad2a231dd0f923af3aff13e2c6d
-RLY-S14-EVAL-001: REWORK — governance provenance repaired; bounded evidence rework authorized
-Rework candidate: pending result commit / independent reevaluation
-Slice 1.4: OPEN / IMPLEMENTATION REWORK / PENDING EVALUATION
-Technical acceptance: NOT REACHED
-Human technical acceptance: NOT REACHED
-Slice 1.5: NOT OPEN
-Agent execution: NOT AUTHORIZED
-```
+**Unblocked ≠ authorized.**
