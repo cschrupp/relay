@@ -83,6 +83,9 @@ RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
+Canonical closure commit promoted to main:
+45a3acbc5a26c618176a2d5da32a70b67adb9883
+
 Preferred implementation role/model:
 IMPLEMENTATION_AGENT — GPT-5.6 Luna
 ```
