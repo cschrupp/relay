@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closure evaluation pending
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 not open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -28,7 +28,7 @@ Slice 1.4 remains the accepted human-controlled Project/Slice definition-adminis
 
 # 3. Slice 1.5 — Board Projection
 
-Slice 1.5 is open under:
+Slice 1.5 was opened under:
 
 ```text
 RLY-S15-OPEN-001
@@ -64,11 +64,11 @@ Roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
 
-The design must make the board useful without turning it into authority. Governed durable state remains the source of truth; the board derives deterministic human-facing views from that state.
+The accepted design makes the board useful without turning it into authority. Governed durable state remains the source of truth; the board derives deterministic human-facing views from that state.
 
-Slice 1.5 may design projection contracts, deterministic display/traffic-light rules, board structure, read-model/application boundaries, refresh/freshness/error behavior, and minimum UI architecture.
+Slice 1.5's accepted design covers projection contracts, deterministic display/traffic-light rules, board structure, read-model/application boundaries, refresh/freshness/error behavior, and minimum UI architecture.
 
-It may not design Slice 1.6 human-decision mutation behavior as if already authorized, nor introduce new lifecycle/governance truth.
+It does not authorize Slice 1.6 human-decision mutation behavior or introduce new lifecycle/governance truth.
 
 # 4. Current roadmap
 
@@ -77,10 +77,10 @@ Phase 1:
 OPEN
 
 Slice 1.5:
-BOARD PROJECTION — OPEN / IMPLEMENTATION ACCEPTED
+BOARD PROJECTION — COMPLETE / ACCEPTED / CLOSED
 
-Slice 1.5 finalization / closure:
-AUTHORIZED under RLY-S15-CLOSE-AUTH-001 / CLOSURE EVALUATION PENDING
+Slice 1.5 independent closure evaluation:
+RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
 HUMAN AUTHORIZATION AND DECISION GATES — NOT OPEN
@@ -96,7 +96,7 @@ NOT AUTHORIZED
 
 The accepted read-only board implementation remains a projection of governed durable state. The exact candidate has passed independent implementation evaluation and Human technical acceptance.
 
-Slice 1.5 remains open while its canonical history, living projections, and registry are finalized. It may be recorded as closed only after independent closure evaluation accepts the exact closure-ready candidate.
+Slice 1.5 is closed after independent closure evaluation accepted the exact closure-ready candidate. Its accepted technical result and governance history remain preserved in canonical Git history.
 
 Slice 1.6 remains not open, and agent execution remains unauthorized.
 

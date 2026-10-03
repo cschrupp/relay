@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closure evaluation pending
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 not open
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -23,7 +23,7 @@ Slices 1.1–1.4:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-OPEN
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5 design:
 ACCEPTED
@@ -38,7 +38,7 @@ Finalization / closure authorization:
 RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Agent execution:
 NOT AUTHORIZED
@@ -125,7 +125,7 @@ RLY-S14-CLOSE-EVAL-001 — ACCEPT
 
 # 4. Slice 1.5 implementation and closure gates
 
-The accepted design and bounded implementation are complete. Finalization is authorized under `RLY-S15-CLOSE-AUTH-001`; Slice 1.5 remains open until independent closure evaluation accepts the exact closure-ready candidate.
+The accepted design and bounded implementation are complete. Independent closure evaluation accepted the exact closure-ready candidate under `RLY-S15-CLOSE-EVAL-001`.
 
 Current governed sequence:
 
@@ -133,9 +133,9 @@ Current governed sequence:
 Accepted technical candidate: ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
 → independent implementation evaluation: ACCEPT
 → Human technical acceptance: ACCEPTED
-→ canonical finalization: IN PROGRESS
-→ independent closure evaluation: PENDING
-→ closure only after evaluator ACCEPT
+→ finalization / closure authorization: RLY-S15-CLOSE-AUTH-001
+→ independent closure evaluation: RLY-S15-CLOSE-EVAL-001 — ACCEPT
+→ Slice 1.5: COMPLETE / ACCEPTED / CLOSED
 ```
 
 Passing CI is evidence; it does not constitute closure acceptance.
@@ -144,10 +144,10 @@ Passing CI is evidence; it does not constitute closure acceptance.
 
 ```text
 Current finalization gate:
-IN PROGRESS / INDEPENDENT CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-OPEN
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5 design:
 ACCEPTED
@@ -159,7 +159,7 @@ Finalization / closure authorization:
 AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
 NOT OPEN

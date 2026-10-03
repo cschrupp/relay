@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 technically accepted; closure evaluation pending
+**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 not open
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -20,6 +20,9 @@ Slice 1.3:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.4:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.5:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
@@ -77,6 +80,9 @@ RLY-S15-ACCEPT-001 — ACCEPTED
 Finalization and closure authorization:
 RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
 
+Independent closure evaluation:
+RLY-S15-CLOSE-EVAL-001 — ACCEPT
+
 Preferred implementation role/model:
 IMPLEMENTATION_AGENT — GPT-5.6 Luna
 ```
@@ -101,7 +107,7 @@ The implementation added:
 - bounded local `relay-board` launcher if needed;
 - deterministic tests and implementation evidence.
 
-The implementation must preserve:
+The implementation preserves:
 
 - exact lifecycle authority and display-only lanes;
 - READY distinct from authorization;
@@ -139,10 +145,10 @@ e44d63c15b7a4941146db5ad42bfcd414b71b444
 
 ```text
 Current finalization gate:
-IN PROGRESS / INDEPENDENT CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
-OPEN
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5 design:
 ACCEPTED
@@ -163,10 +169,7 @@ Finalization / closure authorization:
 RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
-
-Canonical promotion / closure:
-NOT YET COMPLETED
+RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
@@ -178,6 +181,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next governed gate is independent closure evaluation of the exact closure-ready candidate SHA. Slice 1.5 may be recorded as closed only after that evaluator returns ACCEPT.
+Slice 1.5 is closed under the accepted independent closure evaluation. Slice 1.6 remains not open and requires separate Human Authority.
 
-**Accepted implementation ≠ closed slice.**
+**Slice 1.6 is not open.**
