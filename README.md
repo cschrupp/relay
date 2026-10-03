@@ -6,23 +6,20 @@ Its core thesis is:
 
 > **Agents perform engineering; Relay governs engineering.**
 
-Relay is being built inside-out: deterministic engineering governance first, then repository integration, human workflow, agents, and higher autonomy.
+Relay is being built inside-out: deterministic engineering governance first, then repository integration, human workflow, bounded agent execution, independent evaluation, and higher autonomy.
 
 ## Current status
 
 ```text
 Phase 0:                  COMPLETE / CLOSED
-Core domain model:        ACCEPTED
-Lifecycle engine:         ACCEPTED
-Handover governance:      ACCEPTED
-Persistence/events:       ACCEPTED
-Repository contract:      ACCEPTED
-Phase-0 protocol review:  ACCEPTED
 Phase 1:                  OPEN
 Slice 1.1:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.2 design:         AUTHORIZED
-Slice 1.2 implementation: NOT AUTHORIZED
-Agent execution:          NOT IMPLEMENTED
+Slice 1.2:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.3:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.4:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.5:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.6:                NOT OPEN
+Agent execution:          NOT AUTHORIZED / NOT IMPLEMENTED
 ```
 
 The current authority is recorded in `docs/CURRENT_BASELINE.md`.
@@ -44,11 +41,49 @@ The accepted foundation now includes:
 - fail-closed provider permission readiness;
 - signed GitHub installation webhooks;
 - optimistic integration-state concurrency;
-- deterministic webhook redelivery idempotency.
+- deterministic webhook redelivery idempotency;
+- provider-neutral repository baseline resolution;
+- governed `.relay/` initialization and synchronization;
+- governed Project / Slice administration;
+- read-only human-facing Board Projection derived from governed state.
 
-Slice 1.1 is accepted at technical result `ae79b15170c88e776af99944eab9b2fdd6872c2e`, with acceptance-record/finalization commit `ccfbfb964064e92aef4e21e11f0ad01290acb16f`.
+Slice 1.5 closed at canonical closure head `45a3acbc5a26c618176a2d5da32a70b67adb9883`.
 
-Slice 1.2 is now authorized for **design only**. It owns provider-neutral repository registration, branch/tag/ref resolution to immutable commit identity, and the baseline/worktree proof deferred by Slice 0.6. Implementation still requires independent design review, Human Authority design acceptance, and a separate implementation authorization.
+## Agent runtime direction
+
+Relay will **not** implement a bespoke coding-agent reasoning/tool loop unless a future accepted requirement proves that necessary.
+
+The planned boundary is:
+
+```text
+Relay
+  ├─ governance / authority
+  ├─ role contracts
+  ├─ work packets
+  ├─ workspace policy
+  ├─ evidence / provenance
+  ├─ independent evaluation
+  └─ acceptance / baseline promotion
+        │
+        ▼
+   AgentRuntime
+        │
+        ├─ OpenCodeRuntime   ← first planned implementation
+        └─ future runtimes   ← e.g. Codex or other compatible harnesses
+```
+
+The first planned runtime is **OpenCode** because it provides an embeddable coding-agent harness with sessions, event streaming, worktree support, permissions, provider/model flexibility, plugins, and subagents while allowing Relay to retain ownership of engineering governance.
+
+OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
+
+This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation, and it does not open Slice 1.6.
+
+See:
+
+- `docs/architecture/AGENT_RUNTIME.md`
+- `docs/decisions/ADR-0011-agent-runtime-opencode-first.md`
+- `docs/slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
+- `docs/slices/SLICE_3_3_CODING_AGENT_EXECUTION.md`
 
 ## Canonical documentation
 
@@ -62,15 +97,7 @@ Current canonical projections include:
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality
 
-Current accepted Slice 1.1 records include:
-
-```text
-docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION.md
-docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION_REV2.md
-docs/architecture/GITHUB_APP_INTEGRATION.md
-docs/decisions/ADR-0007-github-app-authentication.md
-docs/slices/SLICE_1_1_GITHUB_APP_INTEGRATION_MEMORY.md
-```
+The OpenCode / AgentRuntime documents above are currently **working future-architecture artifacts** and are not canonical implementation authority.
 
 ## Requirements
 
@@ -97,7 +124,7 @@ uv build
 
 ```text
 src/relay_engine/              Relay runtime foundation
-src/relay_engine/integrations GitHub/provider-specific integration boundary
+src/relay_engine/integrations  GitHub/provider-specific integration boundary
 tests/                         deterministic regression coverage
 docs/                          governed architecture, decisions, slices, and projections
 .relay/registry.json           repository artifact/canonical contract
