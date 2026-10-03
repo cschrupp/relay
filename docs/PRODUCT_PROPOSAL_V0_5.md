@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 design accepted; implementation authorized
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -83,7 +83,7 @@ Slice 1.5 independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-HUMAN AUTHORIZATION AND DECISION GATES — OPEN (ADMINISTRATIVE ONLY)
+HUMAN AUTHORIZATION AND DECISION GATES — DESIGN ACCEPTED; IMPLEMENTATION AUTHORIZED
 
 Opening authority:
 RLY-S16-OPEN-001
@@ -92,13 +92,25 @@ Canonical repository head at opening:
 d757885ff417cd573b2d3f566d778dd4a37520b3
 
 Slice 1.6 design:
-NOT AUTHORIZED
+ACCEPTED — RLY-S16-DESIGN-ACCEPT-001
+
+Exact accepted design head:
+c0fe5d7d2c2bba5b1d9e0011e194005268b6f9fb
 
 Slice 1.6 implementation:
-NOT AUTHORIZED
+AUTHORIZED — RLY-S16-AUTH-001
+
+Authorized implementation baseline:
+7bb7363375cc3cc3ac26758741ac9f2c6ca991e3
+
+Implementation branch:
+implementation/1.6-human-authorization-decision-gates
+
+Preferred implementation model:
+GPT-5.6 Luna
 
 Mutation endpoints / board controls:
-NOT AUTHORIZED
+AUTHORIZED FOR IMPLEMENTATION WITHIN ACCEPTED SLICE 1.6 DESIGN
 
 Slice 1.7:
 MANUAL EVALUATION AND ACCEPTANCE — NOT OPEN
@@ -113,6 +125,6 @@ The accepted read-only board implementation remains a projection of governed dur
 
 Slice 1.5 is closed after independent closure evaluation accepted the exact closure-ready candidate. Its accepted technical result and governance history remain preserved in canonical Git history.
 
-Slice 1.6 is open administratively under `RLY-S16-OPEN-001`. Design, implementation, and mutation endpoints / board controls remain unauthorized; Slice 1.7 remains not open and agent execution remains unauthorized. The accepted Slice 1.5 board remains read-only.
+Slice 1.6 implementation is authorized under `RLY-S16-AUTH-001` against the exact accepted design and baseline listed above. This is implementation authority only: the product change is not yet complete or accepted, the current Slice 1.5 board remains read-only, Slice 1.7 remains not open, and agent execution remains unauthorized. The authority also excludes schema migrations and new dependencies.
 
 **Unblocked ≠ authorized.**

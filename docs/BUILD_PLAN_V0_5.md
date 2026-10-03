@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 design accepted; implementation authorized
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -162,7 +162,7 @@ Independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-OPEN — ADMINISTRATIVE ONLY
+OPEN — DESIGN ACCEPTED; IMPLEMENTATION AUTHORIZED
 
 Opening authority:
 RLY-S16-OPEN-001
@@ -171,13 +171,25 @@ Canonical repository head at opening:
 d757885ff417cd573b2d3f566d778dd4a37520b3
 
 Slice 1.6 design:
-NOT AUTHORIZED
+ACCEPTED — RLY-S16-DESIGN-ACCEPT-001
+
+Exact accepted design head:
+c0fe5d7d2c2bba5b1d9e0011e194005268b6f9fb
 
 Slice 1.6 implementation:
-NOT AUTHORIZED
+AUTHORIZED — RLY-S16-AUTH-001
+
+Authorized implementation baseline:
+7bb7363375cc3cc3ac26758741ac9f2c6ca991e3
+
+Implementation branch:
+implementation/1.6-human-authorization-decision-gates
+
+Preferred implementation model:
+GPT-5.6 Luna
 
 Mutation endpoints / board controls:
-NOT AUTHORIZED
+AUTHORIZED FOR IMPLEMENTATION WITHIN ACCEPTED SLICE 1.6 DESIGN
 
 Slice 1.7:
 NOT OPEN
@@ -186,6 +198,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The opening is administrative only. The Slice 1.5 board remains read-only. Design authorization for Slice 1.6 is a separate Human Authority decision.
+The authorized implementation adds the bounded Human Authority command seam to the existing server-rendered board. It requires no schema migration or new dependency. The currently implemented Slice 1.5 board remains read-only until an implementation candidate completes independent evaluation and Human technical acceptance.
 
 **Unblocked ≠ authorized.**

@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 design accepted; implementation not authorized
+**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 implementation authorized; implementation not yet complete
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -246,10 +246,22 @@ Human design acceptance:
 RLY-S16-DESIGN-ACCEPT-001 — ACCEPTED
 
 Slice 1.6 implementation:
-NOT AUTHORIZED
+AUTHORIZED — RLY-S16-AUTH-001
+
+Authorized implementation baseline:
+7bb7363375cc3cc3ac26758741ac9f2c6ca991e3
+
+Implementation branch:
+implementation/1.6-human-authorization-decision-gates
+
+Preferred implementation model:
+GPT-5.6 Luna
+
+Implementation handoff:
+docs/reviews/SLICE_1_6_IMPLEMENTATION_HANDOFF.md
 
 Mutation endpoints / board controls:
-DESIGNED / NOT AUTHORIZED FOR IMPLEMENTATION
+AUTHORIZED FOR IMPLEMENTATION WITHIN ACCEPTED SLICE 1.6 DESIGN
 
 Slice 1.7:
 NOT OPEN
@@ -258,6 +270,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.6 design is accepted. The next governed gate is a separate Human Authority implementation authorization bound to the exact accepted combined design and an explicit implementation baseline. Until that authority exists, the accepted Slice 1.5 board remains the implemented read-only product surface.
+Slice 1.6 implementation is authorized under `RLY-S16-AUTH-001` against the exact accepted design and implementation baseline above. The implementation is not yet complete; the currently implemented Slice 1.5 board remains read-only. No schema migration or new dependency is authorized. Slice 1.7 and agent execution remain outside this authority.
 
 **Unblocked ≠ authorized.**
