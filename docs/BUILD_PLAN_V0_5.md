@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 not open
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -162,10 +162,30 @@ Independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
+OPEN — ADMINISTRATIVE ONLY
+
+Opening authority:
+RLY-S16-OPEN-001
+
+Canonical repository head at opening:
+d757885ff417cd573b2d3f566d778dd4a37520b3
+
+Slice 1.6 design:
+NOT AUTHORIZED
+
+Slice 1.6 implementation:
+NOT AUTHORIZED
+
+Mutation endpoints / board controls:
+NOT AUTHORIZED
+
+Slice 1.7:
 NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
+
+The opening is administrative only. The Slice 1.5 board remains read-only. Design authorization for Slice 1.6 is a separate Human Authority decision.
 
 **Unblocked ≠ authorized.**

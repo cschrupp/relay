@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 not open
+**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -178,12 +178,30 @@ React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
 
 Slice 1.6:
+OPEN — ADMINISTRATIVE ONLY
+
+Slice 1.6 opening authority:
+RLY-S16-OPEN-001
+
+Canonical repository head at opening:
+d757885ff417cd573b2d3f566d778dd4a37520b3
+
+Slice 1.6 design:
+NOT AUTHORIZED
+
+Slice 1.6 implementation:
+NOT AUTHORIZED
+
+Mutation endpoints / board controls:
+NOT AUTHORIZED
+
+Slice 1.7:
 NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.5 is closed under the accepted independent closure evaluation. Slice 1.6 remains not open and requires separate Human Authority.
+Slice 1.5 is closed under the accepted independent closure evaluation. Slice 1.6 is open administratively under `RLY-S16-OPEN-001`; design and implementation require separate Human Authority decisions. The Slice 1.5 board remains read-only.
 
-**Slice 1.6 is not open.**
+**Slice 1.6 design is not authorized.**

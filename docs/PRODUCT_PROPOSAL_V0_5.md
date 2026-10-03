@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 not open
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -83,7 +83,22 @@ Slice 1.5 independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-HUMAN AUTHORIZATION AND DECISION GATES — NOT OPEN
+HUMAN AUTHORIZATION AND DECISION GATES — OPEN (ADMINISTRATIVE ONLY)
+
+Opening authority:
+RLY-S16-OPEN-001
+
+Canonical repository head at opening:
+d757885ff417cd573b2d3f566d778dd4a37520b3
+
+Slice 1.6 design:
+NOT AUTHORIZED
+
+Slice 1.6 implementation:
+NOT AUTHORIZED
+
+Mutation endpoints / board controls:
+NOT AUTHORIZED
 
 Slice 1.7:
 MANUAL EVALUATION AND ACCEPTANCE — NOT OPEN
@@ -98,6 +113,6 @@ The accepted read-only board implementation remains a projection of governed dur
 
 Slice 1.5 is closed after independent closure evaluation accepted the exact closure-ready candidate. Its accepted technical result and governance history remain preserved in canonical Git history.
 
-Slice 1.6 remains not open, and agent execution remains unauthorized.
+Slice 1.6 is open administratively under `RLY-S16-OPEN-001`. Design, implementation, and mutation endpoints / board controls remain unauthorized; Slice 1.7 remains not open and agent execution remains unauthorized. The accepted Slice 1.5 board remains read-only.
 
 **Unblocked ≠ authorized.**
