@@ -1,8 +1,8 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 implementation authorized  
-**Document class:** Living canonical projection  
-**Canonical key:** `current-baseline`  
+**Status:** Phase 1 open — Slice 1.5 technically accepted; closure evaluation pending
+**Document class:** Living canonical projection
+**Canonical key:** `current-baseline`
 **Date:** October 2026
 
 ---
@@ -65,6 +65,18 @@ RLY-S15-AUTH-001 — AUTHORIZED
 Implementation baseline:
 2075be41962591552eded0597e243f0c1754b27f
 
+Accepted implementation candidate:
+ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
+
+Independent implementation evaluation:
+RLY-S15-EVAL-001 — ACCEPT
+
+Human technical acceptance:
+RLY-S15-ACCEPT-001 — ACCEPTED
+
+Finalization and closure authorization:
+RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
+
 Preferred implementation role/model:
 IMPLEMENTATION_AGENT — GPT-5.6 Luna
 ```
@@ -73,11 +85,11 @@ Roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
 
-# 3. Authorized Slice 1.5 implementation boundary
+# 3. Completed Slice 1.5 implementation boundary
 
-Implementation is authorized only for the accepted read-only Board Projection design.
+The authorized read-only Board Projection implementation is complete at the accepted candidate above.
 
-The implementation may add:
+The implementation added:
 
 - typed immutable board projection models;
 - deterministic Project index, Project board, and Slice detail projection service;
@@ -126,8 +138,8 @@ e44d63c15b7a4941146db5ad42bfcd414b71b444
 # 5. Current authority boundary
 
 ```text
-Current role:
-SLICE 1.5 IMPLEMENTATION_AGENT — GPT-5.6 LUNA
+Current finalization gate:
+IN PROGRESS / INDEPENDENT CLOSURE EVALUATION PENDING
 
 Slice 1.5:
 OPEN
@@ -136,13 +148,25 @@ Slice 1.5 design:
 ACCEPTED
 
 Slice 1.5 implementation:
-AUTHORIZED
+COMPLETE
 
-Implementation baseline:
-2075be41962591552eded0597e243f0c1754b27f
+Accepted technical candidate:
+ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
 
-Technical acceptance:
-NOT YET GRANTED
+Independent implementation evaluation:
+RLY-S15-EVAL-001 — ACCEPT
+
+Human technical acceptance:
+RLY-S15-ACCEPT-001 — ACCEPTED
+
+Finalization / closure authorization:
+RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
+
+Independent closure evaluation:
+PENDING
+
+Canonical promotion / closure:
+NOT YET COMPLETED
 
 React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
@@ -154,6 +178,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next governed gate is implementation completion followed by independent implementation evaluation of the exact candidate SHA.
+The next governed gate is independent closure evaluation of the exact closure-ready candidate SHA. Slice 1.5 may be recorded as closed only after that evaluator returns ACCEPT.
 
-**Unblocked ≠ accepted.**
+**Accepted implementation ≠ closed slice.**

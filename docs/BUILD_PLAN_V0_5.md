@@ -1,9 +1,9 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 design authorized  
-**Document class:** Living canonical projection  
-**Canonical key:** `build-plan`  
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closure evaluation pending
+**Document class:** Living canonical projection
+**Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
 **Parent document:** *Relay — Product and Technical Proposal v0.5*  
 **Date:** October 2026
@@ -26,10 +26,19 @@ Slice 1.5:
 OPEN
 
 Slice 1.5 design:
-AUTHORIZED
+ACCEPTED
 
 Slice 1.5 implementation:
-NOT AUTHORIZED
+COMPLETE / ACCEPTED
+
+Independent implementation evaluation:
+RLY-S15-EVAL-001 — ACCEPT
+
+Finalization / closure authorization:
+RLY-S15-CLOSE-AUTH-001 — AUTHORIZED
+
+Independent closure evaluation:
+PENDING
 
 Agent execution:
 NOT AUTHORIZED
@@ -49,6 +58,12 @@ Human design authorization:
 RLY-S15-DESIGN-AUTH-001
 ```
 
+Human design acceptance:
+
+```text
+RLY-S15-DESIGN-ACCEPT-001 — ACCEPTED
+```
+
 Human-authorized design subject baseline:
 
 ```text
@@ -66,6 +81,14 @@ Slice 1.5 Board Projection Architect — GPT-5.6 Sol
 ```
 
 The design must preserve the board as a deterministic, read-only projection of governed state. Slice 1.5 does not own human authorization mutations, new lifecycle/governance semantics, repository/provider mutations, or agent execution.
+
+The exact accepted technical candidate is:
+
+```text
+ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
+```
+
+The candidate was independently evaluated as ACCEPT under `RLY-S15-EVAL-001` and technically accepted under `RLY-S15-ACCEPT-001`.
 
 # 3. Accepted foundation and preserved Slice 1.4 lineage
 
@@ -100,35 +123,43 @@ Slice 1.4 closure evaluation:
 RLY-S14-CLOSE-EVAL-001 — ACCEPT
 ```
 
-# 4. Slice 1.5 design gate
+# 4. Slice 1.5 implementation and closure gates
 
-The Slice 1.5 architect may now produce architecture/contract/design artifacts only.
+The accepted design and bounded implementation are complete. Finalization is authorized under `RLY-S15-CLOSE-AUTH-001`; Slice 1.5 remains open until independent closure evaluation accepts the exact closure-ready candidate.
 
-Required next design sequence:
+Current governed sequence:
 
 ```text
-Design Revision 1
-→ Independent Design Review
-→ Human Design Acceptance
-→ Separate Implementation Authorization
+Accepted technical candidate: ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
+→ independent implementation evaluation: ACCEPT
+→ Human technical acceptance: ACCEPTED
+→ canonical finalization: IN PROGRESS
+→ independent closure evaluation: PENDING
+→ closure only after evaluator ACCEPT
 ```
 
-Passing CI never constitutes design acceptance or implementation authority.
+Passing CI is evidence; it does not constitute closure acceptance.
 
 # 5. Current authority boundary
 
 ```text
-Current governed role:
-SLICE 1.5 BOARD PROJECTION ARCHITECT — GPT-5.6 SOL
+Current finalization gate:
+IN PROGRESS / INDEPENDENT CLOSURE EVALUATION PENDING
 
 Slice 1.5:
 OPEN
 
 Slice 1.5 design:
-AUTHORIZED
+ACCEPTED
 
 Slice 1.5 implementation:
-NOT AUTHORIZED
+COMPLETE / ACCEPTED
+
+Finalization / closure authorization:
+AUTHORIZED
+
+Independent closure evaluation:
+PENDING
 
 Slice 1.6:
 NOT OPEN

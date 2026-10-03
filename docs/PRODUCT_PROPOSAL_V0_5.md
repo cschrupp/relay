@@ -1,9 +1,9 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 design authorized  
-**Document class:** Living canonical projection  
-**Canonical key:** `product-proposal`  
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closure evaluation pending
+**Document class:** Living canonical projection
+**Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
 **Date:** October 2026
 
@@ -40,6 +40,14 @@ Design is authorized under:
 RLY-S15-DESIGN-AUTH-001
 ```
 
+The design was accepted under `RLY-S15-DESIGN-ACCEPT-001`. Implementation was authorized under `RLY-S15-AUTH-001` and is complete at the exact accepted technical candidate:
+
+```text
+ff8df665f36afe60a2d44ee1ed0d735a0dcbc230
+```
+
+Independent implementation evaluation returned `RLY-S15-EVAL-001 — ACCEPT`, followed by Human technical acceptance `RLY-S15-ACCEPT-001 — ACCEPTED`.
+
 Human-authorized design subject baseline:
 
 ```text
@@ -69,10 +77,10 @@ Phase 1:
 OPEN
 
 Slice 1.5:
-BOARD PROJECTION — OPEN / DESIGN AUTHORIZED
+BOARD PROJECTION — OPEN / IMPLEMENTATION ACCEPTED
 
-Slice 1.5 implementation:
-NOT AUTHORIZED
+Slice 1.5 finalization / closure:
+AUTHORIZED under RLY-S15-CLOSE-AUTH-001 / CLOSURE EVALUATION PENDING
 
 Slice 1.6:
 HUMAN AUTHORIZATION AND DECISION GATES — NOT OPEN
@@ -84,10 +92,12 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-# 5. Design governance
+# 5. Implementation and closure governance
 
-Design Revision 1 must receive independent design review before Human design acceptance.
+The accepted read-only board implementation remains a projection of governed durable state. The exact candidate has passed independent implementation evaluation and Human technical acceptance.
 
-Implementation requires a separate explicit Human Authority decision after design acceptance.
+Slice 1.5 remains open while its canonical history, living projections, and registry are finalized. It may be recorded as closed only after independent closure evaluation accepts the exact closure-ready candidate.
+
+Slice 1.6 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
