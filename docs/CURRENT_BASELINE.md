@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 administratively open; design not authorized
+**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 design accepted; implementation not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -144,7 +144,57 @@ Canonical closure head:
 e44d63c15b7a4941146db5ad42bfcd414b71b444
 ```
 
-# 5. Current authority boundary
+# 5. Slice 1.6 accepted design
+
+```text
+Slice:
+1.6 — Human Authorization and Decision Gates
+
+Opening authority:
+RLY-S16-OPEN-001
+
+Canonical repository head at opening:
+d757885ff417cd573b2d3f566d778dd4a37520b3
+
+Human-authorized design subject baseline:
+e9c6e3a5cc7592764bf0ac4932a2ae2659644027
+
+Design authorization:
+RLY-S16-DESIGN-AUTH-001 — AUTHORIZED
+
+Authority-recording design parent:
+e4923c837f20de35eb96cd1caf615b86860d9222
+
+Revision 1:
+f3a0fa7d9cc5b344399c070406353e1107ec30ff
+
+Independent design evaluation 1:
+RLY-S16-DESIGN-EVAL-001 — REVISE
+
+Revision 2 amendment:
+9a114b81f4347df10db7dfcb75677a606f18262e
+
+Independent design evaluation 2:
+RLY-S16-DESIGN-EVAL-002 — REVISE
+
+Revision 3 amendment / exact accepted design head:
+c0fe5d7d2c2bba5b1d9e0011e194005268b6f9fb
+
+Independent combined design evaluation:
+RLY-S16-DESIGN-EVAL-003 — ACCEPT
+
+Human design acceptance:
+RLY-S16-DESIGN-ACCEPT-001 — ACCEPTED
+
+Human design acceptance record commit:
+0d23067c96eb9f3cec0ea3a3fa21b2fa605e4de1
+```
+
+The accepted Slice 1.6 design preserves the existing Relay governance model and defines the minimum Human Authority product seam. It requires exact action-basis binding, deterministic durable human-evidence projection, atomic successor gate-evaluation observations after gate-affecting human mutations, and explicit separation between human decision evidence and governed lifecycle execution.
+
+The accepted design keeps `BLOCK`, `PAUSE`, and `DEFER` as orthogonal blockage controls; requires `ADVANCE` and `CANCEL` to execute only exact current GREEN gates; keeps the local server-rendered FastAPI board and request-scoped SQLite architecture; requires no new schema migration or runtime dependency; and reserves transition to `ACCEPTED`, manual evaluation, technical acceptance, and accepted-baseline promotion for Slice 1.7.
+
+# 6. Current authority boundary
 
 ```text
 Current finalization gate:
@@ -178,22 +228,28 @@ React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
 
 Slice 1.6:
-OPEN — ADMINISTRATIVE ONLY
+OPEN
 
-Slice 1.6 opening authority:
-RLY-S16-OPEN-001
-
-Canonical repository head at opening:
-d757885ff417cd573b2d3f566d778dd4a37520b3
+Slice 1.6 design authorization:
+RLY-S16-DESIGN-AUTH-001 — AUTHORIZED
 
 Slice 1.6 design:
-NOT AUTHORIZED
+ACCEPTED
+
+Exact accepted design head:
+c0fe5d7d2c2bba5b1d9e0011e194005268b6f9fb
+
+Independent design evaluation:
+RLY-S16-DESIGN-EVAL-003 — ACCEPT
+
+Human design acceptance:
+RLY-S16-DESIGN-ACCEPT-001 — ACCEPTED
 
 Slice 1.6 implementation:
 NOT AUTHORIZED
 
 Mutation endpoints / board controls:
-NOT AUTHORIZED
+DESIGNED / NOT AUTHORIZED FOR IMPLEMENTATION
 
 Slice 1.7:
 NOT OPEN
@@ -202,6 +258,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.5 is closed under the accepted independent closure evaluation. Slice 1.6 is open administratively under `RLY-S16-OPEN-001`; design and implementation require separate Human Authority decisions. The Slice 1.5 board remains read-only.
+Slice 1.6 design is accepted. The next governed gate is a separate Human Authority implementation authorization bound to the exact accepted combined design and an explicit implementation baseline. Until that authority exists, the accepted Slice 1.5 board remains the implemented read-only product surface.
 
-**Slice 1.6 design is not authorized.**
+**Unblocked ≠ authorized.**
