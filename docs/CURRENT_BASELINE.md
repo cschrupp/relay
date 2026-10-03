@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 design accepted  
+**Status:** Phase 1 open — Slice 1.5 implementation authorized  
 **Document class:** Living canonical projection  
 **Canonical key:** `current-baseline`  
 **Date:** October 2026
@@ -58,29 +58,48 @@ RLY-S15-DESIGN-EVAL-002 — ACCEPT
 
 Human design acceptance:
 RLY-S15-DESIGN-ACCEPT-001 — ACCEPTED
+
+Implementation authorization:
+RLY-S15-AUTH-001 — AUTHORIZED
+
+Implementation baseline:
+2075be41962591552eded0597e243f0c1754b27f
+
+Preferred implementation role/model:
+IMPLEMENTATION_AGENT — GPT-5.6 Luna
 ```
 
 Roadmap objective:
 
 > Build the first human-facing board strictly as a projection of governed state.
 
-# 3. Accepted Slice 1.5 design boundary
+# 3. Authorized Slice 1.5 implementation boundary
 
-The accepted design specifies a deterministic read-only board projection over already-governed durable state.
+Implementation is authorized only for the accepted read-only Board Projection design.
 
-It preserves:
+The implementation may add:
 
-- exact lifecycle authority and derived display lanes;
+- typed immutable board projection models;
+- deterministic Project index, Project board, and Slice detail projection service;
+- narrow read-only SQLite transaction/read helpers with no migration;
+- request-scoped SQLite connection ownership;
+- FastAPI + Uvicorn as direct runtime dependencies;
+- optional `httpx` as a dev/test-only dependency if required for HTTP-level tests;
+- simple server-rendered HTML/CSS;
+- bounded local `relay-board` launcher if needed;
+- deterministic tests and implementation evidence.
+
+The implementation must preserve:
+
+- exact lifecycle authority and display-only lanes;
 - READY distinct from authorization;
 - gate-level evaluation observations only;
 - full persisted evaluation-context identity for duplicate/conflict integrity;
-- durable structural-basis freshness semantics;
-- fail-closed projection behavior;
-- one request-scoped SQLite connection and one read transaction/snapshot per request;
-- FastAPI + Uvicorn as the bounded backend/web seam;
-- simple server-rendered HTML for Slice 1.5;
+- `MATCHING_DURABLE_BASIS` / `STALE_DURABLE_BASIS` semantics;
+- one SQLite connection and one read snapshot per request;
+- loopback-default read-only serving;
 - disabled framework-generated OpenAPI/Swagger/ReDoc routes;
-- React/TypeScript/Node and the final JSON API deferred.
+- no board mutation, React, final JSON API, async persistence, connection pooling, schema migration, repository/provider mutation, Slice 1.6, or agent execution.
 
 # 4. Preserved Slice 1.4 accepted state
 
@@ -108,7 +127,7 @@ e44d63c15b7a4941146db5ad42bfcd414b71b444
 
 ```text
 Current role:
-HUMAN AUTHORITY / SLICE 1.5 DESIGN ACCEPTANCE COMPLETE
+SLICE 1.5 IMPLEMENTATION_AGENT — GPT-5.6 LUNA
 
 Slice 1.5:
 OPEN
@@ -117,7 +136,13 @@ Slice 1.5 design:
 ACCEPTED
 
 Slice 1.5 implementation:
-NOT YET AUTHORIZED
+AUTHORIZED
+
+Implementation baseline:
+2075be41962591552eded0597e243f0c1754b27f
+
+Technical acceptance:
+NOT YET GRANTED
 
 React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
@@ -129,6 +154,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The next governed gate is a separate Human Authority implementation authorization bound to the exact accepted Slice 1.5 design and an explicit implementation baseline.
+The next governed gate is implementation completion followed by independent implementation evaluation of the exact candidate SHA.
 
-**Unblocked ≠ authorized.**
+**Unblocked ≠ accepted.**
