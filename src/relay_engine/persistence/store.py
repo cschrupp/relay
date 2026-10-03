@@ -407,46 +407,61 @@ def persist_lifecycle_change(
     if expected_lifecycle_revision < 0:
         raise ValueError("expected lifecycle revision must be non-negative")
     with _write(database) as connection:
-        current, history = _load_current_and_history(connection, updated_lifecycle.slice_id)
-        if current is None:
-            raise ConcurrencyConflict("lifecycle is not initialized")
-        if current.revision != expected_lifecycle_revision:
-            raise ConcurrencyConflict("expected lifecycle revision is stale")
-        if isinstance(event, LifecycleInitialized):
-            raise PersistenceIntegrityError("initialization is not a lifecycle mutation event")
-        if (
-            event.slice_id != current.slice_id
-            or updated_lifecycle.slice_id != current.slice_id
-            or event.resulting_revision != expected_lifecycle_revision + 1
-            or updated_lifecycle.revision != expected_lifecycle_revision + 1
-        ):
-            raise PersistenceIntegrityError(
-                "lifecycle event and snapshot identity or revision disagree"
-            )
-        try:
-            replayed = replay_lifecycle((*history, event))
-        except LifecycleReplayError as error:
-            raise PersistenceIntegrityError(
-                "candidate lifecycle event cannot replay from durable history"
-            ) from error
-        if replayed != updated_lifecycle:
-            raise PersistenceIntegrityError(
-                "candidate event does not produce supplied lifecycle snapshot"
-            )
-
-        _insert_event(connection, event)
-        cursor = connection.execute(
-            "UPDATE lifecycle_current SET revision = ?, payload_json = ? "
-            "WHERE slice_id = ? AND revision = ?",
-            (
-                updated_lifecycle.revision,
-                _canonical_json(updated_lifecycle),
-                updated_lifecycle.slice_id,
-                expected_lifecycle_revision,
-            ),
+        persist_lifecycle_change_from_connection(
+            connection, expected_lifecycle_revision, updated_lifecycle, event
         )
-        if cursor.rowcount != 1:
-            raise ConcurrencyConflict("lifecycle changed while committing the update")
+
+
+def persist_lifecycle_change_from_connection(
+    connection: sqlite3.Connection,
+    expected_lifecycle_revision: int,
+    updated_lifecycle: SliceLifecycle,
+    event: LifecycleEvent,
+) -> None:
+    """Persist one lifecycle change inside a caller-owned transaction."""
+
+    if expected_lifecycle_revision < 0:
+        raise ValueError("expected lifecycle revision must be non-negative")
+    current, history = _load_current_and_history(connection, updated_lifecycle.slice_id)
+    if current is None:
+        raise ConcurrencyConflict("lifecycle is not initialized")
+    if current.revision != expected_lifecycle_revision:
+        raise ConcurrencyConflict("expected lifecycle revision is stale")
+    if isinstance(event, LifecycleInitialized):
+        raise PersistenceIntegrityError("initialization is not a lifecycle mutation event")
+    if (
+        event.slice_id != current.slice_id
+        or updated_lifecycle.slice_id != current.slice_id
+        or event.resulting_revision != expected_lifecycle_revision + 1
+        or updated_lifecycle.revision != expected_lifecycle_revision + 1
+    ):
+        raise PersistenceIntegrityError(
+            "lifecycle event and snapshot identity or revision disagree"
+        )
+    try:
+        replayed = replay_lifecycle((*history, event))
+    except LifecycleReplayError as error:
+        raise PersistenceIntegrityError(
+            "candidate lifecycle event cannot replay from durable history"
+        ) from error
+    if replayed != updated_lifecycle:
+        raise PersistenceIntegrityError(
+            "candidate event does not produce supplied lifecycle snapshot"
+        )
+
+    _insert_event(connection, event)
+    cursor = connection.execute(
+        "UPDATE lifecycle_current SET revision = ?, payload_json = ? "
+        "WHERE slice_id = ? AND revision = ?",
+        (
+            updated_lifecycle.revision,
+            _canonical_json(updated_lifecycle),
+            updated_lifecycle.slice_id,
+            expected_lifecycle_revision,
+        ),
+    )
+    if cursor.rowcount != 1:
+        raise ConcurrencyConflict("lifecycle changed while committing the update")
 
 
 def load_lifecycle_events(database: RelayDatabase, slice_id: SliceId) -> tuple[LifecycleEvent, ...]:
@@ -589,6 +604,21 @@ def insert_authorization_grant(database: RelayDatabase, value: AuthorizationGran
         )
 
 
+def insert_authorization_grant_from_connection(
+    connection: sqlite3.Connection, value: AuthorizationGrant
+) -> None:
+    """Insert one grant without opening or committing a nested transaction."""
+
+    _insert_payload(
+        connection,
+        "authorization_grants",
+        "authorization_id",
+        value.authorization_id,
+        value,
+        {"baseline_id": value.baseline_id},
+    )
+
+
 def load_authorization_grant(
     database: RelayDatabase, authorization_id: AuthorizationId
 ) -> AuthorizationGrant | None:
@@ -603,6 +633,26 @@ def load_authorization_grant(
             {"authorization_id": "authorization_id", "baseline_id": "baseline_id"},
         ),
     )
+
+
+def load_authorization_grants_for_slice_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[AuthorizationGrant, ...]:
+    """Load and validate all grants for one Slice in deterministic order."""
+
+    rows = connection.execute(
+        "SELECT * FROM authorization_grants ORDER BY authorization_id ASC"
+    ).fetchall()
+    grants: list[AuthorizationGrant] = []
+    for row in rows:
+        grant = _parse_payload(
+            row,
+            AuthorizationGrant,
+            {"authorization_id": "authorization_id", "baseline_id": "baseline_id"},
+        )
+        if grant.slice_id == slice_id:
+            grants.append(grant)
+    return tuple(sorted(grants, key=lambda item: (item.granted_at, item.authorization_id)))
 
 
 def insert_repository_mutation_authorization(
@@ -653,6 +703,18 @@ def insert_human_decision(database: RelayDatabase, value: HumanGateDecision) -> 
         )
 
 
+def insert_human_decision_from_connection(
+    connection: sqlite3.Connection, value: HumanGateDecision
+) -> None:
+    """Insert one Human decision inside the caller-owned transaction."""
+
+    connection.execute(
+        "INSERT INTO human_decisions(decision_id, decision_type, baseline_id, payload_json) "
+        "VALUES (?, ?, ?, ?)",
+        (value.decision_id, type(value).__name__, value.baseline_id, _canonical_json(value)),
+    )
+
+
 def load_human_decision(
     database: RelayDatabase, decision_id: HumanDecisionId
 ) -> HumanGateDecision | None:
@@ -677,6 +739,29 @@ def load_human_decision(
     return _read(database, read)
 
 
+def load_human_decisions_for_slice_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[HumanGateDecision, ...]:
+    """Load, type-check, and order Human decisions for one Slice."""
+
+    rows = connection.execute("SELECT * FROM human_decisions ORDER BY decision_id ASC").fetchall()
+    decisions: list[HumanGateDecision] = []
+    for row in rows:
+        try:
+            decision = _DECISION_ADAPTER.validate_json(cast(str, row["payload_json"]))
+        except (ValidationError, ValueError, TypeError) as error:
+            raise PersistenceIntegrityError("stored human decision payload is invalid") from error
+        if (
+            decision.decision_id != row["decision_id"]
+            or decision.baseline_id != row["baseline_id"]
+            or type(decision).__name__ != row["decision_type"]
+        ):
+            raise PersistenceIntegrityError("human-decision index columns disagree with payload")
+        if decision.slice_id == slice_id:
+            decisions.append(decision)
+    return tuple(sorted(decisions, key=lambda item: (item.occurred_at, item.decision_id)))
+
+
 def insert_gate_evaluation_record(database: RelayDatabase, value: GateEvaluationRecord) -> None:
     """Append validated evaluation evidence; this record alone never authorizes execution."""
 
@@ -692,6 +777,24 @@ def insert_gate_evaluation_record(database: RelayDatabase, value: GateEvaluation
                 "slice_id": value.context.lifecycle.slice_id,
             },
         )
+
+
+def insert_gate_evaluation_record_from_connection(
+    connection: sqlite3.Connection, value: GateEvaluationRecord
+) -> None:
+    """Append one observation in a caller-owned write transaction."""
+
+    _insert_payload(
+        connection,
+        "gate_evaluation_records",
+        "record_id",
+        value.id,
+        value,
+        {
+            "baseline_id": value.context.baseline_id,
+            "slice_id": value.context.lifecycle.slice_id,
+        },
+    )
 
 
 def load_gate_evaluation_record(
@@ -1001,110 +1104,127 @@ def execute_and_persist_handover(
     """Recheck durable governance facts, execute, and commit all causality atomically."""
 
     with _write(database) as connection:
-        current, history = _load_current_and_history(connection, context.lifecycle.slice_id)
-        if current is None:
-            raise ConcurrencyConflict("target lifecycle is not initialized")
-        if current.revision != expected_lifecycle_revision:
-            raise ConcurrencyConflict("expected target lifecycle revision is stale")
-        if context.lifecycle.revision != current.revision:
-            raise ConcurrencyConflict("supplied target lifecycle projection is stale")
-        if context.lifecycle != current:
-            raise PersistenceIntegrityError(
-                "target lifecycle differs from durable state at same revision"
-            )
-
-        _require_baseline(connection, context.baseline_id)
-        for gate in gates:
-            _require_gate(connection, gate)
-        for dependency in context.dependency_lifecycles:
-            _require_dependency(connection, dependency)
-        for grant in context.authorization_grants:
-            _require_grant(connection, grant)
-        for decision in context.human_decisions:
-            _require_decision(connection, decision)
-        for artifact_id in context.available_artifact_ids:
-            if (
-                _read_one(connection, "artifacts", "id", artifact_id, Artifact, {"id": "id"})
-                is None
-            ):
-                raise PersistenceIntegrityError("available artifact ID is not durable")
-        for evidence_id in context.available_evidence_ids:
-            if _read_one(connection, "evidence", "id", evidence_id, Evidence, {"id": "id"}) is None:
-                raise PersistenceIntegrityError("available evidence ID is not durable")
-
-        evaluations = evaluate_handover_gates(gates, context)
-        updated, event, selected_evaluation = execute_handover(
+        return execute_and_persist_handover_from_connection(
+            connection,
             gates,
             selected_gate_id,
             context,
+            expected_lifecycle_revision,
+            evaluation_record_id,
+            evaluation_recorded_at,
+            execution_id,
             event_id,
             actor,
             occurred_at,
             reason,
         )
-        expected_selected = next(
-            (item for item in evaluations if item.gate_id == selected_gate_id), None
-        )
-        if expected_selected is None or expected_selected != selected_evaluation:
-            raise PersistenceIntegrityError(
-                "execution evaluation differs from complete evidence tuple"
-            )
 
-        evaluation_record = GateEvaluationRecord(
-            id=evaluation_record_id,
-            recorded_at=evaluation_recorded_at,
-            gate_refs=tuple(
-                GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision)
-                for gate in sorted(gates, key=lambda item: item.gate_id)
-            ),
-            context=context,
-            evaluations=evaluations,
-        )
-        try:
-            replayed = replay_lifecycle((*history, event))
-        except LifecycleReplayError as error:
-            raise PersistenceIntegrityError("executed lifecycle event cannot replay") from error
-        if replayed != updated:
-            raise PersistenceIntegrityError("executed event does not produce returned lifecycle")
 
-        execution_record = ExecutionRecord(
-            execution_id=execution_id,
-            gate_evaluation_record_id=evaluation_record_id,
-            slice_id=context.lifecycle.slice_id,
-            baseline_id=context.baseline_id,
-            selected_gate_id=selected_gate_id,
-            selected_gate_revision=selected_evaluation.gate_revision,
-            source_lifecycle_revision=current.revision,
-            resulting_lifecycle_revision=updated.revision,
-            event_id=event.event_id,
-            actor=actor,
-            occurred_at=event.occurred_at,
-            reason=event.reason,
+def execute_and_persist_handover_from_connection(
+    connection: sqlite3.Connection,
+    gates: tuple[HandoverGate, ...],
+    selected_gate_id: HandoverGateId,
+    context: HandoverContext,
+    expected_lifecycle_revision: int,
+    evaluation_record_id: GateEvaluationRecordId,
+    evaluation_recorded_at: datetime,
+    execution_id: ExecutionId,
+    event_id: EventId,
+    actor: ActorRef,
+    occurred_at: datetime,
+    reason: str,
+) -> tuple[SliceLifecycle, PhaseChanged, GateEvaluation, GateEvaluationRecord, ExecutionRecord]:
+    """Execute a governed handover without opening a nested transaction."""
+
+    current, history = _load_current_and_history(connection, context.lifecycle.slice_id)
+    if current is None:
+        raise ConcurrencyConflict("target lifecycle is not initialized")
+    if current.revision != expected_lifecycle_revision:
+        raise ConcurrencyConflict("expected target lifecycle revision is stale")
+    if context.lifecycle.revision != current.revision:
+        raise ConcurrencyConflict("supplied target lifecycle projection is stale")
+    if context.lifecycle != current:
+        raise PersistenceIntegrityError(
+            "target lifecycle differs from durable state at same revision"
         )
 
-        _insert_payload(
-            connection,
-            "gate_evaluation_records",
-            "record_id",
-            evaluation_record.id,
-            evaluation_record,
-            {
-                "baseline_id": evaluation_record.context.baseline_id,
-                "slice_id": evaluation_record.context.lifecycle.slice_id,
-            },
-        )
-        _insert_event(connection, event)
-        cursor = connection.execute(
-            "UPDATE lifecycle_current SET revision = ?, payload_json = ? "
-            "WHERE slice_id = ? AND revision = ?",
-            (
-                updated.revision,
-                _canonical_json(updated),
-                updated.slice_id,
-                expected_lifecycle_revision,
-            ),
-        )
-        if cursor.rowcount != 1:
-            raise ConcurrencyConflict("target lifecycle changed during governed execution")
-        _insert_execution_record(connection, execution_record)
-        return updated, event, selected_evaluation, evaluation_record, execution_record
+    _require_baseline(connection, context.baseline_id)
+    for gate in gates:
+        _require_gate(connection, gate)
+    for dependency in context.dependency_lifecycles:
+        _require_dependency(connection, dependency)
+    for grant in context.authorization_grants:
+        _require_grant(connection, grant)
+    for decision in context.human_decisions:
+        _require_decision(connection, decision)
+    for artifact_id in context.available_artifact_ids:
+        if _read_one(connection, "artifacts", "id", artifact_id, Artifact, {"id": "id"}) is None:
+            raise PersistenceIntegrityError("available artifact ID is not durable")
+    for evidence_id in context.available_evidence_ids:
+        if _read_one(connection, "evidence", "id", evidence_id, Evidence, {"id": "id"}) is None:
+            raise PersistenceIntegrityError("available evidence ID is not durable")
+
+    evaluations = evaluate_handover_gates(gates, context)
+    updated, event, selected_evaluation = execute_handover(
+        gates,
+        selected_gate_id,
+        context,
+        event_id,
+        actor,
+        occurred_at,
+        reason,
+    )
+    expected_selected = next(
+        (item for item in evaluations if item.gate_id == selected_gate_id), None
+    )
+    if expected_selected is None or expected_selected != selected_evaluation:
+        raise PersistenceIntegrityError("execution evaluation differs from complete evidence tuple")
+
+    evaluation_record = GateEvaluationRecord(
+        id=evaluation_record_id,
+        recorded_at=evaluation_recorded_at,
+        gate_refs=tuple(
+            GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision)
+            for gate in sorted(gates, key=lambda item: item.gate_id)
+        ),
+        context=context,
+        evaluations=evaluations,
+    )
+    try:
+        replayed = replay_lifecycle((*history, event))
+    except LifecycleReplayError as error:
+        raise PersistenceIntegrityError("executed lifecycle event cannot replay") from error
+    if replayed != updated:
+        raise PersistenceIntegrityError("executed event does not produce returned lifecycle")
+
+    execution_record = ExecutionRecord(
+        execution_id=execution_id,
+        gate_evaluation_record_id=evaluation_record_id,
+        slice_id=context.lifecycle.slice_id,
+        baseline_id=context.baseline_id,
+        selected_gate_id=selected_gate_id,
+        selected_gate_revision=selected_evaluation.gate_revision,
+        source_lifecycle_revision=current.revision,
+        resulting_lifecycle_revision=updated.revision,
+        event_id=event.event_id,
+        actor=actor,
+        occurred_at=event.occurred_at,
+        reason=event.reason,
+    )
+
+    insert_gate_evaluation_record_from_connection(connection, evaluation_record)
+    _insert_event(connection, event)
+    cursor = connection.execute(
+        "UPDATE lifecycle_current SET revision = ?, payload_json = ? "
+        "WHERE slice_id = ? AND revision = ?",
+        (
+            updated.revision,
+            _canonical_json(updated),
+            updated.slice_id,
+            expected_lifecycle_revision,
+        ),
+    )
+    if cursor.rowcount != 1:
+        raise ConcurrencyConflict("target lifecycle changed during governed execution")
+    _insert_execution_record(connection, execution_record)
+    return updated, event, selected_evaluation, evaluation_record, execution_record

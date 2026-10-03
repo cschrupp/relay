@@ -160,6 +160,12 @@ _PHASE_TRANSITIONS: dict[LifecyclePhase, frozenset[LifecyclePhase]] = {
 }
 
 
+def is_blockable_phase(phase: LifecyclePhase) -> bool:
+    """Return whether the existing lifecycle engine permits Human blockage here."""
+
+    return phase in _BLOCKABLE_PHASES
+
+
 def initialize_lifecycle(
     slice_id: SliceId,
     event_id: EventId,
