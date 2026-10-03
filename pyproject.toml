@@ -13,13 +13,19 @@ dependencies = [
   "pydantic-settings>=2.10,<3",
   "structlog>=25.4,<26",
   "PyJWT[crypto]>=2.10,<3",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
 ]
+
+[project.scripts]
+relay-board = "relay_engine.board.web:main"
 
 [dependency-groups]
 dev = [
   "pyright>=1.1.405,<2",
   "pytest>=8.4,<9",
   "ruff>=0.12,<1",
+  "httpx>=0.28,<1",
 ]
 
 [tool.hatch.build.targets.wheel]

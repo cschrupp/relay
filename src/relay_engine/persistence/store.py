@@ -199,6 +199,21 @@ def load_baseline(database: RelayDatabase, baseline_id: BaselineId) -> Baseline 
     )
 
 
+def load_baseline_from_connection(
+    connection: sqlite3.Connection, baseline_id: BaselineId
+) -> Baseline | None:
+    """Load and validate one baseline inside a caller-owned read snapshot."""
+
+    return _read_one(
+        connection,
+        "baselines",
+        "id",
+        baseline_id,
+        Baseline,
+        {"id": "id", "project_id": "project_id"},
+    )
+
+
 def load_slice(database: RelayDatabase, slice_id: SliceId) -> Slice | None:
     return _read(
         database,
@@ -449,6 +464,14 @@ def load_current_lifecycle(database: RelayDatabase, slice_id: SliceId) -> SliceL
     )
 
 
+def load_current_lifecycle_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> SliceLifecycle | None:
+    """Load and replay lifecycle history inside a caller-owned read snapshot."""
+
+    return _load_current_and_history(connection, slice_id)[0]
+
+
 def verify_slice_history(database: RelayDatabase, slice_id: SliceId) -> None:
     """Read-only proof that exact stored lifecycle events produce current state."""
 
@@ -522,6 +545,29 @@ def load_handover_gates(
         return values
 
     return _read(database, read)
+
+
+def load_handover_gates_for_slice_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[HandoverGate, ...]:
+    """Load every persisted gate revision for one Slice in deterministic order."""
+
+    rows = connection.execute(
+        "SELECT * FROM handover_gate_revisions WHERE slice_id = ? "
+        "ORDER BY gate_id ASC, gate_revision ASC",
+        (slice_id,),
+    ).fetchall()
+    gates: list[HandoverGate] = []
+    for row in rows:
+        gate = _parse_payload(
+            row,
+            HandoverGate,
+            {"gate_id": "gate_id", "baseline_id": "baseline_id", "slice_id": "slice_id"},
+        )
+        if gate.revision != row["gate_revision"]:
+            raise PersistenceIntegrityError("gate revision column disagrees with typed payload")
+        gates.append(gate)
+    return tuple(gates)
 
 
 def load_latest_handover_gate(
@@ -692,6 +738,30 @@ def load_gate_evaluation_records(
     return _read(database, read)
 
 
+def load_gate_evaluation_records_for_slice_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[GateEvaluationRecord, ...]:
+    """Load one Slice's evaluation records in durable sequence order."""
+
+    rows = connection.execute(
+        "SELECT * FROM gate_evaluation_records WHERE slice_id = ? "
+        "ORDER BY sequence ASC, record_id ASC",
+        (slice_id,),
+    ).fetchall()
+    return tuple(
+        _parse_payload(
+            row,
+            GateEvaluationRecord,
+            {
+                "record_id": "id",
+                "baseline_id": "context.baseline_id",
+                "slice_id": "context.lifecycle.slice_id",
+            },
+        )
+        for row in rows
+    )
+
+
 def _insert_execution_record(connection: sqlite3.Connection, value: ExecutionRecord) -> None:
     connection.execute(
         "INSERT INTO executions(execution_id, evaluation_record_id, event_id, slice_id, "
@@ -818,6 +888,27 @@ def load_execution_records(database: RelayDatabase) -> tuple[ExecutionRecord, ..
         return tuple(records)
 
     return _read(database, read)
+
+
+def load_execution_records_for_slice_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[ExecutionRecord, ...]:
+    """Load and cross-check one Slice's execution records in deterministic order."""
+
+    rows = connection.execute(
+        "SELECT execution_id FROM executions WHERE slice_id = ? "
+        "ORDER BY resulting_lifecycle_revision ASC, execution_id ASC",
+        (slice_id,),
+    ).fetchall()
+    records: list[ExecutionRecord] = []
+    for row in rows:
+        record = _load_execution(connection, cast(str, row["execution_id"]))
+        if record is None:
+            raise PersistenceIntegrityError("execution disappeared during ordered read")
+        if record.slice_id != slice_id:
+            raise PersistenceIntegrityError("execution indexed Slice disagrees with its payload")
+        records.append(record)
+    return tuple(records)
 
 
 def _require_gate(connection: sqlite3.Connection, gate: HandoverGate) -> None:

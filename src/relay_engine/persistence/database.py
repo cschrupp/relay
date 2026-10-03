@@ -123,6 +123,37 @@ def write_transaction(database: RelayDatabase) -> Generator[sqlite3.Connection]:
         raise
 
 
+@contextmanager
+def read_transaction(database: RelayDatabase) -> Generator[sqlite3.Connection]:
+    """Own one deferred, read-only SQLite snapshot without nested transactions."""
+
+    connection = database.connection
+    if connection.in_transaction:
+        raise PersistenceError("a read transaction cannot be nested")
+    try:
+        connection.execute("BEGIN")
+        yield connection
+        connection.commit()
+    except PersistenceError:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+    except sqlite3.OperationalError as error:
+        if connection.in_transaction:
+            connection.rollback()
+        if _is_busy(error):
+            raise DatabaseUnavailable("SQLite database is busy or locked") from error
+        raise DatabaseUnavailable("SQLite read transaction failed") from error
+    except sqlite3.Error as error:
+        if connection.in_transaction:
+            connection.rollback()
+        raise DatabaseUnavailable("SQLite read transaction failed") from error
+    except Exception:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+
+
 def _is_busy(error: sqlite3.OperationalError) -> bool:
     message = str(error).lower()
     return "locked" in message or "busy" in message
