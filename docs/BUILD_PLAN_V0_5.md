@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 and Slice 1.6 closed; canonical promotion pending
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 and Slice 1.6 closed; Slice 1.6 canonical closure promoted
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -62,7 +62,10 @@ Independent closure evaluation:
 RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-PROMOTION TO MAIN PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+9db044036e3591c53d777c81af58af252ebc69a7
 
 Closure evaluation record commit:
 fc407e603593a7340515313bfb0b13bc5d286125
@@ -231,7 +234,10 @@ Independent closure evaluation:
 RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-PROMOTION TO MAIN PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+9db044036e3591c53d777c81af58af252ebc69a7
 
 Closure evaluation record commit:
 fc407e603593a7340515313bfb0b13bc5d286125
@@ -252,6 +258,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed on the authorized finalization lineage. Canonical promotion to `main` is pending. No schema migration or new dependency was introduced. Slice 1.7 remains not open, and agent execution remains unauthorized.
+The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed. Canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. No schema migration or new dependency was introduced. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

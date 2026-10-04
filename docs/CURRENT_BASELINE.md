@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 and Slice 1.6 closed; canonical promotion pending
+**Status:** Phase 1 open — Slice 1.5 and Slice 1.6 closed; Slice 1.6 canonical closure promoted
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -285,7 +285,10 @@ Independent closure evaluation:
 RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-PROMOTION TO MAIN PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+9db044036e3591c53d777c81af58af252ebc69a7
 
 Closure evaluation record commit:
 fc407e603593a7340515313bfb0b13bc5d286125
@@ -309,6 +312,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` authorizes the closed state on this finalization lineage; promotion to canonical `main` is pending. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
