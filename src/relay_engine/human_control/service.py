@@ -7,10 +7,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from relay_engine.domain.ids import (
+    AuthorizationId,
+    EventId,
+    ExecutionId,
+    GateEvaluationRecordId,
     HandoverGateId,
     HumanDecisionId,
     SliceId,
-    new_id,
 )
 from relay_engine.domain.references import ActorKind, ActorRef
 from relay_engine.governance import (
@@ -298,23 +301,16 @@ def _basis_if_current(snapshot: _Snapshot) -> HumanActionBasis | None:
         return None
 
 
-def _action_time(
-    latest: GateEvaluationRecord | None,
-    lifecycle: SliceLifecycle | None,
-    previous: datetime | None = None,
-    supplied: datetime | None = None,
-) -> datetime:
-    value = (supplied or datetime.now(UTC)).astimezone(UTC)
-    lower_bounds = [
-        item
-        for item in (
-            None if latest is None else latest.recorded_at,
-            None if lifecycle is None else lifecycle.updated_at,
-            previous,
-        )
-        if item is not None
-    ]
-    return max((value, *lower_bounds))
+def _timestamp_at_or_after(value: datetime, *lower_bounds: datetime, label: str) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{label} must be timezone-aware")
+    normalized = value.astimezone(UTC)
+    for lower_bound in lower_bounds:
+        if lower_bound.tzinfo is None or lower_bound.utcoffset() is None:
+            raise PersistenceIntegrityError("durable timestamps must be timezone-aware")
+        if normalized < lower_bound.astimezone(UTC):
+            raise ValueError(f"{label} must not precede current durable evidence")
+    return normalized
 
 
 def _latest_evidence_time(snapshot: _Snapshot) -> datetime | None:
@@ -325,15 +321,28 @@ def _latest_evidence_time(snapshot: _Snapshot) -> datetime | None:
     return max(evidence_times, default=None)
 
 
+def _durable_action_times(
+    snapshot: _Snapshot,
+    lifecycle: SliceLifecycle,
+    latest: GateEvaluationRecord,
+) -> tuple[datetime, ...]:
+    values = [lifecycle.updated_at, latest.recorded_at]
+    evidence_time = _latest_evidence_time(snapshot)
+    if evidence_time is not None:
+        values.append(evidence_time)
+    return tuple(values)
+
+
 def _record_successor(
     connection: sqlite3.Connection,
     gates: tuple[HandoverGate, ...],
     context: HandoverContext,
+    evaluation_record_id: GateEvaluationRecordId,
     recorded_at: datetime,
 ) -> GateEvaluationRecord:
     evaluations = evaluate_handover_gates(gates, context)
     record = GateEvaluationRecord(
-        id=new_id("geval_"),
+        id=evaluation_record_id,
         recorded_at=recorded_at,
         gate_refs=_gate_refs(gates),
         context=context,
@@ -513,7 +522,10 @@ def grant_gate_authorization(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    authorization_id: AuthorizationId,
+    granted_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> GateEvaluationRecord:
     """Grant exact current gate permission and atomically evaluate its successor."""
 
@@ -550,14 +562,19 @@ def grant_gate_authorization(
         if exact_grants:
             return latest
 
-        when = _action_time(
-            latest,
-            lifecycle,
-            _latest_evidence_time(snapshot),
-            occurred_at,
+        lower_bounds = _durable_action_times(snapshot, lifecycle, latest)
+        when = _timestamp_at_or_after(
+            granted_at,
+            *lower_bounds,
+            label="granted_at",
+        )
+        evaluation_time = _timestamp_at_or_after(
+            successor_evaluation_recorded_at,
+            when,
+            label="successor_evaluation_recorded_at",
         )
         grant = AuthorizationGrant(
-            authorization_id=new_id("auth_"),
+            authorization_id=authorization_id,
             slice_id=slice_id,
             baseline_id=gate.baseline_id,
             gate_id=gate.gate_id,
@@ -579,7 +596,13 @@ def grant_gate_authorization(
             decisions,
             governance_revision=latest.context.governance_revision + 1,
         )
-        return _record_successor(connection, gates, context, when)
+        return _record_successor(
+            connection,
+            gates,
+            context,
+            successor_evaluation_record_id,
+            evaluation_time,
+        )
 
 
 def _record_decision(
@@ -591,7 +614,10 @@ def _record_decision(
     reason: str,
     target: HumanApprovalValue,
     expected_current_approval_decision_id: HumanDecisionId | None,
-    occurred_at: datetime | None,
+    decision_id: HumanDecisionId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> GateEvaluationRecord:
     slice_id = basis.slice_id
     lifecycle, gates, latest = _validate_basis(snapshot, basis)
@@ -624,14 +650,19 @@ def _record_decision(
     if previous_is_current and previous is not None and previous.decision is target:
         return latest
 
-    when = _action_time(
-        latest,
-        lifecycle,
-        _latest_evidence_time(snapshot),
+    lower_bounds = _durable_action_times(snapshot, lifecycle, latest)
+    when = _timestamp_at_or_after(
         occurred_at,
+        *lower_bounds,
+        label="occurred_at",
+    )
+    evaluation_time = _timestamp_at_or_after(
+        successor_evaluation_recorded_at,
+        when,
+        label="successor_evaluation_recorded_at",
     )
     decision = HumanApprovalDecision(
-        decision_id=new_id("hdec_"),
+        decision_id=decision_id,
         slice_id=slice_id,
         baseline_id=gate.baseline_id,
         gate_id=gate.gate_id,
@@ -649,7 +680,13 @@ def _record_decision(
     )
     grants = _project_authorizations(snapshot.grants, gates)
     context = _successor_context(latest, lifecycle, gates, grants, decisions)
-    return _record_successor(connection, gates, context, when)
+    return _record_successor(
+        connection,
+        gates,
+        context,
+        successor_evaluation_record_id,
+        evaluation_time,
+    )
 
 
 def record_gate_approval(
@@ -662,7 +699,10 @@ def record_gate_approval(
     reason: str,
     *,
     decision: HumanApprovalValue = HumanApprovalValue.APPROVE,
-    occurred_at: datetime | None = None,
+    decision_id: HumanDecisionId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> GateEvaluationRecord:
     """Record APPROVE or REJECT with per-gate optimistic concurrency."""
 
@@ -680,7 +720,10 @@ def record_gate_approval(
             reason,
             decision,
             expected_current_approval_decision_id,
+            decision_id,
             occurred_at,
+            successor_evaluation_record_id,
+            successor_evaluation_recorded_at,
         )
 
 
@@ -693,7 +736,10 @@ def record_gate_rejection(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    decision_id: HumanDecisionId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> GateEvaluationRecord:
     """Record REJECT with per-gate optimistic concurrency."""
 
@@ -711,7 +757,10 @@ def record_gate_rejection(
             reason,
             HumanApprovalValue.REJECT,
             expected_current_approval_decision_id,
+            decision_id,
             occurred_at,
+            successor_evaluation_record_id,
+            successor_evaluation_recorded_at,
         )
 
 
@@ -724,7 +773,10 @@ def record_gate_choice(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    decision_id: HumanDecisionId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> GateEvaluationRecord:
     """Record a selection over the exact canonical current choice gate set."""
 
@@ -760,14 +812,19 @@ def record_gate_choice(
             and current_choice.governance_revision == latest.context.governance_revision
         ):
             return latest
-        when = _action_time(
-            latest,
-            lifecycle,
-            _latest_evidence_time(snapshot),
+        lower_bounds = _durable_action_times(snapshot, lifecycle, latest)
+        when = _timestamp_at_or_after(
             occurred_at,
+            *lower_bounds,
+            label="occurred_at",
+        )
+        evaluation_time = _timestamp_at_or_after(
+            successor_evaluation_recorded_at,
+            when,
+            label="successor_evaluation_recorded_at",
         )
         choice = HumanChoiceDecision(
-            decision_id=new_id("hdec_"),
+            decision_id=decision_id,
             slice_id=slice_id,
             baseline_id=selected.baseline_id,
             selected_gate_id=selected.gate_id,
@@ -790,7 +847,13 @@ def record_gate_choice(
             _project_authorizations(snapshot.grants, gates),
             decisions,
         )
-        return _record_successor(connection, gates, context, when)
+        return _record_successor(
+            connection,
+            gates,
+            context,
+            successor_evaluation_record_id,
+            evaluation_time,
+        )
 
 
 def _change_human_hold(
@@ -800,8 +863,10 @@ def _change_human_hold(
     expected_lifecycle_revision: int,
     actor: ActorRef,
     reason: str,
-    *,
-    occurred_at: datetime | None = None,
+    event_id: EventId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> SliceLifecycle:
     _require_human(actor)
     if action not in {HumanActionKind.BLOCK, HumanActionKind.PAUSE, HumanActionKind.DEFER}:
@@ -826,17 +891,22 @@ def _change_human_hold(
             and lifecycle.blockage.reasons == reasons
         ):
             return lifecycle
-        when = _action_time(
-            snapshot.latest,
-            lifecycle,
-            _latest_evidence_time(snapshot),
+        lower_bounds = [lifecycle.updated_at]
+        if snapshot.latest is not None:
+            lower_bounds.append(snapshot.latest.recorded_at)
+        evidence_time = _latest_evidence_time(snapshot)
+        if evidence_time is not None:
+            lower_bounds.append(evidence_time)
+        when = _timestamp_at_or_after(
             occurred_at,
+            *lower_bounds,
+            label="occurred_at",
         )
         try:
             updated, event = set_blocked(
                 lifecycle,
                 reasons,
-                new_id("evt_"),
+                event_id,
                 actor,
                 when,
                 reason,
@@ -854,7 +924,18 @@ def _change_human_hold(
                 _project_authorizations(snapshot.grants, gates),
                 _project_decisions(snapshot.decisions, gates),
             )
-            _record_successor(connection, gates, context, when)
+            evaluation_time = _timestamp_at_or_after(
+                successor_evaluation_recorded_at,
+                when,
+                label="successor_evaluation_recorded_at",
+            )
+            _record_successor(
+                connection,
+                gates,
+                context,
+                successor_evaluation_record_id,
+                evaluation_time,
+            )
         return updated
 
 
@@ -866,7 +947,10 @@ def set_human_hold(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    event_id: EventId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> SliceLifecycle:
     """Set one indefinite Human blocker while preserving unrelated blockers."""
 
@@ -877,7 +961,10 @@ def set_human_hold(
         expected_lifecycle_revision,
         actor,
         reason,
-        occurred_at=occurred_at,
+        event_id,
+        occurred_at,
+        successor_evaluation_record_id,
+        successor_evaluation_recorded_at,
     )
 
 
@@ -888,7 +975,10 @@ def clear_human_hold(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    event_id: EventId,
+    occurred_at: datetime,
+    successor_evaluation_record_id: GateEvaluationRecordId,
+    successor_evaluation_recorded_at: datetime,
 ) -> SliceLifecycle:
     """Remove only Human blockers; unrelated blockage reasons remain durable."""
 
@@ -902,23 +992,26 @@ def clear_human_hold(
             raise HumanActionBasisStale("lifecycle changed since the resume form was rendered")
         holds = _human_hold_reasons(lifecycle)
         if not holds:
-            raise HumanActionNotAvailable("Slice has no Human hold to clear")
+            return lifecycle
         remaining = tuple(
             item for item in lifecycle.blockage.reasons if item.code not in _HUMAN_HOLD_CODES
         )
-        when = _action_time(
-            snapshot.latest,
-            lifecycle,
-            _latest_evidence_time(snapshot),
+        lower_bounds = [lifecycle.updated_at]
+        if snapshot.latest is not None:
+            lower_bounds.append(snapshot.latest.recorded_at)
+        evidence_time = _latest_evidence_time(snapshot)
+        if evidence_time is not None:
+            lower_bounds.append(evidence_time)
+        when = _timestamp_at_or_after(
             occurred_at,
+            *lower_bounds,
+            label="occurred_at",
         )
         try:
             if remaining:
-                updated, event = set_blocked(
-                    lifecycle, remaining, new_id("evt_"), actor, when, reason
-                )
+                updated, event = set_blocked(lifecycle, remaining, event_id, actor, when, reason)
             else:
-                updated, event = clear_blockage(lifecycle, new_id("evt_"), actor, when, reason)
+                updated, event = clear_blockage(lifecycle, event_id, actor, when, reason)
         except LifecycleError as error:
             raise HumanActionNotAvailable(str(error)) from error
         valid_basis = _basis_if_current(snapshot)
@@ -932,7 +1025,18 @@ def clear_human_hold(
                 _project_authorizations(snapshot.grants, gates),
                 _project_decisions(snapshot.decisions, gates),
             )
-            _record_successor(connection, gates, context, when)
+            evaluation_time = _timestamp_at_or_after(
+                successor_evaluation_recorded_at,
+                when,
+                label="successor_evaluation_recorded_at",
+            )
+            _record_successor(
+                connection,
+                gates,
+                context,
+                successor_evaluation_record_id,
+                evaluation_time,
+            )
         return updated
 
 
@@ -942,7 +1046,7 @@ def _validate_green_action(
     gate_id: HandoverGateId,
     *,
     cancellation: bool,
-) -> tuple[SliceLifecycle, tuple[HandoverGate, ...], GateEvaluationRecord, HandoverGate, datetime]:
+) -> tuple[SliceLifecycle, tuple[HandoverGate, ...], GateEvaluationRecord, HandoverGate]:
     lifecycle, gates, latest = _validate_basis(snapshot, basis)
     gate = _find_gate(gates, gate_id)
     if cancellation:
@@ -956,8 +1060,27 @@ def _validate_green_action(
         raise HumanActionNotAvailable("current gate evaluation is not GREEN")
     if evaluations != latest.evaluations:
         raise PersistenceIntegrityError("latest evaluation changed during current-state validation")
-    when = _action_time(latest, lifecycle, _latest_evidence_time(snapshot))
-    return lifecycle, gates, latest, gate, when
+    return lifecycle, gates, latest, gate
+
+
+def _execution_times(
+    snapshot: _Snapshot,
+    lifecycle: SliceLifecycle,
+    latest: GateEvaluationRecord,
+    evaluation_recorded_at: datetime,
+    occurred_at: datetime,
+) -> tuple[datetime, datetime]:
+    evaluation_time = _timestamp_at_or_after(
+        evaluation_recorded_at,
+        *_durable_action_times(snapshot, lifecycle, latest),
+        label="evaluation_recorded_at",
+    )
+    event_time = _timestamp_at_or_after(
+        occurred_at,
+        evaluation_time,
+        label="occurred_at",
+    )
+    return evaluation_time, event_time
 
 
 def advance_green_handover(
@@ -968,7 +1091,11 @@ def advance_green_handover(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    evaluation_record_id: GateEvaluationRecordId,
+    evaluation_recorded_at: datetime,
+    execution_id: ExecutionId,
+    event_id: EventId,
+    occurred_at: datetime,
 ) -> ExecutionRecord:
     """Execute exactly one currently GREEN non-terminal handover."""
 
@@ -977,23 +1104,24 @@ def advance_green_handover(
         raise HumanActionBasisStale("basis Slice does not match route Slice")
     with _human_write(database) as connection:
         snapshot = _load_snapshot(connection, slice_id)
-        lifecycle, gates, latest, _gate, when = _validate_green_action(
+        lifecycle, gates, latest, _gate = _validate_green_action(
             snapshot, basis, gate_id, cancellation=False
         )
-        if occurred_at is not None:
-            when = _action_time(latest, lifecycle, supplied=occurred_at)
+        evaluation_time, event_time = _execution_times(
+            snapshot, lifecycle, latest, evaluation_recorded_at, occurred_at
+        )
         result = execute_and_persist_handover_from_connection(
             connection,
             gates,
             gate_id,
             latest.context,
             lifecycle.revision,
-            new_id("geval_"),
-            when,
-            new_id("exec_"),
-            new_id("evt_"),
+            evaluation_record_id,
+            evaluation_time,
+            execution_id,
+            event_id,
             actor,
-            when,
+            event_time,
             reason,
         )
         return result[-1]
@@ -1007,7 +1135,11 @@ def cancel_slice(
     actor: ActorRef,
     reason: str,
     *,
-    occurred_at: datetime | None = None,
+    evaluation_record_id: GateEvaluationRecordId,
+    evaluation_recorded_at: datetime,
+    execution_id: ExecutionId,
+    event_id: EventId,
+    occurred_at: datetime,
 ) -> ExecutionRecord | None:
     """Cancel only through a current GREEN gate targeting CANCELLED."""
 
@@ -1023,23 +1155,24 @@ def cancel_slice(
             raise HumanActionNotAvailable("CANCEL requires a current cancellation gate and basis")
         if basis.slice_id != slice_id:
             raise HumanActionBasisStale("basis Slice does not match route Slice")
-        lifecycle, gates, latest, _gate, when = _validate_green_action(
+        lifecycle, gates, latest, _gate = _validate_green_action(
             snapshot, basis, gate_id, cancellation=True
         )
-        if occurred_at is not None:
-            when = _action_time(latest, lifecycle, supplied=occurred_at)
+        evaluation_time, event_time = _execution_times(
+            snapshot, lifecycle, latest, evaluation_recorded_at, occurred_at
+        )
         result = execute_and_persist_handover_from_connection(
             connection,
             gates,
             gate_id,
             latest.context,
             lifecycle.revision,
-            new_id("geval_"),
-            when,
-            new_id("exec_"),
-            new_id("evt_"),
+            evaluation_record_id,
+            evaluation_time,
+            execution_id,
+            event_id,
             actor,
-            when,
+            event_time,
             reason,
         )
         return result[-1]

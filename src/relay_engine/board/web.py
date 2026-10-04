@@ -3,6 +3,7 @@
 import argparse
 import secrets
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 from urllib.parse import parse_qs
@@ -143,12 +144,11 @@ def _command_error(error: Exception, method: str = "POST") -> HTMLResponse:
         return _error_response("ACTION_INVALID", 422, method)
     if isinstance(
         error,
-        HumanActionBasisStale
-        | HumanActionConflict
-        | HumanActionRequiresEvaluation
-        | HumanActionNotAvailable,
+        HumanActionBasisStale | HumanActionConflict | HumanActionRequiresEvaluation,
     ):
         return _error_response("STALE_OR_CONFLICT", 409, method)
+    if isinstance(error, HumanActionNotAvailable):
+        return _error_response("ACTION_INVALID", 422, method)
     if isinstance(error, DatabaseUnavailable):
         return _error_response("UNAVAILABLE", 503, method)
     if isinstance(error, MigrationError | PersistenceIntegrityError):
@@ -240,6 +240,7 @@ def create_app(
     ) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 grant_gate_authorization(
@@ -249,6 +250,10 @@ def create_app(
                     _basis(form),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    authorization_id=new_id("auth_"),
+                    granted_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -261,6 +266,7 @@ def create_app(
     async def approve_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 record_gate_approval(
@@ -271,6 +277,10 @@ def create_app(
                     _optional_id(form, "expected_current_approval_decision_id"),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    decision_id=new_id("hdec_"),
+                    occurred_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -283,6 +293,7 @@ def create_app(
     async def reject_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 record_gate_rejection(
@@ -293,6 +304,10 @@ def create_app(
                     _optional_id(form, "expected_current_approval_decision_id"),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    decision_id=new_id("hdec_"),
+                    occurred_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -305,6 +320,7 @@ def create_app(
     async def choose_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 record_gate_choice(
@@ -315,6 +331,10 @@ def create_app(
                     _optional_id(form, "expected_current_choice_decision_id"),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    decision_id=new_id("hdec_"),
+                    occurred_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -327,6 +347,7 @@ def create_app(
     async def advance_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 advance_green_handover(
@@ -336,6 +357,11 @@ def create_app(
                     _basis(form),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    evaluation_record_id=new_id("geval_"),
+                    evaluation_recorded_at=command_time,
+                    execution_id=new_id("exec_"),
+                    event_id=new_id("evt_"),
+                    occurred_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -348,6 +374,7 @@ def create_app(
     async def cancel_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 cancel_slice(
@@ -357,6 +384,11 @@ def create_app(
                     None if not form.get("basis") else _basis(form),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    evaluation_record_id=new_id("geval_"),
+                    evaluation_recorded_at=command_time,
+                    execution_id=new_id("exec_"),
+                    event_id=new_id("evt_"),
+                    occurred_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -375,6 +407,7 @@ def create_app(
                 raise _FormError("ACTION_INVALID", 422) from error
             if action not in {HumanActionKind.BLOCK, HumanActionKind.PAUSE, HumanActionKind.DEFER}:
                 raise _FormError("ACTION_INVALID", 422)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 set_human_hold(
@@ -384,6 +417,10 @@ def create_app(
                     int(_required(form, "expected_lifecycle_revision")),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    event_id=new_id("evt_"),
+                    occurred_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
@@ -396,6 +433,7 @@ def create_app(
     async def resume_route(request: Request, project_id: ProjectId, slice_id: SliceId) -> Response:
         try:
             form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
             with open_database(request.app.state.database_path, apply_migrations=False) as database:
                 _route_slice(database, project_id, slice_id)
                 clear_human_hold(
@@ -404,6 +442,10 @@ def create_app(
                     int(_required(form, "expected_lifecycle_revision")),
                     request.app.state.human_actor,
                     _required(form, "reason"),
+                    event_id=new_id("evt_"),
+                    occurred_at=command_time,
+                    successor_evaluation_record_id=new_id("geval_"),
+                    successor_evaluation_recorded_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)

@@ -88,6 +88,7 @@ from relay_engine.persistence import (
     load_execution_records,
     load_gate_evaluation_records,
     load_human_decision,
+    load_lifecycle_events,
     open_database,
     persist_lifecycle_change,
     persist_lifecycle_initialization,
@@ -304,6 +305,63 @@ def _basis(database, gates: tuple[HandoverGate, ...]) -> HumanActionBasis:
         return projection.basis
 
 
+def _next_command_time(database: RelayDatabase) -> datetime:
+    lifecycle = load_current_lifecycle(database, SLICE_ID)
+    records = load_gate_evaluation_records(database)
+    lower_bounds = [NOW]
+    if lifecycle is not None:
+        lower_bounds.append(lifecycle.updated_at)
+    if records:
+        lower_bounds.append(records[-1].recorded_at)
+    return max(lower_bounds) + timedelta(seconds=1)
+
+
+def _authorization_inputs(database: RelayDatabase) -> dict[str, object]:
+    command_time = _next_command_time(database)
+    return {
+        "authorization_id": new_id("auth_"),
+        "granted_at": command_time,
+        "successor_evaluation_record_id": new_id("geval_"),
+        "successor_evaluation_recorded_at": command_time,
+    }
+
+
+def _decision_inputs(
+    database: RelayDatabase,
+    *,
+    occurred_at: datetime | None = None,
+    successor_evaluation_recorded_at: datetime | None = None,
+) -> dict[str, object]:
+    command_time = occurred_at or _next_command_time(database)
+    return {
+        "decision_id": new_id("hdec_"),
+        "occurred_at": command_time,
+        "successor_evaluation_record_id": new_id("geval_"),
+        "successor_evaluation_recorded_at": (successor_evaluation_recorded_at or command_time),
+    }
+
+
+def _lifecycle_inputs(database: RelayDatabase) -> dict[str, object]:
+    command_time = _next_command_time(database)
+    return {
+        "event_id": new_id("evt_"),
+        "occurred_at": command_time,
+        "successor_evaluation_record_id": new_id("geval_"),
+        "successor_evaluation_recorded_at": command_time,
+    }
+
+
+def _execution_inputs(database: RelayDatabase) -> dict[str, object]:
+    command_time = _next_command_time(database)
+    return {
+        "evaluation_record_id": new_id("geval_"),
+        "evaluation_recorded_at": command_time,
+        "execution_id": new_id("exec_"),
+        "event_id": new_id("evt_"),
+        "occurred_at": command_time,
+    }
+
+
 def _gate_eval(record: GateEvaluationRecord, gate_id: HandoverGateId):
     return next(item for item in record.evaluations if item.gate_id == gate_id)
 
@@ -388,10 +446,27 @@ def test_authorize_is_atomic_advances_governance_and_keeps_gate_outcome_truthful
     try:
         assert prior is not None
         basis = _basis(database, gates)
+        authorization_id = new_id("auth_")
+        evaluation_record_id = new_id("geval_")
+        granted_at = NOW + timedelta(seconds=11)
+        evaluation_recorded_at = NOW + timedelta(seconds=12)
         successor = grant_gate_authorization(
-            database, SLICE_ID, GATE_A, basis, ACTOR, "Authorize this exact handover."
+            database,
+            SLICE_ID,
+            GATE_A,
+            basis,
+            ACTOR,
+            "Authorize this exact handover.",
+            authorization_id=authorization_id,
+            granted_at=granted_at,
+            successor_evaluation_record_id=evaluation_record_id,
+            successor_evaluation_recorded_at=evaluation_recorded_at,
         )
         grant = successor.context.authorization_grants[0]
+        assert grant.authorization_id == authorization_id
+        assert grant.granted_at == granted_at
+        assert successor.id == evaluation_record_id
+        assert successor.recorded_at == evaluation_recorded_at
         assert successor.context.governance_revision == prior.context.governance_revision + 1
         assert prior.recorded_at <= grant.granted_at <= successor.recorded_at
         assert _gate_eval(successor, GATE_A).light.value == "RED"
@@ -423,7 +498,13 @@ def test_unsynchronized_exact_grant_fails_closed_and_synchronized_retry_is_noop(
         before_evaluations = len(load_gate_evaluation_records(database))
         with pytest.raises(HumanActionRequiresEvaluation):
             grant_gate_authorization(
-                database, SLICE_ID, GATE_A, stale_basis, ACTOR, "Do not synthesize an evaluation."
+                database,
+                SLICE_ID,
+                GATE_A,
+                stale_basis,
+                ACTOR,
+                "Do not synthesize an evaluation.",
+                **_authorization_inputs(database),
             )
         assert len(load_gate_evaluation_records(database)) == before_evaluations
     finally:
@@ -432,11 +513,23 @@ def test_unsynchronized_exact_grant_fails_closed_and_synchronized_retry_is_noop(
     database, _, gates, _ = _seed(tmp_path / "synced.sqlite", (_gate(authorization_required=True),))
     try:
         first = grant_gate_authorization(
-            database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "Authorize once."
+            database,
+            SLICE_ID,
+            GATE_A,
+            _basis(database, gates),
+            ACTOR,
+            "Authorize once.",
+            **_authorization_inputs(database),
         )
         count = len(load_gate_evaluation_records(database))
         retry = grant_gate_authorization(
-            database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "Retry authorization."
+            database,
+            SLICE_ID,
+            GATE_A,
+            _basis(database, gates),
+            ACTOR,
+            "Retry authorization.",
+            **_authorization_inputs(database),
         )
         assert retry.id == first.id
         assert len(load_gate_evaluation_records(database)) == count
@@ -450,6 +543,10 @@ def test_approval_rejection_retry_optimistic_identity_and_chronology(tmp_path: P
     try:
         assert prior is not None
         first_basis = _basis(database, gates)
+        decision_id = new_id("hdec_")
+        evaluation_record_id = new_id("geval_")
+        occurred_at = NOW + timedelta(seconds=11)
+        evaluation_recorded_at = NOW + timedelta(seconds=12)
         approved = record_gate_approval(
             database,
             SLICE_ID,
@@ -458,13 +555,20 @@ def test_approval_rejection_retry_optimistic_identity_and_chronology(tmp_path: P
             None,
             ACTOR,
             "Approve this gate.",
-            occurred_at=NOW + timedelta(seconds=11),
+            decision_id=decision_id,
+            occurred_at=occurred_at,
+            successor_evaluation_record_id=evaluation_record_id,
+            successor_evaluation_recorded_at=evaluation_recorded_at,
         )
         approval = next(
             item
             for item in approved.context.human_decisions
             if isinstance(item, HumanApprovalDecision)
         )
+        assert approval.decision_id == decision_id
+        assert approval.occurred_at == occurred_at
+        assert approved.id == evaluation_record_id
+        assert approved.recorded_at == evaluation_recorded_at
         assert approved.context.governance_revision == prior.context.governance_revision
         assert prior.recorded_at <= approval.occurred_at <= approved.recorded_at
         assert _gate_eval(approved, GATE_A).light.value == "GREEN"
@@ -478,6 +582,7 @@ def test_approval_rejection_retry_optimistic_identity_and_chronology(tmp_path: P
             approval.decision_id,
             ACTOR,
             "Same target retry.",
+            **_decision_inputs(database),
         )
         assert retry.id == approved.id
         assert len(load_gate_evaluation_records(database)) == count
@@ -490,6 +595,18 @@ def test_approval_rejection_retry_optimistic_identity_and_chronology(tmp_path: P
                 None,
                 ACTOR,
                 "A stale form cannot replace the current decision.",
+                **_decision_inputs(database),
+            )
+        with pytest.raises(ValueError):
+            record_gate_rejection(
+                database,
+                SLICE_ID,
+                GATE_A,
+                current_basis,
+                approval.decision_id,
+                ACTOR,
+                "A caller timestamp cannot regress.",
+                **_decision_inputs(database, occurred_at=NOW),
             )
         rejected = record_gate_rejection(
             database,
@@ -499,7 +616,7 @@ def test_approval_rejection_retry_optimistic_identity_and_chronology(tmp_path: P
             approval.decision_id,
             ACTOR,
             "Reject after review.",
-            occurred_at=NOW,
+            **_decision_inputs(database),
         )
         current = next(
             item
@@ -538,6 +655,7 @@ def test_choice_uses_exact_sorted_set_and_newer_choice_replaces_current_projecti
             None,
             ACTOR,
             "Select path A.",
+            **_decision_inputs(database),
         )
         choice = next(
             item for item in first.context.human_decisions if isinstance(item, HumanChoiceDecision)
@@ -561,6 +679,7 @@ def test_choice_uses_exact_sorted_set_and_newer_choice_replaces_current_projecti
                 None,
                 ACTOR,
                 "A stale expected identity conflicts.",
+                **_decision_inputs(database),
             )
         second = record_gate_choice(
             database,
@@ -570,6 +689,7 @@ def test_choice_uses_exact_sorted_set_and_newer_choice_replaces_current_projecti
             choice.decision_id,
             ACTOR,
             "Select path B after review.",
+            **_decision_inputs(database),
         )
         latest_choice = next(
             item for item in second.context.human_decisions if isinstance(item, HumanChoiceDecision)
@@ -628,6 +748,7 @@ def test_human_hold_preserves_unrelated_blockers_advances_revision_and_stales_de
             before_revision,
             ACTOR,
             "Pause pending a human review.",
+            **_lifecycle_inputs(database),
         )
         assert blocked.revision == before_revision + 1
         assert blocked.blockage.status is BlockageStatus.BLOCKED
@@ -646,6 +767,7 @@ def test_human_hold_preserves_unrelated_blockers_advances_revision_and_stales_de
             blocked.revision,
             ACTOR,
             "Remove only the Human pause.",
+            **_lifecycle_inputs(database),
         )
         assert resumed.revision == blocked.revision + 1
         assert resumed.blockage.status is BlockageStatus.BLOCKED
@@ -671,10 +793,50 @@ def test_hold_without_valid_evaluation_persists_without_fabricating_observation(
             lifecycle.revision,
             ACTOR,
             "Defer indefinitely.",
+            **_lifecycle_inputs(database),
         )
         assert updated.revision == lifecycle.revision + 1
         assert load_gate_evaluation_records(database) == ()
         assert updated.blockage.reasons[-1].code == "HUMAN_DEFER"
+    finally:
+        database.close()
+
+
+def test_clear_hold_without_human_hold_is_revision_checked_write_free_noop(
+    tmp_path: Path,
+) -> None:
+    database, lifecycle, _, _ = _seed(
+        tmp_path / "clear-no-human-hold.sqlite",
+        (_gate(source_phase=LifecyclePhase.READY, target_phase=LifecyclePhase.IMPLEMENTING),),
+        phase=LifecyclePhase.READY,
+    )
+    try:
+        changes_before = database.connection.total_changes
+        lifecycle_events_before = load_lifecycle_events(database, SLICE_ID)
+        observations_before = load_gate_evaluation_records(database)
+        cleared = clear_human_hold(
+            database,
+            SLICE_ID,
+            lifecycle.revision,
+            ACTOR,
+            "Repeat a completed resume safely.",
+            **_lifecycle_inputs(database),
+        )
+        assert cleared == lifecycle
+        assert database.connection.total_changes == changes_before
+        assert load_lifecycle_events(database, SLICE_ID) == lifecycle_events_before
+        assert load_gate_evaluation_records(database) == observations_before
+
+        with pytest.raises(HumanActionBasisStale):
+            clear_human_hold(
+                database,
+                SLICE_ID,
+                lifecycle.revision - 1,
+                ACTOR,
+                "A stale resume must still conflict.",
+                **_lifecycle_inputs(database),
+            )
+        assert database.connection.total_changes == changes_before
     finally:
         database.close()
 
@@ -690,16 +852,35 @@ def test_hold_replaces_prior_human_hold_and_clear_removes_only_human_codes(tmp_p
     )
     try:
         first = set_human_hold(
-            database, SLICE_ID, HumanActionKind.BLOCK, lifecycle.revision, ACTOR, "Block work."
+            database,
+            SLICE_ID,
+            HumanActionKind.BLOCK,
+            lifecycle.revision,
+            ACTOR,
+            "Block work.",
+            **_lifecycle_inputs(database),
         )
         second = set_human_hold(
-            database, SLICE_ID, HumanActionKind.DEFER, first.revision, ACTOR, "Defer work."
+            database,
+            SLICE_ID,
+            HumanActionKind.DEFER,
+            first.revision,
+            ACTOR,
+            "Defer work.",
+            **_lifecycle_inputs(database),
         )
         assert second.blockage.reasons == (
             blocker,
             BlockReason(code="HUMAN_DEFER", summary="Defer work."),
         )
-        cleared = clear_human_hold(database, SLICE_ID, second.revision, ACTOR, "Resume work.")
+        cleared = clear_human_hold(
+            database,
+            SLICE_ID,
+            second.revision,
+            ACTOR,
+            "Resume work.",
+            **_lifecycle_inputs(database),
+        )
         assert cleared.blockage.reasons == (blocker,)
     finally:
         database.close()
@@ -712,21 +893,37 @@ def test_advance_rechecks_green_basis_and_persists_evaluation_event_execution(
     try:
         assert prior is not None
         basis = _basis(database, gates)
+        execution_inputs = _execution_inputs(database)
         execution = advance_green_handover(
-            database, SLICE_ID, GATE_A, basis, ACTOR, "Advance through the current green gate."
+            database,
+            SLICE_ID,
+            GATE_A,
+            basis,
+            ACTOR,
+            "Advance through the current green gate.",
+            **execution_inputs,
         )
         current = load_current_lifecycle(database, SLICE_ID)
         assert current is not None and current.phase is LifecyclePhase.READY
         assert execution.gate_evaluation_record_id != prior.id
         assert execution.source_lifecycle_revision == lifecycle.revision
         assert execution.resulting_lifecycle_revision == lifecycle.revision + 1
+        assert execution.execution_id == execution_inputs["execution_id"]
+        assert execution.event_id == execution_inputs["event_id"]
         records = load_gate_evaluation_records(database)
         assert len(records) == 2
+        assert records[-1].id == execution_inputs["evaluation_record_id"]
         assert records[-1].recorded_at <= execution.occurred_at
         assert load_execution_records(database)[-1] == execution
         with pytest.raises(HumanActionBasisStale):
             advance_green_handover(
-                database, SLICE_ID, GATE_A, basis, ACTOR, "A second advance is stale."
+                database,
+                SLICE_ID,
+                GATE_A,
+                basis,
+                ACTOR,
+                "A second advance is stale.",
+                **_execution_inputs(database),
             )
     finally:
         database.close()
@@ -740,7 +937,13 @@ def test_advance_rejects_red_yellow_and_accepted_target(tmp_path: Path) -> None:
     try:
         with pytest.raises(HumanActionNotAvailable):
             advance_green_handover(
-                database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "No."
+                database,
+                SLICE_ID,
+                GATE_A,
+                _basis(database, gates),
+                ACTOR,
+                "No.",
+                **_execution_inputs(database),
             )
     finally:
         database.close()
@@ -750,7 +953,13 @@ def test_advance_rejects_red_yellow_and_accepted_target(tmp_path: Path) -> None:
     try:
         with pytest.raises(HumanActionNotAvailable):
             advance_green_handover(
-                database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "No."
+                database,
+                SLICE_ID,
+                GATE_A,
+                _basis(database, gates),
+                ACTOR,
+                "No.",
+                **_execution_inputs(database),
             )
     finally:
         database.close()
@@ -771,6 +980,7 @@ def test_advance_rejects_red_yellow_and_accepted_target(tmp_path: Path) -> None:
                 _basis(database, gates),
                 ACTOR,
                 "Acceptance is excluded.",
+                **_execution_inputs(database),
             )
     finally:
         database.close()
@@ -781,7 +991,14 @@ def test_newer_reject_beats_older_approval_for_advance(tmp_path: Path) -> None:
     database, lifecycle, gates, _ = _seed(tmp_path / "newer-reject.sqlite", (gate,))
     try:
         approved = record_gate_approval(
-            database, SLICE_ID, GATE_A, _basis(database, gates), None, ACTOR, "Approve."
+            database,
+            SLICE_ID,
+            GATE_A,
+            _basis(database, gates),
+            None,
+            ACTOR,
+            "Approve.",
+            **_decision_inputs(database),
         )
         approval = next(
             item
@@ -796,6 +1013,7 @@ def test_newer_reject_beats_older_approval_for_advance(tmp_path: Path) -> None:
             approval.decision_id,
             ACTOR,
             "Reject after reconsideration.",
+            **_decision_inputs(database),
         )
         current_decision = next(
             item
@@ -812,6 +1030,7 @@ def test_newer_reject_beats_older_approval_for_advance(tmp_path: Path) -> None:
                 _basis(database, gates),
                 ACTOR,
                 "A prior approval cannot bypass the rejection.",
+                **_execution_inputs(database),
             )
         assert load_current_lifecycle(database, SLICE_ID) == lifecycle
     finally:
@@ -829,13 +1048,25 @@ def test_cancel_requires_current_green_cancel_gate_and_is_governed(tmp_path: Pat
             _basis(database, gates),
             ACTOR,
             "Cancel through the current gate.",
+            **_execution_inputs(database),
         )
         assert isinstance(execution, ExecutionRecord)
         cancelled = load_current_lifecycle(database, SLICE_ID)
         assert cancelled is not None and cancelled.phase is LifecyclePhase.CANCELLED
         assert execution.resulting_lifecycle_revision == lifecycle.revision + 1
         assert len(load_execution_records(database)) == 1
-        assert cancel_slice(database, SLICE_ID, None, None, ACTOR, "Idempotent retry.") is None
+        assert (
+            cancel_slice(
+                database,
+                SLICE_ID,
+                None,
+                None,
+                ACTOR,
+                "Idempotent retry.",
+                **_execution_inputs(database),
+            )
+            is None
+        )
         assert len(load_execution_records(database)) == 1
     finally:
         database.close()
@@ -848,7 +1079,13 @@ def test_cancel_requires_existing_green_gate_and_does_not_mutate_phase_directly(
     try:
         with pytest.raises(HumanActionNotAvailable):
             cancel_slice(
-                database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "Not a cancel gate."
+                database,
+                SLICE_ID,
+                GATE_A,
+                _basis(database, gates),
+                ACTOR,
+                "Not a cancel gate.",
+                **_execution_inputs(database),
             )
         assert load_current_lifecycle(database, SLICE_ID) == lifecycle
         assert load_execution_records(database) == ()
@@ -869,6 +1106,7 @@ def test_cancel_requires_existing_green_gate_and_does_not_mutate_phase_directly(
                 _basis(database, gates),
                 ACTOR,
                 "Red cancellation is unavailable.",
+                **_execution_inputs(database),
             )
         assert load_current_lifecycle(database, SLICE_ID) == lifecycle
         assert load_execution_records(database) == ()
@@ -880,7 +1118,13 @@ def test_cancel_requires_existing_green_gate_and_does_not_mutate_phase_directly(
     try:
         with pytest.raises(HumanActionNotAvailable):
             cancel_slice(
-                database, SLICE_ID, GATE_A, _basis(database, gates), ACTOR, "Yellow is unavailable."
+                database,
+                SLICE_ID,
+                GATE_A,
+                _basis(database, gates),
+                ACTOR,
+                "Yellow is unavailable.",
+                **_execution_inputs(database),
             )
         assert load_current_lifecycle(database, SLICE_ID) == lifecycle
         assert load_execution_records(database) == ()
@@ -902,11 +1146,25 @@ def test_competing_decisions_serialize_and_failed_action_leaves_no_partial_recor
         try:
             if target is HumanApprovalValue.APPROVE:
                 record_gate_approval(
-                    connection, SLICE_ID, GATE_A, basis, None, ACTOR, "Competing approve."
+                    connection,
+                    SLICE_ID,
+                    GATE_A,
+                    basis,
+                    None,
+                    ACTOR,
+                    "Competing approve.",
+                    **_decision_inputs(connection),
                 )
             else:
                 record_gate_rejection(
-                    connection, SLICE_ID, GATE_A, basis, None, ACTOR, "Competing reject."
+                    connection,
+                    SLICE_ID,
+                    GATE_A,
+                    basis,
+                    None,
+                    ACTOR,
+                    "Competing reject.",
+                    **_decision_inputs(connection),
                 )
             return "accepted"
         except HumanActionBasisStale, HumanActionConflict:
@@ -946,6 +1204,7 @@ def test_competing_decisions_serialize_and_failed_action_leaves_no_partial_recor
                 current.decision_id,
                 ACTOR,
                 "A later evaluation failure rolls back the decision.",
+                **_decision_inputs(database),
             )
         assert (
             database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0]
@@ -969,6 +1228,7 @@ def test_non_human_actor_is_forbidden_before_write(tmp_path: Path) -> None:
                 _basis(database, gates),
                 system,
                 "System cannot authorize.",
+                **_authorization_inputs(database),
             )
         assert len(load_gate_evaluation_records(database)) == before
     finally:
@@ -988,6 +1248,7 @@ def test_expected_gate_choice_must_be_exact_current_choice_set(tmp_path: Path) -
                 None,
                 ACTOR,
                 "Choose outside current set.",
+                **_decision_inputs(database),
             )
     finally:
         database.close()
@@ -1071,6 +1332,36 @@ def test_choice_control_posts_to_explicit_choose_route(tmp_path: Path) -> None:
         database.close()
 
 
+def test_web_resume_without_human_hold_is_303_write_free_noop(tmp_path: Path) -> None:
+    database, lifecycle, _, _ = _seed(
+        tmp_path / "human-resume-noop-web.sqlite",
+        (_gate(source_phase=LifecyclePhase.READY, target_phase=LifecyclePhase.IMPLEMENTING),),
+        phase=LifecyclePhase.READY,
+    )
+    app = create_app(database.path, actor=ACTOR)
+    path = f"/projects/{PROJECT_ID}/slices/{SLICE_ID}"
+    events_before = load_lifecycle_events(database, SLICE_ID)
+    observations_before = load_gate_evaluation_records(database)
+    try:
+        response = _http_request(
+            app,
+            "POST",
+            f"{path}/actions/resume",
+            {
+                "csrf_token": app.state.csrf_token,
+                "expected_lifecycle_revision": str(lifecycle.revision),
+                "reason": "Retry a completed resume safely.",
+            },
+        )
+        assert response.status_code == 303
+        assert response.headers["location"] == path
+        assert load_current_lifecycle(database, SLICE_ID) == lifecycle
+        assert load_lifecycle_events(database, SLICE_ID) == events_before
+        assert load_gate_evaluation_records(database) == observations_before
+    finally:
+        database.close()
+
+
 def test_web_maps_invalid_stale_not_found_integrity_and_unavailable_commands(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1087,6 +1378,20 @@ def test_web_maps_invalid_stale_not_found_integrity_and_unavailable_commands(
     path = f"/projects/{PROJECT_ID}/slices/{SLICE_ID}"
     basis_json = _basis(database, gates).model_dump_json()
     try:
+        unavailable_action = _http_request(
+            app,
+            "POST",
+            f"{path}/actions/authorize",
+            {
+                "csrf_token": token,
+                "basis": basis_json,
+                "gate_id": GATE_A,
+                "reason": "This gate does not request authorization.",
+            },
+        )
+        assert unavailable_action.status_code == 422
+        assert "ACTION_INVALID" in unavailable_action.text
+
         invalid = _http_request(
             app,
             "POST",
@@ -1108,6 +1413,7 @@ def test_web_maps_invalid_stale_not_found_integrity_and_unavailable_commands(
             lifecycle.revision,
             ACTOR,
             "Advance the lifecycle revision to stale the form.",
+            **_lifecycle_inputs(database),
         )
         stale = _http_request(
             app,
