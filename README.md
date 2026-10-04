@@ -18,8 +18,9 @@ Slice 1.2:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.3:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.4:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.5:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.6:                NOT OPEN
-Agent execution:          NOT AUTHORIZED / NOT IMPLEMENTED
+Slice 1.6:                COMPLETE / ACCEPTED / CLOSED
+Slice 1.7:                NEXT PLANNED — NOT OPEN
+Agent execution:          NOT AUTHORIZED
 ```
 
 The current authority is recorded in `docs/CURRENT_BASELINE.md`.
@@ -45,7 +46,8 @@ The accepted foundation now includes:
 - provider-neutral repository baseline resolution;
 - governed `.relay/` initialization and synchronization;
 - governed Project / Slice administration;
-- read-only human-facing Board Projection derived from governed state.
+- server-rendered Board Projection derived from governed state, with bounded
+  Human Authority actions for gate decisions, holds, and governed ADVANCE/CANCEL.
 
 Slice 1.5 closed at canonical closure head `45a3acbc5a26c618176a2d5da32a70b67adb9883`.
 
@@ -76,7 +78,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation, and it does not open Slice 1.6.
+This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation or agent execution. Slice 1.7 — Manual Evaluation and Acceptance — is the next planned slice and remains not open.
 
 See:
 

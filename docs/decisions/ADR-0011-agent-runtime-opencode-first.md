@@ -159,7 +159,7 @@ This ADR records the Human-selected strategic direction to pursue OpenCode first
 
 It is deliberately `PROPOSED`, because:
 
-- Slice 1.6 is not open;
+- Slice 1.6 is complete and closed, while Slice 1.7 remains not open;
 - Phase 2 and Phase 3 are not authorized;
 - the canonical Build Plan has not yet been superseded/revised for this architecture;
 - the required sidecar validation has not yet occurred.

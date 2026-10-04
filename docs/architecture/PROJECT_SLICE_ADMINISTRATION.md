@@ -1,6 +1,6 @@
 # Project and Slice Definition Administration
 
-**Status:** IMPLEMENTATION CANDIDATE / PENDING INDEPENDENT EVALUATION
+**Status:** IMPLEMENTED / ACCEPTED / CLOSED
 **Authority:** `RLY-S14-AUTH-001`
 **Accepted design:** Slice 1.4 Revision 2, `f5a678da360b96701a1f9635d3703b49dc16e779`
 
@@ -58,7 +58,10 @@ UI, Slice 1.5 behavior, or agent execution.
 ## Evaluation state
 
 ```text
-Slice 1.4 implementation: COMPLETE / PENDING INDEPENDENT EVALUATION
-Human technical acceptance: NOT GRANTED
-Slice 1.5: NOT OPEN
+Slice 1.4 implementation: COMPLETE / ACCEPTED / CLOSED
+Independent implementation evaluation: RLY-S14-EVAL-002 — ACCEPT
+Human technical acceptance: RLY-S14-ACCEPT-001 — ACCEPTED
+Independent closure evaluation: RLY-S14-CLOSE-EVAL-001 — ACCEPT
+Canonical closure commit: e44d63c15b7a4941146db5ad42bfcd414b71b444
+Slices 1.5–1.6: COMPLETE / ACCEPTED / CLOSED
 ```

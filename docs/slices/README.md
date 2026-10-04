@@ -4,7 +4,13 @@ Slice documents describe bounded engineering work and design authority.
 
 They do not, by their presence alone, authorize implementation.
 
-Current set:
+Current roadmap state:
+
+- Slices 1.1–1.6 — COMPLETE / ACCEPTED / CLOSED
+- Slice 1.7 — Manual Evaluation and Acceptance — NEXT PLANNED / NOT OPEN
+- Agent execution — NOT AUTHORIZED
+
+Foundational records include:
 
 - Slice 0.1 — Repository Foundation and Engineering Baseline
 - Slice 0.2 — Core Domain Model
