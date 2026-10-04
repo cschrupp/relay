@@ -3,6 +3,7 @@
 from relay_engine.lifecycle.engine import (
     clear_blockage,
     initialize_lifecycle,
+    is_blockable_phase,
     mark_stale,
     replay_lifecycle,
     revalidate,
@@ -50,6 +51,7 @@ __all__ = [
     "ValidityChanged",
     "clear_blockage",
     "initialize_lifecycle",
+    "is_blockable_phase",
     "mark_stale",
     "replay_lifecycle",
     "revalidate",

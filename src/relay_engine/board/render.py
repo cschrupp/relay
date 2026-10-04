@@ -14,6 +14,11 @@ from relay_engine.board.models import (
 )
 from relay_engine.domain.models import Baseline
 from relay_engine.governance.models import GateReason, GateReasonKind
+from relay_engine.human_control.models import (
+    HumanAction,
+    HumanActionKind,
+    HumanActionProjection,
+)
 from relay_engine.lifecycle.models import BlockageStatus
 
 _STYLE = """
@@ -380,7 +385,218 @@ def _execution_section(detail: SliceDetail) -> str:
     return f"<section><h2>Execution evidence</h2><ol>{items}</ol></section>"
 
 
-def render_slice_detail(detail: SliceDetail) -> str:
+def _human_evidence(projection: HumanActionProjection) -> str:
+    evidence: list[str] = []
+    for grant in projection.current_authorizations:
+        actor = grant.actor.display_name or grant.actor.id
+        evidence.append(
+            "<li>Authorization <code>"
+            f"{_e(grant.authorization_id)}</code> for gate <code>{_e(grant.gate_id)}</code> "
+            f"revision {_e(grant.gate_revision)}; baseline <code>{_e(grant.baseline_id)}</code>; "
+            f"actor {_e(actor)}; granted {_e(grant.granted_at)}; "
+            f"reason: {_e(grant.reason)}</li>"
+        )
+    for decision in projection.current_approval_decisions:
+        actor = decision.actor.display_name or decision.actor.id
+        evidence.append(
+            "<li>Approval decision <code>"
+            f"{_e(decision.decision_id)}</code> for gate <code>{_e(decision.gate_id)}</code> "
+            f"revision {_e(decision.gate_revision)}: "
+            f"<strong>{_e(decision.decision.value)}</strong>; "
+            f"lifecycle revision {_e(decision.lifecycle_revision)}; governance revision "
+            f"{_e(decision.governance_revision)}; actor "
+            f"{_e(actor)}; time {_e(decision.occurred_at)}; "
+            f"reason: {_e(decision.reason)}</li>"
+        )
+    if projection.current_choice is not None:
+        choice = projection.current_choice
+        actor = choice.actor.display_name or choice.actor.id
+        evidence.append(
+            "<li>Choice decision <code>"
+            f"{_e(choice.decision_id)}</code> selected gate <code>"
+            f"{_e(choice.selected_gate_id)}</code> revision {_e(choice.selected_gate_revision)}; "
+            f"lifecycle revision {_e(choice.lifecycle_revision)}; governance revision "
+            f"{_e(choice.governance_revision)}; actor {_e(actor)}; "
+            f"time {_e(choice.occurred_at)}; reason: {_e(choice.reason)}</li>"
+        )
+    for hold in projection.human_hold:
+        evidence.append(f"<li>Human hold {_e(hold.code)}: {_e(hold.summary)}</li>")
+    if not evidence:
+        return "<p>No current Human evidence is projected.</p>"
+    return "<ul>" + "".join(evidence) + "</ul>"
+
+
+def _hidden(name: str, value: object) -> str:
+    return f'<input type="hidden" name="{_e(name)}" value="{_e(value)}">'
+
+
+def _reason_field() -> str:
+    return '<label>Reason <textarea name="reason" required maxlength="2000"></textarea></label>'
+
+
+def _action_form(
+    path: str,
+    label: str,
+    csrf_token: str,
+    hidden_fields: tuple[tuple[str, object], ...],
+    *,
+    reason: bool = True,
+    extra: str = "",
+) -> str:
+    hidden = _hidden("csrf_token", csrf_token) + "".join(
+        _hidden(name, value) for name, value in hidden_fields
+    )
+    reason_control = _reason_field() if reason else ""
+    return (
+        f'<form method="post" action="{_e(path)}"><fieldset><legend>{_e(label)}</legend>'
+        f'{hidden}{extra}{reason_control}<button type="submit">{_e(label)}</button>'
+        "</fieldset></form>"
+    )
+
+
+def _human_action_form(
+    action: HumanAction,
+    detail: SliceDetail,
+    csrf_token: str,
+    basis_json: str,
+) -> str:
+    value = detail.slice_definition.value
+    prefix = _slice_url(detail.project.id, value.id)
+    gate_id = action.gate_id or ""
+    route = action.kind.value.lower()
+    fields: list[tuple[str, object]] = [("basis", basis_json)]
+    if action.gate_id is not None:
+        fields.append(("gate_id", action.gate_id))
+    if action.gate_revision is not None:
+        fields.append(("gate_revision", action.gate_revision))
+    if action.kind in {HumanActionKind.APPROVE, HumanActionKind.REJECT}:
+        decision = next(
+            (
+                item
+                for item in detail.human_actions.current_approval_decisions
+                if item.gate_id == action.gate_id
+            ),
+            None,
+        )
+        fields.append(
+            (
+                "expected_current_approval_decision_id",
+                "" if decision is None else decision.decision_id,
+            )
+        )
+    extra = ""
+    label = action.kind.value.replace("_", " ").title()
+    if action.kind is HumanActionKind.CHOOSE_PATH:
+        current_choice = detail.human_actions.current_choice
+        fields.append(
+            (
+                "expected_current_choice_decision_id",
+                "" if current_choice is None else current_choice.decision_id,
+            )
+        )
+        basis = detail.human_actions.basis
+        current_refs: set[tuple[str, int]] = (
+            set()
+            if basis is None
+            else {(reference.gate_id, reference.gate_revision) for reference in basis.gate_refs}
+        )
+        options = "".join(
+            f'<option value="{_e(gate.gate_id)}">{_e(gate.key)} — '
+            f"{_e(gate.gate_id)} revision {_e(gate.revision)}; target "
+            f"{_e(gate.target_phase.value)}</option>"
+            for gate in detail.outgoing_gate_definitions
+            if gate.policy.value == "HUMAN_CHOICE" and (gate.gate_id, gate.revision) in current_refs
+        )
+        extra = (
+            '<label>Chosen path <select name="selected_gate_id" required>'
+            '<option value="" disabled selected>Select a path</option>'
+            f"{options}</select></label>"
+        )
+    if action.kind is HumanActionKind.CANCEL:
+        route = "cancel"
+    if action.kind is HumanActionKind.ADVANCE:
+        route = "advance"
+    if action.kind is HumanActionKind.CHOOSE_PATH:
+        route = "choose"
+    if action.kind in {HumanActionKind.APPROVE, HumanActionKind.REJECT}:
+        route = action.kind.value.lower()
+    provenance = ""
+    if action.gate_id is not None:
+        basis = detail.human_actions.basis
+        baseline_id = "" if basis is None else basis.baseline_id
+        provenance = (
+            f"<p>Gate <code>{_e(gate_id)}</code> revision {_e(action.gate_revision)}; "
+            f"target {_e(action.target_phase.value if action.target_phase else '')}; "
+            f"baseline <code>{_e(baseline_id)}</code>.</p>"
+            f"{_reason_list(action.reasons)}"
+        )
+    return provenance + _action_form(
+        f"{prefix}/actions/{route}",
+        label,
+        csrf_token,
+        tuple(fields),
+        extra=extra,
+    )
+
+
+def _human_action_section(detail: SliceDetail, csrf_token: str | None) -> str:
+    projection = detail.human_actions
+    basis = projection.basis
+    provenance = (
+        "<p>No current Human Action Basis is available. Gate controls are hidden until a matching "
+        "durable evaluation and Human-evidence projection exist.</p>"
+        if basis is None
+        else "<p>Human Action Basis: evaluation <code>"
+        f"{_e(basis.evaluation_record_id)}</code>; baseline <code>{_e(basis.baseline_id)}</code>; "
+        f"lifecycle revision {_e(basis.lifecycle_revision)}; governance revision "
+        f"{_e(basis.governance_revision)}.</p>"
+    )
+    body = f"<h3>Current Human evidence</h3>{_human_evidence(projection)}{provenance}"
+    if csrf_token is not None:
+        if basis is not None:
+            basis_json = basis.model_dump_json()
+            seen: set[HumanActionKind] = set()
+            for action in projection.actions:
+                if action.kind in {
+                    HumanActionKind.BLOCK,
+                    HumanActionKind.PAUSE,
+                    HumanActionKind.DEFER,
+                    HumanActionKind.CLEAR_HOLD,
+                }:
+                    continue
+                if action.kind is HumanActionKind.CHOOSE_PATH:
+                    if action.kind in seen:
+                        continue
+                    seen.add(action.kind)
+                body += _human_action_form(action, detail, csrf_token, basis_json)
+        lifecycle = detail.lifecycle
+        if lifecycle is not None:
+            slice_url = _slice_url(detail.project.id, detail.slice_definition.value.id)
+            for kind in (HumanActionKind.BLOCK, HumanActionKind.PAUSE, HumanActionKind.DEFER):
+                if any(action.kind is kind for action in projection.actions):
+                    body += _action_form(
+                        f"{slice_url}/actions/hold",
+                        kind.value.title(),
+                        csrf_token,
+                        (
+                            ("hold_kind", kind.value),
+                            ("expected_lifecycle_revision", lifecycle.revision),
+                        ),
+                    )
+            if any(action.kind is HumanActionKind.CLEAR_HOLD for action in projection.actions):
+                body += _action_form(
+                    f"{slice_url}/actions/resume",
+                    "Resume",
+                    csrf_token,
+                    (("expected_lifecycle_revision", lifecycle.revision),),
+                )
+    return (
+        '<section aria-labelledby="human-actions-heading">'
+        f'<h2 id="human-actions-heading">Human actions</h2>{body}</section>'
+    )
+
+
+def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> str:
     """Render one complete Slice projection without database access."""
 
     value = detail.slice_definition.value
@@ -391,7 +607,8 @@ def render_slice_detail(detail: SliceDetail) -> str:
         f"definition revision {_e(detail.project_definition_revision)}.</p>"
         f"<p>Slice ID: <code>{_e(value.id)}</code></p>"
         f"{_definition_section(detail)}{_lifecycle_section(detail)}"
-        f"{_observation_section(detail)}{_execution_section(detail)}"
+        f"{_observation_section(detail)}{_human_action_section(detail, csrf_token)}"
+        f"{_execution_section(detail)}"
     )
     return _page(f"{value.title} — Slice detail", body)
 

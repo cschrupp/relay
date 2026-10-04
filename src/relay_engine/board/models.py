@@ -19,6 +19,7 @@ from relay_engine.governance.models import (
     HandoverPolicy,
     TrafficLight,
 )
+from relay_engine.human_control.models import HumanActionProjection
 from relay_engine.lifecycle.models import LifecyclePhase, LifecycleValidity, SliceLifecycle
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
@@ -123,7 +124,7 @@ class BoardProjection(DomainModel):
 
 
 class SliceDetail(DomainModel):
-    """Full read-only definition, lifecycle, governance, and execution provenance."""
+    """Full read-only definition, governance provenance, and advisory Human controls."""
 
     project: Project
     project_definition_revision: int = Field(ge=1)
@@ -139,6 +140,7 @@ class SliceDetail(DomainModel):
     baseline: Baseline | None
     evaluation_baseline: Baseline | None
     relevant_execution_records: tuple[ExecutionRecord, ...]
+    human_actions: HumanActionProjection = Field(default_factory=HumanActionProjection)
 
 
 __all__ = [
