@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 closed; Slice 1.6 technically accepted and closure-ready; closure evaluation pending
+**Status:** Current living implementation plan — Phase 1 / Slice 1.5 and Slice 1.6 closed; canonical promotion pending
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -41,7 +41,7 @@ Independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Accepted technical candidate:
 a62493c733f67a5ce1b2fe5c53892d1833e4c615
@@ -59,10 +59,13 @@ Finalization / closure authority:
 RLY-S16-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-NOT YET RECORDED
+PROMOTION TO MAIN PENDING
+
+Closure evaluation record commit:
+fc407e603593a7340515313bfb0b13bc5d286125
 
 Agent execution:
 NOT AUTHORIZED
@@ -168,7 +171,7 @@ Passing CI is evidence; it does not constitute closure acceptance.
 
 ```text
 Current finalization gate:
-SLICE 1.6 CLOSURE-READY — INDEPENDENT CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
 COMPLETE / ACCEPTED / CLOSED
@@ -186,7 +189,7 @@ Independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Opening authority:
 RLY-S16-OPEN-001
@@ -225,10 +228,13 @@ Finalization / closure authority:
 RLY-S16-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-NOT YET RECORDED
+PROMOTION TO MAIN PENDING
+
+Closure evaluation record commit:
+fc407e603593a7340515313bfb0b13bc5d286125
 
 Implementation branch:
 implementation/1.6-human-authorization-decision-gates
@@ -246,6 +252,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Finalization and closure evaluation are authorized; Slice 1.6 remains open until an independent closure evaluation accepts the exact closure-ready candidate. No schema migration or new dependency was introduced. Slice 1.7 remains not open, and agent execution remains unauthorized.
+The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed on the authorized finalization lineage. Canonical promotion to `main` is pending. No schema migration or new dependency was introduced. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

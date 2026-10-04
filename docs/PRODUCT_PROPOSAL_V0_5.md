@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 implementation technically accepted and closure-ready; closure evaluation pending
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 and Slice 1.6 closed; canonical promotion pending
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -83,7 +83,7 @@ Slice 1.5 independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-HUMAN AUTHORIZATION AND DECISION GATES — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+HUMAN AUTHORIZATION AND DECISION GATES — COMPLETE / ACCEPTED / CLOSED
 
 Opening authority:
 RLY-S16-OPEN-001
@@ -122,10 +122,13 @@ Finalization / closure authority:
 RLY-S16-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-NOT YET RECORDED
+PROMOTION TO MAIN PENDING
+
+Closure evaluation record commit:
+fc407e603593a7340515313bfb0b13bc5d286125
 
 Implementation branch:
 implementation/1.6-human-authorization-decision-gates
@@ -149,6 +152,6 @@ The board remains a projection of governed durable state. Slice 1.6 adds the bou
 
 Slice 1.5 is closed after independent closure evaluation accepted the exact closure-ready candidate. Its accepted technical result and governance history remain preserved in canonical Git history.
 
-Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`. The prior `RLY-S16-EVAL-001 — REWORK` and final `RLY-S16-EVAL-002 — ACCEPT` remain part of its history, followed by Human technical acceptance `RLY-S16-ACCEPT-001`. Bounded finalization and independent closure evaluation are authorized under `RLY-S16-CLOSE-AUTH-001`; Slice 1.6 remains open pending the closure evaluation. No schema migration or new dependency was added. Slice 1.7 remains not open, and agent execution remains unauthorized.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`. The prior `RLY-S16-EVAL-001 — REWORK` and final `RLY-S16-EVAL-002 — ACCEPT` remain part of its history, followed by Human technical acceptance `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closes Slice 1.6 on the authorized finalization lineage. Canonical promotion to `main` is pending. No schema migration or new dependency was added. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

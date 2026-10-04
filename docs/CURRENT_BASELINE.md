@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 technically accepted and closure-ready; closure evaluation pending
+**Status:** Phase 1 open — Slice 1.5 and Slice 1.6 closed; canonical promotion pending
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -198,7 +198,7 @@ The accepted design keeps `BLOCK`, `PAUSE`, and `DEFER` as orthogonal blockage c
 
 ```text
 Current finalization gate:
-SLICE 1.6 CLOSURE-READY — INDEPENDENT CLOSURE EVALUATION PENDING
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.5:
 COMPLETE / ACCEPTED / CLOSED
@@ -228,7 +228,7 @@ React frontend:
 DEFERRED / NOT AUTHORIZED IN SLICE 1.5
 
 Slice 1.6:
-OPEN
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.6 design authorization:
 RLY-S16-DESIGN-AUTH-001 — AUTHORIZED
@@ -282,10 +282,13 @@ Finalization handoff commit:
 141367c935fbc28822dc79bc1c82b06b1bb2bef2
 
 Independent closure evaluation:
-PENDING
+RLY-S16-CLOSE-EVAL-001 — ACCEPT
 
 Canonical closure:
-NOT YET RECORDED
+PROMOTION TO MAIN PENDING
+
+Closure evaluation record commit:
+fc407e603593a7340515313bfb0b13bc5d286125
 
 Implementation branch:
 implementation/1.6-human-authorization-decision-gates
@@ -306,6 +309,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Bounded finalization and independent closure evaluation are authorized under `RLY-S16-CLOSE-AUTH-001`; closure remains pending. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` authorizes the closed state on this finalization lineage; promotion to canonical `main` is pending. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
