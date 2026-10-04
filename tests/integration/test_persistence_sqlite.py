@@ -441,7 +441,7 @@ def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_aud
             migrated.connection.execute(
                 "SELECT version FROM relay_schema_migrations ORDER BY version DESC LIMIT 1"
             ).fetchone()[0]
-            == 4
+            == 5
         )
     finally:
         migrated.close()

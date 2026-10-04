@@ -257,11 +257,59 @@ PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION = Migration(
     ),
 )
 
+MANUAL_EVALUATION_MIGRATION = Migration(
+    version=5,
+    name="slice result and manual evaluation history",
+    statements=(
+        """CREATE TABLE slice_results (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            result_id TEXT NOT NULL UNIQUE,
+            slice_id TEXT NOT NULL REFERENCES slices(id),
+            source_baseline_id TEXT NOT NULL REFERENCES baselines(id),
+            result_baseline_id TEXT NOT NULL REFERENCES baselines(id),
+            lifecycle_revision INTEGER NOT NULL CHECK (lifecycle_revision >= 0),
+            supersedes_result_id TEXT UNIQUE REFERENCES slice_results(result_id),
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE TABLE manual_evaluations (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            evaluation_id TEXT NOT NULL UNIQUE,
+            slice_id TEXT NOT NULL REFERENCES slices(id),
+            result_id TEXT NOT NULL REFERENCES slice_results(result_id),
+            result_baseline_id TEXT NOT NULL REFERENCES baselines(id),
+            lifecycle_revision INTEGER NOT NULL CHECK (lifecycle_revision >= 0),
+            supersedes_evaluation_id TEXT UNIQUE REFERENCES manual_evaluations(evaluation_id),
+            payload_json TEXT NOT NULL
+        )""",
+        "CREATE INDEX slice_results_by_slice_sequence "
+        "ON slice_results(slice_id, sequence, result_id)",
+        "CREATE INDEX manual_evaluations_by_slice_result_sequence "
+        "ON manual_evaluations(slice_id, result_id, sequence, evaluation_id)",
+        """CREATE TRIGGER slice_results_no_update
+        BEFORE UPDATE ON slice_results BEGIN
+            SELECT RAISE(ABORT, 'Slice result history is append-only');
+        END""",
+        """CREATE TRIGGER slice_results_no_delete
+        BEFORE DELETE ON slice_results BEGIN
+            SELECT RAISE(ABORT, 'Slice result history is append-only');
+        END""",
+        """CREATE TRIGGER manual_evaluations_no_update
+        BEFORE UPDATE ON manual_evaluations BEGIN
+            SELECT RAISE(ABORT, 'Manual evaluation history is append-only');
+        END""",
+        """CREATE TRIGGER manual_evaluations_no_delete
+        BEFORE DELETE ON manual_evaluations BEGIN
+            SELECT RAISE(ABORT, 'Manual evaluation history is append-only');
+        END""",
+    ),
+)
+
 DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     INITIAL_MIGRATION,
     GITHUB_INTEGRATION_MIGRATION,
     REPOSITORY_MUTATION_AUTHORITY_MIGRATION,
     PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION,
+    MANUAL_EVALUATION_MIGRATION,
 )
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
@@ -293,6 +341,8 @@ REQUIRED_TABLES = frozenset(
         "repository_mutation_authorizations",
         "project_definition_revisions",
         "slice_definition_revisions",
+        "slice_results",
+        "manual_evaluations",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -305,6 +355,8 @@ REQUIRED_INDEXES = frozenset(
         "repository_mutation_authorizations_by_project_subject",
         "project_definition_revisions_by_revision",
         "slice_definition_revisions_by_project_revision",
+        "slice_results_by_slice_sequence",
+        "manual_evaluations_by_slice_result_sequence",
     }
 )
 REQUIRED_TRIGGERS = frozenset(
@@ -313,6 +365,10 @@ REQUIRED_TRIGGERS = frozenset(
         "project_definition_revisions_no_delete",
         "slice_definition_revisions_no_update",
         "slice_definition_revisions_no_delete",
+        "slice_results_no_update",
+        "slice_results_no_delete",
+        "manual_evaluations_no_update",
+        "manual_evaluations_no_delete",
     }
 )
 

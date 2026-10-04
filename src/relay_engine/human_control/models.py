@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from relay_engine.domain._base import DomainModel
 from relay_engine.domain.ids import (
@@ -10,7 +10,9 @@ from relay_engine.domain.ids import (
     GateEvaluationRecordId,
     HandoverGateId,
     HumanDecisionId,
+    ManualEvaluationId,
     SliceId,
+    SliceResultId,
 )
 from relay_engine.governance.models import (
     AuthorizationGrant,
@@ -55,6 +57,9 @@ class HumanActionBasis(DomainModel):
     gate_refs: tuple[GateRevisionRef, ...]
     current_approval_decision_ids: tuple[HumanApprovalIdentity, ...] = ()
     current_choice_decision_id: HumanDecisionId | None = None
+    current_result_id: SliceResultId | None = None
+    current_result_baseline_id: BaselineId | None = None
+    current_manual_evaluation_id: ManualEvaluationId | None = None
 
     @field_validator("gate_refs")
     @classmethod
@@ -75,6 +80,14 @@ class HumanActionBasis(DomainModel):
         if ids != tuple(sorted(ids)) or len(ids) != len(set(ids)):
             raise ValueError("approval identities must be unique and sorted by gate_id")
         return value
+
+    @model_validator(mode="after")
+    def result_subject_is_consistent(self) -> HumanActionBasis:
+        if (self.current_result_id is None) != (self.current_result_baseline_id is None):
+            raise ValueError("current result identity and Baseline must be present together")
+        if self.current_manual_evaluation_id is not None and self.current_result_id is None:
+            raise ValueError("current evaluation identity requires a current result")
+        return self
 
 
 class HumanAction(DomainModel):

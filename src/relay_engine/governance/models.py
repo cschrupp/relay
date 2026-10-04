@@ -15,7 +15,9 @@ from relay_engine.domain.ids import (
     EvidenceId,
     HandoverGateId,
     HumanDecisionId,
+    ManualEvaluationId,
     SliceId,
+    SliceResultId,
 )
 from relay_engine.domain.references import ActorKind, ActorRef
 from relay_engine.lifecycle.models import LifecyclePhase, SliceLifecycle
@@ -376,6 +378,9 @@ class HandoverContext(DomainModel):
     available_evidence_ids: tuple[EvidenceId, ...] = ()
     dependency_lifecycles: tuple[SliceLifecycle, ...] = ()
     evaluation_outcome: EvaluationOutcome | None = None
+    result_id: SliceResultId | None = None
+    result_baseline_id: BaselineId | None = None
+    manual_evaluation_id: ManualEvaluationId | None = None
     authorization_grants: tuple[AuthorizationGrant, ...] = ()
     human_decisions: tuple[HumanGateDecision, ...] = ()
     quality_checks: tuple[QualityCheckResult, ...] = ()
@@ -385,6 +390,12 @@ class HandoverContext(DomainModel):
 
     @model_validator(mode="after")
     def projections_are_unambiguous(self) -> HandoverContext:
+        if (self.result_id is None) != (self.result_baseline_id is None):
+            raise ValueError("result_id and result_baseline_id must be present together")
+        if self.manual_evaluation_id is not None and (
+            self.result_id is None or self.evaluation_outcome is None
+        ):
+            raise ValueError("manual_evaluation_id requires result identity and evaluation_outcome")
         if len(self.available_artifact_ids) != len(set(self.available_artifact_ids)):
             raise ValueError("available artifact IDs must be unique")
         if len(self.available_evidence_ids) != len(set(self.available_evidence_ids)):

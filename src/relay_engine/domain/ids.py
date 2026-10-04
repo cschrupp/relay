@@ -21,6 +21,8 @@ type IdPrefix = Literal[
     "geval_",
     "exec_",
     "rma_",
+    "res_",
+    "eval_",
 ]
 
 _UUID_TEXT = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -40,6 +42,8 @@ type HumanDecisionId = Annotated[str, Field(pattern=rf"^hdec_{_UUID_TEXT}$")]
 type GateEvaluationRecordId = Annotated[str, Field(pattern=rf"^geval_{_UUID_TEXT}$")]
 type ExecutionId = Annotated[str, Field(pattern=rf"^exec_{_UUID_TEXT}$")]
 type RepositoryMutationAuthorizationId = Annotated[str, Field(pattern=rf"^rma_{_UUID_TEXT}$")]
+type SliceResultId = Annotated[str, Field(pattern=rf"^res_{_UUID_TEXT}$")]
+type ManualEvaluationId = Annotated[str, Field(pattern=rf"^eval_{_UUID_TEXT}$")]
 
 
 def new_id(prefix: IdPrefix) -> str:
@@ -61,6 +65,8 @@ def new_id(prefix: IdPrefix) -> str:
         "geval_",
         "exec_",
         "rma_",
+        "res_",
+        "eval_",
     ):
         raise ValueError("unsupported domain identifier prefix")
     return f"{prefix}{uuid7()}"
