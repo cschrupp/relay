@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 implementation authorized; implementation not yet complete
+**Status:** Phase 1 open — Slice 1.5 closed; Slice 1.6 technically accepted and closure-ready; closure evaluation pending
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -198,7 +198,7 @@ The accepted design keeps `BLOCK`, `PAUSE`, and `DEFER` as orthogonal blockage c
 
 ```text
 Current finalization gate:
-COMPLETE / ACCEPTED / CLOSED
+SLICE 1.6 CLOSURE-READY — INDEPENDENT CLOSURE EVALUATION PENDING
 
 Slice 1.5:
 COMPLETE / ACCEPTED / CLOSED
@@ -246,10 +246,46 @@ Human design acceptance:
 RLY-S16-DESIGN-ACCEPT-001 — ACCEPTED
 
 Slice 1.6 implementation:
-AUTHORIZED — RLY-S16-AUTH-001
+COMPLETE / TECHNICALLY ACCEPTED — RLY-S16-AUTH-001
 
 Authorized implementation baseline:
 7bb7363375cc3cc3ac26758741ac9f2c6ca991e3
+
+Prior implementation candidate:
+c1fbad66cbede4e16cb39b5065426656df4cfb3a
+
+Prior implementation evaluation:
+RLY-S16-EVAL-001 — REWORK
+
+Accepted technical candidate:
+a62493c733f67a5ce1b2fe5c53892d1833e4c615
+
+Independent implementation evaluation:
+RLY-S16-EVAL-002 — ACCEPT
+
+Human technical acceptance:
+RLY-S16-ACCEPT-001 — ACCEPTED
+
+Human technical acceptance commit:
+b3fb25d23121ca9a249c56376a8f208bbaf6a1d1
+
+Finalization / closure authority:
+RLY-S16-CLOSE-AUTH-001 — AUTHORIZED
+
+Finalization authority commit:
+4b5e32844753224fd2ac9f8c0be475b67ea8f6a8
+
+Finalization branch:
+finalization/1.6-human-authorization-decision-gates
+
+Finalization handoff commit:
+141367c935fbc28822dc79bc1c82b06b1bb2bef2
+
+Independent closure evaluation:
+PENDING
+
+Canonical closure:
+NOT YET RECORDED
 
 Implementation branch:
 implementation/1.6-human-authorization-decision-gates
@@ -257,11 +293,11 @@ implementation/1.6-human-authorization-decision-gates
 Preferred implementation model:
 GPT-5.6 Luna
 
+Executing implementation model:
+Codex (GPT-6); provenance deviation recorded in RLY-S16-EVAL-002
+
 Implementation handoff:
 docs/reviews/SLICE_1_6_IMPLEMENTATION_HANDOFF.md
-
-Mutation endpoints / board controls:
-AUTHORIZED FOR IMPLEMENTATION WITHIN ACCEPTED SLICE 1.6 DESIGN
 
 Slice 1.7:
 NOT OPEN
@@ -270,6 +306,6 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.6 implementation is authorized under `RLY-S16-AUTH-001` against the exact accepted design and implementation baseline above. The implementation is not yet complete; the currently implemented Slice 1.5 board remains read-only. No schema migration or new dependency is authorized. Slice 1.7 and agent execution remain outside this authority.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Bounded finalization and independent closure evaluation are authorized under `RLY-S16-CLOSE-AUTH-001`; closure remains pending. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

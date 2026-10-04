@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 design accepted; implementation authorized
+**Status:** Current living product and architecture proposal — Phase 1 / Slice 1.5 closed; Slice 1.6 implementation technically accepted and closure-ready; closure evaluation pending
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -83,7 +83,7 @@ Slice 1.5 independent closure evaluation:
 RLY-S15-CLOSE-EVAL-001 — ACCEPT
 
 Slice 1.6:
-HUMAN AUTHORIZATION AND DECISION GATES — DESIGN ACCEPTED; IMPLEMENTATION AUTHORIZED
+HUMAN AUTHORIZATION AND DECISION GATES — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 
 Opening authority:
 RLY-S16-OPEN-001
@@ -98,10 +98,34 @@ Exact accepted design head:
 c0fe5d7d2c2bba5b1d9e0011e194005268b6f9fb
 
 Slice 1.6 implementation:
-AUTHORIZED — RLY-S16-AUTH-001
+COMPLETE / TECHNICALLY ACCEPTED — RLY-S16-AUTH-001
 
 Authorized implementation baseline:
 7bb7363375cc3cc3ac26758741ac9f2c6ca991e3
+
+Accepted technical candidate:
+a62493c733f67a5ce1b2fe5c53892d1833e4c615
+
+Prior implementation candidate:
+c1fbad66cbede4e16cb39b5065426656df4cfb3a
+
+Prior implementation evaluation:
+RLY-S16-EVAL-001 — REWORK
+
+Independent implementation evaluation:
+RLY-S16-EVAL-002 — ACCEPT
+
+Human technical acceptance:
+RLY-S16-ACCEPT-001 — ACCEPTED
+
+Finalization / closure authority:
+RLY-S16-CLOSE-AUTH-001 — AUTHORIZED
+
+Independent closure evaluation:
+PENDING
+
+Canonical closure:
+NOT YET RECORDED
 
 Implementation branch:
 implementation/1.6-human-authorization-decision-gates
@@ -109,8 +133,8 @@ implementation/1.6-human-authorization-decision-gates
 Preferred implementation model:
 GPT-5.6 Luna
 
-Mutation endpoints / board controls:
-AUTHORIZED FOR IMPLEMENTATION WITHIN ACCEPTED SLICE 1.6 DESIGN
+Executing implementation model:
+Codex (GPT-6); provenance deviation recorded in RLY-S16-EVAL-002
 
 Slice 1.7:
 MANUAL EVALUATION AND ACCEPTANCE — NOT OPEN
@@ -121,10 +145,10 @@ NOT AUTHORIZED
 
 # 5. Implementation and closure governance
 
-The accepted read-only board implementation remains a projection of governed durable state. The exact candidate has passed independent implementation evaluation and Human technical acceptance.
+The board remains a projection of governed durable state. Slice 1.6 adds the bounded Human command seam while keeping Relay's durable state authoritative. The exact candidate has passed independent implementation evaluation and Human technical acceptance.
 
 Slice 1.5 is closed after independent closure evaluation accepted the exact closure-ready candidate. Its accepted technical result and governance history remain preserved in canonical Git history.
 
-Slice 1.6 implementation is authorized under `RLY-S16-AUTH-001` against the exact accepted design and baseline listed above. This is implementation authority only: the product change is not yet complete or accepted, the current Slice 1.5 board remains read-only, Slice 1.7 remains not open, and agent execution remains unauthorized. The authority also excludes schema migrations and new dependencies.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`. The prior `RLY-S16-EVAL-001 — REWORK` and final `RLY-S16-EVAL-002 — ACCEPT` remain part of its history, followed by Human technical acceptance `RLY-S16-ACCEPT-001`. Bounded finalization and independent closure evaluation are authorized under `RLY-S16-CLOSE-AUTH-001`; Slice 1.6 remains open pending the closure evaluation. No schema migration or new dependency was added. Slice 1.7 remains not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
