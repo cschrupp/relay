@@ -39,7 +39,7 @@ productization
 In particular:
 
 - Slice 1.6 Human Authorization and Decision Gates is complete / accepted / closed;
-- Slice 1.7 Manual Evaluation and Acceptance is next planned, remains not open, and is required before autonomy;
+- Slice 1.7 Manual Evaluation and Acceptance is open with its design accepted, but implementation is not authorized; it remains required before autonomy;
 - the Phase-1 M0 hard stop remains mandatory;
 - Phase 3 still begins with isolated execution workspaces and reproducible work packets;
 - independent evaluation, rework, and acceptance remain Relay responsibilities;

@@ -20,7 +20,7 @@ Read `docs/PRODUCT_PROPOSAL.md` and `docs/BUILD_PLAN.md` when broader product co
 
 The authoritative current boundary is `docs/CURRENT_BASELINE.md` plus the exact Human Authority records governing the active slice.
 
-As of the current repository baseline, Slices 1.1–1.6 are complete / accepted / closed, Slice 1.7 — Manual Evaluation and Acceptance — is next planned but not open, and agent execution is not authorized. If these statements ever disagree with `docs/CURRENT_BASELINE.md`, the canonical current baseline governs.
+As of the current repository baseline, Slices 1.1–1.6 are complete / accepted / closed; Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted, but implementation is not authorized; and agent execution is not authorized. The accepted `slice_results` and `manual_evaluations` migration is not authorized to apply. If these statements ever disagree with `docs/CURRENT_BASELINE.md`, the canonical current baseline governs.
 
 Future slice documents may be present for review. Presence does not constitute authorization.
 

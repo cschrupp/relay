@@ -2,7 +2,7 @@
 
 **Status:** Historical bootstrap instructions — superseded by the current repository baseline.
 
-This handoff records the original Slice 0.1 starter setup and is retained for history. For current project state and authority, consult `AGENTS.md` and `docs/CURRENT_BASELINE.md`. Slices 1.1–1.6 are complete / accepted / closed; Slice 1.7 is next planned but not open; agent execution is not authorized.
+This handoff records the original Slice 0.1 starter setup and is retained for history. For current project state and authority, consult `AGENTS.md` and `docs/CURRENT_BASELINE.md`. Slices 1.1–1.6 are complete / accepted / closed; Slice 1.7 is open with its design accepted but implementation not authorized; agent execution is not authorized.
 
 This starter is intentionally positioned **before the first accepted Git baseline**.
 

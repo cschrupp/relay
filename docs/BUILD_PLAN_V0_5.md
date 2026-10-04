@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Phase 1 / Slice 1.5 and Slice 1.6 closed; Slice 1.6 canonical closure promoted
+**Status:** Current living implementation plan — Slices 1.5–1.6 closed; Slice 1.7 design accepted, implementation not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -69,6 +69,36 @@ Canonical closure commit:
 
 Closure evaluation record commit:
 fc407e603593a7340515313bfb0b13bc5d286125
+
+Slice 1.7:
+OPEN — DESIGN ACCEPTED
+
+Accepted combined design head:
+d2f4cc20ae4d85f267b11e8f3ef3f892bceee73b
+
+Independent design evaluation:
+RLY-S17-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S17-DESIGN-ACCEPT-001 — ACCEPTED
+
+Implementation:
+NOT AUTHORIZED
+
+Next authority gate:
+SEPARATE HUMAN IMPLEMENTATION AUTHORIZATION
+
+Accepted schema migration:
+DESIGNED / ACCEPTED — NOT AUTHORIZED TO APPLY
+
+Migration application authority:
+Must be explicitly included in the implementation authorization
+
+Phase 1 M0 validation:
+NOT YET COMPLETED
+
+Phase 2:
+NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
@@ -252,12 +282,53 @@ Executing implementation model:
 Codex (GPT-6); provenance deviation recorded in RLY-S16-EVAL-002
 
 Slice 1.7:
+OPEN — DESIGN ACCEPTED
+
+Opening authority:
+RLY-S17-OPEN-001
+
+Design authorization:
+RLY-S17-DESIGN-AUTH-001 — AUTHORIZED
+
+Accepted combined design head:
+d2f4cc20ae4d85f267b11e8f3ef3f892bceee73b
+
+Independent design evaluation:
+RLY-S17-DESIGN-EVAL-004 — ACCEPT
+
+Design evaluation record commit:
+10afbeac26bbd2d7de9021e09752a5e8eaf8539b
+
+Human design acceptance:
+RLY-S17-DESIGN-ACCEPT-001 — ACCEPTED
+
+Design acceptance record commit:
+9bbf67d9f49c1a81b0a07707f26c0c352d4ef03c
+
+Implementation:
+NOT AUTHORIZED
+
+Next authority gate:
+SEPARATE HUMAN IMPLEMENTATION AUTHORIZATION
+
+Accepted schema migration:
+DESIGNED / ACCEPTED — NOT AUTHORIZED TO APPLY
+
+Migration application authority:
+Must be explicitly included in the implementation authorization
+
+Phase 1 M0 validation:
+NOT YET COMPLETED
+
+Phase 2:
 NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed. Canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. No schema migration or new dependency was introduced. Slice 1.7 remains not open, and agent execution remains unauthorized.
+The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed. Canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. No schema migration or new dependency was introduced.
+
+Slice 1.7 is open, and its combined Revision 1–4 design is accepted under `RLY-S17-DESIGN-ACCEPT-001`; Revision 4 is normative over Revision 3, Revision 3 over Revision 2, and Revision 2 over Revision 1. Implementation requires separate Human Authority authorization. The accepted `slice_results` and `manual_evaluations` migration is not authorized to apply. Phase 1 M0 validation remains incomplete, Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

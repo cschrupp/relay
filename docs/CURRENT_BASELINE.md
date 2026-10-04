@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slice 1.5 and Slice 1.6 closed; Slice 1.6 canonical closure promoted
+**Status:** Phase 1 open — Slices 1.5–1.6 closed; Slice 1.7 design accepted, implementation not authorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -306,12 +306,53 @@ Implementation handoff:
 docs/reviews/SLICE_1_6_IMPLEMENTATION_HANDOFF.md
 
 Slice 1.7:
+OPEN — DESIGN ACCEPTED
+
+Opening authority:
+RLY-S17-OPEN-001
+
+Design authorization:
+RLY-S17-DESIGN-AUTH-001 — AUTHORIZED
+
+Accepted combined design head:
+d2f4cc20ae4d85f267b11e8f3ef3f892bceee73b
+
+Independent design evaluation:
+RLY-S17-DESIGN-EVAL-004 — ACCEPT
+
+Design evaluation record commit:
+10afbeac26bbd2d7de9021e09752a5e8eaf8539b
+
+Human design acceptance:
+RLY-S17-DESIGN-ACCEPT-001 — ACCEPTED
+
+Design acceptance record commit:
+9bbf67d9f49c1a81b0a07707f26c0c352d4ef03c
+
+Implementation:
+NOT AUTHORIZED
+
+Next authority gate:
+SEPARATE HUMAN IMPLEMENTATION AUTHORIZATION
+
+Accepted schema migration:
+DESIGNED / ACCEPTED — NOT AUTHORIZED TO APPLY
+
+Migration application authority:
+Must be explicitly included in the implementation authorization
+
+Phase 1 M0 validation:
+NOT YET COMPLETED
+
+Phase 2:
 NOT OPEN
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency. Slice 1.7 remains not open, and agent execution remains unauthorized.
+Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency.
+
+Slice 1.7 is open, and its combined Revision 1–4 design is accepted under `RLY-S17-DESIGN-ACCEPT-001`; Revision 4 is normative over Revision 3, Revision 3 over Revision 2, and Revision 2 over Revision 1. Implementation remains unauthorized. The accepted append-only `slice_results` and `manual_evaluations` migration is designed and accepted but is not authorized to apply. Phase 1 M0 validation is not yet complete; Phase 2 is not open; agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

@@ -7,7 +7,7 @@ They do not, by their presence alone, authorize implementation.
 Current roadmap state:
 
 - Slices 1.1–1.6 — COMPLETE / ACCEPTED / CLOSED
-- Slice 1.7 — Manual Evaluation and Acceptance — NEXT PLANNED / NOT OPEN
+- Slice 1.7 — Manual Evaluation and Acceptance — OPEN / DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
 - Agent execution — NOT AUTHORIZED
 
 Foundational records include:

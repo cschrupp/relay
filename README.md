@@ -19,7 +19,8 @@ Slice 1.3:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.4:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.5:                COMPLETE / ACCEPTED / CLOSED
 Slice 1.6:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.7:                NEXT PLANNED — NOT OPEN
+Slice 1.7:                OPEN — DESIGN ACCEPTED
+Slice 1.7 implementation: NOT AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -78,7 +79,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation or agent execution. Slice 1.7 — Manual Evaluation and Acceptance — is the next planned slice and remains not open.
+This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation or agent execution. Slice 1.7 is open and its design is accepted, but implementation requires a separate Human Authority authorization.
 
 See:
 

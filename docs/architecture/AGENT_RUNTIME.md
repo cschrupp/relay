@@ -19,7 +19,7 @@ Relay therefore owns a stable `AgentRuntime` contract and delegates runtime-loca
 
 The first planned runtime implementation is **OpenCode**.
 
-This document records future architecture only. Slice 1.6 is complete and closed. Slice 1.7 — Manual Evaluation and Acceptance — is next planned and remains not open. This document does not authorize agent execution.
+This document records future architecture only. Slice 1.6 is complete and closed. Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted, but implementation is not authorized. This document does not authorize agent execution.
 
 ---
 

@@ -31,7 +31,7 @@ Current working documents for this direction are:
 
 These are **future planning/design artifacts**. They are not current canonical implementation authority and do not open or authorize Phase 2 or Phase 3 work.
 
-Slice 1.7 — Manual Evaluation and Acceptance — is next planned and remains not open. Agent execution is not authorized.
+Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted. Implementation and applying the accepted schema migration require separate Human Authority authorization. Agent execution is not authorized.
 
 ## Slice records
 
@@ -59,4 +59,4 @@ Accepted or working slice architecture documents live under `architecture/`.
 
 `architecture/AGENT_RUNTIME.md` describes the planned boundary between Relay governance and external coding-agent harnesses. OpenCode is the first planned implementation, but runtime-specific features must not become Relay domain authority.
 
-Current authority and the next planned engineering gate are recorded in `CURRENT_BASELINE.md`.
+Current authority and the next required Human Authority gate are recorded in `CURRENT_BASELINE.md`.
