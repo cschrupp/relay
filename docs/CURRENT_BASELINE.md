@@ -365,7 +365,10 @@ Closure evaluation record commit:
 965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-ACCEPTED; CANONICAL PROMOTION PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+5d6773bd5f634246c026b2964ca21e7083a966a1
 
 Preferred implementation model:
 GPT-5.6 Luna
@@ -391,6 +394,6 @@ NOT AUTHORIZED
 
 Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency.
 
-Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. Its combined Revision 1–4 design, accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`, REWORK, REWORK, ACCEPT evaluation history, and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. Its combined Revision 1–4 design, accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`, REWORK, REWORK, ACCEPT evaluation history, and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

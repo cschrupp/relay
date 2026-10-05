@@ -193,7 +193,10 @@ Closure evaluation record commit:
 965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-ACCEPTED; CANONICAL PROMOTION PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+5d6773bd5f634246c026b2964ca21e7083a966a1
 
 Accepted schema migration:
 VERSION 5 — slice_results + manual_evaluations ONLY
@@ -221,6 +224,6 @@ Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a
 
 Slice 1.7 delivers exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Agent execution remains unauthorized.
 
-Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 validation remains pending and was not performed under Slice 1.7 finalization authority. Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 validation remains pending and was not performed under Slice 1.7 finalization authority. Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

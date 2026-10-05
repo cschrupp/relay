@@ -114,7 +114,10 @@ Closure evaluation record commit:
 965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-ACCEPTED; CANONICAL PROMOTION PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+5d6773bd5f634246c026b2964ca21e7083a966a1
 
 Implementation:
 COMPLETE / TECHNICALLY ACCEPTED
@@ -366,7 +369,10 @@ Closure evaluation record commit:
 965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-ACCEPTED; CANONICAL PROMOTION PENDING
+PROMOTED TO MAIN
+
+Canonical closure commit:
+5d6773bd5f634246c026b2964ca21e7083a966a1
 
 Implementation:
 COMPLETE / TECHNICALLY ACCEPTED
@@ -389,6 +395,6 @@ NOT AUTHORIZED
 
 The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed. Canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. No schema migration or new dependency was introduced.
 
-Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The REWORK, REWORK, ACCEPT implementation evaluation history and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved with exact accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`. The implementation uses only migration v5, with no dependency or lifecycle transition-matrix changes. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The REWORK, REWORK, ACCEPT implementation evaluation history and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved with exact accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. The implementation uses only migration v5, with no dependency or lifecycle transition-matrix changes. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
