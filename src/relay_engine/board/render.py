@@ -259,6 +259,215 @@ def render_project_board(board: ProjectBoard, query: str = "") -> str:
     return _page(f"{board.project.name} — board", body)
 
 
+def _governance_lifecycle_summary(detail: SliceDetail) -> str:
+    lifecycle = detail.lifecycle
+    if lifecycle is None:
+        return "<p>Lifecycle: NOT_STARTED — no lifecycle record.</p>"
+
+    body = (
+        f"<p>Lifecycle: <strong>{_e(lifecycle.phase.value)}</strong>; validity "
+        f"{_e(lifecycle.validity.value)}; blockage "
+        f"{_e(lifecycle.blockage.status.value)}; revision {_e(lifecycle.revision)}.</p>"
+    )
+    if lifecycle.blockage.status is BlockageStatus.BLOCKED:
+        reasons = "".join(
+            f"<li>{_e(reason.code)}: {_e(reason.summary)}</li>"
+            for reason in lifecycle.blockage.reasons
+        )
+        body += f"<h4>Blockage reasons</h4><ul>{reasons}</ul>"
+    if lifecycle.phase.value == "READY":
+        body += "<p>READY is a lifecycle phase; it does not grant execution authorization.</p>"
+    return body
+
+
+def _governance_gate_evaluation(gate: GateProjection) -> str:
+    status = gate.evaluation_basis_status
+    if status is EvaluationBasisStatus.MATCHING_DURABLE_BASIS:
+        if gate.evaluation_light is None:
+            evaluation = "<p>No current traffic light is projected for the matching basis.</p>"
+        else:
+            color = gate.evaluation_light.value.lower()
+            evaluation = (
+                f'<p class="gate-light {_e(color)}">Current traffic light: '
+                f"<strong>{_e(gate.evaluation_light.value)}</strong></p>"
+            )
+        return (
+            "<p>Evaluation-basis status: matching durable basis.</p>"
+            f"{evaluation}{_reason_list(gate.evaluation_reasons)}"
+        )
+    if status is EvaluationBasisStatus.STALE_DURABLE_BASIS:
+        return "<p>Evaluation: stale durable basis — historical traffic lights are not current.</p>"
+    if status is EvaluationBasisStatus.NOT_EVALUATED:
+        return "<p>Evaluation: not evaluated.</p>"
+    return "<p>Evaluation: not applicable.</p>"
+
+
+def _governance_gate_summary(detail: SliceDetail) -> str:
+    if not detail.outgoing_gates:
+        return "<p>No current outgoing gates projected.</p>"
+
+    gates = "".join(
+        "<li>"
+        f"<h4>Gate <code>{_e(gate.gate_id)}</code> revision "
+        f"{_e(gate.gate_revision)}</h4>"
+        f"<p>Target lifecycle phase: {_e(gate.target_phase.value)}; "
+        f"authorization required: {_e('yes' if gate.authorization_required else 'no')}.</p>"
+        f"{_governance_gate_evaluation(gate)}</li>"
+        for gate in detail.outgoing_gates
+    )
+    return f"<ul>{gates}</ul>"
+
+
+def _governance_human_summary(detail: SliceDetail) -> str:
+    projection = detail.human_actions
+    parts: list[str] = ["<h4>Authorization grants</h4>"]
+    if projection.current_authorizations:
+        grants = "".join(
+            "<li>Authorization <code>"
+            f"{_e(grant.authorization_id)}</code>; gate <code>{_e(grant.gate_id)}</code> "
+            f"revision {_e(grant.gate_revision)}; actor "
+            f"{_e(grant.actor.display_name or grant.actor.id)}; granted "
+            f"{_e(grant.granted_at)}.</li>"
+            for grant in projection.current_authorizations
+        )
+        parts.append(f"<ul>{grants}</ul>")
+    else:
+        parts.append("<p>Current authorization grants: none projected.</p>")
+
+    parts.append("<h4>Approval decisions</h4>")
+    if projection.current_approval_decisions:
+        decisions = "".join(
+            "<li>Approval decision <code>"
+            f"{_e(decision.decision_id)}</code>: {_e(decision.decision.value)}; gate "
+            f"<code>{_e(decision.gate_id)}</code> revision "
+            f"{_e(decision.gate_revision)}.</li>"
+            for decision in projection.current_approval_decisions
+        )
+        parts.append(f"<ul>{decisions}</ul>")
+    else:
+        parts.append("<p>No current approval decisions projected.</p>")
+
+    parts.append("<h4>Choice decision</h4>")
+    if projection.current_choice is None:
+        parts.append("<p>No current choice decision projected.</p>")
+    else:
+        choice = projection.current_choice
+        parts.append(
+            "<p>Choice decision <code>"
+            f"{_e(choice.decision_id)}</code> selected gate "
+            f"<code>{_e(choice.selected_gate_id)}</code> revision "
+            f"{_e(choice.selected_gate_revision)}.</p>"
+        )
+
+    parts.append("<h4>Human holds</h4>")
+    if projection.human_hold:
+        holds = "".join(
+            f"<li>{_e(hold.code)}: {_e(hold.summary)}</li>" for hold in projection.human_hold
+        )
+        parts.append(f"<ul>{holds}</ul>")
+    else:
+        parts.append("<p>No current Human holds projected.</p>")
+
+    parts.append(
+        "<p>Unblocked, READY, authorization grants, and approval decisions are distinct "
+        "governance facts.</p>"
+    )
+    return "".join(parts)
+
+
+def _governance_manual_evaluation_summary(detail: SliceDetail) -> str:
+    projection: ManualEvaluationProjection = detail.manual_evaluation
+    parts: list[str] = []
+
+    parts.append("<h4>Engineering result</h4>")
+    result = projection.current_result
+    if result is None:
+        parts.append("<p>No current engineering result projected.</p>")
+    else:
+        parts.append(
+            f"<p>Result <code>{_e(result.result_id)}</code>; result baseline "
+            f"<code>{_e(result.result_baseline_id)}</code>.</p>"
+        )
+        baseline = projection.current_result_baseline
+        if baseline is None:
+            parts.append("<p>Exact result commit is not currently resolvable.</p>")
+        else:
+            parts.append(
+                f"<p>Exact result commit: <code>{_e(baseline.commit.sha)}</code> in "
+                f"{_e(baseline.commit.repository.path)}.</p>"
+            )
+
+    parts.append("<h4>Evaluator decision</h4>")
+    evaluation = projection.current_evaluation
+    if evaluation is None:
+        parts.append("<p>No current evaluator decision projected.</p>")
+    else:
+        parts.append(
+            f"<p>Evaluation <code>{_e(evaluation.evaluation_id)}</code>; outcome "
+            f"{_e(evaluation.outcome.value)}; evaluator "
+            f"{_e(evaluation.evaluator.display_name or evaluation.evaluator.id)}; "
+            f"result <code>{_e(evaluation.result_id)}</code>.</p>"
+        )
+
+    parts.append("<h4>Human technical decision</h4>")
+    decision = projection.current_technical_decision
+    if decision is None:
+        parts.append("<p>No current Human technical decision projected.</p>")
+    else:
+        parts.append(
+            f"<p>Decision <code>{_e(decision.decision_id)}</code>: "
+            f"{_e(decision.decision.value)}; gate <code>{_e(decision.gate_id)}</code> "
+            f"revision {_e(decision.gate_revision)}.</p>"
+        )
+
+    parts.append("<h4>Accepted-result promotion</h4>")
+    accepted = projection.accepted_result
+    if accepted is None:
+        parts.append("<p>No accepted-result promotion projected.</p>")
+    else:
+        parts.append(
+            f"<p>Accepted result <code>{_e(accepted.result_id)}</code>; exact accepted "
+            f"commit <code>{_e(accepted.commit)}</code>; manual evaluation "
+            f"<code>{_e(accepted.manual_evaluation_id)}</code>; Human approval decision "
+            f"<code>{_e(accepted.human_approval_decision_id)}</code>; accepted execution "
+            f"<code>{_e(accepted.accepted_execution_id)}</code>.</p>"
+        )
+
+    parts.append(
+        "<p>Engineering result, evaluator decision, Human technical decision, and "
+        "accepted-result promotion are distinct records.</p>"
+    )
+
+    memory = projection.development_memory
+    if memory is not None:
+        parts.append(
+            f"<p>Development memory source baseline: "
+            f"<code>{_e(memory.source_baseline.id)}</code>. Result records: "
+            f"{len(memory.result_history)}; evaluation records: "
+            f"{len(memory.evaluation_history)}; Evidence items: {len(memory.evidence)}; "
+            f"accepted results: {len(memory.accepted_results)}.</p>"
+        )
+    return "".join(parts)
+
+
+def _governance_status_section(detail: SliceDetail) -> str:
+    """Render a compact read-only summary from current SliceDetail projections."""
+
+    return (
+        '<section aria-labelledby="governance-status-heading">'
+        '<h2 id="governance-status-heading">Governance status</h2>'
+        "<h3>Lifecycle</h3>"
+        f"{_governance_lifecycle_summary(detail)}"
+        "<h3>Outgoing gates</h3>"
+        f"{_governance_gate_summary(detail)}"
+        "<h3>Human authority evidence</h3>"
+        f"{_governance_human_summary(detail)}"
+        "<h3>Manual evaluation and result provenance</h3>"
+        f"{_governance_manual_evaluation_summary(detail)}"
+        "</section>"
+    )
+
+
 def _definition_section(detail: SliceDetail) -> str:
     value = detail.slice_definition.value
     in_scope = "".join(f"<li>{_e(item)}</li>" for item in value.scope.in_scope)
@@ -887,7 +1096,8 @@ def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> s
         f"<p>Project: {_e(detail.project.name)} (<code>{_e(detail.project.id)}</code>); "
         f"definition revision {_e(detail.project_definition_revision)}.</p>"
         f"<p>Slice ID: <code>{_e(value.id)}</code></p>"
-        f"{_definition_section(detail)}{_lifecycle_section(detail)}"
+        f"{_governance_status_section(detail)}{_definition_section(detail)}"
+        f"{_lifecycle_section(detail)}"
         f"{_observation_section(detail)}{_human_action_section(detail, csrf_token)}"
         f"{_manual_evaluation_section(detail, csrf_token)}"
         f"{_execution_section(detail)}"
