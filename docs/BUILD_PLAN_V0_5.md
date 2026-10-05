@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.5  
-**Status:** Current living implementation plan — Slices 1.1–1.6 closed; Slice 1.7 technically accepted, closure evaluation pending
+**Status:** Current living implementation plan — Slices 1.1–1.7 closed; Phase 1 M0 validation pending
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.4 at `docs/BUILD_PLAN_V0_4.md`  
@@ -71,7 +71,7 @@ Closure evaluation record commit:
 fc407e603593a7340515313bfb0b13bc5d286125
 
 Slice 1.7:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Accepted combined design head:
 d2f4cc20ae4d85f267b11e8f3ef3f892bceee73b
@@ -105,10 +105,16 @@ Finalization / closure authority:
 RLY-S17-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S17-CLOSE-EVAL-001 — ACCEPT
+
+Closure-ready candidate:
+d7c3876754804ea0f889ec09133b99f569398f1e
+
+Closure evaluation record commit:
+965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-NOT YET RECORDED
+ACCEPTED; CANONICAL PROMOTION PENDING
 
 Implementation:
 COMPLETE / TECHNICALLY ACCEPTED
@@ -307,7 +313,7 @@ Executing implementation model:
 Codex (GPT-6); provenance deviation recorded in RLY-S16-EVAL-002
 
 Slice 1.7:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Opening authority:
 RLY-S17-OPEN-001
@@ -351,10 +357,16 @@ Finalization / closure authority:
 RLY-S17-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S17-CLOSE-EVAL-001 — ACCEPT
+
+Closure-ready candidate:
+d7c3876754804ea0f889ec09133b99f569398f1e
+
+Closure evaluation record commit:
+965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-NOT YET RECORDED
+ACCEPTED; CANONICAL PROMOTION PENDING
 
 Implementation:
 COMPLETE / TECHNICALLY ACCEPTED
@@ -377,6 +389,6 @@ NOT AUTHORIZED
 
 The accepted Slice 1.6 implementation adds the bounded Human Authority command seam to the existing server-rendered board. The exact candidate completed independent implementation evaluation and Human technical acceptance. Independent closure evaluation accepted the exact closure-ready candidate, and Slice 1.6 is closed. Canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. No schema migration or new dependency was introduced.
 
-Slice 1.7 is open. Its combined Revision 1–4 design is accepted, and its implementation is complete and technically accepted at `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`. The REWORK, REWORK, ACCEPT implementation evaluation history and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. Finalization is authorized; independent closure evaluation is pending, so Slice 1.7 remains open. The implementation uses only migration v5, with no dependency or lifecycle transition-matrix changes. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The REWORK, REWORK, ACCEPT implementation evaluation history and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved with exact accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`. The implementation uses only migration v5, with no dependency or lifecycle transition-matrix changes. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**

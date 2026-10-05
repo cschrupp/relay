@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slices 1.1–1.6 closed; Slice 1.7 implementation technically accepted, closure evaluation pending
+**Status:** Phase 1 open — Slices 1.1–1.7 closed; Phase 1 M0 validation pending
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -26,6 +26,9 @@ Slice 1.5:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.6:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.7:
 COMPLETE / ACCEPTED / CLOSED
 ```
 
@@ -309,7 +312,7 @@ Implementation handoff:
 docs/reviews/SLICE_1_6_IMPLEMENTATION_HANDOFF.md
 
 Slice 1.7:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Opening authority:
 RLY-S17-OPEN-001
@@ -353,10 +356,16 @@ Finalization / closure authority:
 RLY-S17-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S17-CLOSE-EVAL-001 — ACCEPT
+
+Closure-ready candidate:
+d7c3876754804ea0f889ec09133b99f569398f1e
+
+Closure evaluation record commit:
+965d481b02e6dc29e73d9285a3afa31a4f8ce39a
 
 Canonical closure:
-NOT YET RECORDED
+ACCEPTED; CANONICAL PROMOTION PENDING
 
 Preferred implementation model:
 GPT-5.6 Luna
@@ -382,6 +391,6 @@ NOT AUTHORIZED
 
 Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency.
 
-Slice 1.7 is open. Its combined Revision 1–4 design is accepted, with Revision 4 normative over Revision 3, Revision 3 over Revision 2, and Revision 2 over Revision 1. Implementation is complete and technically accepted at `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` after the preserved REWORK, REWORK, ACCEPT evaluation sequence. Human technical acceptance is recorded as `RLY-S17-ACCEPT-001`. Finalization is authorized and independent closure evaluation is pending. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. Its combined Revision 1–4 design, accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`, REWORK, REWORK, ACCEPT evaluation history, and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
