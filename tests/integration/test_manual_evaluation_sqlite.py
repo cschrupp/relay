@@ -1076,14 +1076,22 @@ def test_technical_decision_retry_requires_exact_durable_identity_and_payload(
             command_time: datetime,
             observation_id: GateEvaluationRecordId,
             observation_time: datetime,
+            command_result_id: SliceResultId | None = None,
+            command_evaluation_id: ManualEvaluationId | None = None,
         ):
             return record_technical_acceptance(
                 database,
                 SLICE_ID,
                 GATE_ID,
                 submitted_basis,
-                expected_result_id=cast(SliceResultId, basis.current_result_id),
-                expected_manual_evaluation_id=first_id,
+                expected_result_id=(
+                    cast(SliceResultId, basis.current_result_id)
+                    if command_result_id is None
+                    else command_result_id
+                ),
+                expected_manual_evaluation_id=(
+                    first_id if command_evaluation_id is None else command_evaluation_id
+                ),
                 expected_current_approval_decision_id=expected_current_id,
                 actor=ACTOR,
                 reason=command_reason,
@@ -1101,6 +1109,8 @@ def test_technical_decision_retry_requires_exact_durable_identity_and_payload(
             occurred_at,
             successor_id,
             successor_at,
+            command_result_id=cast(SliceResultId, basis.current_result_id),
+            command_evaluation_id=first_id,
         )
         counts_after_first = (
             database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
@@ -1116,8 +1126,46 @@ def test_technical_decision_retry_requires_exact_durable_identity_and_payload(
             occurred_at,
             successor_id,
             successor_at,
+            command_result_id=cast(SliceResultId, basis.current_result_id),
+            command_evaluation_id=first_id,
         )
         assert exact_retry == first
+        assert (
+            database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        ) == counts_after_first
+
+        with pytest.raises(ManualEvaluationConflict):
+            decide(
+                basis,
+                decision_id,
+                None,
+                "Approve this exact authored evaluation.",
+                occurred_at,
+                successor_id,
+                successor_at,
+                cast(SliceResultId, new_id("res_")),
+            )
+        assert (
+            database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        ) == counts_after_first
+
+        with pytest.raises(ManualEvaluationConflict):
+            decide(
+                basis,
+                decision_id,
+                None,
+                "Approve this exact authored evaluation.",
+                occurred_at,
+                successor_id,
+                successor_at,
+                command_evaluation_id=cast(ManualEvaluationId, new_id("eval_")),
+            )
         assert (
             database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
             database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[

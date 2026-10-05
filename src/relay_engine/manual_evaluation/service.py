@@ -676,6 +676,8 @@ def _exact_technical_decision_retry(
     snapshot: HumanControlSnapshot,
     basis: HumanActionBasis,
     decision: HumanApprovalDecision,
+    expected_result_id: SliceResultId,
+    expected_manual_evaluation_id: ManualEvaluationId,
     expected_current_approval_decision_id: HumanDecisionId | None,
     successor_gate_evaluation_record_id: GateEvaluationRecordId,
     successor_gate_evaluation_recorded_at: datetime,
@@ -732,9 +734,15 @@ def _exact_technical_decision_retry(
     if (
         current_result is None
         or current_evaluation is None
+        or expected_result_id != basis.current_result_id
+        or expected_manual_evaluation_id != basis.current_manual_evaluation_id
+        or expected_result_id != current_result.result_id
+        or expected_manual_evaluation_id != current_evaluation.evaluation_id
         or current_result.result_id != basis.current_result_id
         or current_result.result_baseline_id != basis.current_result_baseline_id
         or current_evaluation.evaluation_id != basis.current_manual_evaluation_id
+        or expected_result_id != successor.context.result_id
+        or expected_manual_evaluation_id != successor.context.manual_evaluation_id
         or current_result.result_id != successor.context.result_id
         or current_result.result_baseline_id != successor.context.result_baseline_id
         or current_evaluation.evaluation_id != successor.context.manual_evaluation_id
@@ -831,6 +839,8 @@ def _record_technical_decision(
                 snapshot,
                 basis,
                 submitted_decision,
+                expected_result_id,
+                expected_manual_evaluation_id,
                 expected_current_approval_decision_id,
                 successor_gate_evaluation_record_id,
                 successor_gate_evaluation_recorded_at,
