@@ -21,9 +21,11 @@ from relay_engine.domain.ids import (
     EvidenceId,
     GateEvaluationRecordId,
     HandoverGateId,
+    HumanDecisionId,
     ManualEvaluationId,
     ProjectId,
     SliceId,
+    SliceResultId,
     new_id,
 )
 from relay_engine.domain.models import (
@@ -49,23 +51,31 @@ from relay_engine.governance import (
     ToolchainChangeStatus,
     TrafficLight,
 )
-from relay_engine.human_control.errors import HumanActionRequiresEvaluation
+from relay_engine.human_control.errors import HumanActionNotAvailable, HumanActionRequiresEvaluation
 from relay_engine.human_control.models import HumanActionBasis
 from relay_engine.human_control.service import (
+    advance_green_handover,
     basis_if_current,
+    current_gates,
     load_human_control_snapshot,
     record_gate_approval,
+    record_successor_observation,
 )
 from relay_engine.integrations.github.models import GitHubRepositoryAccessSelection
 from relay_engine.lifecycle import LifecyclePhase, initialize_lifecycle, transition_phase
 from relay_engine.lifecycle.models import SliceLifecycle
-from relay_engine.manual_evaluation.errors import ManualEvaluationConflict, ManualEvaluationStale
+from relay_engine.manual_evaluation.errors import (
+    ManualEvaluationConflict,
+    ManualEvaluationNotAvailable,
+    ManualEvaluationStale,
+)
 from relay_engine.manual_evaluation.models import (
     EvaluationEvidenceSubmission,
     SliceResultRecord,
 )
 from relay_engine.manual_evaluation.service import (
     attach_result,
+    project_development_memory,
     promote_accepted_result,
     record_manual_evaluation,
     record_technical_acceptance,
@@ -81,8 +91,10 @@ from relay_engine.persistence import (
     insert_handover_gate,
     insert_slice_result_from_connection,
     load_current_lifecycle,
+    load_current_lifecycle_from_connection,
     load_execution_records,
     load_gate_evaluation_records,
+    load_handover_gates_for_slice_from_connection,
     load_manual_evaluation_history_from_connection,
     load_slice_result_history_from_connection,
     open_database,
@@ -91,6 +103,7 @@ from relay_engine.persistence import (
     read_transaction,
     verify_schema,
 )
+from relay_engine.persistence.database import write_transaction
 from relay_engine.persistence.errors import PersistenceIntegrityError
 from relay_engine.project_slice import MutationMetadata, create_project, create_slice
 from relay_engine.repository_baseline.models import (
@@ -104,6 +117,8 @@ PROJECT_ID: ProjectId = "prj_018f47c1-7b2c-7abc-8def-123456789001"
 SLICE_ID: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789006"
 SOURCE_BASELINE_ID: BaselineId = "base_018f47c1-7b2c-7abc-8def-123456789003"
 GATE_ID: HandoverGateId = "gate_018f47c1-7b2c-7abc-8def-123456789020"
+REWORK_GATE_ID: HandoverGateId = "gate_018f47c1-7b2c-7abc-8def-123456789021"
+REENTRY_GATE_ID: HandoverGateId = "gate_018f47c1-7b2c-7abc-8def-123456789022"
 DECISION_ID: DecisionId = "dec_018f47c1-7b2c-7abc-8def-123456789007"
 ACTOR = ActorRef(id="act_018f47c1-7b2c-7abc-8def-123456789008", kind=ActorKind.HUMAN)
 REPOSITORY = RepositoryRef(
@@ -114,8 +129,16 @@ RESULT_ARTIFACT: ArtifactId = "art_018f47c1-7b2c-7abc-8def-123456789010"
 
 
 class _BaselineResolver:
-    def __init__(self, database: object) -> None:
+    def __init__(
+        self,
+        database: object,
+        *,
+        result_sha: str = RESULT_SHA,
+        artifact_id: ArtifactId = RESULT_ARTIFACT,
+    ) -> None:
         self.database = database
+        self.result_sha = result_sha
+        self.artifact_id = artifact_id
         self.decision_ids: tuple[DecisionId, ...] | None = None
 
     def resolve_and_persist_github_baseline(
@@ -135,14 +158,14 @@ class _BaselineResolver:
         baseline = Baseline(
             id=baseline_id,
             project_id=project_id,
-            commit=CommitRef(repository=repository, sha=RESULT_SHA),
-            artifact_ids=(RESULT_ARTIFACT,),
+            commit=CommitRef(repository=repository, sha=self.result_sha),
+            artifact_ids=(self.artifact_id,),
             decision_ids=decision_ids,
         )
         insert_artifact(
             cast(object, self.database),
             Artifact(
-                id=RESULT_ARTIFACT,
+                id=self.artifact_id,
                 artifact_type="DESIGN_RECORD",
                 path="docs/result.md",
                 commit=baseline.commit,
@@ -173,8 +196,41 @@ def _gate(*, policy: HandoverPolicy = HandoverPolicy.AUTO) -> HandoverGate:
     )
 
 
+def _rework_gate() -> HandoverGate:
+    return HandoverGate(
+        gate_id=REWORK_GATE_ID,
+        revision=1,
+        key="rework-result",
+        slice_id=SLICE_ID,
+        baseline_id=SOURCE_BASELINE_ID,
+        source_phase=LifecyclePhase.EVALUATING,
+        target_phase=LifecyclePhase.REWORK,
+        policy=HandoverPolicy.HUMAN_APPROVAL,
+        required_quality_checks=("rework-check",),
+        required_evaluation_outcomes=(EvaluationOutcome.REWORK,),
+    )
+
+
+def _reentry_gate() -> HandoverGate:
+    return HandoverGate(
+        gate_id=REENTRY_GATE_ID,
+        revision=1,
+        key="resume-evaluation",
+        slice_id=SLICE_ID,
+        baseline_id=SOURCE_BASELINE_ID,
+        source_phase=LifecyclePhase.REWORK,
+        target_phase=LifecyclePhase.EVALUATING,
+        policy=HandoverPolicy.AUTO,
+    )
+
+
 def _seed(
-    path: Path, *, policy: HandoverPolicy = HandoverPolicy.AUTO, initial_observation: bool = False
+    path: Path,
+    *,
+    policy: HandoverPolicy = HandoverPolicy.AUTO,
+    initial_observation: bool = False,
+    gate_value: HandoverGate | None = None,
+    additional_gates: tuple[HandoverGate, ...] = (),
 ):
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
     project = Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY)
@@ -215,8 +271,9 @@ def _seed(
             "Move fixture through the governed lifecycle model.",
         )
         persist_lifecycle_change(database, lifecycle.revision - 1, lifecycle, phase_event)
-    gate = _gate(policy=policy)
-    insert_handover_gate(database, gate)
+    gate = _gate(policy=policy) if gate_value is None else gate_value
+    for candidate in (gate, *additional_gates):
+        insert_handover_gate(database, candidate)
     prior = None
     if initial_observation:
         context = HandoverContext(
@@ -232,7 +289,7 @@ def _seed(
         prior = GateEvaluationRecord(
             id=new_id("geval_"),
             recorded_at=NOW + timedelta(seconds=9),
-            gate_refs=(GateRevisionRef(gate_id=GATE_ID, gate_revision=1),),
+            gate_refs=(GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision),),
             context=context,
             evaluations=evaluate_handover_gates((gate,), context),
         )
@@ -240,23 +297,33 @@ def _seed(
     return database, lifecycle, gate, prior, source
 
 
-def _attach(database: object, lifecycle: SliceLifecycle, resolver: _BaselineResolver) -> object:
+def _attach(
+    database: object,
+    lifecycle: SliceLifecycle,
+    resolver: _BaselineResolver,
+    *,
+    result_id: SliceResultId | None = None,
+    result_baseline_id: BaselineId | None = None,
+    expected_current_result_id: SliceResultId | None = None,
+    recorded_at: datetime = NOW + timedelta(seconds=10),
+    reason: str = "Attach the exact verified result commit.",
+) -> SliceResultRecord:
     return attach_result(
         cast(object, database),
         SLICE_ID,
         repository_baseline_service=cast(object, resolver),
         selection=_selection(),
         selector=RepositoryRevisionSelector(
-            kind=RepositoryRevisionKind.COMMIT_SHA, value=RESULT_SHA
+            kind=RepositoryRevisionKind.COMMIT_SHA, value=resolver.result_sha
         ),
-        result_id=new_id("res_"),
-        result_baseline_id=new_id("base_"),
+        result_id=new_id("res_") if result_id is None else result_id,
+        result_baseline_id=new_id("base_") if result_baseline_id is None else result_baseline_id,
         expected_lifecycle_revision=lifecycle.revision,
         expected_slice_definition_revision=1,
-        expected_current_result_id=None,
+        expected_current_result_id=expected_current_result_id,
         recorded_by=ACTOR,
-        recorded_at=NOW + timedelta(seconds=10),
-        reason="Attach the exact verified result commit.",
+        recorded_at=recorded_at,
+        reason=reason,
     )
 
 
@@ -287,14 +354,21 @@ def _evaluation_inputs(
     expected_eval_id: ManualEvaluationId | None,
     expected_gate_id: GateEvaluationRecordId | None,
     outcome: EvaluationOutcome = EvaluationOutcome.ACCEPT,
+    quality_checks: tuple[QualityCheckResult, ...] | None = None,
 ):
     from relay_engine.persistence import load_slice_1_7_subject_from_connection
 
     with read_transaction(cast(object, database)) as connection:
         result, _current = load_slice_1_7_subject_from_connection(connection, SLICE_ID)
         assert result is not None
-        gate = _gate()
-        gate_refs = (GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision),)
+        lifecycle = load_current_lifecycle_from_connection(connection, SLICE_ID)
+        gates = current_gates(
+            load_handover_gates_for_slice_from_connection(connection, SLICE_ID), lifecycle
+        )
+        assert gates
+        gate_refs = tuple(
+            GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision) for gate in gates
+        )
     evidence_id: EvidenceId = new_id("evd_")
     evidence_time = evaluated_at - timedelta(seconds=1)
     return record_manual_evaluation(
@@ -312,13 +386,17 @@ def _evaluation_inputs(
                 recorded_at=evidence_time,
             ),
         ),
-        quality_checks=(QualityCheckResult(key="tests", status=QualityCheckStatus.PASS),),
+        quality_checks=(
+            (QualityCheckResult(key="tests", status=QualityCheckStatus.PASS),)
+            if quality_checks is None
+            else quality_checks
+        ),
         change_surface_status=ChangeSurfaceStatus.WITHIN_DECLARED,
         risk_status=RiskStatus.CLEAR,
         toolchain_change_status=ToolchainChangeStatus.NONE,
         findings=("The authored result satisfies its acceptance criteria.",),
         summary="Manual evaluation of the exact result commit.",
-        expected_lifecycle_revision=3,
+        expected_lifecycle_revision=lifecycle.revision,
         expected_slice_definition_revision=1,
         expected_result_id=result.result_id,
         expected_current_evaluation_id=expected_eval_id,
@@ -603,6 +681,86 @@ def test_result_attachment_inherits_decisions_and_creates_no_evaluation(tmp_path
         database.close()
 
 
+def test_result_attachment_exact_retry_is_idempotent_but_new_identity_supersedes(
+    tmp_path: Path,
+) -> None:
+    database, lifecycle, _gate_value, _prior, _source = _seed(
+        tmp_path / "attach-result-retry.sqlite"
+    )
+    resolver = _BaselineResolver(database)
+    try:
+        original = _attach(database, lifecycle, resolver)
+        original_count = database.connection.execute(
+            "SELECT count(*) FROM slice_results"
+        ).fetchone()[0]
+
+        retried = attach_result(
+            database,
+            SLICE_ID,
+            repository_baseline_service=resolver,
+            selection=_selection(),
+            selector=RepositoryRevisionSelector(
+                kind=RepositoryRevisionKind.COMMIT_SHA, value=RESULT_SHA
+            ),
+            result_id=original.result_id,
+            result_baseline_id=original.result_baseline_id,
+            expected_lifecycle_revision=original.lifecycle_revision,
+            expected_slice_definition_revision=original.slice_definition_revision,
+            expected_current_result_id=original.supersedes_result_id,
+            recorded_by=original.recorded_by,
+            recorded_at=original.recorded_at,
+            reason=original.reason,
+        )
+        assert retried == original
+        assert (
+            database.connection.execute("SELECT count(*) FROM slice_results").fetchone()[0]
+            == original_count
+        )
+        with pytest.raises(ManualEvaluationConflict):
+            attach_result(
+                database,
+                SLICE_ID,
+                repository_baseline_service=resolver,
+                selection=_selection(),
+                selector=RepositoryRevisionSelector(
+                    kind=RepositoryRevisionKind.COMMIT_SHA, value=RESULT_SHA
+                ),
+                result_id=original.result_id,
+                result_baseline_id=original.result_baseline_id,
+                expected_lifecycle_revision=original.lifecycle_revision,
+                expected_slice_definition_revision=original.slice_definition_revision,
+                expected_current_result_id=original.supersedes_result_id,
+                recorded_by=original.recorded_by,
+                recorded_at=original.recorded_at,
+                reason="Conflicting attachment provenance.",
+            )
+
+        next_resolver = _BaselineResolver(
+            database,
+            result_sha="d" * 40,
+            artifact_id=cast(ArtifactId, new_id("art_")),
+        )
+        successor = _attach(
+            database,
+            lifecycle,
+            next_resolver,
+            result_id=cast(SliceResultId, new_id("res_")),
+            result_baseline_id=cast(BaselineId, new_id("base_")),
+            expected_current_result_id=original.result_id,
+            recorded_at=NOW + timedelta(seconds=11),
+            reason="Attach a genuinely new result command.",
+        )
+        assert successor.result_id != original.result_id
+        assert successor.supersedes_result_id == original.result_id
+        with read_transaction(database) as connection:
+            assert load_slice_result_history_from_connection(connection, SLICE_ID) == (
+                original,
+                successor,
+            )
+    finally:
+        database.close()
+
+
 def test_pending_result_invalidates_gate_action_basis_until_authored_evaluation(
     tmp_path: Path,
 ) -> None:
@@ -752,6 +910,12 @@ def test_evaluation_human_approval_and_accepted_execution_are_causal(tmp_path: P
         assert second_approval.context.human_decisions[0].decision_id != current_approval
 
         promotion_basis = _basis(database)
+        promotion_gate_evaluation_id = cast(GateEvaluationRecordId, new_id("geval_"))
+        promotion_gate_evaluation_at = NOW + timedelta(seconds=21)
+        promotion_execution_id = new_id("exec_")
+        promotion_event_id = new_id("evt_")
+        promotion_time = NOW + timedelta(seconds=22)
+        promotion_reason = "Execute the exact green ACCEPTED gate."
         accepted = promote_accepted_result(
             database,
             SLICE_ID,
@@ -763,12 +927,12 @@ def test_evaluation_human_approval_and_accepted_execution_are_causal(tmp_path: P
                 0
             ].decision_id,
             actor=ACTOR,
-            reason="Execute the exact green ACCEPTED gate.",
-            gate_evaluation_record_id=new_id("geval_"),
-            gate_evaluation_recorded_at=NOW + timedelta(seconds=21),
-            execution_id=new_id("exec_"),
-            event_id=new_id("evt_"),
-            occurred_at=NOW + timedelta(seconds=22),
+            reason=promotion_reason,
+            gate_evaluation_record_id=promotion_gate_evaluation_id,
+            gate_evaluation_recorded_at=promotion_gate_evaluation_at,
+            execution_id=promotion_execution_id,
+            event_id=promotion_event_id,
+            occurred_at=promotion_time,
         )
         assert accepted.result_id == result.result_id
         assert accepted.manual_evaluation_id == second_id
@@ -782,6 +946,41 @@ def test_evaluation_human_approval_and_accepted_execution_are_causal(tmp_path: P
             load_gate_evaluation_records(database)[-1].id == executions[0].gate_evaluation_record_id
         )
         assert load_gate_evaluation_records(database)[-1].context.manual_evaluation_id == second_id
+
+        committed_counts = (
+            database.connection.execute("SELECT count(*) FROM executions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM lifecycle_events").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        )
+        exact_retry = promote_accepted_result(
+            database,
+            SLICE_ID,
+            GATE_ID,
+            promotion_basis,
+            expected_result_id=result.result_id,
+            expected_manual_evaluation_id=second_id,
+            expected_current_approval_decision_id=second_approval.context.human_decisions[
+                0
+            ].decision_id,
+            actor=ACTOR,
+            reason=promotion_reason,
+            gate_evaluation_record_id=promotion_gate_evaluation_id,
+            gate_evaluation_recorded_at=promotion_gate_evaluation_at,
+            execution_id=promotion_execution_id,
+            event_id=promotion_event_id,
+            occurred_at=promotion_time,
+        )
+        assert exact_retry == accepted
+        assert (
+            database.connection.execute("SELECT count(*) FROM executions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM lifecycle_events").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        ) == committed_counts
+
         with pytest.raises(ManualEvaluationConflict):
             promote_accepted_result(
                 database,
@@ -794,13 +993,396 @@ def test_evaluation_human_approval_and_accepted_execution_are_causal(tmp_path: P
                     0
                 ].decision_id,
                 actor=ACTOR,
-                reason="A retry with the old basis must not re-execute.",
+                reason=promotion_reason,
                 gate_evaluation_record_id=new_id("geval_"),
                 gate_evaluation_recorded_at=NOW + timedelta(seconds=23),
                 execution_id=new_id("exec_"),
                 event_id=new_id("evt_"),
                 occurred_at=NOW + timedelta(seconds=24),
             )
+        with pytest.raises(ManualEvaluationConflict):
+            promote_accepted_result(
+                database,
+                SLICE_ID,
+                GATE_ID,
+                promotion_basis,
+                expected_result_id=result.result_id,
+                expected_manual_evaluation_id=cast(ManualEvaluationId, new_id("eval_")),
+                expected_current_approval_decision_id=second_approval.context.human_decisions[
+                    0
+                ].decision_id,
+                actor=ACTOR,
+                reason=promotion_reason,
+                gate_evaluation_record_id=promotion_gate_evaluation_id,
+                gate_evaluation_recorded_at=promotion_gate_evaluation_at,
+                execution_id=promotion_execution_id,
+                event_id=promotion_event_id,
+                occurred_at=promotion_time,
+            )
+        with pytest.raises(ManualEvaluationConflict):
+            promote_accepted_result(
+                database,
+                SLICE_ID,
+                GATE_ID,
+                promotion_basis,
+                expected_result_id=cast(SliceResultId, new_id("res_")),
+                expected_manual_evaluation_id=second_id,
+                expected_current_approval_decision_id=second_approval.context.human_decisions[
+                    0
+                ].decision_id,
+                actor=ACTOR,
+                reason=promotion_reason,
+                gate_evaluation_record_id=promotion_gate_evaluation_id,
+                gate_evaluation_recorded_at=promotion_gate_evaluation_at,
+                execution_id=promotion_execution_id,
+                event_id=promotion_event_id,
+                occurred_at=promotion_time,
+            )
+    finally:
+        database.close()
+
+
+def test_technical_decision_retry_requires_exact_durable_identity_and_payload(
+    tmp_path: Path,
+) -> None:
+    database, lifecycle, _gate_value, _prior, _source = _seed(
+        tmp_path / "technical-decision-retry.sqlite"
+    )
+    resolver = _BaselineResolver(database)
+    try:
+        _attach(database, lifecycle, resolver)
+        first_id = cast(
+            ManualEvaluationId,
+            new_id("eval_"),
+        )
+        _evaluation_inputs(
+            database,
+            evaluation_id=first_id,
+            evaluated_at=NOW + timedelta(seconds=12),
+            expected_eval_id=None,
+            expected_gate_id=None,
+        )
+        basis = _basis(database)
+        decision_id = cast(HumanDecisionId, new_id("hdec_"))
+        occurred_at = NOW + timedelta(seconds=14)
+        successor_id = cast(GateEvaluationRecordId, new_id("geval_"))
+        successor_at = NOW + timedelta(seconds=15)
+
+        def decide(
+            submitted_basis: HumanActionBasis,
+            submitted_decision_id: HumanDecisionId,
+            expected_current_id: HumanDecisionId | None,
+            command_reason: str,
+            command_time: datetime,
+            observation_id: GateEvaluationRecordId,
+            observation_time: datetime,
+        ):
+            return record_technical_acceptance(
+                database,
+                SLICE_ID,
+                GATE_ID,
+                submitted_basis,
+                expected_result_id=cast(SliceResultId, basis.current_result_id),
+                expected_manual_evaluation_id=first_id,
+                expected_current_approval_decision_id=expected_current_id,
+                actor=ACTOR,
+                reason=command_reason,
+                decision_id=submitted_decision_id,
+                occurred_at=command_time,
+                successor_gate_evaluation_record_id=observation_id,
+                successor_gate_evaluation_recorded_at=observation_time,
+            )
+
+        first = decide(
+            basis,
+            decision_id,
+            None,
+            "Approve this exact authored evaluation.",
+            occurred_at,
+            successor_id,
+            successor_at,
+        )
+        counts_after_first = (
+            database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        )
+        exact_retry = decide(
+            basis,
+            decision_id,
+            None,
+            "Approve this exact authored evaluation.",
+            occurred_at,
+            successor_id,
+            successor_at,
+        )
+        assert exact_retry == first
+        assert (
+            database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0],
+            database.connection.execute("SELECT count(*) FROM gate_evaluation_records").fetchone()[
+                0
+            ],
+        ) == counts_after_first
+
+        with pytest.raises(ManualEvaluationConflict):
+            decide(
+                basis,
+                decision_id,
+                None,
+                "Same ID with conflicting reason.",
+                occurred_at,
+                successor_id,
+                successor_at,
+            )
+
+        current_basis = _basis(database)
+        next_decision_id = cast(HumanDecisionId, new_id("hdec_"))
+        new_decision = decide(
+            current_basis,
+            next_decision_id,
+            decision_id,
+            "Record a distinct Human decision identity.",
+            NOW + timedelta(seconds=16),
+            cast(GateEvaluationRecordId, new_id("geval_")),
+            NOW + timedelta(seconds=17),
+        )
+        assert new_decision.context.human_decisions[0].decision_id == next_decision_id
+        assert (
+            database.connection.execute("SELECT count(*) FROM human_decisions").fetchone()[0] == 2
+        )
+    finally:
+        database.close()
+
+
+def test_rework_cycle_uses_governed_gates_and_preserves_result_lineage(
+    tmp_path: Path,
+) -> None:
+    database, _initial_lifecycle, _gate_value, _prior, _source = _seed(
+        tmp_path / "rework-cycle.sqlite",
+        gate_value=_rework_gate(),
+        additional_gates=(_reentry_gate(),),
+    )
+    resolver_a = _BaselineResolver(database)
+    try:
+        lifecycle = load_current_lifecycle(database, SLICE_ID)
+        assert lifecycle is not None
+        result_a = _attach(database, lifecycle, resolver_a)
+
+        first_evaluation = _evaluation_inputs(
+            database,
+            evaluation_id=cast(ManualEvaluationId, new_id("eval_")),
+            evaluated_at=NOW + timedelta(seconds=12),
+            expected_eval_id=None,
+            expected_gate_id=None,
+            outcome=EvaluationOutcome.REWORK,
+        )
+        first_record = load_manual_evaluation_history_from_connection(
+            database.connection, SLICE_ID
+        )[-1]
+        assert first_record.result_id == result_a.result_id
+        assert first_record.outcome is EvaluationOutcome.REWORK
+        after_first_evaluation = load_current_lifecycle(database, SLICE_ID)
+        assert after_first_evaluation == lifecycle
+        first_gate_result = next(
+            item for item in first_evaluation.evaluations if item.gate_id == REWORK_GATE_ID
+        )
+        assert first_gate_result.light is TrafficLight.RED
+
+        with pytest.raises(HumanActionNotAvailable):
+            advance_green_handover(
+                database,
+                SLICE_ID,
+                REWORK_GATE_ID,
+                _basis(database),
+                ACTOR,
+                "A red REWORK gate cannot execute.",
+                evaluation_record_id=new_id("geval_"),
+                evaluation_recorded_at=NOW + timedelta(seconds=14),
+                execution_id=new_id("exec_"),
+                event_id=new_id("evt_"),
+                occurred_at=NOW + timedelta(seconds=15),
+            )
+        assert load_execution_records(database) == ()
+
+        with pytest.raises(ManualEvaluationNotAvailable):
+            _attach(
+                database,
+                lifecycle,
+                _BaselineResolver(
+                    database,
+                    result_sha="d" * 40,
+                    artifact_id=cast(ArtifactId, new_id("art_")),
+                ),
+                result_id=cast(SliceResultId, new_id("res_")),
+                result_baseline_id=cast(BaselineId, new_id("base_")),
+                expected_current_result_id=result_a.result_id,
+                recorded_at=NOW + timedelta(seconds=15),
+                reason="An evaluated result cannot be replaced in the same attempt.",
+            )
+
+        second_evaluation = _evaluation_inputs(
+            database,
+            evaluation_id=cast(ManualEvaluationId, new_id("eval_")),
+            evaluated_at=NOW + timedelta(seconds=16),
+            expected_eval_id=first_record.evaluation_id,
+            expected_gate_id=first_evaluation.id,
+            outcome=EvaluationOutcome.REWORK,
+            quality_checks=(
+                QualityCheckResult(key="rework-check", status=QualityCheckStatus.PASS),
+                QualityCheckResult(key="tests", status=QualityCheckStatus.PASS),
+            ),
+        )
+        second_gate_result = next(
+            item for item in second_evaluation.evaluations if item.gate_id == REWORK_GATE_ID
+        )
+        assert second_gate_result.light is TrafficLight.YELLOW
+        with pytest.raises(HumanActionNotAvailable):
+            advance_green_handover(
+                database,
+                SLICE_ID,
+                REWORK_GATE_ID,
+                _basis(database),
+                ACTOR,
+                "A yellow REWORK gate cannot execute.",
+                evaluation_record_id=new_id("geval_"),
+                evaluation_recorded_at=NOW + timedelta(seconds=18),
+                execution_id=new_id("exec_"),
+                event_id=new_id("evt_"),
+                occurred_at=NOW + timedelta(seconds=19),
+            )
+        assert load_execution_records(database) == ()
+
+        approved_rework = record_gate_approval(
+            database,
+            SLICE_ID,
+            REWORK_GATE_ID,
+            _basis(database),
+            None,
+            ACTOR,
+            "Approve the governed rework handover.",
+            decision_id=new_id("hdec_"),
+            occurred_at=NOW + timedelta(seconds=18),
+            successor_evaluation_record_id=new_id("geval_"),
+            successor_evaluation_recorded_at=NOW + timedelta(seconds=19),
+        )
+        assert (
+            next(
+                item for item in approved_rework.evaluations if item.gate_id == REWORK_GATE_ID
+            ).light
+            is TrafficLight.GREEN
+        )
+
+        first_execution = advance_green_handover(
+            database,
+            SLICE_ID,
+            REWORK_GATE_ID,
+            _basis(database),
+            ACTOR,
+            "Execute the green EVALUATING to REWORK handover.",
+            evaluation_record_id=new_id("geval_"),
+            evaluation_recorded_at=NOW + timedelta(seconds=20),
+            execution_id=new_id("exec_"),
+            event_id=new_id("evt_"),
+            occurred_at=NOW + timedelta(seconds=21),
+        )
+        rework_lifecycle = load_current_lifecycle(database, SLICE_ID)
+        assert rework_lifecycle is not None
+        assert rework_lifecycle.phase is LifecyclePhase.REWORK
+        assert first_execution.resulting_lifecycle_revision == rework_lifecycle.revision
+        assert load_slice_result_history_from_connection(database.connection, SLICE_ID) == (
+            result_a,
+        )
+        rework_evaluations = load_manual_evaluation_history_from_connection(
+            database.connection, SLICE_ID
+        )
+        assert len(rework_evaluations) == 2
+        assert rework_evaluations[0] == first_record
+        assert rework_evaluations[1].result_id == result_a.result_id
+        assert rework_evaluations[1].lifecycle_revision == lifecycle.revision
+        assert rework_evaluations[1].supersedes_evaluation_id == first_record.evaluation_id
+        assert rework_evaluations[1].outcome is EvaluationOutcome.REWORK
+
+        with write_transaction(database) as connection:
+            latest = load_gate_evaluation_records(database)[-1]
+            current_lifecycle = load_current_lifecycle_from_connection(connection, SLICE_ID)
+            assert current_lifecycle is not None
+            reentry_gates = current_gates(
+                load_handover_gates_for_slice_from_connection(connection, SLICE_ID),
+                current_lifecycle,
+            )
+            assert tuple(item.gate_id for item in reentry_gates) == (REENTRY_GATE_ID,)
+            reentry_context = HandoverContext(
+                baseline_id=SOURCE_BASELINE_ID,
+                governance_revision=latest.context.governance_revision,
+                lifecycle=current_lifecycle,
+                change_surface_status=ChangeSurfaceStatus.WITHIN_DECLARED,
+                risk_status=RiskStatus.CLEAR,
+                toolchain_change_status=ToolchainChangeStatus.NONE,
+            )
+            reentry_observation = record_successor_observation(
+                connection,
+                reentry_gates,
+                reentry_context,
+                cast(GateEvaluationRecordId, new_id("geval_")),
+                NOW + timedelta(seconds=22),
+            )
+        assert (
+            next(
+                item for item in reentry_observation.evaluations if item.gate_id == REENTRY_GATE_ID
+            ).light
+            is TrafficLight.GREEN
+        )
+
+        reentry_execution = advance_green_handover(
+            database,
+            SLICE_ID,
+            REENTRY_GATE_ID,
+            _basis(database),
+            ACTOR,
+            "Execute the normal governed REWORK to EVALUATING handover.",
+            evaluation_record_id=new_id("geval_"),
+            evaluation_recorded_at=NOW + timedelta(seconds=23),
+            execution_id=new_id("exec_"),
+            event_id=new_id("evt_"),
+            occurred_at=NOW + timedelta(seconds=24),
+        )
+        next_attempt = load_current_lifecycle(database, SLICE_ID)
+        assert next_attempt is not None
+        assert next_attempt.phase is LifecyclePhase.EVALUATING
+        assert next_attempt.revision > lifecycle.revision
+        assert reentry_execution.resulting_lifecycle_revision == next_attempt.revision
+
+        resolver_b = _BaselineResolver(
+            database,
+            result_sha="e" * 40,
+            artifact_id=cast(ArtifactId, new_id("art_")),
+        )
+        result_b = _attach(
+            database,
+            next_attempt,
+            resolver_b,
+            result_id=cast(SliceResultId, new_id("res_")),
+            result_baseline_id=cast(BaselineId, new_id("base_")),
+            expected_current_result_id=None,
+            recorded_at=NOW + timedelta(seconds=25),
+            reason="Attach the successor result after governed re-entry.",
+        )
+        assert result_b.supersedes_result_id == result_a.result_id
+        with read_transaction(database) as connection:
+            result_history = load_slice_result_history_from_connection(connection, SLICE_ID)
+            evaluation_history = load_manual_evaluation_history_from_connection(
+                connection, SLICE_ID
+            )
+        assert result_history == (result_a, result_b)
+        assert tuple(item.result_id for item in evaluation_history) == (
+            result_a.result_id,
+            result_a.result_id,
+        )
+        memory = project_development_memory(database, SLICE_ID)
+        assert memory is not None
+        assert memory.result_history == result_history
+        assert memory.evaluation_history == evaluation_history
     finally:
         database.close()
 

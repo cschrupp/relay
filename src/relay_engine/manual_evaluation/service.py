@@ -29,13 +29,15 @@ from relay_engine.governance.models import (
     HandoverGate,
     HumanApprovalDecision,
     HumanApprovalValue,
+    HumanChoiceDecision,
     QualityCheckResult,
     RiskStatus,
     ToolchainChangeStatus,
     TrafficLight,
 )
-from relay_engine.human_control.models import HumanActionBasis
+from relay_engine.human_control.models import HumanActionBasis, HumanApprovalIdentity
 from relay_engine.human_control.service import (
+    HumanControlSnapshot,
     basis_if_current,
     current_gates,
     gate_refs_for_gates,
@@ -96,6 +98,7 @@ from relay_engine.persistence.database import write_transaction
 from relay_engine.persistence.records import ExecutionRecord
 from relay_engine.project_slice import get_slice, list_slices
 from relay_engine.repository_baseline.models import (
+    RepositoryRevisionKind,
     RepositoryRevisionSelector,
     ResolvedBaselineResult,
 )
@@ -198,6 +201,54 @@ def _validate_result_authority(
     return source, result
 
 
+def _basis_matches_gate_observation(
+    basis: HumanActionBasis, observation: GateEvaluationRecord
+) -> bool:
+    """Prove a submitted form basis identifies one exact durable observation."""
+
+    context = observation.context
+    approvals = tuple(
+        HumanApprovalIdentity(gate_id=item.gate_id, decision_id=item.decision_id)
+        for item in context.human_decisions
+        if isinstance(item, HumanApprovalDecision)
+    )
+    choice = next(
+        (item for item in context.human_decisions if isinstance(item, HumanChoiceDecision)), None
+    )
+    expected = HumanActionBasis(
+        evaluation_record_id=observation.id,
+        slice_id=context.lifecycle.slice_id,
+        baseline_id=context.baseline_id,
+        lifecycle_revision=context.lifecycle.revision,
+        governance_revision=context.governance_revision,
+        gate_refs=observation.gate_refs,
+        current_approval_decision_ids=approvals,
+        current_choice_decision_id=None if choice is None else choice.decision_id,
+        current_result_id=context.result_id,
+        current_result_baseline_id=context.result_baseline_id,
+        current_manual_evaluation_id=context.manual_evaluation_id,
+    )
+    return basis == expected
+
+
+def _observations_are_adjacent(
+    observations: tuple[GateEvaluationRecord, ...],
+    predecessor: GateEvaluationRecord,
+    successor: GateEvaluationRecord,
+) -> bool:
+    predecessor_index = next(
+        (index for index, item in enumerate(observations) if item.id == predecessor.id), None
+    )
+    successor_index = next(
+        (index for index, item in enumerate(observations) if item.id == successor.id), None
+    )
+    return (
+        predecessor_index is not None
+        and successor_index is not None
+        and successor_index == predecessor_index + 1
+    )
+
+
 def attach_result(
     database: RelayDatabase,
     slice_id: SliceId,
@@ -244,6 +295,35 @@ def attach_result(
         history, current, current_evaluation = _current_attempt_result(
             connection, slice_id, lifecycle
         )
+        existing = next((item for item in history if item.result_id == result_id), None)
+        if existing is not None:
+            if selection.project_id != snapshot.value.project_id:
+                raise ManualEvaluationConflict("result retry selection changed Project")
+            if selection.repository != source_baseline.commit.repository:
+                raise ManualEvaluationConflict("result retry selection changed repository")
+            if current is None or current.result_id != existing.result_id:
+                raise ManualEvaluationConflict("result identity is no longer the current result")
+            if existing != SliceResultRecord(
+                result_id=result_id,
+                slice_id=slice_id,
+                slice_definition_revision=expected_slice_definition_revision,
+                source_baseline_id=source_id,
+                result_baseline_id=result_baseline_id,
+                lifecycle_revision=expected_lifecycle_revision,
+                supersedes_result_id=expected_current_result_id,
+                recorded_by=recorded_by,
+                recorded_at=recorded_at,
+                reason=reason,
+            ):
+                raise ManualEvaluationConflict("result ID is bound to different command content")
+            _, existing_baseline = _validate_result_authority(connection, existing, snapshot.value)
+            if existing_baseline.id != result_baseline_id or (
+                selector.kind is RepositoryRevisionKind.COMMIT_SHA
+                and selector.value != existing_baseline.commit.sha
+            ):
+                raise ManualEvaluationConflict("result retry does not match its exact Baseline")
+            return existing
+
         actual_current_id = None if current is None else current.result_id
         if actual_current_id != expected_current_result_id:
             raise ManualEvaluationStale("current result changed since attachment form was rendered")
@@ -591,6 +671,105 @@ def record_manual_evaluation(
         )
 
 
+def _exact_technical_decision_retry(
+    connection: sqlite3.Connection,
+    snapshot: HumanControlSnapshot,
+    basis: HumanActionBasis,
+    decision: HumanApprovalDecision,
+    expected_current_approval_decision_id: HumanDecisionId | None,
+    successor_gate_evaluation_record_id: GateEvaluationRecordId,
+    successor_gate_evaluation_recorded_at: datetime,
+) -> GateEvaluationRecord:
+    """Return a durable successor only for an exact, still-current command replay."""
+
+    lifecycle = snapshot.lifecycle
+    latest = snapshot.latest
+    gates = snapshot.gates
+    if lifecycle is None or lifecycle.phase is not LifecyclePhase.EVALUATING or latest is None:
+        raise ManualEvaluationConflict("technical decision retry is no longer current")
+    observations = load_gate_evaluation_records_for_slice_from_connection(
+        connection, decision.slice_id
+    )
+    predecessor = next(
+        (item for item in observations if item.id == basis.evaluation_record_id), None
+    )
+    successor = next(
+        (item for item in observations if item.id == successor_gate_evaluation_record_id), None
+    )
+    if (
+        predecessor is None
+        or successor is None
+        or latest.id != successor.id
+        or not _observations_are_adjacent(observations, predecessor, successor)
+        or not _basis_matches_gate_observation(basis, predecessor)
+    ):
+        raise ManualEvaluationConflict("technical decision retry does not match its exact basis")
+    submitted_current = next(
+        (
+            item.decision_id
+            for item in basis.current_approval_decision_ids
+            if item.gate_id == decision.gate_id
+        ),
+        None,
+    )
+    if submitted_current != expected_current_approval_decision_id:
+        raise ManualEvaluationConflict(
+            "technical decision retry changed its compare-and-swap basis"
+        )
+    gate = next((item for item in gates if item.gate_id == decision.gate_id), None)
+    if (
+        gate is None
+        or gate.target_phase is not LifecyclePhase.ACCEPTED
+        or decision.baseline_id != gate.baseline_id
+        or decision.gate_revision != gate.revision
+        or decision.lifecycle_revision != lifecycle.revision
+        or decision.governance_revision != predecessor.context.governance_revision
+        or decision.slice_id != lifecycle.slice_id
+    ):
+        raise ManualEvaluationConflict("technical decision retry is bound to another gate basis")
+    current_result = snapshot.current_result
+    current_evaluation = snapshot.current_manual_evaluation
+    if (
+        current_result is None
+        or current_evaluation is None
+        or current_result.result_id != basis.current_result_id
+        or current_result.result_baseline_id != basis.current_result_baseline_id
+        or current_evaluation.evaluation_id != basis.current_manual_evaluation_id
+        or current_result.result_id != successor.context.result_id
+        or current_result.result_baseline_id != successor.context.result_baseline_id
+        or current_evaluation.evaluation_id != successor.context.manual_evaluation_id
+    ):
+        raise ManualEvaluationConflict("technical decision retry subject is no longer current")
+    projected = project_decisions(snapshot.decisions, gates)
+    current = next(
+        (
+            item
+            for item in projected
+            if isinstance(item, HumanApprovalDecision) and item.gate_id == decision.gate_id
+        ),
+        None,
+    )
+    if current != decision:
+        raise ManualEvaluationConflict("technical decision is no longer the current decision")
+    expected_context = successor_context(
+        predecessor,
+        lifecycle,
+        gates,
+        project_authorizations(snapshot.grants, gates),
+        projected,
+    )
+    if (
+        successor.context != expected_context
+        or successor.recorded_at != successor_gate_evaluation_recorded_at.astimezone(UTC)
+        or successor.gate_refs != gate_refs_for_gates(gates)
+        or evaluate_handover_gates(gates, successor.context) != successor.evaluations
+    ):
+        raise ManualEvaluationConflict(
+            "technical decision retry successor differs from durable state"
+        )
+    return successor
+
+
 def _record_technical_decision(
     database: RelayDatabase,
     slice_id: SliceId,
@@ -620,9 +799,42 @@ def _record_technical_decision(
         or successor_gate_evaluation_recorded_at.utcoffset() is None
     ):
         raise ManualEvaluationInvalid("successor observation time must be timezone-aware")
+    basis_gate = next((item for item in basis.gate_refs if item.gate_id == gate_id), None)
+    if basis_gate is None:
+        raise ManualEvaluationStale("technical decision gate is absent from its submitted basis")
+    submitted_decision = HumanApprovalDecision(
+        decision_id=decision_id,
+        slice_id=slice_id,
+        baseline_id=basis.baseline_id,
+        gate_id=gate_id,
+        gate_revision=basis_gate.gate_revision,
+        lifecycle_revision=basis.lifecycle_revision,
+        governance_revision=basis.governance_revision,
+        actor=actor,
+        occurred_at=occurred_at,
+        decision=decision,
+        reason=reason,
+    )
 
     with _manual_write(database) as connection:
         snapshot = load_human_control_snapshot(connection, slice_id)
+        existing_identity = next(
+            (item for item in snapshot.decisions if item.decision_id == decision_id), None
+        )
+        if existing_identity is not None:
+            if existing_identity != submitted_decision:
+                raise ManualEvaluationConflict(
+                    "technical decision ID is already bound to different payload"
+                )
+            return _exact_technical_decision_retry(
+                connection,
+                snapshot,
+                basis,
+                submitted_decision,
+                expected_current_approval_decision_id,
+                successor_gate_evaluation_record_id,
+                successor_gate_evaluation_recorded_at,
+            )
         lifecycle, gates, latest = validate_human_action_basis(snapshot, basis)
         current_result = snapshot.current_result
         current_evaluation = snapshot.current_manual_evaluation
@@ -655,15 +867,6 @@ def _record_technical_decision(
         actual_id = None if current is None else current.decision_id
         if actual_id != expected_current_approval_decision_id:
             raise ManualEvaluationConflict("technical decision changed since the form was rendered")
-        if (
-            current is not None
-            and current.decision is decision
-            and current.baseline_id == gate.baseline_id
-            and current.gate_revision == gate.revision
-            and current.lifecycle_revision == lifecycle.revision
-            and current.governance_revision == latest.context.governance_revision
-        ):
-            return latest
 
         source_id = _common_baseline(gates)
         if source_id != current_result.source_baseline_id:
@@ -1002,6 +1205,112 @@ def _accepted_results_from_connection(
     return tuple(accepted)
 
 
+def _exact_accepted_promotion_retry(
+    database: RelayDatabase,
+    connection: sqlite3.Connection,
+    slice_id: SliceId,
+    gate_id: HandoverGateId,
+    basis: HumanActionBasis,
+    *,
+    expected_result_id: SliceResultId,
+    expected_manual_evaluation_id: ManualEvaluationId,
+    expected_current_approval_decision_id: HumanDecisionId,
+    actor: ActorRef,
+    reason: str,
+    gate_evaluation_record_id: GateEvaluationRecordId,
+    gate_evaluation_recorded_at: datetime,
+    execution_id: ExecutionId,
+    event_id: EventId,
+    occurred_at: datetime,
+) -> AcceptedSliceResult:
+    """Return an already-committed promotion only when every durable identity matches."""
+
+    lifecycle = load_current_lifecycle_from_connection(connection, slice_id)
+    if lifecycle is None or lifecycle.phase is not LifecyclePhase.ACCEPTED:
+        raise ManualEvaluationConflict("accepted promotion retry has no ACCEPTED target state")
+    accepted = _accepted_results_from_connection(database, connection, slice_id)
+    matching = tuple(
+        item
+        for item in accepted
+        if item.result_id == expected_result_id
+        and item.manual_evaluation_id == expected_manual_evaluation_id
+        and item.accepted_execution_id == execution_id
+    )
+    if len(matching) != 1:
+        raise ManualEvaluationConflict("accepted target state has another promotion identity")
+    projection = matching[0]
+    executions = load_execution_records_for_slice_from_connection(connection, slice_id)
+    execution = next((item for item in executions if item.execution_id == execution_id), None)
+    observations = load_gate_evaluation_records_for_slice_from_connection(connection, slice_id)
+    promotion_observation = next(
+        (item for item in observations if item.id == gate_evaluation_record_id), None
+    )
+    predecessor = next(
+        (item for item in observations if item.id == basis.evaluation_record_id), None
+    )
+    events = load_lifecycle_events(database, slice_id)
+    event = next((item for item in events if item.event_id == event_id), None)
+    current_accepted_events = tuple(
+        item
+        for item in events
+        if isinstance(item, PhaseChanged)
+        and item.to_phase is LifecyclePhase.ACCEPTED
+        and item.resulting_revision == lifecycle.revision
+    )
+    approval_for_gate = next(
+        (
+            item.decision_id
+            for item in basis.current_approval_decision_ids
+            if item.gate_id == gate_id
+        ),
+        None,
+    )
+    exact = (
+        execution is not None
+        and promotion_observation is not None
+        and predecessor is not None
+        and isinstance(event, PhaseChanged)
+        and len(current_accepted_events) == 1
+        and current_accepted_events[0].event_id == event_id
+        and _basis_matches_gate_observation(basis, predecessor)
+        and _observations_are_adjacent(observations, predecessor, promotion_observation)
+        and promotion_observation.context == predecessor.context
+        and promotion_observation.gate_refs == predecessor.gate_refs
+        and promotion_observation.recorded_at == gate_evaluation_recorded_at.astimezone(UTC)
+        and projection.human_approval_decision_id == expected_current_approval_decision_id
+        and approval_for_gate == expected_current_approval_decision_id
+        and basis.current_result_id == expected_result_id
+        and basis.current_manual_evaluation_id == expected_manual_evaluation_id
+        and execution.gate_evaluation_record_id == gate_evaluation_record_id
+        and execution.event_id == event_id
+        and execution.selected_gate_id == gate_id
+        and execution.slice_id == slice_id
+        and execution.baseline_id == basis.baseline_id
+        and execution.source_lifecycle_revision == basis.lifecycle_revision
+        and execution.resulting_lifecycle_revision == lifecycle.revision
+        and execution.actor == actor
+        and execution.reason == reason
+        and execution.occurred_at == occurred_at.astimezone(UTC)
+        and event.to_phase is LifecyclePhase.ACCEPTED
+        and event.from_phase is LifecyclePhase.EVALUATING
+        and event.actor == actor
+        and event.reason == reason
+        and event.occurred_at == occurred_at.astimezone(UTC)
+        and execution.selected_gate_revision
+        == next(
+            (
+                reference.gate_revision
+                for reference in basis.gate_refs
+                if reference.gate_id == gate_id
+            ),
+            None,
+        )
+    )
+    if not exact:
+        raise ManualEvaluationConflict("accepted target state does not match the exact retry")
+    return projection
+
+
 def promote_accepted_result(
     database: RelayDatabase,
     slice_id: SliceId,
@@ -1027,8 +1336,29 @@ def promote_accepted_result(
     with _manual_write(database) as connection:
         lifecycle = load_current_lifecycle_from_connection(connection, slice_id)
         if lifecycle is not None and lifecycle.phase is LifecyclePhase.ACCEPTED:
-            raise ManualEvaluationConflict(
-                "Slice lifecycle already left EVALUATING; promotion basis is stale"
+            if (
+                gate_evaluation_recorded_at.tzinfo is None
+                or gate_evaluation_recorded_at.utcoffset() is None
+                or occurred_at.tzinfo is None
+                or occurred_at.utcoffset() is None
+            ):
+                raise ManualEvaluationInvalid("promotion timestamps must be timezone-aware")
+            return _exact_accepted_promotion_retry(
+                database,
+                connection,
+                slice_id,
+                gate_id,
+                basis,
+                expected_result_id=expected_result_id,
+                expected_manual_evaluation_id=expected_manual_evaluation_id,
+                expected_current_approval_decision_id=expected_current_approval_decision_id,
+                actor=actor,
+                reason=reason,
+                gate_evaluation_record_id=gate_evaluation_record_id,
+                gate_evaluation_recorded_at=gate_evaluation_recorded_at,
+                execution_id=execution_id,
+                event_id=event_id,
+                occurred_at=occurred_at,
             )
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle, gates, latest = validate_human_action_basis(snapshot, basis)
