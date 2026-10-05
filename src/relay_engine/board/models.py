@@ -21,6 +21,7 @@ from relay_engine.governance.models import (
 )
 from relay_engine.human_control.models import HumanActionProjection
 from relay_engine.lifecycle.models import LifecyclePhase, LifecycleValidity, SliceLifecycle
+from relay_engine.manual_evaluation.models import ManualEvaluationProjection
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
 
@@ -141,6 +142,9 @@ class SliceDetail(DomainModel):
     evaluation_baseline: Baseline | None
     relevant_execution_records: tuple[ExecutionRecord, ...]
     human_actions: HumanActionProjection = Field(default_factory=HumanActionProjection)
+    manual_evaluation: ManualEvaluationProjection = Field(
+        default_factory=ManualEvaluationProjection
+    )
 
 
 __all__ = [

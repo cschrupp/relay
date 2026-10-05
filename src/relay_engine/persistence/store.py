@@ -23,6 +23,7 @@ from relay_engine.domain.ids import (
     ProjectId,
     RepositoryMutationAuthorizationId,
     SliceId,
+    SliceResultId,
 )
 from relay_engine.domain.models import Artifact, Baseline, Decision, Evidence, Project, Slice
 from relay_engine.domain.references import ActorRef
@@ -46,6 +47,8 @@ from relay_engine.lifecycle import (
     replay_lifecycle,
 )
 from relay_engine.lifecycle.errors import LifecycleReplayError
+from relay_engine.lifecycle.models import LifecyclePhase
+from relay_engine.manual_evaluation.models import ManualEvaluationRecord, SliceResultRecord
 from relay_engine.persistence.database import RelayDatabase, write_transaction
 from relay_engine.persistence.errors import (
     ConcurrencyConflict,
@@ -268,6 +271,330 @@ def load_evidence(database: RelayDatabase, evidence_id: EvidenceId) -> Evidence 
             connection, "evidence", "id", evidence_id, Evidence, {"id": "id"}
         ),
     )
+
+
+def load_evidence_from_connection(
+    connection: sqlite3.Connection, evidence_id: EvidenceId
+) -> Evidence | None:
+    """Load and validate Evidence in a caller-owned transaction."""
+
+    return _read_one(connection, "evidence", "id", evidence_id, Evidence, {"id": "id"})
+
+
+def insert_evidence_from_connection(connection: sqlite3.Connection, value: Evidence) -> None:
+    """Insert one Evidence record without opening a nested transaction."""
+
+    _insert_payload(connection, "evidence", "id", value.id, value)
+
+
+def insert_slice_result_from_connection(
+    connection: sqlite3.Connection, value: SliceResultRecord
+) -> None:
+    """Append one Slice result inside a caller-owned transaction."""
+
+    _insert_payload(
+        connection,
+        "slice_results",
+        "result_id",
+        value.result_id,
+        value,
+        {
+            "slice_id": value.slice_id,
+            "source_baseline_id": value.source_baseline_id,
+            "result_baseline_id": value.result_baseline_id,
+            "lifecycle_revision": value.lifecycle_revision,
+            "supersedes_result_id": value.supersedes_result_id,
+        },
+    )
+
+
+def _linear_chain[RecordT: BaseModel](
+    records: tuple[RecordT, ...],
+    *,
+    identity: Callable[[RecordT], str],
+    parent: Callable[[RecordT], str | None],
+    label: str,
+) -> tuple[RecordT, ...]:
+    """Order an append-only supersession history by its explicit links."""
+
+    if not records:
+        return ()
+    by_id = {identity(item): item for item in records}
+    if len(by_id) != len(records):
+        raise PersistenceIntegrityError(f"{label} identities are not unique")
+    children: dict[str, str] = {}
+    roots: list[RecordT] = []
+    for item in records:
+        parent_id = parent(item)
+        if parent_id is None:
+            roots.append(item)
+            continue
+        if parent_id not in by_id:
+            raise PersistenceIntegrityError(f"{label} supersession parent is missing")
+        if parent_id in children:
+            raise PersistenceIntegrityError(f"{label} supersession chain forks")
+        children[parent_id] = identity(item)
+    if len(roots) != 1:
+        raise PersistenceIntegrityError(f"{label} history has no unique chain root")
+    ordered: list[RecordT] = []
+    visited: set[str] = set()
+    current = roots[0]
+    while True:
+        current_id = identity(current)
+        if current_id in visited:
+            raise PersistenceIntegrityError(f"{label} supersession chain is cyclic")
+        visited.add(current_id)
+        ordered.append(current)
+        successor_id = children.get(current_id)
+        if successor_id is None:
+            break
+        current = by_id[successor_id]
+    if len(visited) != len(records):
+        raise PersistenceIntegrityError(f"{label} history is disconnected or cyclic")
+    return tuple(ordered)
+
+
+def load_slice_result_history_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[SliceResultRecord, ...]:
+    """Load typed Slice result history and validate its explicit supersession chain."""
+
+    rows = connection.execute(
+        "SELECT * FROM slice_results WHERE slice_id = ? ORDER BY sequence, result_id",
+        (slice_id,),
+    ).fetchall()
+    records = tuple(
+        _parse_payload(
+            row,
+            SliceResultRecord,
+            {
+                "result_id": "result_id",
+                "slice_id": "slice_id",
+                "source_baseline_id": "source_baseline_id",
+                "result_baseline_id": "result_baseline_id",
+                "lifecycle_revision": "lifecycle_revision",
+                "supersedes_result_id": "supersedes_result_id",
+            },
+        )
+        for row in rows
+    )
+    slice_value = _read_one(
+        connection,
+        "slices",
+        "id",
+        slice_id,
+        Slice,
+        {"id": "id", "project_id": "project_id"},
+    )
+    if slice_value is None:
+        raise PersistenceIntegrityError("Slice result history references a missing Slice")
+    for record in records:
+        source = load_baseline_from_connection(connection, record.source_baseline_id)
+        result = load_baseline_from_connection(connection, record.result_baseline_id)
+        if source is None or result is None:
+            raise PersistenceIntegrityError("Slice result references a missing Baseline")
+        if (
+            record.slice_id != slice_id
+            or source.project_id != slice_value.project_id
+            or result.project_id != slice_value.project_id
+            or source.commit.repository != result.commit.repository
+            or source.decision_ids != result.decision_ids
+        ):
+            raise PersistenceIntegrityError(
+                "Slice result Baseline violates Project, repository, or Decision authority"
+            )
+    ordered = _linear_chain(
+        records,
+        identity=lambda item: item.result_id,
+        parent=lambda item: item.supersedes_result_id,
+        label="Slice result",
+    )
+    for previous, current in zip(ordered, ordered[1:], strict=False):
+        if current.lifecycle_revision < previous.lifecycle_revision:
+            raise PersistenceIntegrityError("Slice result lifecycle revisions regress")
+        if current.recorded_at < previous.recorded_at:
+            raise PersistenceIntegrityError("Slice result chronology regresses")
+        if current.lifecycle_revision == previous.lifecycle_revision:
+            evaluated = connection.execute(
+                "SELECT 1 FROM manual_evaluations WHERE result_id = ? LIMIT 1",
+                (previous.result_id,),
+            ).fetchone()
+            if evaluated is not None:
+                raise PersistenceIntegrityError(
+                    "an evaluated result was superseded in the same lifecycle attempt"
+                )
+    return ordered
+
+
+def insert_manual_evaluation_from_connection(
+    connection: sqlite3.Connection, value: ManualEvaluationRecord
+) -> None:
+    """Append one authored evaluation inside a caller-owned transaction."""
+
+    _insert_payload(
+        connection,
+        "manual_evaluations",
+        "evaluation_id",
+        value.evaluation_id,
+        value,
+        {
+            "slice_id": value.slice_id,
+            "result_id": value.result_id,
+            "result_baseline_id": value.result_baseline_id,
+            "lifecycle_revision": value.lifecycle_revision,
+            "supersedes_evaluation_id": value.supersedes_evaluation_id,
+        },
+    )
+
+
+def load_manual_evaluation_history_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[ManualEvaluationRecord, ...]:
+    """Load evaluator history, validate result/Evidence provenance, and follow its chains."""
+
+    results = load_slice_result_history_from_connection(connection, slice_id)
+    result_by_id = {item.result_id: item for item in results}
+    rows = connection.execute(
+        "SELECT * FROM manual_evaluations WHERE slice_id = ? ORDER BY sequence, evaluation_id",
+        (slice_id,),
+    ).fetchall()
+    gate_revisions = {
+        (gate.gate_id, gate.revision): gate
+        for gate in load_handover_gates_for_slice_from_connection(connection, slice_id)
+    }
+    records = tuple(
+        _parse_payload(
+            row,
+            ManualEvaluationRecord,
+            {
+                "evaluation_id": "evaluation_id",
+                "slice_id": "slice_id",
+                "result_id": "result_id",
+                "result_baseline_id": "result_baseline_id",
+                "lifecycle_revision": "lifecycle_revision",
+                "supersedes_evaluation_id": "supersedes_evaluation_id",
+            },
+        )
+        for row in rows
+    )
+    by_id = {item.evaluation_id: item for item in records}
+    if len(by_id) != len(records):
+        raise PersistenceIntegrityError("manual evaluation identities are not unique")
+    groups: dict[SliceResultId, list[ManualEvaluationRecord]] = {}
+    for record in records:
+        result = result_by_id.get(record.result_id)
+        if result is None:
+            raise PersistenceIntegrityError("manual evaluation references a missing result")
+        if (
+            record.slice_id != slice_id
+            or record.result_baseline_id != result.result_baseline_id
+            or record.source_baseline_id != result.source_baseline_id
+            or record.slice_definition_revision != result.slice_definition_revision
+            or record.lifecycle_revision != result.lifecycle_revision
+        ):
+            raise PersistenceIntegrityError("manual evaluation does not match its result subject")
+        if any(
+            (gate := gate_revisions.get((reference.gate_id, reference.gate_revision))) is None
+            or gate.slice_id != slice_id
+            or gate.baseline_id != record.source_baseline_id
+            for reference in record.gate_refs
+        ):
+            raise PersistenceIntegrityError(
+                "manual evaluation references a missing or mismatched gate revision"
+            )
+        result_baseline = load_baseline_from_connection(connection, result.result_baseline_id)
+        source_baseline = load_baseline_from_connection(connection, result.source_baseline_id)
+        if (
+            result_baseline is None
+            or source_baseline is None
+            or source_baseline.decision_ids != result_baseline.decision_ids
+        ):
+            raise PersistenceIntegrityError("manual evaluation Decision authority is inconsistent")
+        for evidence_id in record.evidence_ids:
+            evidence = load_evidence_from_connection(connection, evidence_id)
+            if (
+                evidence is None
+                or evidence.source_commit != result_baseline.commit
+                or evidence.recorded_at > record.evaluated_at
+            ):
+                raise PersistenceIntegrityError(
+                    "manual evaluation Evidence is missing, postdates evaluation, or belongs "
+                    "to another result commit"
+                )
+        if record.evaluated_at < result.recorded_at:
+            raise PersistenceIntegrityError("manual evaluation predates its exact result record")
+        if record.prior_gate_evaluation_record_id is not None:
+            prior = _read_one(
+                connection,
+                "gate_evaluation_records",
+                "record_id",
+                record.prior_gate_evaluation_record_id,
+                GateEvaluationRecord,
+                {
+                    "record_id": "id",
+                    "baseline_id": "context.baseline_id",
+                    "slice_id": "context.lifecycle.slice_id",
+                },
+            )
+            if prior is None or prior.context.lifecycle.slice_id != slice_id:
+                raise PersistenceIntegrityError(
+                    "manual evaluation references a missing or cross-Slice prior observation"
+                )
+        groups.setdefault(record.result_id, []).append(record)
+
+    ordered: list[ManualEvaluationRecord] = []
+    for result in results:
+        group = tuple(groups.get(result.result_id, ()))
+        chain = _linear_chain(
+            group,
+            identity=lambda item: item.evaluation_id,
+            parent=lambda item: item.supersedes_evaluation_id,
+            label="manual evaluation",
+        )
+        for previous, current in zip(chain, chain[1:], strict=False):
+            if (
+                current.lifecycle_revision != previous.lifecycle_revision
+                or current.evaluated_at < previous.evaluated_at
+            ):
+                raise PersistenceIntegrityError(
+                    "manual evaluation supersession crosses its lifecycle or regresses in time"
+                )
+        for record in chain:
+            parent = (
+                None
+                if record.supersedes_evaluation_id is None
+                else by_id.get(record.supersedes_evaluation_id)
+            )
+            if parent is not None and parent.result_id != record.result_id:
+                raise PersistenceIntegrityError("manual evaluation supersession crosses results")
+            ordered.append(record)
+    if len(ordered) != len(records):
+        raise PersistenceIntegrityError("manual evaluation history contains an unknown result")
+    return tuple(ordered)
+
+
+def load_slice_1_7_subject_from_connection(
+    connection: sqlite3.Connection, slice_id: SliceId
+) -> tuple[SliceResultRecord | None, ManualEvaluationRecord | None]:
+    """Return the explicit result/evaluation tails for the current EVALUATING attempt."""
+
+    lifecycle = load_current_lifecycle_from_connection(connection, slice_id)
+    if lifecycle is None or lifecycle.phase is not LifecyclePhase.EVALUATING:
+        return None, None
+    results = load_slice_result_history_from_connection(connection, slice_id)
+    if not results:
+        return None, None
+    result = results[-1]
+    if result.lifecycle_revision > lifecycle.revision:
+        raise PersistenceIntegrityError("Slice result is bound to a future lifecycle revision")
+    if result.lifecycle_revision != lifecycle.revision:
+        return None, None
+    evaluations = tuple(
+        item
+        for item in load_manual_evaluation_history_from_connection(connection, slice_id)
+        if item.result_id == result.result_id
+    )
+    return result, None if not evaluations else evaluations[-1]
 
 
 def _datetime_text(value: datetime) -> str:

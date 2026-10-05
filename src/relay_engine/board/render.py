@@ -1,5 +1,6 @@
 """Accessible server-rendered HTML for immutable board projections."""
 
+import json
 from html import escape
 from urllib.parse import quote
 
@@ -13,13 +14,24 @@ from relay_engine.board.models import (
     SliceDetail,
 )
 from relay_engine.domain.models import Baseline
-from relay_engine.governance.models import GateReason, GateReasonKind
+from relay_engine.governance.models import (
+    ChangeSurfaceStatus,
+    EvaluationOutcome,
+    GateReason,
+    GateReasonKind,
+    RiskStatus,
+    ToolchainChangeStatus,
+)
 from relay_engine.human_control.models import (
     HumanAction,
     HumanActionKind,
     HumanActionProjection,
 )
 from relay_engine.lifecycle.models import BlockageStatus
+from relay_engine.manual_evaluation.models import (
+    ManualEvaluationActionKind,
+    ManualEvaluationProjection,
+)
 
 _STYLE = """
 body {
@@ -596,6 +608,275 @@ def _human_action_section(detail: SliceDetail, csrf_token: str | None) -> str:
     )
 
 
+def _manual_evaluation_form(
+    path: str,
+    label: str,
+    csrf_token: str,
+    fields: tuple[tuple[str, object], ...],
+    controls: str,
+) -> str:
+    hidden = _hidden("csrf_token", csrf_token) + "".join(
+        _hidden(name, value) for name, value in fields
+    )
+    return (
+        f'<form method="post" action="{_e(path)}"><fieldset><legend>{_e(label)}</legend>'
+        f'{hidden}{controls}<button type="submit">{_e(label)}</button></fieldset></form>'
+    )
+
+
+def _manual_evaluation_section(detail: SliceDetail, csrf_token: str | None) -> str:
+    projection: ManualEvaluationProjection = detail.manual_evaluation
+    parts = ['<section aria-labelledby="manual-evaluation-heading">']
+    parts.append('<h2 id="manual-evaluation-heading">Manual evaluation and result</h2>')
+    if projection.current_result is None:
+        parts.append("<p>No result is attached to the current EVALUATING attempt.</p>")
+    else:
+        result = projection.current_result
+        baseline = projection.current_result_baseline
+        parts.append(
+            f"<p>Current result <code>{_e(result.result_id)}</code>; result Baseline "
+            f"<code>{_e(result.result_baseline_id)}</code>; source Baseline "
+            f"<code>{_e(result.source_baseline_id)}</code>; lifecycle revision "
+            f"{_e(result.lifecycle_revision)}.</p>"
+        )
+        if baseline is not None:
+            parts.append(
+                f"<p>Exact result commit: <code>{_e(baseline.commit.sha)}</code> in "
+                f"{_e(baseline.commit.repository.path)}.</p>"
+            )
+        if projection.current_evaluation is None:
+            parts.append("<p>Awaiting authored manual evaluation.</p>")
+        else:
+            evaluation = projection.current_evaluation
+            parts.append(
+                f"<p>Current evaluator decision <code>{_e(evaluation.evaluation_id)}</code>: "
+                f"<strong>{_e(evaluation.outcome.value)}</strong>; evaluator "
+                f"{_e(evaluation.evaluator.display_name or evaluation.evaluator.id)}; "
+                f"evaluated {_e(evaluation.evaluated_at)}.</p>"
+            )
+            parts.append(
+                "<p>Evidence IDs: "
+                + ", ".join(f"<code>{_e(item)}</code>" for item in evaluation.evidence_ids)
+                + "</p>"
+            )
+            findings = "".join(f"<li>{_e(item)}</li>" for item in evaluation.findings)
+            findings_section = f"<ul>{findings}</ul>" if findings else "<p>No findings.</p>"
+            parts.append(
+                f"<h3>Findings</h3>{findings_section}<p>Summary: {_e(evaluation.summary)}</p>"
+            )
+    if projection.result_history:
+        result_items = "".join(
+            "<li>"
+            f"<code>{_e(item.result_id)}</code>; Baseline <code>"
+            f"{_e(item.result_baseline_id)}</code>; lifecycle revision "
+            f"{_e(item.lifecycle_revision)}; supersedes "
+            f"{_e(item.supersedes_result_id or 'none')}.</li>"
+            for item in projection.result_history
+        )
+        parts.append(f"<details><summary>Result history</summary><ol>{result_items}</ol></details>")
+    if projection.evaluation_history:
+        evaluation_items = "".join(
+            "<li>"
+            f"<code>{_e(item.evaluation_id)}</code>; result <code>{_e(item.result_id)}</code>; "
+            f"{_e(item.outcome.value)}; supersedes "
+            f"{_e(item.supersedes_evaluation_id or 'none')}.</li>"
+            for item in projection.evaluation_history
+        )
+        parts.append(
+            f"<details><summary>Evaluation history</summary><ol>{evaluation_items}</ol></details>"
+        )
+    if projection.current_technical_decision is not None:
+        decision = projection.current_technical_decision
+        parts.append(
+            f"<p>Human technical decision <code>{_e(decision.decision_id)}</code>: "
+            f"<strong>{_e(decision.decision.value)}</strong> for gate "
+            f"<code>{_e(decision.gate_id)}</code> revision {_e(decision.gate_revision)}; "
+            f"lifecycle revision {_e(decision.lifecycle_revision)}, governance revision "
+            f"{_e(decision.governance_revision)}.</p>"
+        )
+    if projection.accepted_result is not None:
+        accepted = projection.accepted_result
+        parts.append(
+            f"<p>Accepted result <code>{_e(accepted.result_id)}</code>; exact Baseline "
+            f"<code>{_e(accepted.result_baseline_id)}</code>; commit "
+            f"<code>{_e(accepted.commit)}</code>; evaluation "
+            f"<code>{_e(accepted.manual_evaluation_id)}</code>; Human decision "
+            f"<code>{_e(accepted.human_approval_decision_id)}</code>; execution "
+            f"<code>{_e(accepted.accepted_execution_id)}</code> at {_e(accepted.accepted_at)}.</p>"
+        )
+    memory = projection.development_memory
+    if memory is not None:
+        parts.append(
+            f"<details><summary>Development memory projection</summary>"
+            f"<p>Source Baseline <code>{_e(memory.source_baseline.id)}</code>; "
+            f"{len(memory.result_history)} result records, "
+            f"{len(memory.evaluation_history)} evaluations, {len(memory.evidence)} Evidence items, "
+            f"{len(memory.accepted_results)} accepted result executions.</p></details>"
+        )
+
+    basis = projection.action_basis
+    if csrf_token is not None and basis is not None:
+        root = _slice_url(detail.project.id, detail.slice_definition.value.id)
+        base_fields = (
+            ("expected_lifecycle_revision", basis.lifecycle_revision),
+            ("expected_slice_definition_revision", basis.slice_definition_revision),
+            ("expected_current_result_id", basis.current_result_id or ""),
+            (
+                "expected_current_evaluation_id",
+                basis.current_manual_evaluation_id or "",
+            ),
+            (
+                "expected_latest_gate_evaluation_record_id",
+                basis.latest_gate_evaluation_record_id or "",
+            ),
+            (
+                "expected_gate_refs",
+                json.dumps([item.model_dump(mode="json") for item in basis.gate_refs]),
+            ),
+        )
+        actions = set(projection.actions)
+        if ManualEvaluationActionKind.ATTACH_RESULT in actions:
+            controls = (
+                '<label>Revision selector kind <select name="revision_kind">'
+                '<option value="COMMIT_SHA">Exact commit SHA</option>'
+                '<option value="BRANCH">Branch</option><option value="TAG">Tag</option>'
+                "</select></label>"
+                '<label>Commit or ref <input name="revision_value" required '
+                'maxlength="128"></label>'
+                '<label>Reason <textarea name="reason" required '
+                'maxlength="2000"></textarea></label>'
+            )
+            parts.append(
+                _manual_evaluation_form(
+                    f"{root}/actions/attach-result",
+                    "Attach verified result",
+                    csrf_token,
+                    base_fields,
+                    controls,
+                )
+            )
+        if ManualEvaluationActionKind.EVALUATE in actions:
+            outcome_options = "".join(
+                f'<option value="{_e(item.value)}">{_e(item.value)}</option>'
+                for item in EvaluationOutcome
+            )
+            surface_options = "".join(
+                f'<option value="{_e(item.value)}">{_e(item.value)}</option>'
+                for item in ChangeSurfaceStatus
+            )
+            risk_options = "".join(
+                f'<option value="{_e(item.value)}">{_e(item.value)}</option>' for item in RiskStatus
+            )
+            toolchain_options = "".join(
+                f'<option value="{_e(item.value)}">{_e(item.value)}</option>'
+                for item in ToolchainChangeStatus
+            )
+            controls = (
+                f'<label>Outcome <select name="outcome" required>'
+                f"{outcome_options}</select></label>"
+                "<label>New Evidence claims, one per line "
+                '<textarea name="evidence_claims" required></textarea></label>'
+                "<label>Existing Evidence IDs, comma separated "
+                '<input name="existing_evidence_ids"></label>'
+                "<label>Quality checks, one key=STATUS per line "
+                '<textarea name="quality_checks"></textarea></label>'
+                f'<label>Change surface <select name="change_surface_status" required>'
+                f"{surface_options}</select></label>"
+                f'<label>Risk <select name="risk_status" required>{risk_options}</select></label>'
+                f'<label>Toolchain <select name="toolchain_change_status" required>'
+                f"{toolchain_options}</select></label>"
+                '<label>Findings, one per line <textarea name="findings"></textarea></label>'
+                '<label>Summary <textarea name="summary" required '
+                'maxlength="4000"></textarea></label>'
+            )
+            parts.append(
+                _manual_evaluation_form(
+                    f"{root}/actions/evaluate",
+                    "Record manual evaluation",
+                    csrf_token,
+                    base_fields,
+                    controls,
+                )
+            )
+
+        human_basis = detail.human_actions.basis
+        approval = next(
+            (
+                item
+                for item in detail.human_actions.current_approval_decisions
+                if any(ref.gate_id == item.gate_id for ref in projection.technical_gate_refs)
+            ),
+            None,
+        )
+        if (
+            human_basis is not None
+            and projection.current_result is not None
+            and projection.current_evaluation is not None
+        ):
+            for reference in projection.technical_gate_refs:
+                expected = (
+                    ""
+                    if approval is None or approval.gate_id != reference.gate_id
+                    else approval.decision_id
+                )
+                technical_fields = (
+                    ("basis", human_basis.model_dump_json()),
+                    ("expected_result_id", projection.current_result.result_id),
+                    ("expected_manual_evaluation_id", projection.current_evaluation.evaluation_id),
+                    ("gate_id", reference.gate_id),
+                    ("gate_revision", reference.gate_revision),
+                    ("expected_current_approval_decision_id", expected),
+                )
+                for kind, label in (
+                    (ManualEvaluationActionKind.TECHNICAL_ACCEPT, "Technical accept"),
+                    (ManualEvaluationActionKind.TECHNICAL_REJECT, "Technical reject"),
+                ):
+                    if kind in actions:
+                        route = (
+                            "technical-accept"
+                            if kind is ManualEvaluationActionKind.TECHNICAL_ACCEPT
+                            else "technical-reject"
+                        )
+                        parts.append(
+                            _manual_evaluation_form(
+                                f"{root}/actions/{route}",
+                                f"{label} gate {reference.gate_id}",
+                                csrf_token,
+                                technical_fields,
+                                '<label>Reason <textarea name="reason" required '
+                                'maxlength="2000"></textarea></label>',
+                            )
+                        )
+            for reference in projection.promotable_gate_refs:
+                expected = (
+                    ""
+                    if approval is None or approval.gate_id != reference.gate_id
+                    else approval.decision_id
+                )
+                parts.append(
+                    _manual_evaluation_form(
+                        f"{root}/actions/promote-accepted",
+                        f"Promote accepted gate {reference.gate_id}",
+                        csrf_token,
+                        (
+                            ("basis", human_basis.model_dump_json()),
+                            ("expected_result_id", projection.current_result.result_id),
+                            (
+                                "expected_manual_evaluation_id",
+                                projection.current_evaluation.evaluation_id,
+                            ),
+                            ("expected_current_approval_decision_id", expected),
+                            ("gate_id", reference.gate_id),
+                            ("gate_revision", reference.gate_revision),
+                        ),
+                        '<label>Reason <textarea name="reason" required '
+                        'maxlength="2000"></textarea></label>',
+                    )
+                )
+    parts.append("</section>")
+    return "".join(parts)
+
+
 def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> str:
     """Render one complete Slice projection without database access."""
 
@@ -608,6 +889,7 @@ def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> s
         f"<p>Slice ID: <code>{_e(value.id)}</code></p>"
         f"{_definition_section(detail)}{_lifecycle_section(detail)}"
         f"{_observation_section(detail)}{_human_action_section(detail, csrf_token)}"
+        f"{_manual_evaluation_section(detail, csrf_token)}"
         f"{_execution_section(detail)}"
     )
     return _page(f"{value.title} — Slice detail", body)

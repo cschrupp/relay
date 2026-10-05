@@ -20,6 +20,7 @@ from relay_engine.domain.models import Baseline, Slice
 from relay_engine.governance.models import GateRevisionRef, HandoverGate
 from relay_engine.human_control.service import project_human_actions
 from relay_engine.lifecycle.models import LifecyclePhase, SliceLifecycle
+from relay_engine.manual_evaluation.service import project_manual_evaluation_from_connection
 from relay_engine.persistence import (
     PersistenceIntegrityError,
     RelayDatabase,
@@ -440,6 +441,12 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                 evaluation_baseline=evaluation_baseline,
                 relevant_execution_records=executions,
                 human_actions=project_human_actions(connection, slice_id, lifecycle, gates, latest),
+                manual_evaluation=project_manual_evaluation_from_connection(
+                    database,
+                    connection,
+                    slice_id,
+                    slice_definition_revision=slice_snapshot.definition_revision,
+                ),
             )
     except ValidationError as error:
         raise PersistenceIntegrityError("Slice detail projection is invalid") from error

@@ -2,8 +2,9 @@
 
 import argparse
 import secrets
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import cast
 from urllib.parse import parse_qs
@@ -11,7 +12,7 @@ from urllib.parse import parse_qs
 import uvicorn
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from relay_engine.board.models import BoardProjection, ProjectBoard, SliceDetail
 from relay_engine.board.render import (
@@ -21,8 +22,27 @@ from relay_engine.board.render import (
     render_slice_detail,
 )
 from relay_engine.board.service import project_board, project_index, slice_detail
-from relay_engine.domain.ids import ProjectId, SliceId, new_id
+from relay_engine.domain.ids import (
+    EvidenceId,
+    GateEvaluationRecordId,
+    HandoverGateId,
+    HumanDecisionId,
+    ManualEvaluationId,
+    ProjectId,
+    SliceId,
+    SliceResultId,
+    new_id,
+)
 from relay_engine.domain.references import ActorKind, ActorRef
+from relay_engine.governance.models import (
+    ChangeSurfaceStatus,
+    EvaluationOutcome,
+    GateRevisionRef,
+    QualityCheckResult,
+    QualityCheckStatus,
+    RiskStatus,
+    ToolchainChangeStatus,
+)
 from relay_engine.human_control.errors import (
     HumanActionBasisStale,
     HumanActionConflict,
@@ -42,6 +62,22 @@ from relay_engine.human_control.service import (
     record_gate_rejection,
     set_human_hold,
 )
+from relay_engine.integrations.github.models import GitHubRepositoryAccessSelection
+from relay_engine.manual_evaluation.errors import (
+    ManualEvaluationConflict,
+    ManualEvaluationForbidden,
+    ManualEvaluationInvalid,
+    ManualEvaluationNotAvailable,
+    ManualEvaluationStale,
+)
+from relay_engine.manual_evaluation.models import EvaluationEvidenceSubmission
+from relay_engine.manual_evaluation.service import (
+    attach_result,
+    promote_accepted_result,
+    record_manual_evaluation,
+    record_technical_acceptance,
+    record_technical_rejection,
+)
 from relay_engine.persistence import (
     DatabaseUnavailable,
     MigrationError,
@@ -50,6 +86,29 @@ from relay_engine.persistence import (
     open_database,
 )
 from relay_engine.project_slice import ProjectNotFound, SliceNotFound, get_slice
+from relay_engine.repository_baseline.errors import (
+    RepositoryAccessUnavailable,
+    RepositoryAuthenticationFailed,
+    RepositoryBaselineError,
+    RepositoryBaselinePersistenceError,
+    RepositoryProjectMismatch,
+    RepositoryProviderIdentityChanged,
+    RepositoryRateLimited,
+    RepositoryRefNotFound,
+    RepositorySelectionInvalid,
+    RepositorySnapshotIntegrityError,
+    RepositorySnapshotUnavailable,
+)
+from relay_engine.repository_baseline.models import (
+    RepositoryRevisionKind,
+    RepositoryRevisionSelector,
+)
+from relay_engine.repository_baseline.service import RepositoryBaselineService
+
+type RepositoryBaselineServiceFactory = Callable[[RelayDatabase], RepositoryBaselineService]
+type RepositoryAccessSelectionFactory = Callable[
+    [RelayDatabase, ProjectId], GitHubRepositoryAccessSelection
+]
 
 
 def _read_project_index(database_path: str) -> BoardProjection:
@@ -127,6 +186,65 @@ def _basis(form: dict[str, str]) -> HumanActionBasis:
         raise _FormError("ACTION_INVALID", 422) from error
 
 
+def _slice_1_7_basis(
+    form: dict[str, str],
+) -> tuple[int, int, SliceResultId | None, tuple[GateRevisionRef, ...]]:
+    try:
+        lifecycle_revision = int(_required(form, "expected_lifecycle_revision"))
+        definition_revision = int(_required(form, "expected_slice_definition_revision"))
+        current_result = _optional_id(form, "expected_current_result_id")
+        if current_result is not None:
+            current_result = TypeAdapter[SliceResultId](SliceResultId).validate_python(
+                current_result
+            )
+        raw_refs = _required(form, "expected_gate_refs")
+        gate_refs = TypeAdapter[tuple[GateRevisionRef, ...]](
+            tuple[GateRevisionRef, ...]
+        ).validate_json(raw_refs)
+    except (TypeError, ValueError, ValidationError) as error:
+        raise _FormError("ACTION_INVALID", 422) from error
+    if lifecycle_revision < 0 or definition_revision < 1:
+        raise _FormError("ACTION_INVALID", 422)
+    return lifecycle_revision, definition_revision, current_result, gate_refs
+
+
+def _manual_id[T](form: dict[str, str], name: str, adapter: TypeAdapter[T]) -> T | None:
+    value = _optional_id(form, name)
+    if value is None:
+        return None
+    try:
+        return adapter.validate_python(value)
+    except ValidationError as error:
+        raise _FormError("ACTION_INVALID", 422) from error
+
+
+def _manual_enum[T: StrEnum](form: dict[str, str], name: str, enum_type: type[T]) -> T:
+    try:
+        return enum_type(_required(form, name))
+    except ValueError as error:
+        raise _FormError("ACTION_INVALID", 422) from error
+
+
+def _quality_checks(form: dict[str, str]) -> tuple[QualityCheckResult, ...]:
+    values: list[QualityCheckResult] = []
+    for line in form.get("quality_checks", "").splitlines():
+        if not line.strip():
+            continue
+        pieces = line.split("=", 1)
+        if len(pieces) != 2:
+            raise _FormError("ACTION_INVALID", 422)
+        try:
+            values.append(
+                QualityCheckResult(
+                    key=pieces[0].strip(),
+                    status=QualityCheckStatus(pieces[1].strip()),
+                )
+            )
+        except (ValueError, ValidationError) as error:
+            raise _FormError("ACTION_INVALID", 422) from error
+    return tuple(sorted(values, key=lambda item: item.key))
+
+
 def _route_slice(database: RelayDatabase, project_id: ProjectId, slice_id: SliceId) -> None:
     snapshot = get_slice(database, slice_id)
     if snapshot.value.project_id != project_id:
@@ -149,6 +267,35 @@ def _command_error(error: Exception, method: str = "POST") -> HTMLResponse:
         return _error_response("STALE_OR_CONFLICT", 409, method)
     if isinstance(error, HumanActionNotAvailable):
         return _error_response("ACTION_INVALID", 422, method)
+    if isinstance(error, (ManualEvaluationStale, ManualEvaluationConflict)):
+        return _error_response("STALE_OR_CONFLICT", 409, method)
+    if isinstance(error, (ManualEvaluationForbidden, HumanActionForbidden)):
+        return _error_response("FORBIDDEN", 403, method)
+    if isinstance(error, (ManualEvaluationInvalid, ManualEvaluationNotAvailable)):
+        return _error_response("ACTION_INVALID", 422, method)
+    if isinstance(error, RepositoryBaselineError):
+        if isinstance(
+            error,
+            (
+                RepositoryAuthenticationFailed,
+                RepositoryAccessUnavailable,
+                RepositoryRateLimited,
+                RepositorySnapshotUnavailable,
+            ),
+        ):
+            return _error_response("UNAVAILABLE", 503, method)
+        if isinstance(error, RepositoryBaselinePersistenceError | RepositorySnapshotIntegrityError):
+            return _error_response("INTEGRITY_ERROR", 500, method)
+        if isinstance(
+            error,
+            (
+                RepositoryProjectMismatch,
+                RepositoryProviderIdentityChanged,
+                RepositoryRefNotFound,
+                RepositorySelectionInvalid,
+            ),
+        ):
+            return _error_response("ACTION_INVALID", 422, method)
     if isinstance(error, DatabaseUnavailable):
         return _error_response("UNAVAILABLE", 503, method)
     if isinstance(error, MigrationError | PersistenceIntegrityError):
@@ -165,6 +312,10 @@ def _redirect_to_slice(project_id: ProjectId, slice_id: SliceId) -> RedirectResp
 def create_app(
     database_path: str | Path,
     actor: ActorRef | None = None,
+    *,
+    manual_evaluator_actor: ActorRef | None = None,
+    repository_baseline_service_factory: RepositoryBaselineServiceFactory | None = None,
+    repository_access_selection_factory: RepositoryAccessSelectionFactory | None = None,
 ) -> FastAPI:
     """Create a board app that stores configuration, never a live connection."""
 
@@ -174,7 +325,18 @@ def create_app(
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.database_path = path
-    app.state.human_actor = actor or ActorRef(id=new_id("act_"), kind=ActorKind.HUMAN)
+    human_actor = actor or ActorRef(id=new_id("act_"), kind=ActorKind.HUMAN)
+    evaluator_actor = manual_evaluator_actor or human_actor
+    if (repository_baseline_service_factory is None) != (
+        repository_access_selection_factory is None
+    ):
+        raise ValueError(
+            "repository baseline and access-selection factories must be supplied together"
+        )
+    app.state.human_actor = human_actor
+    app.state.manual_evaluator_actor = evaluator_actor
+    app.state.repository_baseline_service_factory = repository_baseline_service_factory
+    app.state.repository_access_selection_factory = repository_access_selection_factory
     app.state.csrf_token = secrets.token_urlsafe(32)
 
     @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -446,6 +608,230 @@ def create_app(
                     occurred_at=command_time,
                     successor_evaluation_record_id=new_id("geval_"),
                     successor_evaluation_recorded_at=command_time,
+                )
+        except Exception as error:
+            return _command_error(error)
+        return _redirect_to_slice(project_id, slice_id)
+
+    @app.post(
+        "/projects/{project_id}/slices/{slice_id}/actions/attach-result",
+        response_class=HTMLResponse,
+    )
+    async def attach_result_route(
+        request: Request, project_id: ProjectId, slice_id: SliceId
+    ) -> Response:
+        try:
+            form = await _mutation_form(request)
+            try:
+                selector = RepositoryRevisionSelector(
+                    kind=RepositoryRevisionKind(_required(form, "revision_kind")),
+                    value=_required(form, "revision_value"),
+                )
+            except (ValueError, ValidationError) as error:
+                raise _FormError("ACTION_INVALID", 422) from error
+            lifecycle_revision, definition_revision, current_result_id, _refs = _slice_1_7_basis(
+                form
+            )
+            service_factory = request.app.state.repository_baseline_service_factory
+            selection_factory = request.app.state.repository_access_selection_factory
+            if service_factory is None or selection_factory is None:
+                return _error_response("UNAVAILABLE", 503, "POST")
+            command_time = datetime.now(UTC)
+            with open_database(request.app.state.database_path, apply_migrations=False) as database:
+                _route_slice(database, project_id, slice_id)
+                selection = selection_factory(database, project_id)
+                attach_result(
+                    database,
+                    slice_id,
+                    repository_baseline_service=service_factory(database),
+                    selection=selection,
+                    selector=selector,
+                    result_id=new_id("res_"),
+                    result_baseline_id=new_id("base_"),
+                    expected_lifecycle_revision=lifecycle_revision,
+                    expected_slice_definition_revision=definition_revision,
+                    expected_current_result_id=current_result_id,
+                    recorded_by=request.app.state.human_actor,
+                    recorded_at=command_time,
+                    reason=_required(form, "reason"),
+                )
+        except Exception as error:
+            return _command_error(error)
+        return _redirect_to_slice(project_id, slice_id)
+
+    @app.post(
+        "/projects/{project_id}/slices/{slice_id}/actions/evaluate",
+        response_class=HTMLResponse,
+    )
+    async def evaluate_route(
+        request: Request, project_id: ProjectId, slice_id: SliceId
+    ) -> Response:
+        try:
+            form = await _mutation_form(request)
+            lifecycle_revision, definition_revision, expected_result_id, gate_refs = (
+                _slice_1_7_basis(form)
+            )
+            if expected_result_id is None:
+                raise _FormError("ACTION_INVALID", 422)
+            expected_evaluation_id = _manual_id(
+                form,
+                "expected_current_evaluation_id",
+                TypeAdapter[ManualEvaluationId](ManualEvaluationId),
+            )
+            expected_latest_id = _manual_id(
+                form,
+                "expected_latest_gate_evaluation_record_id",
+                TypeAdapter[GateEvaluationRecordId](GateEvaluationRecordId),
+            )
+            existing_ids_raw = form.get("existing_evidence_ids", "")
+            existing_ids: tuple[EvidenceId, ...] = tuple(
+                TypeAdapter[EvidenceId](EvidenceId).validate_python(item.strip())
+                for item in existing_ids_raw.split(",")
+                if item.strip()
+            )
+            command_time = datetime.now(UTC)
+            claims = tuple(item.strip() for item in form.get("evidence_claims", "").splitlines())
+            submissions = tuple(
+                EvaluationEvidenceSubmission(
+                    evidence_id=new_id("evd_"), claim=claim, recorded_at=command_time
+                )
+                for claim in claims
+                if claim
+            )
+            with open_database(request.app.state.database_path, apply_migrations=False) as database:
+                _route_slice(database, project_id, slice_id)
+                record_manual_evaluation(
+                    database,
+                    slice_id,
+                    evaluation_id=new_id("eval_"),
+                    evaluator=request.app.state.manual_evaluator_actor,
+                    evaluated_at=command_time,
+                    outcome=_manual_enum(form, "outcome", EvaluationOutcome),
+                    existing_evidence_ids=existing_ids,
+                    evidence_submissions=submissions,
+                    quality_checks=_quality_checks(form),
+                    change_surface_status=_manual_enum(
+                        form, "change_surface_status", ChangeSurfaceStatus
+                    ),
+                    risk_status=_manual_enum(form, "risk_status", RiskStatus),
+                    toolchain_change_status=_manual_enum(
+                        form, "toolchain_change_status", ToolchainChangeStatus
+                    ),
+                    findings=tuple(
+                        item.strip()
+                        for item in form.get("findings", "").splitlines()
+                        if item.strip()
+                    ),
+                    summary=_required(form, "summary"),
+                    expected_lifecycle_revision=lifecycle_revision,
+                    expected_slice_definition_revision=definition_revision,
+                    expected_result_id=expected_result_id,
+                    expected_current_evaluation_id=expected_evaluation_id,
+                    expected_latest_gate_evaluation_record_id=expected_latest_id,
+                    expected_gate_refs=gate_refs,
+                    successor_gate_evaluation_record_id=new_id("geval_"),
+                    successor_gate_evaluation_recorded_at=command_time,
+                )
+        except Exception as error:
+            return _command_error(error)
+        return _redirect_to_slice(project_id, slice_id)
+
+    async def _technical_decision_route(
+        request: Request,
+        project_id: ProjectId,
+        slice_id: SliceId,
+        *,
+        accept: bool,
+    ) -> Response:
+        try:
+            form = await _mutation_form(request)
+            basis = _basis(form)
+            command_time = datetime.now(UTC)
+            with open_database(request.app.state.database_path, apply_migrations=False) as database:
+                _route_slice(database, project_id, slice_id)
+                command = record_technical_acceptance if accept else record_technical_rejection
+                command(
+                    database,
+                    slice_id,
+                    TypeAdapter[HandoverGateId](HandoverGateId).validate_python(
+                        _required(form, "gate_id")
+                    ),
+                    basis,
+                    expected_result_id=TypeAdapter[SliceResultId](SliceResultId).validate_python(
+                        _required(form, "expected_result_id")
+                    ),
+                    expected_manual_evaluation_id=TypeAdapter[ManualEvaluationId](
+                        ManualEvaluationId
+                    ).validate_python(_required(form, "expected_manual_evaluation_id")),
+                    expected_current_approval_decision_id=_manual_id(
+                        form,
+                        "expected_current_approval_decision_id",
+                        TypeAdapter[HumanDecisionId](HumanDecisionId),
+                    ),
+                    actor=request.app.state.human_actor,
+                    reason=_required(form, "reason"),
+                    decision_id=new_id("hdec_"),
+                    occurred_at=command_time,
+                    successor_gate_evaluation_record_id=new_id("geval_"),
+                    successor_gate_evaluation_recorded_at=command_time,
+                )
+        except Exception as error:
+            return _command_error(error)
+        return _redirect_to_slice(project_id, slice_id)
+
+    @app.post(
+        "/projects/{project_id}/slices/{slice_id}/actions/technical-accept",
+        response_class=HTMLResponse,
+    )
+    async def technical_accept_route(
+        request: Request, project_id: ProjectId, slice_id: SliceId
+    ) -> Response:
+        return await _technical_decision_route(request, project_id, slice_id, accept=True)
+
+    @app.post(
+        "/projects/{project_id}/slices/{slice_id}/actions/technical-reject",
+        response_class=HTMLResponse,
+    )
+    async def technical_reject_route(
+        request: Request, project_id: ProjectId, slice_id: SliceId
+    ) -> Response:
+        return await _technical_decision_route(request, project_id, slice_id, accept=False)
+
+    @app.post(
+        "/projects/{project_id}/slices/{slice_id}/actions/promote-accepted",
+        response_class=HTMLResponse,
+    )
+    async def promote_accepted_route(
+        request: Request, project_id: ProjectId, slice_id: SliceId
+    ) -> Response:
+        try:
+            form = await _mutation_form(request)
+            command_time = datetime.now(UTC)
+            with open_database(request.app.state.database_path, apply_migrations=False) as database:
+                _route_slice(database, project_id, slice_id)
+                promote_accepted_result(
+                    database,
+                    slice_id,
+                    TypeAdapter[HandoverGateId](HandoverGateId).validate_python(
+                        _required(form, "gate_id")
+                    ),
+                    _basis(form),
+                    expected_result_id=TypeAdapter[SliceResultId](SliceResultId).validate_python(
+                        _required(form, "expected_result_id")
+                    ),
+                    expected_manual_evaluation_id=TypeAdapter[ManualEvaluationId](
+                        ManualEvaluationId
+                    ).validate_python(_required(form, "expected_manual_evaluation_id")),
+                    expected_current_approval_decision_id=TypeAdapter[HumanDecisionId](
+                        HumanDecisionId
+                    ).validate_python(_required(form, "expected_current_approval_decision_id")),
+                    actor=request.app.state.human_actor,
+                    reason=_required(form, "reason"),
+                    gate_evaluation_record_id=new_id("geval_"),
+                    gate_evaluation_recorded_at=command_time,
+                    execution_id=new_id("exec_"),
+                    event_id=new_id("evt_"),
+                    occurred_at=command_time,
                 )
         except Exception as error:
             return _command_error(error)
