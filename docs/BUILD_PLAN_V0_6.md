@@ -209,7 +209,13 @@ Independent implementation evaluation:
 RLY-S21-EVAL-002 — ACCEPT
 
 Implementation:
-DETERMINISTICALLY ACCEPTED / LIVE SIDECAR EVIDENCE PENDING
+DETERMINISTICALLY ACCEPTED
+
+Live OpenCode sidecar authority:
+RLY-S21-SIDECAR-AUTH-001 — AUTHORIZED
+
+Live OpenCode sidecar evidence:
+AUTHORIZED / PENDING
 
 Human technical acceptance:
 PENDING / NOT YET ELIGIBLE
@@ -218,7 +224,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending separately authorized live OpenCode sidecar evidence. Only deterministic mocked adapter implementation is authorized; the live OpenCode sidecar, provider/model execution, and Relay agent execution remain separately unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. The bounded disposable-fixture sidecar is now authorized under `RLY-S21-SIDECAR-AUTH-001`, including only the minimum real provider/model calls required by the accepted D21 protocol. Relay agent execution against real work remains unauthorized.
 
 # 2. Slice 1.5 authority
 
