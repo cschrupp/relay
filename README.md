@@ -12,15 +12,11 @@ Relay is being built inside-out: deterministic engineering governance first, the
 
 ```text
 Phase 0:                  COMPLETE / CLOSED
-Phase 1:                  OPEN
-Slice 1.1:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.2:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.3:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.4:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.5:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.6:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.7:                OPEN — DESIGN ACCEPTED
-Slice 1.7 implementation: NOT AUTHORIZED
+Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
+Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
+Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
+Phase 2:                  OPEN
+Slice 2.1:                NOT OPEN / NOT AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -79,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-This direction is documented as future architecture only. It does **not** authorize Phase 2 or Phase 3 implementation or agent execution. Slice 1.7 is open and its design is accepted, but implementation requires a separate Human Authority authorization.
+Phase 2 is open under the accepted-baseline / active-hardening model. This opening does **not** authorize Slice 2.1 implementation, provider/runtime integration, Phase 3 work, or Relay agent execution. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
 
 See:
 
@@ -95,7 +91,7 @@ Canonical document identity is defined by `.relay/registry.json`, not by file na
 Current canonical projections include:
 
 - Product Proposal v0.5
-- Build Plan v0.5
+- Build Plan v0.6
 - Current Baseline
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality

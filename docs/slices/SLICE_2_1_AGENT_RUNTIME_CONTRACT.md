@@ -1,6 +1,6 @@
 # Slice 2.1 — Agent Runtime Contract
 
-**Status:** FUTURE SLICE PROPOSAL — NOT OPEN / NOT AUTHORIZED  
+**Status:** PHASE 2 OPEN — SLICE PROPOSAL NOT OPEN / NOT AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Supersedes roadmap concept:** low-level `Model Provider Interface` as the primary orchestration boundary  
 **First planned runtime:** OpenCode

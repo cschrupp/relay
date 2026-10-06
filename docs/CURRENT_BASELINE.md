@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 open — Slices 1.1–1.7 closed; Phase 1 M0 validation pending
+**Status:** Phase 1 accepted baseline / hardening active — Phase 2 open; agent execution unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -31,6 +31,45 @@ COMPLETE / ACCEPTED / CLOSED
 Slice 1.7:
 COMPLETE / ACCEPTED / CLOSED
 ```
+
+# 1A. Phase 1 viability and Phase 2 opening
+
+```text
+Phase 1 M0 evaluation:
+RLY-P1-M0-EVAL-001 — ACCEPT
+
+Human M0 acceptance:
+RLY-P1-M0-ACCEPT-001 — ACCEPTED
+
+Accepted engineering baseline entering the Phase 2 transition:
+cf8aae9d44bfef5019500bac37ae6baf3cdb5235
+
+Phase 1:
+ACCEPTED BASELINE / HARDENING ACTIVE
+
+Phase 1 production maturity:
+NOT CLAIMED
+
+Phase 2 opening authority:
+RLY-P2-OPEN-001 — AUTHORIZED
+
+Phase 2:
+OPEN
+
+Slice 2.1:
+NOT OPEN / NOT AUTHORIZED
+
+Relay agent execution:
+NOT AUTHORIZED
+```
+
+M0 established project viability and justified continued investment. It did not assert that the Phase 1 product surface is production-ready.
+
+Phase 1 remains the deterministic governing substrate for later phases and continues to receive separately authorized hardening for practicality, governance clarity, UI/UX, information hierarchy, development memory, and operator workflow.
+
+Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens authority integrity, determinism, provenance, Human control, evaluator independence, accepted-result promotion, or fail-closed behavior blocks affected Phase 2 work until resolved.
+
+**Unblocked ≠ authorized. Phase open ≠ Slice open. Slice open ≠ implementation authorized.**
 
 # 2. Slice 1.5 authority and accepted design
 
@@ -382,11 +421,11 @@ Version 5 — slice_results and manual_evaluations only
 Runtime dependencies:
 UNCHANGED
 
-Phase 1 M0 validation:
-PENDING / NOT YET DECLARED COMPLETE
+Phase 1 M0 viability gate:
+ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 
 Phase 2:
-NOT OPEN
+OPEN — RLY-P2-OPEN-001
 
 Agent execution:
 NOT AUTHORIZED
@@ -394,6 +433,6 @@ NOT AUTHORIZED
 
 Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a5ce1b2fe5c53892d1833e4c615`, following the preserved `RLY-S16-EVAL-001 — REWORK` and `RLY-S16-EVAL-002 — ACCEPT` history. Human technical acceptance is recorded as `RLY-S16-ACCEPT-001`. Independent closure evaluation `RLY-S16-CLOSE-EVAL-001 — ACCEPT` closed the slice; canonical closure commit `9db044036e3591c53d777c81af58af252ebc69a7` was promoted to `main`. The implementation adds no schema migration or new dependency.
 
-Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. Its combined Revision 1–4 design, accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`, REWORK, REWORK, ACCEPT evaluation history, and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 validation remains pending, Phase 2 is not open, and agent execution remains unauthorized.
+Slice 1.7 is complete, accepted, and closed following independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` of closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. Its combined Revision 1–4 design, accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435`, REWORK, REWORK, ACCEPT evaluation history, and Human technical acceptance `RLY-S17-ACCEPT-001` remain preserved. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. The implementation includes only authorized migration v5 (`slice_results` and `manual_evaluations`); dependencies and lifecycle/governance semantics are unchanged. Phase 1 M0 is Human-accepted; Phase 1 is an accepted baseline under active hardening; Phase 2 is open under RLY-P2-OPEN-001; agent execution remains unauthorized.
 
 **Unblocked ≠ authorized.**
