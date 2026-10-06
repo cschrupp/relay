@@ -226,6 +226,12 @@ OpenCode 1.18.23 / V1 environment does not satisfy the candidate's pinned V2 con
 Live OpenCode sidecar evidence:
 INCOMPLETE / COMPATIBLE V2 RUNTIME REQUIRED
 
+V2 sidecar runtime provisioning authority:
+RLY-S21-SIDECAR-V2-PROVISION-AUTH-001 — AUTHORIZED
+
+V2 sidecar rerun:
+AUTHORIZED / PENDING PROVISIONING
+
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
 
@@ -233,7 +239,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Sidecar run 001 stopped fail-closed before session creation because OpenCode 1.18.23 did not expose the pinned V2 health/version contract. `RLY-S21-SIDECAR-EVAL-001 — ESCALATE` leaves the accepted candidate unchanged and requires either a compatible V2 runtime for a rerun or a separately governed V1 design change. Relay agent execution against real work remains unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Sidecar run 001 stopped fail-closed before session creation because OpenCode 1.18.23 did not expose the pinned V2 health/version contract. `RLY-S21-SIDECAR-EVAL-001 — ESCALATE` leaves the accepted candidate unchanged. Human Authority now authorizes side-by-side disposable V2 runtime provisioning under `RLY-S21-SIDECAR-V2-PROVISION-AUTH-001` solely to rerun the existing D21 protocol against the same candidate. The existing V1 installation must remain untouched; Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 
