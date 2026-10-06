@@ -58,7 +58,7 @@ OPEN
 
 Slice 2.1:
 OPEN — RLY-S21-OPEN-001
-Design: RLY-S21-DESIGN-AUTH-001 — AUTHORIZED
+Design: RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
 Implementation: NOT AUTHORIZED
 
 Relay agent execution:
@@ -91,8 +91,14 @@ RLY-S21-DESIGN-AUTH-001 — AUTHORIZED
 Design subject baseline:
 2a02da12954a2ed54afdf088576e55dc19283a78
 
-Design:
-IN PROGRESS
+Exact accepted combined design head:
+fc55a50167e8c83d05bad9664c6b8e8fed59db42
+
+Independent design evaluation:
+RLY-S21-DESIGN-EVAL-004 — ACCEPT
+
+Human design acceptance:
+RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
 
 Implementation:
 NOT AUTHORIZED
@@ -101,7 +107,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 is open for governed planning and the next explicit Human gate. Its existing proposal is not an accepted design and does not authorize OpenCode integration, provider/model execution, workspace execution, or coding-agent activity.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design. That design does not authorize implementation, a live OpenCode sidecar, provider/model execution, workspace execution, or coding-agent activity.
 
 # 2. Slice 1.5 authority and accepted design
 
