@@ -58,7 +58,7 @@ OPEN
 
 Slice 2.1:
 OPEN — RLY-S21-OPEN-001
-Design: NOT AUTHORIZED
+Design: RLY-S21-DESIGN-AUTH-001 — AUTHORIZED
 Implementation: NOT AUTHORIZED
 
 Relay agent execution:
@@ -85,8 +85,14 @@ RLY-S21-OPEN-001 — OPEN
 Opening baseline:
 eac62b054af3815cc179c95d0d31aa96f9a374e3
 
+Design authorization:
+RLY-S21-DESIGN-AUTH-001 — AUTHORIZED
+
+Design subject baseline:
+2a02da12954a2ed54afdf088576e55dc19283a78
+
 Design:
-NOT AUTHORIZED
+IN PROGRESS
 
 Implementation:
 NOT AUTHORIZED

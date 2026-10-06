@@ -1,8 +1,9 @@
 # Slice 2.1 — Agent Runtime Contract
 
-**Status:** OPEN — DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN — DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Opening authority:** `RLY-S21-OPEN-001`  
+**Design authority:** `RLY-S21-DESIGN-AUTH-001 — AUTHORIZED`  
 **Opening baseline:** `eac62b054af3815cc179c95d0d31aa96f9a374e3`  
 **Supersedes roadmap concept:** low-level `Model Provider Interface` as the primary orchestration boundary  
 **First planned runtime:** OpenCode

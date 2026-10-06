@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — DESIGN NOT AUTHORIZED
+Slice 2.1:                OPEN — DESIGN AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
