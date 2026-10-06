@@ -229,8 +229,20 @@ INCOMPLETE / COMPATIBLE V2 RUNTIME REQUIRED
 V2 sidecar runtime provisioning authority:
 RLY-S21-SIDECAR-V2-PROVISION-AUTH-001 — AUTHORIZED
 
-V2 sidecar rerun:
-AUTHORIZED / PENDING PROVISIONING
+V2 sidecar run 002:
+STOPPED FAIL-CLOSED BEFORE COMPATIBILITY PREFLIGHT
+
+V2 sidecar run 002 evaluation:
+RLY-S21-SIDECAR-EVAL-002 — ESCALATE
+
+Run 002 finding:
+V2 package postinstall inherited protected V1 HOME/XDG state; V1 state integrity is not attestable
+
+Corrected V2 sidecar run 003:
+AUTHORIZED UNDER EXISTING RLY-S21-SIDECAR-V2-PROVISION-AUTH-001 / HANDOFF READY
+
+Run 003 handoff:
+RLY-S21-SIDECAR-V2-PROVISION-HANDOFF-002
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -239,7 +251,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Sidecar run 001 stopped fail-closed before session creation because OpenCode 1.18.23 did not expose the pinned V2 health/version contract. `RLY-S21-SIDECAR-EVAL-001 — ESCALATE` leaves the accepted candidate unchanged. Human Authority now authorizes side-by-side disposable V2 runtime provisioning under `RLY-S21-SIDECAR-V2-PROVISION-AUTH-001` solely to rerun the existing D21 protocol against the same candidate. The existing V1 installation must remain untouched; Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Sidecar run 001 stopped fail-closed because OpenCode 1.18.23 did not satisfy the pinned V2 contract. Run 002 then stopped even earlier during V2 provisioning: the official package postinstall invoked `opencode2 --version` with inherited HOME/XDG state, and the protected shared OpenCode log may have been written. `RLY-S21-SIDECAR-EVAL-002 — ESCALATE` classifies this as a provisioning-procedure isolation failure, not a Relay candidate or accepted-design defect. Candidate `ded3ed03b7070ea095a823129ebe44935cb57997` remains unchanged and deterministically accepted. Existing Human Authority already permits isolated V2 config/data/state/cache, so run 003 is authorized under the same authority with a corrected handoff that encloses package installation and every V2 invocation in a disposable HOME/XDG profile. Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 
