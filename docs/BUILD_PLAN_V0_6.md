@@ -196,20 +196,29 @@ RLY-S21-IMPL-AUTH-001 — AUTHORIZED
 Authorized implementation baseline:
 aaec399b7d8cd1c4f39b7171f664cb85aa4ecf22
 
-Implementation candidate:
+Prior implementation candidate:
 c947cf607699707b8b56d22cbb9aab4b30a7bf4a
 
-Independent implementation evaluation:
+Prior implementation evaluation:
 RLY-S21-EVAL-001 — REWORK
 
+Current implementation candidate:
+ded3ed03b7070ea095a823129ebe44935cb57997
+
+Independent implementation evaluation:
+RLY-S21-EVAL-002 — ACCEPT
+
 Implementation:
-REWORK REQUIRED
+DETERMINISTICALLY ACCEPTED / LIVE SIDECAR EVIDENCE PENDING
+
+Human technical acceptance:
+PENDING / NOT YET ELIGIBLE
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`; bounded correction is required before technical eligibility. Only deterministic mocked adapter implementation is authorized; the live OpenCode sidecar, provider/model execution, and Relay agent execution remain separately unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending separately authorized live OpenCode sidecar evidence. Only deterministic mocked adapter implementation is authorized; the live OpenCode sidecar, provider/model execution, and Relay agent execution remain separately unauthorized.
 
 # 2. Slice 1.5 authority
 
