@@ -1,11 +1,13 @@
 # Slice 2.1 — Agent Runtime Contract
 
-**Status:** OPEN — DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN — DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Opening authority:** `RLY-S21-OPEN-001`  
 **Design authority:** `RLY-S21-DESIGN-AUTH-001 — AUTHORIZED`  
 **Human design acceptance:** `RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED`  
 **Exact accepted design head:** `fc55a50167e8c83d05bad9664c6b8e8fed59db42`  
+**Implementation authority:** `RLY-S21-IMPL-AUTH-001 — AUTHORIZED`  
+**Authorized implementation baseline:** `aaec399b7d8cd1c4f39b7171f664cb85aa4ecf22`  
 **Opening baseline:** `eac62b054af3815cc179c95d0d31aa96f9a374e3`  
 **Supersedes roadmap concept:** low-level `Model Provider Interface` as the primary orchestration boundary  
 **First planned runtime:** OpenCode
@@ -18,7 +20,7 @@ Define the Relay-owned contract for executing governed engineering roles through
 
 The first planned implementation of the contract is `OpenCodeRuntime`.
 
-The detailed Agent Runtime Contract design has been independently reviewed and Human-accepted. This document remains a roadmap/proposal summary; the accepted Revision 1 + Revision 2 + Revision 3 design records govern implementation semantics. No implementation or runtime execution is authorized until separately granted.
+The detailed Agent Runtime Contract design has been independently reviewed and Human-accepted. This document remains a roadmap/proposal summary; the accepted Revision 1 + Revision 2 + Revision 3 design records govern implementation semantics. Implementation is separately authorized under `RLY-S21-IMPL-AUTH-001` for deterministic contract/OpenCode-adapter code only. Live runtime execution remains unauthorized.
 
 ---
 

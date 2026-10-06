@@ -137,7 +137,7 @@ OPEN — RLY-P2-OPEN-001
 Slice 2.1:
 OPEN — RLY-S21-OPEN-001
 Design: RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
-Implementation: NOT AUTHORIZED
+Implementation: RLY-S21-IMPL-AUTH-001 — AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
@@ -190,14 +190,20 @@ RLY-S21-DESIGN-EVAL-004 — ACCEPT
 Human design acceptance:
 RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
 
+Implementation authorization:
+RLY-S21-IMPL-AUTH-001 — AUTHORIZED
+
+Authorized implementation baseline:
+aaec399b7d8cd1c4f39b7171f664cb85aa4ecf22
+
 Implementation:
-NOT AUTHORIZED
+AUTHORIZED / CANDIDATE PENDING
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted. Implementation, the live OpenCode sidecar, provider/model execution, and Relay agent execution remain separately unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Only deterministic mocked adapter implementation is authorized; the live OpenCode sidecar, provider/model execution, and Relay agent execution remain separately unauthorized.
 
 # 2. Slice 1.5 authority
 
