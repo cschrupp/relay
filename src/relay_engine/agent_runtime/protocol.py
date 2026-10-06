@@ -32,7 +32,11 @@ class AgentRuntime(Protocol):
         request: RuntimeExecutionRequest,
         binding: RuntimeSessionBinding,
     ) -> RuntimeExecutionHandle:
-        """Observe events first, then admit exactly one prompt to the bound session."""
+        """Observe first, admit one prompt, and return an exact handle for recovery.
+
+        If the prompt response is uncertain, the handle still identifies the bound
+        session so callers can inspect or cancel it without retrying admission.
+        """
         ...
 
     def events(self, handle: RuntimeExecutionHandle) -> AsyncIterator[RuntimeEventEnvelope]:

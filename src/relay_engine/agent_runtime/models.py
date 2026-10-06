@@ -407,7 +407,11 @@ class RuntimeSessionBinding(DomainModel):
 
 
 class RuntimeExecutionHandle(DomainModel):
-    """Opaque handle for runtime interaction after exact binding and prompt admission."""
+    """Opaque handle for runtime interaction with an exact request/session binding.
+
+    The handle may also be returned when prompt admission is uncertain, so callers
+    can inspect or cancel the exact session without retrying prompt admission.
+    """
 
     execution_id: ExecutionId
     runtime_session: RuntimeSessionRef

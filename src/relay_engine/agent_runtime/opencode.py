@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from collections.abc import AsyncIterator
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -14,7 +15,7 @@ from urllib.parse import quote
 
 import httpx
 
-from relay_engine.agent_runtime.errors import fail
+from relay_engine.agent_runtime.errors import AgentRuntimeError, fail
 from relay_engine.agent_runtime.models import (
     EventContinuity,
     RuntimeCancelRequest,
@@ -162,13 +163,22 @@ class _ActiveExecution:
         payload: dict[str, str | int | bool | None] | None = None,
     ) -> RuntimeEventEnvelope:
         self.sequence += 1
+        safe_raw_event_type = (
+            raw_event_type
+            if raw_event_type is not None
+            and re.fullmatch(
+                r"(?:session|message|tool|permission|part|execution)\.[A-Za-z0-9_.-]{1,120}",
+                raw_event_type,
+            )
+            else None
+        )
         return RuntimeEventEnvelope(
             execution_id=self.execution_id,
             runtime_session=self.runtime_session,
             sequence=self.sequence,
             event_type=event_type,
             observed_at=datetime.now(UTC),
-            raw_event_type=None,
+            raw_event_type=safe_raw_event_type,
             payload=payload or {},
         )
 
@@ -425,7 +435,7 @@ class OpenCodeRuntime:
         request: RuntimeExecutionRequest,
         binding: RuntimeSessionBinding | None,
     ) -> RuntimeExecutionHandle:
-        """Open observation before admitting exactly one prompt to the bound session."""
+        """Observe before prompt admission and return an exact handle for recovery."""
 
         execution_id = request.basis.execution_id
         if binding is None:
@@ -499,37 +509,26 @@ class OpenCodeRuntime:
                 json=prompt_body,
             )
         except httpx.TimeoutException:
-            active.mark_incomplete(RuntimeContinuityReason.STREAM_DISCONNECTED)
-            active.enqueue(
-                RuntimeEventType.EVENT_GAP,
-                payload={"reason": RuntimeContinuityReason.STREAM_DISCONNECTED.value},
-            )
-            raise fail(
-                RuntimeFailureCategory.TIMEOUT,
-                "OpenCode prompt admission timed out; do not start another invocation.",
-                execution_id=execution_id,
-                runtime_session=binding.runtime_session,
-            ) from None
+            # The server may have admitted the prompt before the response timed out.
+            # Keep the observer and one-prompt guard, and return the exact session handle
+            # so the caller can inspect or cancel without guessing.
+            return provisional_handle
         except httpx.RequestError:
-            active.mark_incomplete(RuntimeContinuityReason.STREAM_DISCONNECTED)
-            active.enqueue(
-                RuntimeEventType.EVENT_GAP,
-                payload={"reason": RuntimeContinuityReason.STREAM_DISCONNECTED.value},
-            )
-            raise fail(
-                RuntimeFailureCategory.TRANSPORT,
-                "OpenCode prompt admission response was not received; do not retry automatically.",
-                execution_id=execution_id,
-                runtime_session=binding.runtime_session,
-            ) from None
+            # Request transport errors are also ambiguous about prompt admission.
+            return provisional_handle
 
         if response.status_code != 200:
+            if response.status_code >= 500 or 200 <= response.status_code < 300:
+                # A server failure or unexpected success response may follow admission.
+                return provisional_handle
+
             if response.status_code == 403:
                 category = RuntimeFailureCategory.PERMISSION_DENIED
             elif response.status_code == 400:
                 category = RuntimeFailureCategory.AGENT_BLOCKED
             else:
                 category = self._http_failure_category(response.status_code)
+            await self._discard_active(execution_id, active)
             raise fail(
                 category,
                 "OpenCode rejected prompt admission.",
@@ -537,9 +536,13 @@ class OpenCodeRuntime:
                 runtime_session=binding.runtime_session,
             )
 
-        response_data = self._unwrap_data(
-            self._read_json(response, RuntimeFailureCategory.TRANSPORT)
-        )
+        try:
+            response_data = self._unwrap_data(
+                self._read_json(response, RuntimeFailureCategory.TRANSPORT)
+            )
+        except AgentRuntimeError:
+            # A successful response with an unusable body may still represent admission.
+            return provisional_handle
         invocation_id = self._invocation_id_from(response_data)
         handle = provisional_handle.model_copy(
             update={
@@ -581,17 +584,38 @@ class OpenCodeRuntime:
     async def _cancel_once(self, request: RuntimeCancelRequest) -> RuntimeControlAck:
         """Serialize cancellation requests so concurrent retries share one result."""
 
-        self._validate_session_runtime(request.runtime_session)
+        binding = self._bindings.get(request.execution_id)
+        if binding is None:
+            raise fail(
+                RuntimeFailureCategory.SESSION_BINDING_REQUIRED,
+                "Exact process-local session binding is required for cancellation.",
+                execution_id=request.execution_id,
+            )
+        if (
+            binding.execution_id != request.execution_id
+            or binding.runtime_session != request.runtime_session
+        ):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Cancellation session does not match the exact process-local binding.",
+                execution_id=request.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        self._validate_session_runtime(binding.runtime_session)
+
         cache_key = (request.execution_id, request.runtime_session.session_id)
         cached = self._cancel_acks.get(cache_key)
         if cached is not None:
             return cached
 
         active = self._active.get(request.execution_id)
-        if active is not None and active.runtime_session != request.runtime_session:
+        if active is not None and (
+            active.runtime_session != binding.runtime_session
+            or active.request_digest != binding.request_digest
+        ):
             raise fail(
                 RuntimeFailureCategory.REQUEST_CONFLICT,
-                "Cancellation session does not match the active execution binding.",
+                "Cancellation state does not match the exact process-local binding.",
                 execution_id=request.execution_id,
                 runtime_session=request.runtime_session,
             )
@@ -671,12 +695,36 @@ class OpenCodeRuntime:
     async def inspect(self, handle: RuntimeExecutionHandle) -> RuntimeExecutionInspection:
         """Read runtime status and safe provenance independently of event consumption."""
 
-        self._validate_session_runtime(handle.runtime_session)
-        active = self._active.get(handle.execution_id)
-        if active is not None and active.handle != handle:
+        binding = self._bindings.get(handle.execution_id)
+        request_identity = self._requested_identities.get(handle.execution_id)
+        if binding is None or request_identity is None:
+            raise fail(
+                RuntimeFailureCategory.SESSION_BINDING_REQUIRED,
+                "Exact process-local request and session binding are required for inspection.",
+                execution_id=handle.execution_id,
+            )
+        if (
+            handle.execution_id != binding.execution_id
+            or handle.runtime_session != binding.runtime_session
+            or handle.request_digest != binding.request_digest
+            or request_identity[2] != binding.request_digest
+        ):
             raise fail(
                 RuntimeFailureCategory.REQUEST_CONFLICT,
-                "Inspection handle does not match the active execution binding.",
+                "Inspection handle does not match the exact process-local request binding.",
+                execution_id=handle.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        self._validate_session_runtime(binding.runtime_session)
+
+        active = self._active.get(handle.execution_id)
+        if active is not None and (
+            active.runtime_session != binding.runtime_session
+            or active.request_digest != binding.request_digest
+        ):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Inspection state does not match the exact process-local request binding.",
                 execution_id=handle.execution_id,
                 runtime_session=handle.runtime_session,
             )
@@ -1002,6 +1050,13 @@ class OpenCodeRuntime:
                 await task
         active.closed = True
         active.wake.set()
+
+    async def _discard_active(self, execution_id: str, active: _ActiveExecution) -> None:
+        """Dispose an observer after a definite prompt rejection."""
+
+        await self._close_active(active)
+        if self._active.get(execution_id) is active:
+            self._active.pop(execution_id, None)
 
     def _validate_binding(
         self,

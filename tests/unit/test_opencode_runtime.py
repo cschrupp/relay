@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -16,12 +17,14 @@ from relay_engine.agent_runtime.models import (
     RuntimeControlAckState,
     RuntimeEventType,
     RuntimeExecutionBasis,
+    RuntimeExecutionHandle,
     RuntimeExecutionInspection,
     RuntimeExecutionRequest,
     RuntimeIdentityCompleteness,
     RuntimePermissionProfileRef,
     RuntimeSelection,
     RuntimeSessionBinding,
+    RuntimeSessionRef,
     RuntimeStatus,
     RuntimeWorkspaceAttachment,
     digest_execution_basis,
@@ -289,6 +292,7 @@ def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_
             event_iterator = runtime.events(handle)
             event = await asyncio.wait_for(anext(event_iterator), timeout=1)
             assert event.event_type is RuntimeEventType.EXECUTION_STARTED
+            assert event.raw_event_type == "session.status"
             assert event.sequence == 1
             await event_iterator.aclose()
 
@@ -454,6 +458,122 @@ def test_event_observer_failure_prevents_prompt_admission() -> None:
     asyncio.run(exercise())
 
 
+@pytest.mark.parametrize("error_type", [httpx.ReadTimeout, httpx.ConnectError])
+def test_uncertain_prompt_admission_returns_recoverable_exact_handle(
+    error_type: type[httpx.RequestError],
+) -> None:
+    server = MockOpenCodeServer(inspection={"data": {"status": "busy"}})
+    prompt_path = f"/api/session/{SESSION_ID}/prompt"
+    prompt_requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == prompt_path:
+            server.requests.append(request)
+            prompt_requests.append(request)
+            raise error_type(AUTH_SENTINEL, request=request)
+        return server.handle(request)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    runtime = OpenCodeRuntime(
+        "http://opencode.mock:4096",
+        expected_runtime_version="1.2.3",
+        permission_profile=permission_profile(),
+        client=client,
+    )
+
+    async def exercise() -> None:
+        try:
+            request = execution_request()
+            binding = await runtime.create_session(request)
+            handle = await runtime.open_execution(request, binding)
+            assert handle.execution_id == request.basis.execution_id
+            assert handle.runtime_session == binding.runtime_session
+            assert handle.request_digest == request.request_digest
+            assert runtime._active[EXECUTION_ID].handle == handle
+
+            with pytest.raises(AgentRuntimeError) as retry_info:
+                await runtime.open_execution(request, binding)
+            assert retry_info.value.failure.category.value == "REQUEST_CONFLICT"
+            assert len(prompt_requests) == 1
+
+            wrong_session = RuntimeSessionRef(runtime_id="opencode", session_id="ses_other")
+            wrong_handle = handle.model_copy(update={"runtime_session": wrong_session})
+            with pytest.raises(AgentRuntimeError) as inspect_info:
+                await runtime.inspect(wrong_handle)
+            assert inspect_info.value.failure.category.value == "REQUEST_CONFLICT"
+            with pytest.raises(AgentRuntimeError) as cancel_info:
+                await runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=request.basis.execution_id,
+                        runtime_session=wrong_session,
+                        reason="must stay on the exact session",
+                    )
+                )
+            assert cancel_info.value.failure.category.value == "REQUEST_CONFLICT"
+            assert not any(
+                item.method == "GET" and item.url.path.startswith("/api/session/")
+                for item in server.requests
+            )
+            assert not any(item.url.path.endswith("/interrupt") for item in server.requests)
+
+            inspection = await runtime.inspect(handle)
+            assert inspection.execution_id == request.basis.execution_id
+            assert inspection.runtime_session == binding.runtime_session
+            cancel_ack = await runtime.cancel(
+                RuntimeCancelRequest(
+                    execution_id=request.basis.execution_id,
+                    runtime_session=binding.runtime_session,
+                    reason="resolve uncertain admission",
+                )
+            )
+            assert cancel_ack.state is RuntimeControlAckState.REQUESTED
+            assert len(prompt_requests) == 1
+            assert any(
+                item.method == "GET" and item.url.path == f"/api/session/{SESSION_ID}"
+                for item in server.requests
+            )
+            assert any(item.url.path.endswith("/interrupt") for item in server.requests)
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("status_code", "failure_category"),
+    [(400, "AGENT_BLOCKED"), (403, "PERMISSION_DENIED")],
+)
+def test_definite_prompt_rejection_disposes_event_observer(
+    status_code: int,
+    failure_category: str,
+) -> None:
+    server = MockOpenCodeServer(prompt_status=status_code)
+    runtime, client = setup_runtime(server)
+
+    async def exercise() -> None:
+        try:
+            request = execution_request()
+            binding = await runtime.create_session(request)
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.open_execution(request, binding)
+            assert exc_info.value.failure.category.value == failure_category
+            assert EXECUTION_ID not in runtime._active
+            assert server.stream._finished
+            prompt_calls = [item for item in server.requests if item.url.path.endswith("/prompt")]
+            assert len(prompt_calls) == 1
+
+            with pytest.raises(AgentRuntimeError) as retry_info:
+                await runtime.open_execution(request, binding)
+            assert retry_info.value.failure.category.value == "REQUEST_CONFLICT"
+            assert len([item for item in server.requests if item.url.path.endswith("/prompt")]) == 1
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
 def test_inspection_is_independent_and_preserves_requested_vs_actual_identity() -> None:
     session_data = {
         "data": {
@@ -501,6 +621,63 @@ def test_inspection_is_independent_and_preserves_requested_vs_actual_identity() 
     asyncio.run(exercise())
 
 
+def test_inspection_requires_known_process_local_binding_before_http() -> None:
+    server = MockOpenCodeServer()
+    runtime, client = setup_runtime(server)
+    request = execution_request()
+    unbound_handle = RuntimeExecutionHandle(
+        execution_id=request.basis.execution_id,
+        runtime_session=RuntimeSessionRef(runtime_id="opencode", session_id=SESSION_ID),
+        request_digest=request.request_digest,
+        opened_at=datetime.now(UTC),
+    )
+
+    async def exercise() -> None:
+        try:
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.inspect(unbound_handle)
+            assert exc_info.value.failure.category.value == "SESSION_BINDING_REQUIRED"
+            assert server.requests == []
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("mismatch", ["session", "digest"])
+def test_inspection_binding_mismatch_fails_before_session_get(mismatch: str) -> None:
+    server = MockOpenCodeServer()
+    runtime, client = setup_runtime(server)
+
+    async def exercise() -> None:
+        try:
+            _, _, handle = await create_open_execution(runtime)
+            if mismatch == "session":
+                mismatched = handle.model_copy(
+                    update={
+                        "runtime_session": RuntimeSessionRef(
+                            runtime_id="opencode", session_id="ses_other"
+                        )
+                    }
+                )
+            else:
+                mismatched = handle.model_copy(update={"request_digest": "sha256:" + "9" * 64})
+
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.inspect(mismatched)
+            assert exc_info.value.failure.category.value == "REQUEST_CONFLICT"
+            assert not any(
+                item.method == "GET" and item.url.path.startswith("/api/session/")
+                for item in server.requests
+            )
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
 def test_cancel_is_idempotent_and_terminal_cancel_is_safe() -> None:
     server = MockOpenCodeServer()
     runtime, client = setup_runtime(server)
@@ -522,6 +699,86 @@ def test_cancel_is_idempotent_and_terminal_cancel_is_safe() -> None:
         finally:
             await runtime.aclose()
             await client.aclose()
+
+    asyncio.run(exercise())
+
+
+def test_cancel_requires_known_process_local_binding_before_interrupt() -> None:
+    server = MockOpenCodeServer()
+    runtime, client = setup_runtime(server)
+
+    async def exercise() -> None:
+        try:
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=EXECUTION_ID,
+                        runtime_session=RuntimeSessionRef(
+                            runtime_id="opencode", session_id=SESSION_ID
+                        ),
+                        reason="unknown execution",
+                    )
+                )
+            assert exc_info.value.failure.category.value == "SESSION_BINDING_REQUIRED"
+            assert server.requests == []
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+def test_cancel_rejects_different_session_for_known_execution_without_interrupt() -> None:
+    server = MockOpenCodeServer()
+    runtime, client = setup_runtime(server)
+
+    async def exercise() -> None:
+        try:
+            request = execution_request()
+            await runtime.create_session(request)
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=request.basis.execution_id,
+                        runtime_session=RuntimeSessionRef(
+                            runtime_id="opencode", session_id="ses_other"
+                        ),
+                        reason="wrong session",
+                    )
+                )
+            assert exc_info.value.failure.category.value == "REQUEST_CONFLICT"
+            assert not any(item.url.path.endswith("/interrupt") for item in server.requests)
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+def test_cancel_requires_binding_in_this_process_even_when_session_ref_is_known_elsewhere() -> None:
+    source_server = MockOpenCodeServer()
+    source_runtime, source_client = setup_runtime(source_server)
+    target_server = MockOpenCodeServer()
+    target_runtime, target_client = setup_runtime(target_server)
+
+    async def exercise() -> None:
+        try:
+            binding = await source_runtime.create_session(execution_request())
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await target_runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=EXECUTION_ID,
+                        runtime_session=binding.runtime_session,
+                        reason="binding belongs to another process",
+                    )
+                )
+            assert exc_info.value.failure.category.value == "SESSION_BINDING_REQUIRED"
+            assert target_server.requests == []
+        finally:
+            await source_runtime.aclose()
+            await source_client.aclose()
+            await target_runtime.aclose()
+            await target_client.aclose()
 
     asyncio.run(exercise())
 
