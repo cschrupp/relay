@@ -106,14 +106,20 @@ RLY-S21-IMPL-AUTH-001 — AUTHORIZED
 Authorized implementation baseline:
 aaec399b7d8cd1c4f39b7171f664cb85aa4ecf22
 
+Implementation candidate:
+c947cf607699707b8b56d22cbb9aab4b30a7bf4a
+
+Independent implementation evaluation:
+RLY-S21-EVAL-001 — REWORK
+
 Implementation:
-AUTHORIZED / CANDIDATE PENDING
+REWORK REQUIRED
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. The live OpenCode sidecar, provider/model execution, workspace execution, and coding-agent activity remain unauthorized.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`; exact-bound cancel/inspect behavior and uncertain prompt-admission recovery require bounded correction. The live OpenCode sidecar, provider/model execution, workspace execution, and coding-agent activity remain unauthorized.
 
 # 2. Slice 1.5 authority and accepted design
 
