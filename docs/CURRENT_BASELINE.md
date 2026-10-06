@@ -124,17 +124,26 @@ DETERMINISTICALLY ACCEPTED
 Live OpenCode sidecar authority:
 RLY-S21-SIDECAR-AUTH-001 — AUTHORIZED
 
+Live OpenCode sidecar run 001:
+STOPPED FAIL-CLOSED
+
+Live OpenCode sidecar evaluation:
+RLY-S21-SIDECAR-EVAL-001 — ESCALATE
+
+Evidence finding:
+OpenCode 1.18.23 / V1 environment does not satisfy the candidate's pinned V2 contract
+
 Live OpenCode sidecar evidence:
-AUTHORIZED / PENDING
+INCOMPLETE / COMPATIBLE V2 RUNTIME REQUIRED
 
 Human technical acceptance:
-PENDING / NOT YET ELIGIBLE
+PENDING / NOT ELIGIBLE
 
 Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. The bounded disposable-fixture sidecar is authorized under `RLY-S21-SIDECAR-AUTH-001`, including only the minimum real provider/model calls required by the accepted D21 evidence protocol. Real-project workspace execution and Relay coding-agent activity remain unauthorized.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Sidecar run 001 stopped fail-closed at compatibility discovery: installed OpenCode 1.18.23 did not satisfy the candidate's pinned V2 health/version contract. `RLY-S21-SIDECAR-EVAL-001 — ESCALATE` preserves the candidate's deterministic ACCEPT and requires either a compatible V2 sidecar environment or a separately governed V1 design decision. Real-project workspace execution and Relay coding-agent activity remain unauthorized.
 
 # 2. Slice 1.5 authority and accepted design
 
