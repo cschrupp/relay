@@ -485,8 +485,8 @@ The contract does not assume event replay.
 
 ```python
 EventContinuity(
-    state = COMPLETE | LIVE_ONLY | INCOMPLETE,
-    reason = ...,
+    state=COMPLETE | LIVE_ONLY | INCOMPLETE,
+    reason=...,
 )
 ```
 
