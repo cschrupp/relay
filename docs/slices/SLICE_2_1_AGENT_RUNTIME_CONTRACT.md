@@ -1,7 +1,9 @@
 # Slice 2.1 — Agent Runtime Contract
 
-**Status:** PHASE 2 OPEN — SLICE PROPOSAL NOT OPEN / NOT AUTHORIZED  
+**Status:** OPEN — DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
+**Opening authority:** `RLY-S21-OPEN-001`  
+**Opening baseline:** `eac62b054af3815cc179c95d0d31aa96f9a374e3`  
 **Supersedes roadmap concept:** low-level `Model Provider Interface` as the primary orchestration boundary  
 **First planned runtime:** OpenCode
 
@@ -13,7 +15,7 @@ Define the Relay-owned contract for executing governed engineering roles through
 
 The first planned implementation of the contract is `OpenCodeRuntime`.
 
-This slice must not itself execute production coding work unless a later implementation authorization explicitly permits that work.
+Opening this slice authorizes governed planning only. Design requires separate Human authorization. This slice must not execute production coding work unless a later implementation authorization explicitly permits that work.
 
 ---
 

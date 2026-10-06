@@ -57,7 +57,9 @@ Phase 2:
 OPEN
 
 Slice 2.1:
-NOT OPEN / NOT AUTHORIZED
+OPEN — RLY-S21-OPEN-001
+Design: NOT AUTHORIZED
+Implementation: NOT AUTHORIZED
 
 Relay agent execution:
 NOT AUTHORIZED
@@ -69,7 +71,31 @@ Phase 1 remains the deterministic governing substrate for later phases and conti
 
 Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens authority integrity, determinism, provenance, Human control, evaluator independence, accepted-result promotion, or fail-closed behavior blocks affected Phase 2 work until resolved.
 
-**Unblocked ≠ authorized. Phase open ≠ Slice open. Slice open ≠ implementation authorized.**
+**Unblocked ≠ authorized. Phase open ≠ Slice open. Slice open ≠ design authorized. Design accepted ≠ implementation authorized.**
+
+# 1B. Slice 2.1 opening
+
+```text
+Slice:
+2.1 — Agent Runtime Contract
+
+Opening authority:
+RLY-S21-OPEN-001 — OPEN
+
+Opening baseline:
+eac62b054af3815cc179c95d0d31aa96f9a374e3
+
+Design:
+NOT AUTHORIZED
+
+Implementation:
+NOT AUTHORIZED
+
+Agent execution:
+NOT AUTHORIZED
+```
+
+Slice 2.1 is open for governed planning and the next explicit Human gate. Its existing proposal is not an accepted design and does not authorize OpenCode integration, provider/model execution, workspace execution, or coding-agent activity.
 
 # 2. Slice 1.5 authority and accepted design
 

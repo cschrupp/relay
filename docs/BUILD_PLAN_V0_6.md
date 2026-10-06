@@ -134,6 +134,11 @@ ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 Phase 2:
 OPEN — RLY-P2-OPEN-001
 
+Slice 2.1:
+OPEN — RLY-S21-OPEN-001
+Design: NOT AUTHORIZED
+Implementation: NOT AUTHORIZED
+
 Agent execution:
 NOT AUTHORIZED
 ```
@@ -163,7 +168,27 @@ This does not relax governance. Any Phase 1 deficiency that threatens authority 
 
 Non-blocking maturity work — including UI/UX, information hierarchy, terminology, progressive disclosure, operator ergonomics, and development-memory presentation — may continue in parallel under separately authorized slices.
 
-Opening Phase 2 does **not** open or authorize Slice 2.1, any provider/runtime implementation, or Relay agent execution.
+Phase 2 is open and Slice 2.1 is now separately open under `RLY-S21-OPEN-001`. Slice 2.1 design, implementation, provider/runtime integration, and Relay agent execution remain separately unauthorized.
+
+# 1B. Slice 2.1 opening boundary
+
+```text
+RLY-S21-OPEN-001 — OPEN
+
+Opening baseline:
+eac62b054af3815cc179c95d0d31aa96f9a374e3
+
+Design:
+NOT AUTHORIZED
+
+Implementation:
+NOT AUTHORIZED
+
+Agent execution:
+NOT AUTHORIZED
+```
+
+The existing Agent Runtime Contract document remains a proposal and input to future design. Opening the Slice does not lock that proposal or authorize implementation.
 
 # 2. Slice 1.5 authority
 

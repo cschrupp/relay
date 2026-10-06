@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                NOT OPEN / NOT AUTHORIZED
+Slice 2.1:                OPEN — DESIGN NOT AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. This opening does **not** authorize Slice 2.1 implementation, provider/runtime integration, Phase 3 work, or Relay agent execution. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
+Phase 2 is open under the accepted-baseline / active-hardening model, and Slice 2.1 is separately open under `RLY-S21-OPEN-001`. Slice 2.1 design and implementation, provider/runtime integration, Phase 3 work, and Relay agent execution remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
 
 See:
 
