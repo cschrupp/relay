@@ -257,16 +257,24 @@ Run 004 established:
 AUTHENTICATED V2 /api/health PASS
 UNCHANGED CANDIDATE describe() PASS
 V1 ISOLATION PASS
+
+V2 sidecar run 005:
+STOPPED FAIL-CLOSED BEFORE SERVER START
+
+V2 sidecar run 005 evaluation:
+RLY-S21-SIDECAR-EVAL-005 — ESCALATE
+
+Run 005 findings:
+OPENROUTER_API_KEY ABSENT FROM CODEX EXECUTION SHELL
+ONE DIRECT V2 --version INVOCATION ESCAPED ISOLATION AND HIT EROFS
+PROTECTED V1 METADATA REMAINED UNCHANGED
 PROVIDER/MODEL CALLS NONE
 
-Provider credential prerequisite:
-UNMET IN ISOLATED PROFILE
+Corrected V2 sidecar run 006:
+CONDITIONALLY READY UNDER EXISTING AUTHORITY AFTER CODEX EXECUTION-ENV PREFLIGHT
 
-Conditional V2 sidecar run 005:
-READY UNDER EXISTING AUTHORITY ONLY IF AN EXISTING EXTERNAL PROVIDER CREDENTIAL IS PRESENTED VIA AUTHORIZED ENVIRONMENT/EXTERNAL MECHANISM
-
-Run 005 handoff:
-RLY-S21-SIDECAR-PROVIDER-HANDOFF-004
+Run 006 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-005
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -275,7 +283,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 is the first live run to pass the complete V2 compatibility preflight: protected V1 state remained unchanged, authenticated `/api/health` returned 200 with `healthy=true` and exact V2 version `0.0.0-beta-17823`, and the unchanged candidate's `OpenCodeRuntime.describe()` returned the expected V2 descriptor through the same injected authenticated client. `RLY-S21-SIDECAR-EVAL-004 — ESCALATE` therefore records live adapter compatibility as established and leaves `RLY-S21-EVAL-002 — ACCEPT` untouched. The run then correctly stopped before session creation because no provider/model credential was available inside the isolated profile without importing protected credential state or creating a credential, both forbidden by current handoffs. Run 005 may proceed under existing sidecar authority only after an already-existing external provider credential is made available through an authorized environment/external mechanism; interactive login, OAuth enrollment, new credential creation, or importing protected V1 credential material remain outside the current execution boundary. Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 did not reach that checkpoint: the OpenRouter credential exported by the Human was absent from the actual Codex command-execution environment, and an inadvertent direct `opencode2 --version` invocation occurred before the required disposable HOME/XDG envelope. That invocation received `EROFS` while attempting to open the protected V1 log; subsequent metadata comparison showed the protected V1 executable and known persistent-state metadata unchanged. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies these as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 is conditionally ready under existing authority with two stronger procedural gates: Codex must prove `OPENROUTER_API_KEY` presence in its actual execution shell before any V2 invocation, and every V2 invocation must pass through a pre-created isolation wrapper. Requested model remains exactly `openrouter / google/gemini-3.8-flash`. Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 

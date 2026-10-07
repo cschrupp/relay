@@ -167,16 +167,24 @@ Run 004 established:
 AUTHENTICATED V2 /api/health PASS
 UNCHANGED CANDIDATE describe() PASS
 V1 ISOLATION PASS
+
+V2 sidecar run 005:
+STOPPED FAIL-CLOSED BEFORE SERVER START
+
+V2 sidecar run 005 evaluation:
+RLY-S21-SIDECAR-EVAL-005 — ESCALATE
+
+Run 005 findings:
+OPENROUTER_API_KEY ABSENT FROM CODEX EXECUTION SHELL
+ONE DIRECT V2 --version INVOCATION ESCAPED ISOLATION AND HIT EROFS
+PROTECTED V1 METADATA REMAINED UNCHANGED
 PROVIDER/MODEL CALLS NONE
 
-Provider credential prerequisite:
-UNMET IN ISOLATED PROFILE
+Corrected V2 sidecar run 006:
+CONDITIONALLY READY UNDER EXISTING AUTHORITY AFTER CODEX EXECUTION-ENV PREFLIGHT
 
-Conditional V2 sidecar run 005:
-READY UNDER EXISTING AUTHORITY ONLY IF AN EXISTING EXTERNAL PROVIDER CREDENTIAL IS PRESENTED VIA AUTHORIZED ENVIRONMENT/EXTERNAL MECHANISM
-
-Run 005 handoff:
-RLY-S21-SIDECAR-PROVIDER-HANDOFF-004
+Run 006 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-005
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -185,7 +193,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 004 passed the complete V2 compatibility preflight: protected V1 state remained unchanged, authenticated `/api/health` returned 200 with `healthy=true` and exact V2 version `0.0.0-beta-17823`, and the unchanged candidate's `OpenCodeRuntime.describe()` returned the expected V2 descriptor through the same injected authenticated client. `RLY-S21-SIDECAR-EVAL-004 — ESCALATE` therefore establishes live adapter compatibility and leaves `RLY-S21-EVAL-002 — ACCEPT` untouched. The run then correctly stopped before session creation because no provider/model credential was available in the isolated profile without importing protected credential state or creating a credential, which current handoffs forbid. Run 005 may proceed under existing sidecar authority only when an already-existing external provider credential is made available through an authorized environment/external mechanism. Interactive login, OAuth enrollment, new credential creation, and importing protected V1 credential material remain outside this execution boundary. Real-project coding-agent activity remains unauthorized.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 stopped before server startup because the Human-exported OpenRouter credential was absent from the actual Codex command-execution environment. In addition, one direct `opencode2 --version` invocation escaped the required disposable HOME/XDG envelope and received `EROFS` while attempting to open the protected V1 log; protected V1 executable/state metadata remained unchanged afterward. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies both findings as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 is conditionally ready under existing authority only after Codex proves `OPENROUTER_API_KEY` presence in its own execution shell and only through a handoff that forbids direct V2 invocation in favor of an isolation wrapper. Requested model remains exactly `openrouter / google/gemini-3.8-flash`. Real-project coding-agent activity remains unauthorized.
 
 # 2. Slice 1.5 authority and accepted design
 
