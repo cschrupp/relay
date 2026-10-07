@@ -173,18 +173,31 @@ class MockOpenCodeServer:
         if request.url.path == f"/api/session/{SESSION_ID}/prompt":
             assert self.event_observer_ready
             body = json.loads(request.content)
-            assert body["prompt"]["text"] == "Perform one bounded mocked task."
-            assert body["resume"] is False
+            assert body == {
+                "text": "Perform one bounded mocked task.",
+                "files": [],
+                "agents": [],
+                "skills": [],
+                "metadata": {},
+                "resume": False,
+            }
+            assert "prompt" not in body
             for event in self.prompt_events:
                 self.stream.feed(event)
             if self.close_events_after_prompt:
                 self.stream.finish()
-            return httpx.Response(
-                self.prompt_status,
-                json={"data": {"id": "invocation-1"}}
-                if self.prompt_status == 200
-                else {"error": AUTH_SENTINEL},
-            )
+            if self.prompt_status == 200:
+                response_body = {"data": {"id": "invocation-1"}}
+            elif self.prompt_status == 400:
+                response_body = {
+                    "error": {
+                        "kind": "Payload",
+                        "message": "Invalid request payload schema",
+                    }
+                }
+            else:
+                response_body = {"error": AUTH_SENTINEL}
+            return httpx.Response(self.prompt_status, json=response_body)
         if request.url.path == f"/api/session/{SESSION_ID}/interrupt":
             return httpx.Response(200, json={"data": True})
         if request.url.path == f"/api/session/{SESSION_ID}" and request.method == "GET":
@@ -289,6 +302,17 @@ def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_
                 "/api/event",
                 f"/api/session/{SESSION_ID}/prompt",
             ]
+            prompt_posts = [
+                item
+                for item in server.requests
+                if item.method == "POST" and item.url.path.endswith("/prompt")
+            ]
+            assert len(prompt_posts) == 1
+            assert server.requests.index(prompt_posts[0]) > next(
+                index
+                for index, item in enumerate(server.requests)
+                if item.method == "GET" and item.url.path == "/api/event"
+            )
             event_iterator = runtime.events(handle)
             event = await asyncio.wait_for(anext(event_iterator), timeout=1)
             assert event.event_type is RuntimeEventType.EXECUTION_STARTED
@@ -542,7 +566,7 @@ def test_uncertain_prompt_admission_returns_recoverable_exact_handle(
 
 @pytest.mark.parametrize(
     ("status_code", "failure_category"),
-    [(400, "AGENT_BLOCKED"), (403, "PERMISSION_DENIED")],
+    [(400, "CONFIGURATION"), (403, "PERMISSION_DENIED")],
 )
 def test_definite_prompt_rejection_disposes_event_observer(
     status_code: int,

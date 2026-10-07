@@ -496,11 +496,11 @@ class OpenCodeRuntime:
             )
 
         prompt_body: dict[str, Any] = {
-            "prompt": {
-                "text": request.basis.input_payload.text,
-                "files": [],
-                "agents": [],
-            },
+            "text": request.basis.input_payload.text,
+            "files": [],
+            "agents": [],
+            "skills": [],
+            "metadata": {},
             "resume": False,
         }
         try:
@@ -525,7 +525,7 @@ class OpenCodeRuntime:
             if response.status_code == 403:
                 category = RuntimeFailureCategory.PERMISSION_DENIED
             elif response.status_code == 400:
-                category = RuntimeFailureCategory.AGENT_BLOCKED
+                category = RuntimeFailureCategory.CONFIGURATION
             else:
                 category = self._http_failure_category(response.status_code)
             await self._discard_active(execution_id, active)
