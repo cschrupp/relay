@@ -157,11 +157,26 @@ RLY-S21-SIDECAR-EVAL-003 — ESCALATE
 Run 003 finding:
 isolated V2 server required HTTP authentication; unauthenticated candidate client correctly normalized 401 as AUTHENTICATION
 
-Corrected V2 sidecar run 004:
-AUTHORIZED UNDER EXISTING SIDECAR / V2 PROVISIONING AUTHORITY / HANDOFF READY
+V2 sidecar run 004:
+STOPPED AT PROVIDER CREDENTIAL PREREQUISITE AFTER LIVE V2 COMPATIBILITY PASS
 
-Run 004 handoff:
-RLY-S21-SIDECAR-V2-AUTH-HANDOFF-003
+V2 sidecar run 004 evaluation:
+RLY-S21-SIDECAR-EVAL-004 — ESCALATE
+
+Run 004 established:
+AUTHENTICATED V2 /api/health PASS
+UNCHANGED CANDIDATE describe() PASS
+V1 ISOLATION PASS
+PROVIDER/MODEL CALLS NONE
+
+Provider credential prerequisite:
+UNMET IN ISOLATED PROFILE
+
+Conditional V2 sidecar run 005:
+READY UNDER EXISTING AUTHORITY ONLY IF AN EXISTING EXTERNAL PROVIDER CREDENTIAL IS PRESENTED VIA AUTHORIZED ENVIRONMENT/EXTERNAL MECHANISM
+
+Run 005 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-004
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -170,7 +185,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 001 established a V1/V2 generation mismatch; run 002 established that provisioning isolation had to begin before the package postinstall. Run 003 successfully proved protected V1 executable/state isolation and started a real V2 server on loopback, but the server required HTTP authentication: unauthenticated `/api/health` returned 401 and the unchanged candidate normalized it safely as `AUTHENTICATION`. `RLY-S21-SIDECAR-EVAL-003 — ESCALATE` does not establish a candidate or accepted-design defect because the accepted design permits injected runtime connection material and candidate `OpenCodeRuntime` already accepts an injected `httpx.AsyncClient`; its deterministic tests exercise an injected Authorization header without leaking the sentinel. Run 004 is ready under the existing sidecar and V2 provisioning authorities to exercise that existing authenticated-client seam using transient server connection material only. The candidate remains unchanged and deterministically accepted. Real-project coding-agent activity remains unauthorized.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 004 passed the complete V2 compatibility preflight: protected V1 state remained unchanged, authenticated `/api/health` returned 200 with `healthy=true` and exact V2 version `0.0.0-beta-17823`, and the unchanged candidate's `OpenCodeRuntime.describe()` returned the expected V2 descriptor through the same injected authenticated client. `RLY-S21-SIDECAR-EVAL-004 — ESCALATE` therefore establishes live adapter compatibility and leaves `RLY-S21-EVAL-002 — ACCEPT` untouched. The run then correctly stopped before session creation because no provider/model credential was available in the isolated profile without importing protected credential state or creating a credential, which current handoffs forbid. Run 005 may proceed under existing sidecar authority only when an already-existing external provider credential is made available through an authorized environment/external mechanism. Interactive login, OAuth enrollment, new credential creation, and importing protected V1 credential material remain outside this execution boundary. Real-project coding-agent activity remains unauthorized.
 
 # 2. Slice 1.5 authority and accepted design
 

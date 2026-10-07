@@ -247,11 +247,26 @@ RLY-S21-SIDECAR-EVAL-003 — ESCALATE
 Run 003 finding:
 isolated V2 server required HTTP authentication; unauthenticated candidate client correctly normalized 401 as AUTHENTICATION
 
-Corrected V2 sidecar run 004:
-AUTHORIZED UNDER EXISTING SIDECAR / V2 PROVISIONING AUTHORITY / HANDOFF READY
+V2 sidecar run 004:
+STOPPED AT PROVIDER CREDENTIAL PREREQUISITE AFTER LIVE V2 COMPATIBILITY PASS
 
-Run 004 handoff:
-RLY-S21-SIDECAR-V2-AUTH-HANDOFF-003
+V2 sidecar run 004 evaluation:
+RLY-S21-SIDECAR-EVAL-004 — ESCALATE
+
+Run 004 established:
+AUTHENTICATED V2 /api/health PASS
+UNCHANGED CANDIDATE describe() PASS
+V1 ISOLATION PASS
+PROVIDER/MODEL CALLS NONE
+
+Provider credential prerequisite:
+UNMET IN ISOLATED PROFILE
+
+Conditional V2 sidecar run 005:
+READY UNDER EXISTING AUTHORITY ONLY IF AN EXISTING EXTERNAL PROVIDER CREDENTIAL IS PRESENTED VIA AUTHORIZED ENVIRONMENT/EXTERNAL MECHANISM
+
+Run 005 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-004
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -260,7 +275,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 001 established a V1/V2 generation mismatch; run 002 established that provisioning isolation had to begin before the package postinstall. Run 003 successfully proved protected V1 executable/state isolation and started a real V2 server on loopback, but the live server required HTTP authentication: unauthenticated `/api/health` returned 401 and the unchanged candidate normalized this safely as `AUTHENTICATION`. `RLY-S21-SIDECAR-EVAL-003 — ESCALATE` does not establish a Relay candidate or accepted-design defect because the accepted design permits injected runtime connection material and candidate `OpenCodeRuntime` already accepts an injected `httpx.AsyncClient`; deterministic tests exercise an injected Authorization header without secret leakage. Run 004 is therefore ready under the existing Human Authority to exercise this existing seam with transient server connection authentication only. Candidate `ded3ed03b7070ea095a823129ebe44935cb57997` remains unchanged and deterministically accepted. Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 is the first live run to pass the complete V2 compatibility preflight: protected V1 state remained unchanged, authenticated `/api/health` returned 200 with `healthy=true` and exact V2 version `0.0.0-beta-17823`, and the unchanged candidate's `OpenCodeRuntime.describe()` returned the expected V2 descriptor through the same injected authenticated client. `RLY-S21-SIDECAR-EVAL-004 — ESCALATE` therefore records live adapter compatibility as established and leaves `RLY-S21-EVAL-002 — ACCEPT` untouched. The run then correctly stopped before session creation because no provider/model credential was available inside the isolated profile without importing protected credential state or creating a credential, both forbidden by current handoffs. Run 005 may proceed under existing sidecar authority only after an already-existing external provider credential is made available through an authorized environment/external mechanism; interactive login, OAuth enrollment, new credential creation, or importing protected V1 credential material remain outside the current execution boundary. Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 
