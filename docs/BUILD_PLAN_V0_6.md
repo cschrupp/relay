@@ -285,10 +285,21 @@ SERVER STARTUP FAIL — EXIT 1 BEFORE READINESS
 PROVIDER/MODEL AVAILABILITY NOT TESTED
 
 Run 007:
-READY UNDER EXISTING AUTHORITY WITH RESTORED PROFILE/DATABASE-DIRECTORY PRECONDITIONS AND STARTUP DIAGNOSTICS
+STOPPED FAIL-CLOSED AT D21-05 PROMPT ADMISSION
 
-Run 007 handoff:
-RLY-S21-SIDECAR-PROVIDER-HANDOFF-006
+Run 007 evaluation:
+RLY-S21-SIDECAR-EVAL-007 — REWORK
+
+Blocking findings:
+LIVE V2 PROMPT REQUEST SCHEMA MISMATCH
+DETERMINISTIC MOCK ENCODED SAME INCORRECT PROMPT CONTRACT
+HTTP 400 PROMPT SCHEMA REJECTION MISCLASSIFIED AS AGENT_BLOCKED
+
+Implementation rework:
+AUTHORIZED UNDER EXISTING RLY-S21-IMPL-AUTH-001 / HANDOFF READY
+
+Rework handoff:
+RLY-S21-IMPL-REWORK-HANDOFF-001
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -297,7 +308,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 did not reach that checkpoint: the OpenRouter credential exported by the Human was absent from the actual Codex command-execution environment, and an inadvertent direct `opencode2 --version` invocation occurred before the required disposable HOME/XDG envelope. That invocation received `EROFS` while attempting to open the protected V1 log; subsequent metadata comparison showed the protected V1 executable and known persistent-state metadata unchanged. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies these as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 passed credential-delivery and wrapper-isolation gates, but the isolated V2 server exited with code 1 before readiness. RLY-S21-SIDECAR-EVAL-006 — ESCALATE leaves the Relay candidate and accepted design unchanged. The Run-006 handoff omitted the explicit disposable-profile and OPENCODE_DB-parent creation required by Run 003; this procedural regression is established, while causality for the server exit is not yet proven. Run 007 restores those startup preconditions and requires sanitized isolated-V2 startup diagnostics if the server still exits. Requested model remains exactly openrouter / google/gemini-3.8-flash. Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 did not reach that checkpoint: the OpenRouter credential exported by the Human was absent from the actual Codex command-execution environment, and an inadvertent direct `opencode2 --version` invocation occurred before the required disposable HOME/XDG envelope. That invocation received `EROFS` while attempting to open the protected V1 log; subsequent metadata comparison showed the protected V1 executable and known persistent-state metadata unchanged. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies these as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 passed credential-delivery and wrapper-isolation gates, but the isolated V2 server exited with code 1 before readiness. RLY-S21-SIDECAR-EVAL-006 — ESCALATE leaves the Relay candidate and accepted design unchanged. The Run-006 handoff omitted the explicit disposable-profile and OPENCODE_DB-parent creation required by Run 003; this procedural regression is established, while causality for the server exit is not yet proven. Run 007 passed startup, authenticated health, candidate describe, fixture binding, and session creation, then failed at D21-05 when the live beta rejected the candidate prompt body with HTTP 400 `Missing key at ["text"]` before provider inference. `RLY-S21-SIDECAR-EVAL-007 — REWORK` establishes a bounded OpenCode adapter implementation defect, not a design defect. The deterministic mock encoded the same wrong prompt contract, and the prompt 400 was also misclassified as `AGENT_BLOCKED`. Rework is confined to `src/relay_engine/agent_runtime/opencode.py` and deterministic runtime tests under existing `RLY-S21-IMPL-AUTH-001`. The exact beta schema must be established before changing the body; no live provider call is authorized during implementation. Relay real-project agent execution remains unauthorized.
 
 # 2. Slice 1.5 authority
 
