@@ -270,11 +270,25 @@ ONE DIRECT V2 --version INVOCATION ESCAPED ISOLATION AND HIT EROFS
 PROTECTED V1 METADATA REMAINED UNCHANGED
 PROVIDER/MODEL CALLS NONE
 
-Corrected V2 sidecar run 006:
-CONDITIONALLY READY UNDER EXISTING AUTHORITY AFTER CODEX EXECUTION-ENV PREFLIGHT
+V2 sidecar run 006:
+STOPPED FAIL-CLOSED AT V2 SERVER STARTUP
 
-Run 006 handoff:
-RLY-S21-SIDECAR-PROVIDER-HANDOFF-005
+V2 sidecar run 006 evaluation:
+RLY-S21-SIDECAR-EVAL-006 — ESCALATE
+
+Run 006 established:
+.env CREDENTIAL DELIVERY PASS
+WRAPPER-ENFORCED V2 ISOLATION PASS
+V1 PROTECTED METADATA UNCHANGED
+V2 VERSION/HASH PASS
+SERVER STARTUP FAIL — EXIT 1 BEFORE READINESS
+PROVIDER/MODEL AVAILABILITY NOT TESTED
+
+Run 007:
+READY UNDER EXISTING AUTHORITY WITH RESTORED PROFILE/DATABASE-DIRECTORY PRECONDITIONS AND STARTUP DIAGNOSTICS
+
+Run 007 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-006
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -283,7 +297,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 did not reach that checkpoint: the OpenRouter credential exported by the Human was absent from the actual Codex command-execution environment, and an inadvertent direct `opencode2 --version` invocation occurred before the required disposable HOME/XDG envelope. That invocation received `EROFS` while attempting to open the protected V1 log; subsequent metadata comparison showed the protected V1 executable and known persistent-state metadata unchanged. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies these as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 is conditionally ready under existing authority with two stronger procedural gates: Codex must prove `OPENROUTER_API_KEY` presence in its actual execution shell before any V2 invocation, and every V2 invocation must pass through a pre-created isolation wrapper. Requested model remains exactly `openrouter / google/gemini-3.8-flash`. Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 did not reach that checkpoint: the OpenRouter credential exported by the Human was absent from the actual Codex command-execution environment, and an inadvertent direct `opencode2 --version` invocation occurred before the required disposable HOME/XDG envelope. That invocation received `EROFS` while attempting to open the protected V1 log; subsequent metadata comparison showed the protected V1 executable and known persistent-state metadata unchanged. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies these as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 passed credential-delivery and wrapper-isolation gates, but the isolated V2 server exited with code 1 before readiness. RLY-S21-SIDECAR-EVAL-006 — ESCALATE leaves the Relay candidate and accepted design unchanged. The Run-006 handoff omitted the explicit disposable-profile and OPENCODE_DB-parent creation required by Run 003; this procedural regression is established, while causality for the server exit is not yet proven. Run 007 restores those startup preconditions and requires sanitized isolated-V2 startup diagnostics if the server still exits. Requested model remains exactly openrouter / google/gemini-3.8-flash. Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 
