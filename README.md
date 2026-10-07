@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — SUCCESSOR ACCEPTED / SIDECAR REAUTH REQUIRED
+Slice 2.1:                OPEN — SUCCESSOR LIVE SIDECAR RUN 009 READY
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Run 008 exposed an admit-only execution-wake defect. Successor `f9a4790c6343561b462d521008c197d776e9ebcf` now received `RLY-S21-EVAL-004 — ACCEPT` with exact-head CI `37682777614 — SUCCESS`; it omits `resume:false` from normal execution and no longer treats the admitted inbox item's generic ID as a runtime invocation identity. Human technical acceptance remains blocked because the current sidecar authority is SHA-bound to `5df1add9...`; a new narrow Human Authority record is required before live D21 evidence may resume against the successor. Phase 3 work and Relay agent execution against real work remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `f9a4790c6343561b462d521008c197d776e9ebcf` received `RLY-S21-EVAL-004 — ACCEPT` with exact-head CI `37682777614 — SUCCESS`. Human Authority `RLY-S21-SIDECAR-AUTH-003 — AUTHORIZED` now binds the bounded live sidecar to that exact successor. Run 009 will collect fresh candidate-specific D21 evidence using OpenRouter / `google/gemini-3.8-flash` against only disposable fixtures; successful evidence still does not imply Human technical acceptance. Phase 3 work and Relay agent execution against real work remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
 
 See:
 
