@@ -238,11 +238,20 @@ RLY-S21-SIDECAR-EVAL-002 — ESCALATE
 Run 002 finding:
 V2 package postinstall inherited protected V1 HOME/XDG state; V1 state integrity is not attestable
 
-Corrected V2 sidecar run 003:
-AUTHORIZED UNDER EXISTING RLY-S21-SIDECAR-V2-PROVISION-AUTH-001 / HANDOFF READY
+V2 sidecar run 003:
+STOPPED FAIL-CLOSED AT AUTHENTICATED COMPATIBILITY PREFLIGHT
 
-Run 003 handoff:
-RLY-S21-SIDECAR-V2-PROVISION-HANDOFF-002
+V2 sidecar run 003 evaluation:
+RLY-S21-SIDECAR-EVAL-003 — ESCALATE
+
+Run 003 finding:
+isolated V2 server required HTTP authentication; unauthenticated candidate client correctly normalized 401 as AUTHENTICATION
+
+Corrected V2 sidecar run 004:
+AUTHORIZED UNDER EXISTING SIDECAR / V2 PROVISIONING AUTHORITY / HANDOFF READY
+
+Run 004 handoff:
+RLY-S21-SIDECAR-V2-AUTH-HANDOFF-003
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -251,7 +260,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Sidecar run 001 stopped fail-closed because OpenCode 1.18.23 did not satisfy the pinned V2 contract. Run 002 then stopped even earlier during V2 provisioning: the official package postinstall invoked `opencode2 --version` with inherited HOME/XDG state, and the protected shared OpenCode log may have been written. `RLY-S21-SIDECAR-EVAL-002 — ESCALATE` classifies this as a provisioning-procedure isolation failure, not a Relay candidate or accepted-design defect. Candidate `ded3ed03b7070ea095a823129ebe44935cb57997` remains unchanged and deterministically accepted. Existing Human Authority already permits isolated V2 config/data/state/cache, so run 003 is authorized under the same authority with a corrected handoff that encloses package installation and every V2 invocation in a disposable HOME/XDG profile. Relay source changes and real-project agent execution remain unauthorized.
+The combined Slice 2.1 Agent Runtime Contract design is Human-accepted, and implementation is explicitly authorized under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` is preserved with `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending live OpenCode sidecar evidence. Run 001 established a V1/V2 generation mismatch; run 002 established that provisioning isolation had to begin before the package postinstall. Run 003 successfully proved protected V1 executable/state isolation and started a real V2 server on loopback, but the live server required HTTP authentication: unauthenticated `/api/health` returned 401 and the unchanged candidate normalized this safely as `AUTHENTICATION`. `RLY-S21-SIDECAR-EVAL-003 — ESCALATE` does not establish a Relay candidate or accepted-design defect because the accepted design permits injected runtime connection material and candidate `OpenCodeRuntime` already accepts an injected `httpx.AsyncClient`; deterministic tests exercise an injected Authorization header without secret leakage. Run 004 is therefore ready under the existing Human Authority to exercise this existing seam with transient server connection authentication only. Candidate `ded3ed03b7070ea095a823129ebe44935cb57997` remains unchanged and deterministically accepted. Relay source changes and real-project agent execution remain unauthorized.
 
 # 2. Slice 1.5 authority
 
