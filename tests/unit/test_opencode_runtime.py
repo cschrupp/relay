@@ -90,8 +90,10 @@ class QueueEventStream(httpx.AsyncByteStream):
     def __init__(self) -> None:
         self._chunks: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._finished = False
+        self.events: list[dict[str, object]] = []
 
     def feed(self, event: dict[str, object]) -> None:
+        self.events.append(event)
         payload = json.dumps(event, separators=(",", ":"), ensure_ascii=False)
         self._chunks.put_nowait(f"data: {payload}\n\n".encode())
 
@@ -135,6 +137,8 @@ class MockOpenCodeServer:
         self.health_status = health_status
         self.malformed_session_response = malformed_session_response
         self.event_observer_ready = False
+        self.prompt_bodies: list[dict[str, object]] = []
+        self.prompt_effects: list[str] = []
 
     def handle(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
@@ -173,21 +177,54 @@ class MockOpenCodeServer:
         if request.url.path == f"/api/session/{SESSION_ID}/prompt":
             assert self.event_observer_ready
             body = json.loads(request.content)
-            assert body == {
+            prompt_body = {
                 "text": "Perform one bounded mocked task.",
                 "files": [],
                 "agents": [],
                 "skills": [],
                 "metadata": {},
-                "resume": False,
             }
+            assert {key: body[key] for key in prompt_body} == prompt_body
+            assert set(body) <= {*prompt_body, "resume"}
+            assert body.get("resume") in (None, False, True)
             assert "prompt" not in body
-            for event in self.prompt_events:
-                self.stream.feed(event)
-            if self.close_events_after_prompt:
-                self.stream.finish()
+            self.prompt_bodies.append(body)
             if self.prompt_status == 200:
-                response_body = {"data": {"id": "invocation-1"}}
+                self.stream.feed(
+                    {
+                        "type": "session.inbox.enqueued",
+                        "properties": {"sessionID": SESSION_ID},
+                    }
+                )
+                self.prompt_effects.append("admission")
+                if body.get("resume") is not False:
+                    self.stream.feed(
+                        {
+                            "type": "session.execution.started",
+                            "properties": {"sessionID": SESSION_ID},
+                        }
+                    )
+                    self.prompt_effects.append("execution_wake")
+                    for event in self.prompt_events:
+                        self.stream.feed(event)
+                if self.close_events_after_prompt:
+                    self.stream.finish()
+                response_body = {
+                    "data": {
+                        "id": "msg_mock_admitted_user_1",
+                        "sessionID": SESSION_ID,
+                        "timeCreated": 1_728_000_000_000,
+                        "type": "user",
+                        "payload": {
+                            "text": body["text"],
+                            "files": body["files"],
+                            "agents": body["agents"],
+                            "skills": body["skills"],
+                            "metadata": body["metadata"],
+                        },
+                        "delivery": "steer",
+                    }
+                }
             elif self.prompt_status == 400:
                 response_body = {
                     "error": {
@@ -281,7 +318,7 @@ def test_missing_v2_health_endpoint_fails_without_v1_fallback() -> None:
     asyncio.run(exercise())
 
 
-def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_event() -> None:
+def test_session_and_prompt_mapping_observe_before_admission_and_wake_execution() -> None:
     started_event = {
         "type": "session.status",
         "properties": {"sessionID": SESSION_ID, "status": {"type": "busy"}},
@@ -294,7 +331,18 @@ def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_
             request, binding, handle = await create_open_execution(runtime)
             assert binding.request_digest == request.request_digest
             assert handle.runtime_session == binding.runtime_session
-            assert handle.runtime_invocation is not None
+            assert handle.runtime_invocation is None
+            assert server.prompt_bodies == [
+                {
+                    "text": "Perform one bounded mocked task.",
+                    "files": [],
+                    "agents": [],
+                    "skills": [],
+                    "metadata": {},
+                }
+            ]
+            assert "resume" not in server.prompt_bodies[0]
+            assert server.prompt_effects == ["admission", "execution_wake"]
             assert [request.url.path for request in server.requests] == [
                 "/api/health",
                 "/api/session",
@@ -313,11 +361,21 @@ def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_
                 for index, item in enumerate(server.requests)
                 if item.method == "GET" and item.url.path == "/api/event"
             )
+            active = runtime._active[EXECUTION_ID]
+            await wait_until(lambda: active.sequence == 3)
             event_iterator = runtime.events(handle)
-            event = await asyncio.wait_for(anext(event_iterator), timeout=1)
-            assert event.event_type is RuntimeEventType.EXECUTION_STARTED
-            assert event.raw_event_type == "session.status"
-            assert event.sequence == 1
+            observed = [await asyncio.wait_for(anext(event_iterator), timeout=1) for _ in range(3)]
+            assert [event.event_type for event in observed] == [
+                RuntimeEventType.PROGRESS,
+                RuntimeEventType.EXECUTION_STARTED,
+                RuntimeEventType.EXECUTION_STARTED,
+            ]
+            assert [event.raw_event_type for event in observed] == [
+                "session.inbox.enqueued",
+                "session.execution.started",
+                "session.status",
+            ]
+            assert [event.sequence for event in observed] == [1, 2, 3]
             await event_iterator.aclose()
 
             with pytest.raises(AgentRuntimeError) as exc_info:
@@ -329,6 +387,33 @@ def test_session_and_prompt_mapping_observe_before_admission_and_keep_immediate_
             await client.aclose()
 
     asyncio.run(exercise())
+
+
+def test_resume_false_models_admission_without_execution_wake() -> None:
+    server = MockOpenCodeServer()
+    server.event_observer_ready = True
+    prompt_body = {
+        "text": "Perform one bounded mocked task.",
+        "files": [],
+        "agents": [],
+        "skills": [],
+        "metadata": {},
+        "resume": False,
+    }
+    request = httpx.Request(
+        "POST",
+        f"http://opencode.mock:4096/api/session/{SESSION_ID}/prompt",
+        json=prompt_body,
+    )
+
+    response = server.handle(request)
+
+    assert response.status_code == 200
+    assert server.prompt_bodies == [prompt_body]
+    assert server.prompt_effects == ["admission"]
+    assert [event["type"] for event in server.stream.events] == ["session.inbox.enqueued"]
+    assert response.json()["data"]["type"] == "user"
+    assert response.json()["data"]["id"] == "msg_mock_admitted_user_1"
 
 
 def test_unrelated_events_are_ignored_and_ambiguous_events_mark_incomplete() -> None:
@@ -355,16 +440,22 @@ def test_unrelated_events_are_ignored_and_ambiguous_events_mark_incomplete() -> 
         try:
             _, _, handle = await create_open_execution(runtime)
             active = runtime._active[EXECUTION_ID]
-            await wait_until(lambda: active.sequence == 2)
+            await wait_until(lambda: active.sequence == 4)
             event_iterator = runtime.events(handle)
             observed = [
                 await asyncio.wait_for(anext(event_iterator), timeout=1),
                 await asyncio.wait_for(anext(event_iterator), timeout=1),
+                await asyncio.wait_for(anext(event_iterator), timeout=1),
+                await asyncio.wait_for(anext(event_iterator), timeout=1),
             ]
             await event_iterator.aclose()
-            assert [event.sequence for event in observed] == [1, 2]
-            assert observed[0].event_type is RuntimeEventType.EVENT_GAP
-            assert observed[1].event_type is RuntimeEventType.PROGRESS
+            assert [event.sequence for event in observed] == [1, 2, 3, 4]
+            assert [event.event_type for event in observed] == [
+                RuntimeEventType.PROGRESS,
+                RuntimeEventType.EXECUTION_STARTED,
+                RuntimeEventType.EVENT_GAP,
+                RuntimeEventType.PROGRESS,
+            ]
             continuity = runtime.continuity(handle)
             assert continuity.state is RuntimeContinuityState.INCOMPLETE
             assert continuity.reason is RuntimeContinuityReason.EVENT_ATTRIBUTION
@@ -390,7 +481,7 @@ def test_queue_overflow_emits_gap_when_space_becomes_available() -> None:
         try:
             _, _, handle = await create_open_execution(runtime)
             active = runtime._active[EXECUTION_ID]
-            await wait_until(lambda: active.sequence == 3)
+            await wait_until(lambda: active.overflow_gap_pending)
             event_iterator = runtime.events(handle)
             first = await asyncio.wait_for(anext(event_iterator), timeout=1)
             gap = await asyncio.wait_for(anext(event_iterator), timeout=1)
@@ -430,9 +521,13 @@ def test_stream_disconnect_emits_gap_without_claiming_replay() -> None:
             observed = [
                 await asyncio.wait_for(anext(iterator), timeout=1),
                 await asyncio.wait_for(anext(iterator), timeout=1),
+                await asyncio.wait_for(anext(iterator), timeout=1),
+                await asyncio.wait_for(anext(iterator), timeout=1),
             ]
             await iterator.aclose()
             assert [event.event_type for event in observed] == [
+                RuntimeEventType.PROGRESS,
+                RuntimeEventType.EXECUTION_STARTED,
                 RuntimeEventType.EXECUTION_STARTED,
                 RuntimeEventType.EVENT_GAP,
             ]
@@ -856,14 +951,16 @@ def test_permission_ask_and_deny_are_never_approved() -> None:
         try:
             _, _, handle = await create_open_execution(runtime)
             active = runtime._active[EXECUTION_ID]
-            await wait_until(lambda: active.sequence == 2)
+            await wait_until(lambda: active.sequence == 4)
             iterator = runtime.events(handle)
             observed = [
                 await asyncio.wait_for(anext(iterator), timeout=1),
                 await asyncio.wait_for(anext(iterator), timeout=1),
+                await asyncio.wait_for(anext(iterator), timeout=1),
+                await asyncio.wait_for(anext(iterator), timeout=1),
             ]
             await iterator.aclose()
-            assert [event.event_type for event in observed] == [
+            assert [event.event_type for event in observed[-2:]] == [
                 RuntimeEventType.PERMISSION_REQUIRED,
                 RuntimeEventType.EXECUTION_BLOCKED,
             ]

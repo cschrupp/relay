@@ -32,7 +32,6 @@ from relay_engine.agent_runtime.models import (
     RuntimeExecutionRequest,
     RuntimeFailureCategory,
     RuntimeIdentityCompleteness,
-    RuntimeInvocationRef,
     RuntimePermissionProfileRef,
     RuntimeProvenance,
     RuntimeSessionBinding,
@@ -501,7 +500,6 @@ class OpenCodeRuntime:
             "agents": [],
             "skills": [],
             "metadata": {},
-            "resume": False,
         }
         try:
             response = await self._client.post(
@@ -537,29 +535,11 @@ class OpenCodeRuntime:
             )
 
         try:
-            response_data = self._unwrap_data(
-                self._read_json(response, RuntimeFailureCategory.TRANSPORT)
-            )
+            self._unwrap_data(self._read_json(response, RuntimeFailureCategory.TRANSPORT))
         except AgentRuntimeError:
             # A successful response with an unusable body may still represent admission.
             return provisional_handle
-        invocation_id = self._invocation_id_from(response_data)
-        handle = provisional_handle.model_copy(
-            update={
-                "runtime_invocation": (
-                    RuntimeInvocationRef(
-                        runtime_id=OPENCODE_RUNTIME_ID,
-                        session_id=binding.runtime_session.session_id,
-                        invocation_id=invocation_id,
-                    )
-                    if invocation_id is not None
-                    else None
-                )
-            }
-        )
-        active.handle = handle
-        self._active[execution_id] = active
-        return handle
+        return provisional_handle
 
     def events(self, handle: RuntimeExecutionHandle) -> AsyncIterator[RuntimeEventEnvelope]:
         """Consume the already-running adapter queue without opening another stream."""
@@ -1397,14 +1377,6 @@ class OpenCodeRuntime:
                 if isinstance(nested, str) and nested.strip() and len(nested) <= 128:
                     return nested
         return None
-
-    def _invocation_id_from(self, data: dict[str, Any] | bool) -> str | None:
-        if isinstance(data, bool):
-            return None
-        value = data.get("invocationID") or data.get("invocationId")
-        if value is None and isinstance(data.get("id"), str):
-            value = data["id"]
-        return value if isinstance(value, str) and value.strip() and len(value) <= 128 else None
 
     def _recompute_digest(self, request: RuntimeExecutionRequest) -> str:
         from relay_engine.agent_runtime.models import digest_execution_basis
