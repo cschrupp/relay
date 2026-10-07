@@ -180,11 +180,25 @@ ONE DIRECT V2 --version INVOCATION ESCAPED ISOLATION AND HIT EROFS
 PROTECTED V1 METADATA REMAINED UNCHANGED
 PROVIDER/MODEL CALLS NONE
 
-Corrected V2 sidecar run 006:
-CONDITIONALLY READY UNDER EXISTING AUTHORITY AFTER CODEX EXECUTION-ENV PREFLIGHT
+V2 sidecar run 006:
+STOPPED FAIL-CLOSED AT V2 SERVER STARTUP
 
-Run 006 handoff:
-RLY-S21-SIDECAR-PROVIDER-HANDOFF-005
+V2 sidecar run 006 evaluation:
+RLY-S21-SIDECAR-EVAL-006 — ESCALATE
+
+Run 006 established:
+.env CREDENTIAL DELIVERY PASS
+WRAPPER-ENFORCED V2 ISOLATION PASS
+V1 PROTECTED METADATA UNCHANGED
+V2 VERSION/HASH PASS
+SERVER STARTUP FAIL — EXIT 1 BEFORE READINESS
+PROVIDER/MODEL AVAILABILITY NOT TESTED
+
+Run 007:
+READY UNDER EXISTING AUTHORITY WITH RESTORED PROFILE/DATABASE-DIRECTORY PRECONDITIONS AND STARTUP DIAGNOSTICS
+
+Run 007 handoff:
+RLY-S21-SIDECAR-PROVIDER-HANDOFF-006
 
 Human technical acceptance:
 PENDING / NOT ELIGIBLE
@@ -193,7 +207,7 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 stopped before server startup because the Human-exported OpenRouter credential was absent from the actual Codex command-execution environment. In addition, one direct `opencode2 --version` invocation escaped the required disposable HOME/XDG envelope and received `EROFS` while attempting to open the protected V1 log; protected V1 executable/state metadata remained unchanged afterward. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies both findings as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 is conditionally ready under existing authority only after Codex proves `OPENROUTER_API_KEY` presence in its own execution shell and only through a handoff that forbids direct V2 invocation in favor of an isolation wrapper. Requested model remains exactly `openrouter / google/gemini-3.8-flash`. Real-project coding-agent activity remains unauthorized.
+Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. Human technical acceptance remains pending the live OpenCode sidecar evidence gate. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 stopped before server startup because the Human-exported OpenRouter credential was absent from the actual Codex command-execution environment. In addition, one direct `opencode2 --version` invocation escaped the required disposable HOME/XDG envelope and received `EROFS` while attempting to open the protected V1 log; protected V1 executable/state metadata remained unchanged afterward. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies both findings as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 passed credential-delivery and wrapper-isolation gates, but the isolated V2 server exited with code 1 before readiness. RLY-S21-SIDECAR-EVAL-006 — ESCALATE leaves the Relay candidate and accepted design unchanged. The Run-006 handoff omitted the explicit disposable-profile and OPENCODE_DB-parent creation required by Run 003; this procedural regression is established, while causality for the server exit is not yet proven. Run 007 restores those startup preconditions and requires sanitized isolated-V2 startup diagnostics if the server still exits. Requested model remains exactly openrouter / google/gemini-3.8-flash. Real-project coding-agent activity remains unauthorized.
 
 # 2. Slice 1.5 authority and accepted design
 
