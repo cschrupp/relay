@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 010 CORRECTED PREFLIGHT READY
+Slice 2.1:                OPEN — RUN 010R1 PROVIDER PREFLIGHT DIAGNOSTIC
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. Run 010 stopped pre-D21 on an authenticated health 503; the diagnostic established a transient readiness race because database migration bootstrap began 23 ms later with no underlying runtime/profile defect observed. `RLY-S21-SIDECAR-HEALTH-DIAG-EVAL-001 — CORRECT_RUN_010_PREFLIGHT` authorizes no new scope: the existing Run-010 Human Authority remains valid, and a fresh corrected attempt will use bounded 503-as-WAITING readiness polling before candidate describe, route preflight, or D21. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. Run 010r1 passed corrected health readiness and candidate `describe()`. Its exact model catalog proved `google/gemini-3.8-flash` enabled/active with the OpenRouter package, but retained provider-response evidence did not prove the provider fields required by the preflight. `RLY-S21-SIDECAR-EVAL-010R1 — ESCALATE` routes the next step to exact-beta provider-schema/evidence diagnostics, not Relay rework. No prompt, inference, or D21 work occurred; Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
