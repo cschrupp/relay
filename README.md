@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 010 HUMAN AUTHORITY REQUIRED
+Slice 2.1:                OPEN — LIVE SIDECAR RUN 010 AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. The exact-beta environment correction succeeded: OpenCode now exposes active `openrouter` and exact model `google/gemini-3.8-flash` in its own catalog with no prompt or inference. `RLY-S21-SIDECAR-ENV-EVAL-001 — READY_FOR_RUN_010_AUTHORIZATION` records this readiness while noting that the beta exposes no stronger non-inference execution-route validator. Run 010 remains unauthorized pending a separate Human decision. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. The exact-beta environment correction established active catalog readiness for `openrouter/google/gemini-3.8-flash`. Human Authority `RLY-S21-SIDECAR-AUTH-004 — AUTHORIZED` now permits Run 010, which must recreate that minimum non-secret provider/model configuration in a fresh disposable profile before any D21 prompt. Human technical acceptance remains a separate later gate. Phase 3 work and Relay agent execution against real work remain unauthorized. Phase 1 remains the accepted deterministic baseline and continues under separately authorized hardening.
 
 See:
 
