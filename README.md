@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 010R2 CORRECTED PROVIDER PREFLIGHT READY
+Slice 2.1:                OPEN — RUN 010R3 MODEL QUERY CORRECTION READY
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. The exact-beta provider diagnostic classified the Run-010r1 provider gate as over-specified: this beta exposes provider `id`, `activation`, and root `package`, not provider `active` or nested `api.*`. `RLY-S21-SIDECAR-PROVIDER-PREFLIGHT-DIAG-EVAL-001 — CORRECT_RUN_010_PROVIDER_PREFLIGHT` defines the strongest exact-beta provider/model predicate and keeps the existing Human Authority valid. A fresh Run 010r2 may proceed; Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. Run 010r2 passed health and candidate `describe()` but stopped before route readiness because the operator encoded the model-catalog location incorrectly, producing HTTP 400. `RLY-S21-SIDECAR-EVAL-010R2 — ESCALATE` records an operator request-shape error only. `RLY-S21-SIDECAR-RUN010-MODEL-QUERY-CORRECTION-001` requires the exact nested `location[directory]` query semantic for fresh Run 010r3 under unchanged Human Authority. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
