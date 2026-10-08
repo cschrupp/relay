@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 010R3 MODEL QUERY CORRECTION READY
+Slice 2.1:                OPEN — CANCELLATION COMPATIBILITY REWORK
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` remains accepted under `RLY-S21-EVAL-004`. Run 010r2 passed health and candidate `describe()` but stopped before route readiness because the operator encoded the model-catalog location incorrectly, producing HTTP 400. `RLY-S21-SIDECAR-EVAL-010R2 — ESCALATE` records an operator request-shape error only. `RLY-S21-SIDECAR-RUN010-MODEL-QUERY-CORRECTION-001` requires the exact nested `location[directory]` query semantic for fresh Run 010r3 under unchanged Human Authority. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Candidate `f9a4790c6343561b462d521008c197d776e9ebcf` reached live D21 through D21-11 in Run 010r3 with exact `openrouter/google/gemini-3.8-flash` execution. D21-12 exposed a bounded cancellation adapter incompatibility: exact-beta interrupt returns HTTP 204 No Content while the candidate expects HTTP 200 plus JSON and reports `TRANSPORT`. `RLY-S21-SIDECAR-EVAL-010R3 — REWORK` keeps the accepted design unchanged and authorizes only cancellation compatibility rework/tests under `RLY-S21-IMPL-REWORK-HANDOFF-003`. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
