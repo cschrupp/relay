@@ -374,9 +374,12 @@ def test_dependency_and_thread_ownership_boundaries() -> None:
         "pyjwt",
         "fastapi",
         "uvicorn",
+        "httpx",
     }
     dev_dependencies = project_config["dependency-groups"]["dev"]
-    assert any(re.match(r"httpx(?:[<>=!~]|$)", item, re.IGNORECASE) for item in dev_dependencies)
+    assert not any(
+        re.match(r"httpx(?:[<>=!~]|$)", item, re.IGNORECASE) for item in dev_dependencies
+    )
     assert not any(
         "jinja" in item.lower() or "sqlalchemy" in item.lower() for item in runtime_dependencies
     )
