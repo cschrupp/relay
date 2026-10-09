@@ -56,8 +56,7 @@ RLY-P2-OPEN-001 — AUTHORIZED
 Phase 2:
 OPEN
 
-Slice 2.1:
-OPEN — RLY-S21-OPEN-001
+Slice 2.1: COMPLETE / ACCEPTED / CLOSED
 Design: RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
 Implementation: COMPLETE / TECHNICALLY ACCEPTED
 Candidate: 4f785f08576e465cd0aa278f927fa4b7253e3f49
@@ -65,8 +64,7 @@ Deterministic implementation evaluation: RLY-S21-EVAL-005 — ACCEPT
 Live sidecar evaluation: RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT
 Human technical acceptance: RLY-S21-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: RLY-S21-CLOSE-EVAL-001 — REWORK
-Corrective closure-ready evaluation: PENDING
+Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 Slice 2.2: NOT AUTHORIZED
 Phase 3: NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
@@ -439,14 +437,23 @@ NOT AUTHORIZED
 Slice 2.1 has a Human-accepted Agent Runtime Contract design and explicit implementation authority under `RLY-S21-IMPL-AUTH-001`. Candidate `c947cf607699707b8b56d22cbb9aab4b30a7bf4a` received `RLY-S21-EVAL-001 — REWORK`. Successor `ded3ed03b7070ea095a823129ebe44935cb57997` resolves those findings and received `RLY-S21-EVAL-002 — ACCEPT`. At that historical checkpoint, Human technical acceptance was pending the live OpenCode sidecar evidence gate; Run 012r3 later passed and Human technical acceptance was recorded as `RLY-S21-ACCEPT-001 — ACCEPTED`. Run 004 remains the successful live authenticated V2 compatibility checkpoint for the exact frozen candidate. Run 005 stopped before server startup because the Human-exported OpenRouter credential was absent from the actual Codex command-execution environment. In addition, one direct `opencode2 --version` invocation escaped the required disposable HOME/XDG envelope and received `EROFS` while attempting to open the protected V1 log; protected V1 executable/state metadata remained unchanged afterward. `RLY-S21-SIDECAR-EVAL-005 — ESCALATE` classifies both findings as operator/execution-environment defects, not Relay candidate or accepted-design defects. Run 006 passed credential-delivery and wrapper-isolation gates, but the isolated V2 server exited with code 1 before readiness. RLY-S21-SIDECAR-EVAL-006 — ESCALATE leaves the Relay candidate and accepted design unchanged. The Run-006 handoff omitted the explicit disposable-profile and OPENCODE_DB-parent creation required by Run 003; this procedural regression is established, while causality for the server exit is not yet proven. Run 007 passed startup, authenticated health, candidate describe, fixture binding, and session creation, then failed at D21-05 when the live beta rejected the candidate prompt body with HTTP 400 `Missing key at ["text"]` before provider inference. `RLY-S21-SIDECAR-EVAL-007 — REWORK` establishes a bounded OpenCode adapter implementation defect, not a design defect. The deterministic mock encoded the same wrong prompt contract, and the prompt 400 was also misclassified as `AGENT_BLOCKED`. Successor `5df1add9ed829a62a99d7f25f561a0f492ff5c73` resolves the bounded live prompt-mapping findings and received `RLY-S21-EVAL-003 — ACCEPT`; exact-head CI `37673385489` is green. Run 008 passed live prompt-schema compatibility and HTTP admission but exposed a second bounded adapter defect: normal `open_execution()` sends `resume: false`, which OpenCode V2 treats as durable admit-only behavior, so no execution wake/provider turn followed. `RLY-S21-SIDECAR-EVAL-008 — REWORK` establishes an implementation defect, not a design defect. The deterministic mock also masked the bug by emitting execution-like events after an admit-only request. Successor `f9a4790c6343561b462d521008c197d776e9ebcf` resolves the execution-wake and invocation-provenance findings and received `RLY-S21-EVAL-004 — ACCEPT`; exact-head CI `37682777614` is green. Run 009 live-confirmed the corrected prompt mapping, execution wake, and absence of fabricated invocation identity. OpenCode then entered execution and terminated `FAILED` before any fixture mutation, with zero reported usage. `RLY-S21-SIDECAR-EVAL-009 — ESCALATE` does not establish a Relay candidate or accepted-design defect because the sanitized evidence does not identify the underlying runtime/provider failure. The Run-009 diagnostic established exact-beta `SessionRunnerModel.ModelUnavailableError` / `provider.no-route` for `openrouter/google/gemini-3.8-flash`. `RLY-S21-SIDECAR-DIAG-EVAL-001 — ENVIRONMENT_CORRECTION_REQUIRED` establishes a disposable OpenCode runtime/provider environment issue, not a Relay candidate or accepted-design defect. Candidate `f9a4790...` remains deterministically accepted. The disposable exact-beta environment correction succeeded: OpenCode now exposes active `openrouter` and exact model `google/gemini-3.8-flash` in its own catalog under the minimum non-secret provider/model configuration, with protected V1 unchanged and no prompt/inference. `RLY-S21-SIDECAR-ENV-EVAL-001 — READY_FOR_RUN_010_AUTHORIZATION` records the strongest non-inference readiness proof the beta exposes; it has no public non-inference execution-route resolver. Candidate `f9a4790...` remains unchanged and accepted. Run 010 recreated the fresh disposable profile and non-secret route configuration but stopped before candidate `describe()` and before D21 when authenticated `/api/health` returned HTTP 503 with `healthy=false`. `RLY-S21-SIDECAR-EVAL-010 — ESCALATE` establishes a pre-D21 disposable runtime/environment failure, not a Relay candidate or accepted-design defect. Candidate `f9a4790...` remains accepted under `RLY-S21-EVAL-004`. Run 010r1 cleared the corrected health gate and candidate `describe()`, and the exact model catalog showed `google/gemini-3.8-flash` enabled/active with the OpenRouter provider package. The provider list/detail calls returned HTTP 200, but the retained sanitized provider response did not prove the provider identity/readiness/package fields demanded by the handoff. `RLY-S21-SIDECAR-EVAL-010R1 — ESCALATE` classifies this as a pre-D21 provider-preflight evidence/specification issue, not a Relay candidate or design defect and not a proven provider absence. The exact-beta provider-preflight diagnostic classified the gate as `GATE_OVERSPECIFIED`. `Provider.Info` exposes `id`, `activation` (`auto|enabled|disabled`), and root `package`; it does not expose provider `active` or nested `api.type/api.package`. `Model.Info` exposes the route-specific `providerID`, `enabled`, `status`, and optional package. `RLY-S21-SIDECAR-PROVIDER-PREFLIGHT-DIAG-EVAL-001 — CORRECT_RUN_010_PROVIDER_PREFLIGHT` therefore replaces impossible provider assertions with the strongest exact-beta predicate while preserving exact provider/model identity and the separate credential-presence gate. Run 010r2 passed health and candidate `describe()` but stopped before route readiness when the operator sent the model-catalog location in the wrong request shape, producing HTTP 400. `RLY-S21-SIDECAR-EVAL-010R2 — ESCALATE` establishes an operator/request-construction defect only; it establishes no provider/model availability, OpenCode runtime, Relay candidate, or design defect. Existing Human Authority remains valid because no prompt/inference or D21 work occurred. Run 010r3 finally reached the candidate end-to-end: exact route preflight passed, the fixture edit executed, denials/inspection/provenance passed through D21-11, and actual provider/model was `openrouter/google/gemini-3.8-flash`. D21-12 then exposed a bounded adapter defect: the exact beta returns successful HTTP 204 No Content for session interrupt, while candidate `f9a4790...` accepts only HTTP 200 and parses JSON, misclassifying 204 as `TRANSPORT`. Successor `4f785f08...` resolves the exact-beta cancellation mismatch by accepting only HTTP 204 No Content for interrupt success without JSON parsing, while preserving idempotent ack caching, exact binding, terminal handling, 403/404, timeout/transport normalization, and rejection of undeclared 2xx responses. `RLY-S21-EVAL-005 — ACCEPT` independently verifies the one-commit/two-file bounded diff and exact-head CI `37873019090 — SUCCESS`. Run 012r1 fixed the fixture-SHA and lifecycle discipline defects but stopped before readiness when the exact V2 server exited with `EPERM: operation not permitted, listen`. `RLY-S21-SIDECAR-EVAL-012R1 — ESCALATE` establishes a listener/startup environment failure, not a Relay candidate or accepted-design defect; no session, prompt, or inference occurred. Existing `RLY-S21-SIDECAR-AUTH-006` remains sufficient for fresh Run 012r2 under `RLY-S21-SIDECAR-RUN012-LISTENER-PREFLIGHT-HANDOFF-001`. The retry adds a non-V2 generic loopback listener capability preflight before starting OpenCode, preserving the same exact candidate/runtime/provider scope. Run 012r2 then failed at generic socket creation with `EPERM` before bind/listen; `RLY-S21-SIDECAR-EVAL-012R2 — ESCALATE` establishes a host/container socket/listener restriction and leaves OpenCode-specific listener behavior untested. Candidate `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains `RLY-S21-EVAL-005 — ACCEPT / UNCHANGED`; no candidate, design, implementation, or provider/model defect is established, implementation rework is not justified, and Human technical acceptance remains ineligible. `RLY-S21-SIDECAR-RUN012-EXECUTION-ENV-HANDOFF-001` targets Run 012r3 under the unchanged `RLY-S21-SIDECAR-AUTH-006`, requiring a fresh execution environment that passes the generic loopback socket create/bind/listen preflight. Run 012r3 was later executed after this governance checkpoint was canonical and its exact-head CI succeeded; it received `RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT`, followed by Human technical acceptance `RLY-S21-ACCEPT-001 — ACCEPTED`. This was a historical instruction and no longer applies.
 
 
-## Current Slice 2.1 closure-ready state
+## Current Slice 2.1 closed state
 
 ```text
 Slice 2.1:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Accepted candidate:
 4f785f08576e465cd0aa278f927fa4b7253e3f49
+
+Design acceptance:
+RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
+
+Deterministic implementation evaluation:
+RLY-S21-EVAL-005 — ACCEPT
+
+Live sidecar evaluation:
+RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT
 
 Human technical acceptance:
 RLY-S21-ACCEPT-001 — ACCEPTED
@@ -455,7 +462,7 @@ Finalization / closure authority:
 RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S21-CLOSE-EVAL-002 — ACCEPT
 
 Slice 2.2:
 NOT AUTHORIZED
@@ -467,7 +474,7 @@ Real-project agent execution:
 NOT AUTHORIZED
 ```
 
-The independent closure evaluation of the initial closure-ready SHA returned `RLY-S21-CLOSE-EVAL-001 — REWORK` because of stale living-projection wording. The corrective closure-ready evaluation is pending. Technical acceptance and finalization authority do not constitute Slice closure; Slice 2.1 remains open.
+The first independent closure evaluation returned `RLY-S21-CLOSE-EVAL-001 — REWORK` on stale projection wording. The corrective projections were accepted by `RLY-S21-CLOSE-EVAL-002 — ACCEPT`, authorizing canonical closure and promotion under `RLY-S21-CLOSE-AUTH-001`.
 
 # 2. Slice 1.5 authority and accepted design
 

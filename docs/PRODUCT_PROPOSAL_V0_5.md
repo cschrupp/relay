@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 2 open; Slice 2.1 closure evaluation pending; Phase 1 M0 validation pending
+**Status:** Current living product and architecture proposal — Phase 2 open; Slice 2.1 closed; Phase 1 M0 validation pending
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -214,14 +214,23 @@ Agent execution:
 NOT AUTHORIZED
 ```
 
-# Current Slice 2.1 closure-ready state
+# Current Slice 2.1 closed state
 
 ```text
 Slice 2.1:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Accepted candidate:
 4f785f08576e465cd0aa278f927fa4b7253e3f49
+
+Design acceptance:
+RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
+
+Deterministic implementation evaluation:
+RLY-S21-EVAL-005 — ACCEPT
+
+Live sidecar evaluation:
+RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT
 
 Human technical acceptance:
 RLY-S21-ACCEPT-001 — ACCEPTED
@@ -230,7 +239,7 @@ Finalization / closure authority:
 RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 
 Independent closure evaluation:
-PENDING
+RLY-S21-CLOSE-EVAL-002 — ACCEPT
 
 Slice 2.2:
 NOT AUTHORIZED
@@ -242,7 +251,7 @@ Real-project agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 2.1 remains open pending independent closure evaluation of the exact closure-ready SHA. The finalization authority does not itself close the Slice.
+Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the corrective closure-ready candidate and authorized canonical closure and promotion under `RLY-S21-CLOSE-AUTH-001`.
 
 # 5. Implementation and closure governance
 
@@ -254,6 +263,6 @@ Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a
 
 Slice 1.7 delivers exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Agent execution remains unauthorized.
 
-Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 validation remains pending and was not performed under Slice 1.7 finalization authority. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is closure-ready and remains open pending independent closure evaluation. Slice 2.2, Phase 3, and real-project agent execution remain unauthorized.
+Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 validation remains pending and was not performed under Slice 1.7 finalization authority. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is complete, accepted, and closed after `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. Slice 2.2, Phase 3, and real-project agent execution remain unauthorized.
 
 **Unblocked ≠ authorized.**
