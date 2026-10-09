@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 011 INCOMPLETE / NEW LIVE AUTHORITY REQUIRED
+Slice 2.1:                OPEN — RUN 012 LIVE SIDECAR AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains deterministically accepted under `RLY-S21-EVAL-005`. Run 011 freshly proved the exact-beta HTTP 204 cancellation fix, but `RLY-S21-SIDECAR-EVAL-011 — ESCALATE` leaves the live gate incomplete because D21-16 and D21-18 were not run and the protected-V1 baseline was not captured before the first wrapped V2 invocation. No implementation rework is justified. A fresh live run requires new exact-SHA Human Authority; Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains deterministically accepted under `RLY-S21-EVAL-005`. Human Authority `RLY-S21-SIDECAR-AUTH-006 — AUTHORIZED` now permits fresh Run 012 against exact OpenCode `0.0.0-beta-17823` and `openrouter/google/gemini-3.8-flash`. Run 012 must capture protected-V1 baseline metadata before any V2 invocation and freshly complete all applicable D21-01 through D21-18 evidence; Run 011 remains historical only. Human technical acceptance remains blocked pending independent evaluation. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
