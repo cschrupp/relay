@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 012R1 CORRECTED RETRY READY
+Slice 2.1:                OPEN — RUN 012R2 LISTENER PREFLIGHT READY
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains deterministically accepted under `RLY-S21-EVAL-005`. Run 012 stopped before session creation: its protected-V1 ordering and first route preflight passed, but an operator fixture-SHA newline defect was found and a subsequent continuation startup did not reach healthy readiness. `RLY-S21-SIDECAR-EVAL-012 — ESCALATE` establishes no candidate defect. Existing `RLY-S21-SIDECAR-AUTH-006` remains valid for fresh Run 012r1 under the corrective retry handoff, with exact 40-hex source-SHA validation and a single-server-lifecycle rule. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains deterministically accepted under `RLY-S21-EVAL-005`. Run 012r1 stopped before readiness because the exact V2 server received `EPERM` while listening; `RLY-S21-SIDECAR-EVAL-012R1 — ESCALATE` establishes no candidate defect and no live execution occurred. Existing `RLY-S21-SIDECAR-AUTH-006` remains valid for fresh Run 012r2 under the listener-preflight corrective handoff. Run 012r2 must first prove generic loopback listening is available without invoking V2, then may attempt the single OpenCode server lifecycle. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
