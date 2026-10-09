@@ -16,7 +16,7 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — SUCCESSOR ACCEPTED / LIVE AUTHORITY REQUIRED
+Slice 2.1:                OPEN — RUN 011 LIVE SIDECAR AUTHORIZED
 Agent execution:          NOT AUTHORIZED
 ```
 
@@ -75,7 +75,7 @@ The first planned runtime is **OpenCode** because it provides an embeddable codi
 
 OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` resolves the Run-010r3 cancellation incompatibility and received `RLY-S21-EVAL-005 — ACCEPT`; exact-head CI `37873019090` is green. The change is bounded to exact-beta HTTP 204 No Content interrupt handling and deterministic cancellation tests. The prior live sidecar Human Authority remains SHA-bound to `f9a4790c6343561b462d521008c197d776e9ebcf`, so fresh live authority is required before D21 may exercise the successor. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` received `RLY-S21-EVAL-005 — ACCEPT`. Human Authority `RLY-S21-SIDECAR-AUTH-005 — AUTHORIZED` now permits fresh candidate-specific Run 011 against exact OpenCode `0.0.0-beta-17823` and `openrouter/google/gemini-3.8-flash`, under the established corrected readiness/preflight and D21 safety constraints. Prior Run 010r3 results remain historical only. Human technical acceptance remains blocked pending independent evaluation of Run 011. Phase 3 work and Relay agent execution against real work remain unauthorized.
 
 See:
 
