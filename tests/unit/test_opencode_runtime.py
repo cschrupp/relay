@@ -14,6 +14,7 @@ from relay_engine.agent_runtime.models import (
     RuntimeCapability,
     RuntimeContinuityReason,
     RuntimeContinuityState,
+    RuntimeControlAck,
     RuntimeControlAckState,
     RuntimeEventType,
     RuntimeExecutionBasis,
@@ -126,6 +127,7 @@ class MockOpenCodeServer:
         runtime_version: str = "1.2.3",
         health_status: int = 200,
         malformed_session_response: bool = False,
+        interrupt_status: int = 204,
     ) -> None:
         self.requests: list[httpx.Request] = []
         self.stream = QueueEventStream()
@@ -136,6 +138,7 @@ class MockOpenCodeServer:
         self.runtime_version = runtime_version
         self.health_status = health_status
         self.malformed_session_response = malformed_session_response
+        self.interrupt_status = interrupt_status
         self.event_observer_ready = False
         self.prompt_bodies: list[dict[str, object]] = []
         self.prompt_effects: list[str] = []
@@ -236,7 +239,9 @@ class MockOpenCodeServer:
                 response_body = {"error": AUTH_SENTINEL}
             return httpx.Response(self.prompt_status, json=response_body)
         if request.url.path == f"/api/session/{SESSION_ID}/interrupt":
-            return httpx.Response(200, json={"data": True})
+            assert request.method == "POST"
+            # OpenCode 0.0.0-beta-17823 declares only 204 No Content success.
+            return httpx.Response(self.interrupt_status)
         if request.url.path == f"/api/session/{SESSION_ID}" and request.method == "GET":
             return httpx.Response(200, json=self.inspection)
         raise AssertionError(f"Unexpected OpenCode request: {request.method} {request.url.path}")
@@ -797,25 +802,212 @@ def test_inspection_binding_mismatch_fails_before_session_get(mismatch: str) -> 
     asyncio.run(exercise())
 
 
-def test_cancel_is_idempotent_and_terminal_cancel_is_safe() -> None:
+@pytest.mark.parametrize("active_status", [None, RuntimeStatus.UNKNOWN, RuntimeStatus.RUNNING])
+def test_cancel_204_skips_json_and_caches_acknowledgment(
+    active_status: RuntimeStatus | None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     server = MockOpenCodeServer()
     runtime, client = setup_runtime(server)
 
     async def exercise() -> None:
         try:
-            request, _, handle = await create_open_execution(runtime)
+            request = execution_request()
+            binding = await runtime.create_session(request)
+            if active_status is not None:
+                await runtime.open_execution(request, binding)
+                if active_status is RuntimeStatus.RUNNING:
+                    server.stream.feed(
+                        {
+                            "type": "session.status",
+                            "properties": {"sessionID": SESSION_ID, "status": "busy"},
+                        }
+                    )
+                    await wait_until(
+                        lambda: (
+                            runtime._active[EXECUTION_ID].runtime_status is RuntimeStatus.RUNNING
+                        )
+                    )
+
+            def reject_json_parse(response: httpx.Response) -> None:
+                raise AssertionError("Cancellation must not parse a 204 response")
+
+            monkeypatch.setattr(httpx.Response, "json", reject_json_parse)
             cancel_request = RuntimeCancelRequest(
                 execution_id=request.basis.execution_id,
-                runtime_session=handle.runtime_session,
+                runtime_session=binding.runtime_session,
                 reason="operator requested cancellation",
             )
             first = await runtime.cancel(cancel_request)
             second = await runtime.cancel(cancel_request)
             assert first.state is RuntimeControlAckState.REQUESTED
-            assert first.observed_runtime_status is RuntimeStatus.UNKNOWN
-            assert second == first
+            assert first.observed_runtime_status is (active_status or RuntimeStatus.UNKNOWN)
+            assert second is first
             assert sum(item.url.path.endswith("/interrupt") for item in server.requests) == 1
         finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected_state"),
+    [(404, RuntimeControlAckState.NOT_FOUND), (403, RuntimeControlAckState.DENIED)],
+)
+def test_cancel_preserves_not_found_and_denied(
+    status_code: int, expected_state: RuntimeControlAckState
+) -> None:
+    server = MockOpenCodeServer(interrupt_status=status_code)
+    runtime, client = setup_runtime(server)
+
+    async def exercise() -> None:
+        try:
+            binding = await runtime.create_session(execution_request())
+            request = RuntimeCancelRequest(
+                execution_id=EXECUTION_ID,
+                runtime_session=binding.runtime_session,
+                reason="controlled cancellation",
+            )
+            ack = await runtime.cancel(request)
+            assert ack.state is expected_state
+            assert ack.observed_runtime_status is RuntimeStatus.UNKNOWN
+            assert await runtime.cancel(request) is ack
+            assert sum(item.url.path.endswith("/interrupt") for item in server.requests) == 1
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("status_code", [200, 201, 202, 205, 206])
+def test_cancel_rejects_undeclared_success_status(status_code: int) -> None:
+    server = MockOpenCodeServer()
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/interrupt"):
+            server.requests.append(request)
+            return httpx.Response(status_code, json={"data": True})
+        return server.handle(request)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    runtime = OpenCodeRuntime(
+        "http://opencode.mock:4096",
+        expected_runtime_version="1.2.3",
+        permission_profile=permission_profile(),
+        client=client,
+    )
+
+    async def exercise() -> None:
+        try:
+            binding = await runtime.create_session(execution_request())
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=EXECUTION_ID,
+                        runtime_session=binding.runtime_session,
+                        reason="undeclared interrupt response",
+                    )
+                )
+            assert exc_info.value.failure.category.value == "TRANSPORT"
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("error_type", "expected_category"),
+    [(httpx.ReadTimeout, "TIMEOUT"), (httpx.ConnectError, "TRANSPORT")],
+)
+def test_cancel_preserves_timeout_and_transport_failures(
+    error_type: type[httpx.RequestError], expected_category: str
+) -> None:
+    server = MockOpenCodeServer()
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/interrupt"):
+            server.requests.append(request)
+            raise error_type(AUTH_SENTINEL, request=request)
+        return server.handle(request)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    runtime = OpenCodeRuntime(
+        "http://opencode.mock:4096",
+        expected_runtime_version="1.2.3",
+        permission_profile=permission_profile(),
+        client=client,
+    )
+
+    async def exercise() -> None:
+        try:
+            binding = await runtime.create_session(execution_request())
+            with pytest.raises(AgentRuntimeError) as exc_info:
+                await runtime.cancel(
+                    RuntimeCancelRequest(
+                        execution_id=EXECUTION_ID,
+                        runtime_session=binding.runtime_session,
+                        reason="controlled transport failure",
+                    )
+                )
+            assert exc_info.value.failure.category.value == expected_category
+            assert exc_info.value.failure.retryable
+            assert AUTH_SENTINEL not in exc_info.value.failure.model_dump_json()
+        finally:
+            await runtime.aclose()
+            await client.aclose()
+
+    asyncio.run(exercise())
+
+
+def test_concurrent_cancel_serializes_interrupt_and_returns_cached_ack() -> None:
+    async def exercise() -> None:
+        server = MockOpenCodeServer()
+        entered = asyncio.Event()
+        release = asyncio.Event()
+        interrupt_count = 0
+
+        async def respond(request: httpx.Request) -> httpx.Response:
+            nonlocal interrupt_count
+            if request.url.path.endswith("/interrupt"):
+                interrupt_count += 1
+                entered.set()
+                await release.wait()
+            return server.handle(request)
+
+        client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+        runtime = OpenCodeRuntime(
+            "http://opencode.mock:4096",
+            expected_runtime_version="1.2.3",
+            permission_profile=permission_profile(),
+            client=client,
+        )
+        tasks: list[asyncio.Task[RuntimeControlAck]] = []
+        try:
+            binding = await runtime.create_session(execution_request())
+            request = RuntimeCancelRequest(
+                execution_id=EXECUTION_ID,
+                runtime_session=binding.runtime_session,
+                reason="concurrent cancellation",
+            )
+            tasks.append(asyncio.create_task(runtime.cancel(request)))
+            await asyncio.wait_for(entered.wait(), timeout=1)
+            tasks.append(asyncio.create_task(runtime.cancel(request)))
+            await asyncio.sleep(0)
+            assert interrupt_count == 1
+            assert not tasks[1].done()
+            release.set()
+            first, second = await asyncio.wait_for(asyncio.gather(*tasks), timeout=1)
+            assert first.state is RuntimeControlAckState.REQUESTED
+            assert first.observed_runtime_status is RuntimeStatus.UNKNOWN
+            assert second is first
+            assert interrupt_count == 1
+        finally:
+            release.set()
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
             await runtime.aclose()
             await client.aclose()
 
@@ -915,14 +1107,15 @@ def test_cancel_of_already_terminal_execution_does_not_interrupt_again() -> None
             request, _, handle = await create_open_execution(runtime)
             active = runtime._active[EXECUTION_ID]
             await wait_until(lambda: active.terminal)
-            ack = await runtime.cancel(
-                RuntimeCancelRequest(
-                    execution_id=request.basis.execution_id,
-                    runtime_session=handle.runtime_session,
-                    reason="cancel after completion",
-                )
+            cancel_request = RuntimeCancelRequest(
+                execution_id=request.basis.execution_id,
+                runtime_session=handle.runtime_session,
+                reason="cancel after completion",
             )
+            ack = await runtime.cancel(cancel_request)
             assert ack.state is RuntimeControlAckState.ALREADY_TERMINAL
+            assert ack.observed_runtime_status is RuntimeStatus.SUCCEEDED
+            assert await runtime.cancel(cancel_request) is ack
             assert not any(item.url.path.endswith("/interrupt") for item in server.requests)
         finally:
             await runtime.aclose()

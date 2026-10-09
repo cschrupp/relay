@@ -635,7 +635,7 @@ class OpenCodeRuntime:
         elif response.status_code == 403:
             state = RuntimeControlAckState.DENIED
             status = active.runtime_status if active else RuntimeStatus.UNKNOWN
-        elif response.status_code != 200:
+        elif response.status_code != 204:
             raise fail(
                 self._http_failure_category(response.status_code),
                 "OpenCode rejected cancellation.",
@@ -643,26 +643,13 @@ class OpenCodeRuntime:
                 runtime_session=request.runtime_session,
             )
         else:
-            response_data = self._unwrap_data(
-                self._read_json(response, RuntimeFailureCategory.TRANSPORT)
+            # The pinned V2 interrupt contract is 204 No Content, not a JSON response.
+            status = active.runtime_status if active else RuntimeStatus.UNKNOWN
+            state = (
+                RuntimeControlAckState.ALREADY_TERMINAL
+                if active is not None and active.terminal
+                else RuntimeControlAckState.REQUESTED
             )
-            accepted = (
-                response_data if isinstance(response_data, bool) else response_data.get("accepted")
-            )
-            if accepted is False:
-                status = active.runtime_status if active else RuntimeStatus.UNKNOWN
-                state = (
-                    RuntimeControlAckState.ALREADY_TERMINAL
-                    if active is not None and active.terminal
-                    else RuntimeControlAckState.DENIED
-                )
-            else:
-                status = active.runtime_status if active else RuntimeStatus.UNKNOWN
-                state = (
-                    RuntimeControlAckState.ALREADY_TERMINAL
-                    if active is not None and active.terminal
-                    else RuntimeControlAckState.REQUESTED
-                )
 
         ack = RuntimeControlAck(
             execution_id=request.execution_id,
