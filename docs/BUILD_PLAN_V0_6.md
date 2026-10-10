@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Phase 1 accepted baseline / hardening active; Phase 2 open
+**Status:** Current living implementation plan — Phase 1 hardening re-baselined; Phase 2 open; Slice 1.8 next planned work
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -131,10 +131,20 @@ UNCHANGED
 Phase 1 M0 viability gate:
 ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 
+Roadmap re-baseline authority:
+RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
+
+Slice 1.8 — Governance Assurance Reference Model:
+PLANNED — NEXT / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.9 — Canonical Source and Promotion Enforcement:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
 Phase 2:
 OPEN — RLY-P2-OPEN-001
 
-Slice 2.1: COMPLETE / ACCEPTED / CLOSED
+Slice 2.1 — Agent Runtime Contract:
+COMPLETE / ACCEPTED / CLOSED
 Design: RLY-S21-DESIGN-ACCEPT-001 — ACCEPTED
 Implementation: COMPLETE / TECHNICALLY ACCEPTED
 Candidate: 4f785f08576e465cd0aa278f927fa4b7253e3f49
@@ -143,9 +153,21 @@ Live sidecar evaluation: RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT
 Human technical acceptance: RLY-S21-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
-Slice 2.2: NOT AUTHORIZED
-Phase 3: NOT AUTHORIZED
-Real-project agent execution: NOT AUTHORIZED
+
+Slice 2.2 — Role Contracts:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.3 — Context and Work-Packet Contract:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.4 — Execution Workspace Authority:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Phase 3:
+NOT OPEN / NOT AUTHORIZED
+
+Real-project agent execution:
+NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
@@ -153,32 +175,62 @@ NOT AUTHORIZED
 
 # 1A. Phase model after the M0 viability gate
 
-M0 is a **viability / continued-investment gate**, not a declaration that Phase 1 is production-complete.
-
-The accepted phase model is:
+M0 remains a **viability / continued-investment gate**, not a declaration that every Phase 1 surface is production-complete.
 
 ```text
 Phase 1 — deterministic governance foundation
 ACCEPTED BASELINE / HARDENING ACTIVE
-        │
-        ├── M0 viability gate: PASSED / HUMAN-ACCEPTED
-        ├── accepted governing substrate exists
-        └── practicality, clarity, governance, and UI/UX hardening continue
-                 │
-                 ▼
+        |
+        +-- M0 viability: PASSED / HUMAN-ACCEPTED
+        +-- Slices 1.1-1.7: CLOSED
+        +-- 1.8 Governance Assurance Reference Model      NEXT
+        +-- 1.9 Canonical Source / Promotion Enforcement
+                 |
+                 +-------------------------------+
+                                                 |
+                                                 v
 Phase 2 — provider and agent foundation
 OPEN
+        |
+        +-- 2.1 Agent Runtime Contract            CLOSED
+        +-- 2.2 Role Contracts                    PLANNED
+        +-- 2.3 Context / Work-Packet Contract    PLANNED
+        +-- 2.4 Execution Workspace Authority     PLANNED
+                                                 |
+                                                 v
+Phase 3 — first governed autonomous engineering loop
+NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 2 may build on the accepted Phase 1 baseline while Phase 1 hardening continues.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level, but the development frontier is deliberately ordered: 1.8, then 1.9, then 2.2.
 
-This does not relax governance. Any Phase 1 deficiency that threatens authority integrity, determinism, provenance, Human control, evaluator independence, accepted-result promotion, or fail-closed behavior becomes a blocking dependency for the affected Phase 2 work.
+Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 
-Non-blocking maturity work — including UI/UX, information hierarchy, terminology, progressive disclosure, operator ergonomics, and development-memory presentation — may continue in parallel under separately authorized slices.
+# 1B. Re-baselined development sequence
 
-Phase 2 is open and Slice 2.1 is complete, accepted, and closed under finalization authority `RLY-S21-CLOSE-AUTH-001`, following independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. The exact implementation candidate `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains the accepted technical result under `RLY-S21-ACCEPT-001`. Slice 2.2, Phase 3, and real-project agent execution remain unauthorized.
+```text
+1.8  Governance Assurance Reference Model
+     -> independently review Relay-native vs external assurance semantics
 
-# 1B. Slice 2.1 opening boundary
+1.9  Canonical Source and Promotion Enforcement
+     -> make SCM/promotion enforcement match declared governance
+
+2.2  Role Contracts
+     -> define who may do what, with explicit non-authority
+
+2.3  Context and Work-Packet Contract
+     -> define exact authorized execution input
+
+2.4  Execution Workspace Authority
+     -> define where/how the authorized role may execute
+
+3.1  Coding Agent Execution
+     -> first governed autonomous implementation execution
+```
+
+No planned Slice is opened by roadmap placement.
+
+# 1C. Slice 2.1 historical opening boundary
 
 ```text
 RLY-S21-OPEN-001 — OPEN
@@ -814,8 +866,32 @@ UNCHANGED
 Phase 1 M0 viability gate:
 ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 
+Roadmap re-baseline:
+RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
+
+Slice 1.8:
+PLANNED — NEXT / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.9:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
 Phase 2:
 OPEN — RLY-P2-OPEN-001
+
+Slice 2.1:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 2.2:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.3:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.4:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Phase 3:
+NOT OPEN / NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED

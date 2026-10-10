@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 accepted baseline / hardening active — Phase 2 open; agent execution unauthorized
+**Status:** Phase 1 accepted baseline / hardening active — roadmap re-baselined; Slice 1.8 next; Phase 2 open; agent execution unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -65,8 +65,13 @@ Live sidecar evaluation: RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT
 Human technical acceptance: RLY-S21-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
-Slice 2.2: NOT AUTHORIZED
-Phase 3: NOT AUTHORIZED
+Roadmap re-baseline: RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
+Slice 1.8 — Governance Assurance Reference Model: PLANNED — NEXT / NOT OPEN / NOT AUTHORIZED
+Slice 1.9 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.2 — Role Contracts: PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.3 — Context and Work-Packet Contract: PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.4 — Execution Workspace Authority: PLANNED / NOT OPEN / NOT AUTHORIZED
+Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 
 Relay agent execution:
@@ -81,7 +86,27 @@ Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens a
 
 **Unblocked ≠ authorized. Phase open ≠ Slice open. Slice open ≠ design authorized. Design accepted ≠ implementation authorized.**
 
-# 1B. Slice 2.1 opening
+# 1B. Re-baselined development frontier
+
+```text
+Next planned Slice:
+1.8 — Governance Assurance Reference Model
+
+Then:
+1.9 — Canonical Source and Promotion Enforcement
+
+Then Phase 2 continues:
+2.2 — Role Contracts
+2.3 — Context and Work-Packet Contract
+2.4 — Execution Workspace Authority
+
+Phase 3:
+NOT OPEN / NOT AUTHORIZED
+```
+
+This ordering places assurance and promotion hardening beneath later agent autonomy. External standards remain compliance/assurance references; Relay-native semantics remain authoritative.
+
+# 1C. Slice 2.1 historical opening
 
 ```text
 Slice:
@@ -464,11 +489,26 @@ RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation:
 RLY-S21-CLOSE-EVAL-002 — ACCEPT
 
+Roadmap re-baseline:
+RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
+
+Slice 1.8:
+PLANNED — NEXT / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.9:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
 Slice 2.2:
-NOT AUTHORIZED
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.3:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.4:
+PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Phase 3:
-NOT AUTHORIZED
+NOT OPEN / NOT AUTHORIZED
 
 Real-project agent execution:
 NOT AUTHORIZED
@@ -829,8 +869,32 @@ UNCHANGED
 Phase 1 M0 viability gate:
 ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 
+Roadmap re-baseline:
+RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
+
+Slice 1.8:
+PLANNED — NEXT / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.9:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
 Phase 2:
 OPEN — RLY-P2-OPEN-001
+
+Slice 2.1:
+COMPLETE / ACCEPTED / CLOSED
+
+Slice 2.2:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.3:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 2.4:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Phase 3:
+NOT OPEN / NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED
