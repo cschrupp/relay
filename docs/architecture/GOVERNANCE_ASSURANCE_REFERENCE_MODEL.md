@@ -35,6 +35,7 @@ The reverse direction is not accepted architecture.
 
 ```text
 INTENT
+  -> HUMAN AUTHORITY TO BEGIN DESIGN
   -> DESIGN
   -> DESIGN EVALUATION
   -> HUMAN DESIGN ACCEPTANCE
@@ -65,57 +66,29 @@ Evaluation cannot manufacture authority
 ## 3. Reference architecture
 
 ```text
-                              RELAY
-                                 |
-        +------------------------+------------------------+
-        |                        |                        |
-        v                        v                        v
- CONTROL / GOVERNANCE        EXECUTION              EVIDENCE
-        PLANE                  PLANE                  PLANE
-        |                        |                        |
- Human Authority           Role Contract           provenance
- lifecycle                 Work Packet             CI evidence
- policy                    Workspace               artifacts
- authorization             AgentRuntime            build evidence
- promotion authority       tools/runtime           runtime observations
-        |                        |                        |
-        +------------------------+------------------------+
-                                 |
-                                 v
-                           VERIFICATION
-                                 |
-                 +---------------+---------------+
-                 |                               |
-                 v                               v
-       Independent evaluation              External standards
-       Relay policy verifier               conformance verifier
-                                                 |
-                                       +---------+---------+
-                                       |         |         |
-                                      SLSA      SSDF      DORA
-                           |
-                           v
-                     VERIFICATION
-                           |
-                           v
-                  DECISION SUPPORT
-                 NON-AUTHORITATIVE
-                           |
-                           v
-                   HUMAN AUTHORITY
-                           |
-                           v
-                  PROMOTION ELIGIBILITY
-                           |
-                           v
-               VALID PROMOTION AUTHORITY
-                           |
-                           v
-                MECHANICAL TRANSITION
-                           |
-                           v
-              TRANSITION / PROMOTION EVIDENCE
+                    CANONICAL GOVERNED STATE
+                             |
+          +------------------+-------------------+
+          |                  |                   |
+        intent              policy          prior authority
+        design              evidence        prior evaluation
+        risks               unknowns        consequences
+          |                  |                   |
+          +------------------+-------------------+
+                             v
+                  DECISION BASIS PROJECTION
+                    NON-AUTHORITATIVE
+                             v
+                  PENDING HUMAN DECISION
+                             v
+                    HUMAN AUTHORITY ACT
+                             v
+                  GOVERNED STATE TRANSITION
 ```
+
+Decision Support is a cross-cutting read/projection seam attached to each policy-required Human decision, not a lifecycle stage after verification. The underlying canonical state includes whichever inputs apply at that gate: intent, design, policy, evidence, risks, unknowns, prior authority/evaluation, and consequences. For a design authorization gate, there may be no implementation evidence or evaluation; for technical acceptance, there may be implementation result, CI, runtime evidence, and an evaluation; promotion authority may additionally depend on accepted result, parent freshness, and promotion eligibility. The detailed role and trust planes remain as described below, and do not force these decision inputs into one linear order.
+
+Relay continues to organize governed work across Control / Governance, Execution, and Evidence / Provenance planes. Verification evaluates applicable evidence and policy claims, including independent Relay evaluation and any applicable external conformance assessment. Their governed records and current state provide inputs to the decision-specific projection above; no plane is replaced or collapsed into Decision Support.
 
 Decision Support is projection, explanation, navigation, question-answering, traceability, and comprehension support. It is not authority, evidence creator, evaluator, lifecycle/policy owner, or promotion authority. It may summarize facts, evidence, verification, authority, and executed transitions but owns none. `Evidence != Evaluation`; `Evaluation != Human Authority`; `Human Authority != Executed Transition`; and `Decision Support != Evidence / Evaluation / Authority`.
 
@@ -178,7 +151,7 @@ RELAY_ACTOR_IDENTITY_BOUND
 RELAY_EXECUTION_PROVENANCE_SUFFICIENT
 ```
 
-`RELAY_DECISION_BASIS_COMPLETE` passes only when the policy-required DecisionBasisProjection for the exact decision includes subject identity, authority and policy/design basis, evidence/evaluation references, blockers, unknowns, material consequences, and explicit non-authority. It does not measure Human understanding.
+`RELAY_DECISION_BASIS_COMPLETE` passes only when every component required and applicable under policy for the exact decision is present and current, and each inapplicable component is explicitly recorded or deterministically understood as not applicable. Conceptual states distinguish `REQUIRED_PRESENT`, `OPTIONAL_PRESENT`, `NOT_APPLICABLE`, `UNKNOWN`, and `MISSING_REQUIRED`. A pre-design gate that does not require an evaluation records `NOT_APPLICABLE`; required but unlocated evidence is `MISSING_REQUIRED`; uncertain applicability is `UNKNOWN`. It verifies Relay supplied the decision basis, not Human understanding.
 
 `RELAY_ACTOR_IDENTITY_BOUND` passes only when the actor/issuer is independently bound to the identity required by policy; role, identity, and authority remain distinct. A model request does not grant tool authorization [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026] [SRC-PAIE-AGENT-IDENTITY-PLATFORM-2026].
 
@@ -286,7 +259,7 @@ Slice 2.2 consumes `RELAY_ACTOR_IDENTITY_BOUND`, `RELAY_IMPLEMENTER_EVALUATOR_SE
 
 ### Human-gate necessity
 
-A Human gate should exist only when a distinct discretionary authority decision is required. Exact SHA, registry/schema validity, CI, tests, evidence presence, current parent, and digest correctness should increasingly be mechanically verified. Work commencement, architecture acceptability, implementation authority, exact-result acceptance, promotion authority, and exceptions remain Human decisions. DORA favors peer review and automated controls over heavyweight approvals; the Principal AI Engineer Handbook notes Human approval has human-scale latency [SRC-DORA-CHANGE-APPROVAL] [SRC-PAIE-HANDBOOK-2026].
+A Human gate should exist only when a distinct discretionary authority decision is required. Exact SHA, registry/schema validity, CI, tests, evidence presence, current parent, and digest correctness should increasingly be mechanically verified. Work commencement, architecture acceptability, implementation authority, exact-result acceptance, promotion authority, and exceptions remain Human decisions. DORA favors peer review and automated controls over heavyweight approvals; the Principal AI Engineer Handbook describes approval latency as human-scale and recommends reserving approval for consequential actions [SRC-DORA-CHANGE-APPROVAL] [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
 
 The operating model remains GPT-5.6 Sol for architecture/design/review/evaluation/governance; GPT-5.6 Luna/Codex for bounded implementation/rework and evidence; Human as root authority. `IMPLEMENTER != EVALUATOR` by default; `DESIGNER != EVALUATOR` is not automatic.
 

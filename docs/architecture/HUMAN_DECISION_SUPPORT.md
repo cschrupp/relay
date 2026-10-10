@@ -9,39 +9,29 @@
 Governance Assurance proves the authority, evidence, and verification chain. Decision Support makes consequential engineering decisions legible to the Human. Neither substitutes for the other. Relay does not attempt to prove Human understanding. Relay is responsible for presenting decisions legibly enough that a Human can understand, question, inspect, compare, defer, and decide. This is a product responsibility, not a cognition predicate.
 
 ```text
-                         RELAY
-                           |
-      +--------------------+--------------------+
-      |                    |                    |
-      v                    v                    v
-CONTROL / GOVERNANCE    EXECUTION          EVIDENCE / PROVENANCE
-      |                    |                    |
-      +--------------------+--------------------+
-                           |
-                           v
-                     VERIFICATION
-                           |
-                           v
-                  DECISION SUPPORT
-                 NON-AUTHORITATIVE
-                           |
-                           v
-                   HUMAN AUTHORITY
-                           |
-                           v
-                  PROMOTION ELIGIBILITY
-                           |
-                           v
-               VALID PROMOTION AUTHORITY
-                           |
-                           v
-                MECHANICAL TRANSITION
-                           |
-                           v
-              TRANSITION / PROMOTION EVIDENCE
+                    CANONICAL GOVERNED STATE
+                             |
+          +------------------+-------------------+
+          |                  |                   |
+        intent              policy          prior authority
+        design              evidence        prior evaluation
+        risks               unknowns        consequences
+          |                  |                   |
+          +------------------+-------------------+
+                             v
+                  DECISION BASIS PROJECTION
+                    NON-AUTHORITATIVE
+                             v
+                  PENDING HUMAN DECISION
+                             v
+                    HUMAN AUTHORITY ACT
+                             v
+                  GOVERNED STATE TRANSITION
 ```
 
-Decision Support is projection, explanation, navigation, question-answering, traceability, and human-comprehension support. It is not authority, evidence creator, evaluation authority, promotion authority, lifecycle owner, or policy owner. It may summarize authoritative records but owns none of them.
+Decision Support is a cross-cutting read/projection seam attached to each pending Human decision required by policy. It is not a lifecycle stage and does not sit only after verification: Relay has Human Authority gates before design or execution evidence exists, including Slice opening, design authorization, implementation authorization, and exception authorization. Exact inputs vary by decision. A design-authorization basis may include intent, roadmap, existing architecture, scope, risk, and non-authority boundaries without implementation evidence or evaluation. Technical acceptance may include implementation result, CI, runtime evidence, evaluation, risks, and unknowns. Promotion authority may additionally require an accepted result, current parent, and promotion eligibility.
+
+The diagram is a decision-gate projection pattern, not a claim that all governed-state changes follow a single lifecycle. Decision Support is projection, explanation, navigation, question-answering, traceability, and human-comprehension support. It is not authority, evidence creator, evaluation authority, promotion authority, lifecycle owner, or policy owner. It may summarize authoritative records but owns none of them.
 
 The statement classes remain `FACT / EVIDENCE`, `VERIFICATION JUDGMENT`, `AUTHORITY DECISION`, and `EXECUTED TRANSITION / PROMOTION RECORD`. `DECISION SUPPORT PROJECTION` is a fifth derived projection category, not a new authoritative statement class.
 
@@ -65,9 +55,10 @@ decision_id, decision_type
 governed_subject, exact_subject_identity
 current_state, proposed_transition
 why_this_decision_exists
-authority_basis, policy_basis, accepted_design_basis
+policy_required_components and their applicability state
+authority_basis, policy_basis, accepted_design_basis (when applicable)
 what_changed, what_did_not_change
-evidence_summary, evaluation_summary
+evidence_summary, evaluation_summary (when applicable)
 required_verified_properties, verified_property_results
 known_risks, known_unknowns, blocking_findings
 consequences_if_approved, consequences_if_rejected,
@@ -75,7 +66,9 @@ consequences_if_approved, consequences_if_rejected,
 explicit_non_authority, source_references, freshness_state
 ```
 
-This is architecture only. It does not define a database schema, Pydantic model, API, or persistence design. The required verified property `RELAY_DECISION_BASIS_COMPLETE` passes only when the policy-required projection for that exact decision contains subject identity, authority and policy/design basis, evidence/evaluation references, blockers, unknowns, material consequences, and explicit non-authority boundaries. It verifies Relay's provision of the basis, not Human comprehension.
+The projection is assembled from the components required for that exact decision by applicable policy. `accepted_design_basis`, evidence, evaluation, and verified-property results are not universal required fields: they may be optional or not applicable at an opening or pre-design gate. This is architecture only; it does not define a database schema, Pydantic model, API, or persistence design.
+
+For conceptual component applicability, distinguish `REQUIRED_PRESENT`, `OPTIONAL_PRESENT`, `NOT_APPLICABLE`, `UNKNOWN`, and `MISSING_REQUIRED`. `RELAY_DECISION_BASIS_COMPLETE` passes only when every component required by policy for the exact decision is present and current, and every inapplicable component is explicitly recorded or deterministically known to be not applicable. A pre-design decision with no evaluator because none is required is `NOT_APPLICABLE`, not `UNKNOWN` or missing evidence. If technical acceptance requires an evaluation and it cannot be located, that component is `MISSING_REQUIRED` and the property does not pass. If the evaluation exists but whether it applies cannot be established, the state is `UNKNOWN`. This verifies Relay supplied the required decision basis, not Human comprehension.
 
 The underlying governed subject may later be a Slice, task, work item, evaluation, promotion candidate, exception, incident, or future governed atomic unit. This architecture does not create a Task or WorkItem domain model.
 
@@ -117,7 +110,7 @@ Conceptual external references identify framework/version/publication status, re
 
 ## Human-gate necessity
 
-A Human gate exists when a distinct discretionary authority decision is required. Exact SHA, registry/schema validity, CI, required tests/evidence, current parent, and artifact digest should increasingly be deterministic checks. Decisions about whether work may begin, an architecture is acceptable, implementation may be performed, an exact result should be accepted, a candidate may become canonical, or an exception should be granted remain discretionary Human decisions. DORA supports peer review, automation, continuous testing, fast feedback, and risk-based scrutiny over heavyweight approval bureaucracy; its guidance is not Relay lifecycle authority [SRC-DORA-CHANGE-APPROVAL]. Human approval has human-scale latency and should be reserved for consequential choices [SRC-PAIE-HANDBOOK-2026].
+A Human gate exists when a distinct discretionary authority decision is required. Exact SHA, registry/schema validity, CI, required tests/evidence, current parent, and artifact digest should increasingly be deterministic checks. Decisions about whether work may begin, an architecture is acceptable, implementation may be performed, an exact result should be accepted, a candidate may become canonical, or an exception should be granted remain discretionary Human decisions. DORA supports peer review, automation, continuous testing, fast feedback, and risk-based scrutiny over heavyweight approval bureaucracy; its guidance is not Relay lifecycle authority [SRC-DORA-CHANGE-APPROVAL]. The Principal AI Engineer Handbook describes Human approval as a human-scale latency stage and recommends routing only consequential actions through it [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
 
 ## Assurance, external standards, and roles
 
@@ -141,4 +134,4 @@ Slice 1.8 Design Revision 1 remains preserved pre-rebaseline input: not reviewed
 
 External references provide provenance and design inspiration only. They are not Relay authority, do not establish conformance, and must not override Relay's canonical policy and records. Source identity, status, freshness, and limitations are catalogued in `docs/references/GOVERNANCE_ASSURANCE_AND_AGENTIC_SDLC_SOURCES.md`.
 
-Agentic engineering practice emphasizes repository guardrails, feedback loops, and human steering [SRC-OPENAI-HARNESS-ENGINEERING]. Board-centric asynchronous agent work appears in Symphony and Linear Coding Sessions; GitLab documents attributable agent identity and tool approval [SRC-OPENAI-SYMPHONY] [SRC-LINEAR-CODING-SESSIONS] [SRC-GITLAB-DUO-AGENT-PLATFORM]. These are product/architecture examples, not Relay authority. Vibe Kanban is retained only as historical evidence of the interaction pattern: its company announced shutdown while the project continued as open-source/community maintained [SRC-VIBE-KANBAN].
+Agentic engineering practice emphasizes repository guardrails, feedback loops, and human steering [SRC-OPENAI-HARNESS-ENGINEERING]. Board-centric asynchronous agent work appears in Symphony and Linear Coding Sessions; GitLab documents attributable agent identity, tool approval, workflow trace logging, and session approval checkpoints [SRC-OPENAI-SYMPHONY] [SRC-LINEAR-CODING-SESSIONS] [SRC-GITLAB-DUO-AGENT-PLATFORM]. These are product/architecture examples, not Relay authority. Vibe Kanban is retained only as historical evidence of the interaction pattern: its company announced shutdown while the project continued as open-source/community maintained [SRC-VIBE-KANBAN].
