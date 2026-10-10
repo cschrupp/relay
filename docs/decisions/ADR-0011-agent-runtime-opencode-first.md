@@ -1,6 +1,6 @@
 # ADR-0011 — Agent Runtime Boundary and OpenCode-First Direction
 
-**Status:** PROPOSED / HUMAN-SELECTED DIRECTION — NOT LOCKED  
+**Status:** REALIZED BY CLOSED SLICE 2.1 / HISTORICAL DECISION DIRECTION — NOT STANDALONE AUTHORITY  
 **Date:** October 2026  
 **Scope:** Future Phase 2–3 agent execution architecture  
 **Implementation authority:** NONE
@@ -155,26 +155,27 @@ Rejected. Formal evaluator independence is a Relay governance property and must 
 
 ## Relationship to current authority
 
-This ADR records the Human-selected strategic direction to pursue OpenCode first.
+The OpenCode-first AgentRuntime direction was subsequently designed, implemented, live-evidenced, Human-accepted, and canonically closed by Slice 2.1.
 
-It is deliberately `PROPOSED`, because:
+```text
+Slice 2.1:
+COMPLETE / ACCEPTED / CLOSED
 
-- Slice 1.6 is complete and closed, while Slice 1.7 design is accepted but implementation is not authorized;
-- Phase 2 and Phase 3 are not authorized;
-- the canonical Build Plan has not yet been superseded/revised for this architecture;
-- the required sidecar validation has not yet occurred.
+Accepted candidate:
+4f785f08576e465cd0aa278f927fa4b7253e3f49
 
-No code implementation is authorized by this ADR.
+Closure evaluation:
+RLY-S21-CLOSE-EVAL-002 — ACCEPT
+```
+
+This ADR remains historical rationale, not standalone implementation authority.
+
+The roadmap is now re-baselined under `RLY-P2-ROADMAP-REBASE-001` around Phase 1 assurance/promotion hardening, then Role Contracts, Context/Work Packets, Execution Workspace Authority, and only afterward Phase 3 autonomous execution.
+
+No new execution is authorized by this ADR.
 
 ---
 
 ## Expected superseding/locking path
 
-At or after the Phase-1 M0 hard stop:
-
-1. review the manual-governance dogfood findings;
-2. authorize the appropriate Phase-2 design slice;
-3. run the bounded runtime sidecar experiment if separately authorized;
-4. revise the canonical Build Plan/Product Proposal as required;
-5. independently review the AgentRuntime contract;
-6. lock or supersede this ADR through normal Relay governance.
+The runtime decision has been realized by Slice 2.1. Future changes to AgentRuntime architecture must proceed through normal Relay governance. The current next sequence is defined by the canonical Build Plan and `RLY-P2-ROADMAP-REBASE-001`.
