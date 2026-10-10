@@ -8,6 +8,7 @@
 
 **Pause:** `RLY-S18-PAUSE-001`
 **Re-baseline authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
+**Strategic amendment authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
 ## Current governed state
 
@@ -23,7 +24,7 @@ Implementation: NOT AUTHORIZED
 Design Revision 2: NOT PRODUCED / NOT AUTHORIZED
 ```
 
-Design Revision 1 is the review-ready head `c67fe2147fcb9a37e7ab13de92bfc79bb8688919` on `design/slice-1.8-governance-assurance-reference-model`. It is not reviewed, not Human-accepted, and not implementation authority. Preserve that branch and head unchanged.
+Design Revision 1 is the review-ready head `c67fe2147fcb9a37e7ab13de92bfc79bb8688919` on `design/slice-1.8-governance-assurance-reference-model`. It is preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Preserve that branch and head unchanged.
 
 ## Objective
 
@@ -42,10 +43,18 @@ Define and review:
 - conservative compliance-claim rules;
 - standards-mapping direction;
 - DORA-style governance-overhead guardrails [SRC-DORA-CHANGE-APPROVAL].
+- the cross-cutting Decision Support boundary and policy-specific `DecisionBasisProjection` completeness;
+- conceptual `GovernanceProfile`, risk inputs, exact subject/profile binding, and escalation/downgrade authority;
+- proposed `RELAY_GOVERNANCE_PROFILE_BOUND` and `RELAY_VERIFICATION_ASSETS_PROTECTED` semantics;
+- Protected Verification Asset designation, mutation-authority boundary, and role separation;
+- governance-effectiveness telemetry as non-authoritative, with assurance value separate from governance cost;
+- workflow-agnostic control-plane semantics, including the rule that upstream workflow artifacts cannot import Relay authority;
+- external mapping freshness and the previously established identity/provenance properties;
+- downstream `ContextManifest` and planning-artifact interoperability requirements for Slice 2.3.
 
 ### Future Design Revision 2 expectations
 
-If separately authorized after the re-baseline is reviewed and Human-accepted, a future revision should address the Decision Support boundary and `DecisionBasisProjection`; `RELAY_DECISION_BASIS_COMPLETE`; `RELAY_ACTOR_IDENTITY_BOUND`; `RELAY_EXECUTION_PROVENANCE_SUFFICIENT`; external mapping freshness; Human-gate necessity; and the downstream Slice 2.3 `ContextManifest` requirement. External source references provide provenance, not Relay authority. No Revision 2 is produced or authorized here.
+If separately authorized after the complete amended re-baseline is reviewed, Human-accepted, and promoted, a future revision should address the requirements above as design questions. It should also resolve applicable versus unknown versus missing decision-basis components; define profile-selection inputs without a final scoring formula or taxonomy; prohibit implementer/runtime/provider self-downgrade; define policy-authorized escalation and durable downgrade; distinguish implementation tests from policy/acceptance/evaluation assets; and preserve tri-valued `PASS / FAIL / UNKNOWN` semantics. This is an expectation list, not Design Revision 2. No Revision 2 is produced or authorized here.
 
 ## Out of scope
 

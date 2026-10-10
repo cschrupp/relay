@@ -3,6 +3,7 @@
 **Status:** FUTURE / PLANNED — NOT OPEN / NOT AUTHORIZED  
 **Phase:** 1 — Deterministic Governance Foundation  
 **Roadmap authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
+**Strategic amendment authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
 ## Objective
 
@@ -17,6 +18,12 @@ Design a Human-facing review surface that makes one exact governed decision unde
 - optional `DecisionClarityFeedback` and defer / inspect / question / decide interaction;
 - explicit separation between explanation and Human Authority action;
 - freshness of the decision basis, explanations, and decision-scoped context.
+- selected GovernanceProfile and profile version, rationale and risk/impact explanation;
+- profile-required Human gates, evidence, protected verification assets, and evaluator separation;
+- decision-scoped questions about why governance requirements and restrictions apply;
+- future presentation of governance-effectiveness measures, including expected/actual decision and evaluation latency, rework, clarity feedback, and mechanical-versus-Human gate proportions.
+
+These additions are scope direction only. They do not define dashboards, telemetry collection, a profile taxonomy, or implementation.
 
 ## Explicit exclusions
 

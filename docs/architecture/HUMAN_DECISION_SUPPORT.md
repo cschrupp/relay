@@ -104,6 +104,12 @@ Possible tags are scope, rationale, architecture, risk, evidence, evaluation, au
 
 `RELAY_EXECUTION_PROVENANCE_SUFFICIENT` passes only when the provenance required by applicable policy and risk is exact enough to evaluate the required assurance properties. A documentation candidate may require exact commit, changed paths, registry transition, and CI. A higher-risk autonomous implementation may require execution/workspace/runtime/provider/model identity, tool activity, permissions, network state, quality execution, event gaps, and terminal result. Relay does not require universal full-trajectory logging. Output verification and trajectory evaluation answer different questions; a plausible artifact alone may not expose a defective process [SRC-GOOGLE-NEW-SDLC-2026].
 
+## GovernanceProfile in a decision basis
+
+When a future policy requires a `GovernanceProfile`, a Decision Card should be able to show the selected profile and version, why it applies, required Human decisions, required evidence, protected verification assets and their mutation permissions, evaluator separation, and expected promotion predicates. It should let the Human ask why the profile applies, why gates are required, whether policy permits a stricter or weaker profile, what would justify a permitted downgrade, and who may modify protected assets. The projection explains Relay policy; it cannot select or relax the profile. Profile taxonomy and selection mechanics remain future Slice 1.8 design work.
+
+Governance-effectiveness telemetry may later surface the profile/rationale, expected governance cost, actual decision/evaluation latency, rework, clarity feedback, and the ratio of mechanical to Human gates. This is a future Slice 1.9 direction, not a dashboard design. Telemetry remains non-authoritative and cannot relax a profile [SRC-DORA-CHANGE-APPROVAL].
+
 ## External mapping freshness
 
 Conceptual external references identify framework/version/publication status, requirement, and authoritative source. A mapping also records Relay control references, required evidence, assessment and rationale, assessor, verification time, and either review due date or refresh trigger. Exact schema is deferred. A mapping outside its accepted freshness window becomes `STALE`; for a new external claim, stale evidence resolves to `UNKNOWN` until reverified, neither `PASS` nor automatically `FAIL`. This preserves Relay's conservative three-valued semantics.

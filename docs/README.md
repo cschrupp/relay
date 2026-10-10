@@ -6,10 +6,10 @@ Canonicality is defined by `.relay/registry.json`, not by filename recency.
 
 ## Canonical living documents
 
-Current registry targets are:
+Current registry targets resolve to:
 
 - `PRODUCT_PROPOSAL_V0_5.md`
-- `BUILD_PLAN_V0_5.md`
+- `BUILD_PLAN_V0_6.md`
 - `CURRENT_BASELINE.md`
 - `policies/DOCUMENTATION_GOVERNANCE_V0_3.md`
 - `policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md`
@@ -17,6 +17,8 @@ Current registry targets are:
 Older versioned or unversioned proposal/plan/policy files remain historical repository content and are not current merely because they are present.
 
 ## Current future-architecture direction
+
+Relay is the governance control plane for AI software engineering. It does not require Relay-native planning or a particular upstream SDLC method. Future external workflow artifacts may be normalized through explicit adapters, but never import Relay authority. Relay governs exact authority, policy, subject/baseline, execution, evidence, evaluation, Human decisions, and canonical transitions.
 
 Relay plans to introduce agent execution through a Relay-owned `AgentRuntime` boundary rather than by implementing a bespoke model/tool loop.
 
@@ -29,9 +31,11 @@ Current working documents for this direction are:
 - `slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
 - `slices/SLICE_3_3_CODING_AGENT_EXECUTION.md`
 
-These are **future planning/design artifacts**. They do not open or authorize Phase 2 or Phase 3 work. Human Decision Support remains a derived, non-authoritative projection; its architecture is documented in `architecture/HUMAN_DECISION_SUPPORT.md`.
+These are **reference and future planning/design artifacts**. Their presence does not open or authorize a future Slice or Phase 3 work. Human Decision Support remains a derived, non-authoritative projection; its architecture is documented in `architecture/HUMAN_DECISION_SUPPORT.md`.
 
 Current roadmap: Slices 1.1–1.7 are closed; Slice 1.8 is open and paused for the architecture/roadmap re-baseline under `RLY-S18-PAUSE-001`; Slice 1.9 Human Decision Support and Slice 1.10 Source/Promotion Enforcement are planned, unopened, and unauthorized. Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3 and real-project agent execution are not authorized. See `CURRENT_BASELINE.md` and `.relay/registry.json` for canonical state.
+
+The current pause also includes the authorized strategic amendment for workflow interoperability, future risk-adaptive GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement. Slice 1.8 remains paused; Design Revision 2 has not been produced. The competitive comparison is planned research only and has not been executed.
 
 ## Slice records
 
@@ -58,5 +62,7 @@ Submitted evaluations and Human Authority decisions are preserved as historical 
 Accepted or working slice architecture documents live under `architecture/`.
 
 `architecture/AGENT_RUNTIME.md` describes the planned boundary between Relay governance and external coding-agent harnesses. OpenCode is the first planned implementation, but runtime-specific features must not become Relay domain authority.
+
+The external source catalog is `references/GOVERNANCE_ASSURANCE_AND_AGENTIC_SDLC_SOURCES.md`; `references/RELAY_COMPETITIVE_VALIDATION_PLAN.md` is non-authoritative research planning only.
 
 Current authority and the next required Human Authority gate are recorded in `CURRENT_BASELINE.md`.

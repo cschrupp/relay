@@ -57,6 +57,8 @@ acceptance and baseline promotion
 
 The architecture should keep those responsibilities explicit and testable while using a mature coding-agent harness for the inner execution loop.
 
+`AgentRuntime` consumes a Relay-governed execution contract. It is independent of whether upstream engineering intent originated in Relay-native planning, Spec Kit, OpenSpec, BMAD, an enterprise workflow, or another supported source. Those sources must first be normalized and bound to Relay authority; the runtime neither imports upstream workflow authority nor needs to know which planning method produced the contract. This clarifies the future architecture boundary and does not change the accepted Slice 2.1 runtime contract.
+
 ---
 
 ## 3. Planned architecture

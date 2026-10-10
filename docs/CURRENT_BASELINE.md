@@ -124,6 +124,30 @@ NOT OPEN / NOT AUTHORIZED
 
 This ordering places assurance and promotion hardening beneath later agent autonomy. External standards remain compliance/assurance references; Relay-native semantics remain authoritative.
 
+## 1B.1 Strategic amendment state
+
+`RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` authorizes documentation and architecture work only. The reason Slice 1.8 remains paused is to incorporate workflow interoperability, risk-adaptive governance through a future GovernanceProfile, Protected Verification Assets, and governance-effectiveness measurement. Design Revision 1 remains preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. No Revision 2 has been produced; Slice 1.8 has not resumed.
+
+```text
+Relay:
+governance control plane for AI software engineering
+
+Relay-native planning:
+SUPPORTED / NOT REQUIRED
+
+External workflow authority:
+NEVER IMPORTED AUTOMATICALLY
+
+GovernanceProfile and protected-verification semantics:
+FUTURE DESIGN ONLY / NOT IMPLEMENTED
+
+GovernanceEffectivenessTelemetry:
+FUTURE / NON-AUTHORITATIVE / NOT IMPLEMENTED
+
+Competitive validation:
+PLANNED RESEARCH ONLY / NOT EXECUTED
+```
+
 # 1C. Slice 2.1 historical opening
 
 ```text

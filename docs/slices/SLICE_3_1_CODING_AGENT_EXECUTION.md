@@ -4,6 +4,7 @@
 **Phase:** 3 - First Governed Autonomous Engineering Loop  
 **Roadmap authority:** `RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED`  
 **Planned runtime:** `OpenCodeRuntime` through Relay `AgentRuntime`
+**Strategic architecture direction:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
 ## Objective
 
@@ -27,15 +28,17 @@ Phase 3 itself requires explicit Human opening authority.
 ## Planned execution path
 
 ```text
-Relay authorization
+planning source (Relay-native or external; provider is not hard-coded)
+      -> normalized Relay Work Packet
+      -> Relay authority and GovernanceProfile
       -> Role Contract
-      -> Context / Work Packet
-      -> Execution Workspace
+      -> Workspace Authority
       -> AgentRuntime
-      -> OpenCodeRuntime
-      -> configured provider/model
+      -> coding agent
       -> normalized result + evidence
 ```
+
+The implementation actor consumes Relay-authorized normalized intent regardless of which upstream planning methodology produced it. An upstream workflow label does not supply Relay authority. Execution must honor the profile-selected workspace and Protected Verification Asset restrictions. No Phase 3 work is authorized.
 
 ## Core invariants
 

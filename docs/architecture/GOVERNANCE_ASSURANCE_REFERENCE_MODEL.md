@@ -12,7 +12,7 @@
 
 ## 1. Framework identity
 
-Relay is an **AI software-development and engineering-governance framework**.
+Relay is the governance control plane for AI software engineering. Relay-native planning is supported but not required; external planning/workflow methods may eventually connect through explicit adapter contracts. Relay does not import authority from those methods.
 
 Relay owns project/Slice definition, architecture and design governance, exact authority and baseline binding, human and AI role boundaries, execution governance, evidence/provenance, independent evaluation, rework, Human acceptance, canonical promotion, lifecycle state, and durable project knowledge.
 
@@ -149,6 +149,8 @@ RELAY_CONTROL_CONTINUITY_VERIFIED
 RELAY_DECISION_BASIS_COMPLETE
 RELAY_ACTOR_IDENTITY_BOUND
 RELAY_EXECUTION_PROVENANCE_SUFFICIENT
+RELAY_GOVERNANCE_PROFILE_BOUND
+RELAY_VERIFICATION_ASSETS_PROTECTED
 ```
 
 `RELAY_DECISION_BASIS_COMPLETE` passes only when every component required and applicable under policy for the exact decision is present and current, and each inapplicable component is explicitly recorded or deterministically understood as not applicable. Conceptual states distinguish `REQUIRED_PRESENT`, `OPTIONAL_PRESENT`, `NOT_APPLICABLE`, `UNKNOWN`, and `MISSING_REQUIRED`. A pre-design gate that does not require an evaluation records `NOT_APPLICABLE`; required but unlocated evidence is `MISSING_REQUIRED`; uncertain applicability is `UNKNOWN`. It verifies Relay supplied the decision basis, not Human understanding.
@@ -158,6 +160,10 @@ RELAY_EXECUTION_PROVENANCE_SUFFICIENT
 `RELAY_EXECUTION_PROVENANCE_SUFFICIENT` is risk/policy-relative: the recorded exact provenance must suffice to evaluate the required properties. Documentation changes may need exact commit, changed paths, registry transition, and CI; higher-risk autonomous work may need execution, workspace, runtime, provider/model, tool, permission, network, quality, continuity, and terminal evidence. It does not require universal full trajectory logging. Output verification and trajectory evaluation are distinct [SRC-GOOGLE-NEW-SDLC-2026].
 
 Independent AI evaluation is Relay-native. It must not be misrepresented as satisfying an external requirement explicitly defined in terms of multiple trusted persons.
+
+`RELAY_GOVERNANCE_PROFILE_BOUND` passes only when the exact governed subject is bound, before the applicable governed action, to the exact policy-required `GovernanceProfile` and its policy basis. The implementer, runtime, agent assertion, and workflow-provider metadata cannot self-select a weaker profile. Applicability that cannot be established remains `UNKNOWN`; it never silently passes.
+
+`RELAY_VERIFICATION_ASSETS_PROTECTED` uses `PASS / FAIL / UNKNOWN` and passes only when verification-critical assets designated as protected by the applicable profile were outside unauthorized implementer mutation authority, or every permitted mutation received separate authorization and governance under policy. Applicability or mutation authority that cannot be established is `UNKNOWN`, never an implicit pass. This does not mean every implementation test is protected or that hidden tests are required. The concern is who may mutate policy, acceptance, and evaluation assets.
 
 ## 7. Canonical source and promotion architecture
 
@@ -256,6 +262,59 @@ Phase 3:
 ```
 
 Slice 2.2 consumes `RELAY_ACTOR_IDENTITY_BOUND`, `RELAY_IMPLEMENTER_EVALUATOR_SEPARATION`, `RELAY_INDEPENDENT_EVALUATION`, `RELAY_RUNTIME_IDENTITY_RECORDED`, and `RELAY_EXECUTION_PROVENANCE_SUFFICIENT`. Slice 2.3 defines a future ContextManifest separating static rules/design/authority from dynamic retrieval, skills, tools, selected code, runtime observations, external references, and windowed session history. Prompt text is not effective governed context; provenance/version/digest semantics are needed [SRC-GOOGLE-NEW-SDLC-2026]. Slice 2.4 supplies future scope, provenance, fail-closed, and control-continuity evidence. The Phase 3.1 prerequisite chain is 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening.
+
+## 10. Workflow-agnostic governance
+
+Relay accepts engineering intent independently of the method that produced it. Spec Kit, OpenSpec, BMAD, and other examples show distinct upstream planning/artifact workflows; they are landscape references, not Relay dependencies or authorities [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026]. A future Slice 2.3 design may define the following conceptual boundary; this is not an adapter schema or implementation authorization:
+
+```text
+ENGINEERING / PLANNING SOURCES
+ Relay-native planning | Spec Kit | OpenSpec | BMAD | enterprise | custom
+                              |
+                              v
+                 PlanningArtifactSourceRef
+                              |
+                              v
+                  PlanningArtifactAdapter
+                              |
+                              v
+              Normalized Engineering Intent
+                              |
+                              v
+                    Relay Work Packet
+                              |
+                 +------------+------------+
+                 |                         |
+           Relay Authority             Relay Policy
+                 |                         |
+                 +------------+------------+
+                              v
+                    Governed Execution
+```
+
+Conceptually, `PlanningArtifactSourceRef` preserves source method/version, artifact identity/digest, and provenance. `PlanningArtifactAdapter` identifies its own version and normalization contract. A normalized intent can carry objective, problem, acceptance criteria, design references, work identity, proposed scope and explicit non-scope, quality and verification expectations, dependencies, and source provenance. Exact schema is deferred. Normalized intent is not an authorized Work Packet; Relay authorization binds the exact normalized input before execution.
+
+An external artifact's `approved`, `ready`, `accepted`, `done`, or `green` claim never imports Relay authority, Human acceptance, evaluation, or lifecycle state. An adapter must not invent acceptance criteria, authority, scope, or non-authority unsupported by its inputs. Incomplete required normalization yields `UNKNOWN` or `MISSING_REQUIRED` and no authorized Work Packet; a Human may clarify the intent through a governed decision.
+
+## 11. GovernanceProfile
+
+`GovernanceProfile` is a future conceptual policy selection for the minimum sufficient governance requirements of exact work. It may eventually name its profile/version and policy basis and identify required Human gates, evidence, evaluator independence, execution isolation/provenance, protected verification assets, tests/evaluations, runtime-identity evidence, promotion predicates, canonical-reference controls, and escalation triggers. Labels such as `LOW`, `STANDARD`, `HIGH`, and `CRITICAL` are examples only, not a frozen taxonomy.
+
+Risk context may include change category, blast radius, reversibility, production/data/security/privacy impact, destructive potential, migration/schema implications, credentials, network and external side effects, autonomy/workspace capabilities, novelty/uncertainty, and rollback availability. No final scoring formula is defined here.
+
+Profile selection comes from Relay policy and/or explicit Human Authority. An implementer, runtime capability, agent assertion, or workflow metadata cannot downgrade governance. Policy may classify deterministically; unknown required inputs fail closed or escalate as policy specifies. A profile may be escalated to stricter controls. A downgrade requires policy-authorized downgrade or explicit Human Authority and a durable record. Slice 1.8 owns the future semantics; implementation is not authorized.
+
+## 12. Protected Verification Assets
+
+Protected Verification Assets are assets that an applicable policy/profile places outside unauthorized implementer mutation authority. They may include acceptance criteria, evaluation fixtures, golden datasets, acceptance tests, security checks, policy rules, verification scripts, expected invariants, or external-validation configuration. Implementation tests may legitimately be authored or changed by the implementer; not every test is protected. Policy may require read-only access, no access, separate authority for changes, or separate evaluator approval. The defining property is mutation authority, not secrecy. Consort is one implementation example of protected test lists and deterministic gates; this amendment draws a general design concept, not Consort's full methodology or outcome claims [SRC-CONSORT-PAPER-2026] [SRC-CONSORT-IMPLEMENTATION-2026].
+
+Slice ownership is prospective: Slice 1.8 defines semantics and designation authority; Slice 2.2 defines role permissions to read, create, modify, approve, and evaluate; Slice 2.3 binds exact asset references, digests, classifications, required evaluations, and allowed mutation authority; Slice 2.4 enforces filesystem/tool boundaries and produces evidence; Slice 3.1 executes under those restrictions. No enforcement is implemented here.
+
+## 13. Governance-effectiveness telemetry
+
+`GovernanceEffectivenessTelemetry` is a future non-authoritative view of assurance value and governance cost, kept as separate dimensions rather than collapsed into a single score. Candidate measures include Human decision latency/interaction time, evaluation duration, Human and mechanical gate counts, rework cycles, blocked unauthorized operations, detected scope violations, defects caught before promotion, avoidable escalations, recovery time, promotion latency after requirements are met, execution duration, model/token/monetary cost, and work completed without Human intervention.
+
+Telemetry is not authority or evaluation. Low cost does not permit weaker controls, and past success does not waive current policy. It may inform Human and policy-design decisions; automatic relaxation requires a separate future policy authority. A comparative experiment remains planned research only in `docs/references/RELAY_COMPETITIVE_VALIDATION_PLAN.md` and is not authorized to run.
 
 ### Human-gate necessity
 

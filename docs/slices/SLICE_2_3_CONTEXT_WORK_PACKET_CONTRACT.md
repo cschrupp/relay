@@ -3,6 +3,7 @@
 **Status:** FUTURE SLICE PROPOSAL - NOT OPEN / NOT AUTHORIZED  
 **Phase:** 2 - Provider and Agent Foundation  
 **Roadmap authority:** `RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED`
+**Strategic architecture direction:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
 ## Objective
 
@@ -29,7 +30,18 @@ exact policy refs
 accepted design refs
 required verified properties
 decision-support relevance where applicable
+exact GovernanceProfile identity/version and policy basis where required
+protected verification-asset references, digests, policy classification,
+required evaluation assets, and allowed mutation authority
 ```
+
+### Workflow-provider interoperability
+
+The future contract should let normalized Work Packets be reproduced regardless of whether planning input came from Relay-native planning, Spec Kit, OpenSpec, BMAD, an enterprise workflow, or another future provider. Those named systems are landscape examples only; no adapter implementation is authorized [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026].
+
+Conceptually define `PlanningArtifactSourceRef` for source method/version, exact artifact identity/digest, and provenance; `PlanningArtifactAdapter` for adapter identity/version, supported source type, normalization contract, mapping diagnostics, unmapped required fields, and uncertainty; and `NormalizedEngineeringIntent` for the normalized objective, acceptance criteria, proposed scope/non-scope, dependencies, quality/verification expectations, design/work identity, and source provenance. This is vocabulary for future design, not a database or Pydantic schema.
+
+Retain the exact source artifacts, accepted source references, adapter identity/version, and their relevant digest/provenance in the future governed input. Normalization is not authorization: Relay authority binds the exact normalized input before work becomes an authorized Work Packet. If a required field cannot be normalized, record `UNKNOWN` or `MISSING_REQUIRED` and do not create an authorized packet. Do not infer authority, acceptance criteria, scope, or non-scope from prose when source semantics do not support it. A Human may clarify or complete normalized intent through a governed decision.
 
 The static/dynamic boundary and effective context provenance should themselves be reviewable and versioned [SRC-GOOGLE-NEW-SDLC-2026]. This is a future design requirement only; no ContextManifest implementation is authorized.
 

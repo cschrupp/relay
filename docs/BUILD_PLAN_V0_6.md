@@ -260,6 +260,46 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
      -> first governed autonomous implementation execution
 
 Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Human Decision Support, 1.10 Source/Promotion Enforcement, 2.2 Role Contracts, 2.3 Context/Work Packets, 2.4 Workspace Authority, and explicit Phase 3 opening.
+
+## 1B.1 Strategic control-plane amendment — planned ownership
+
+This documentation-only amendment is authorized by `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`. Slice 1.8 remains open, design-authorized, paused; Design Revision 1 remains preserved pre-rebaseline input, not reviewed or Human-accepted. Revision 2 has not been produced. No Slice is opened by this roadmap clarification.
+
+```text
+Relay:
+governance control plane for AI software engineering
+
+Relay-native planning:
+SUPPORTED / NOT REQUIRED
+
+Future external planning adapters:
+PLANNED / NOT IMPLEMENTED / DO NOT IMPORT AUTHORITY
+
+GovernanceProfile:
+FUTURE SLICE 1.8 DESIGN SEMANTICS
+
+Protected Verification Assets:
+FUTURE SLICE 1.8 SEMANTICS; 2.2 ROLE AUTHORITY;
+2.3 EXACT REFERENCES; 2.4 ENFORCEMENT; 3.1 RESTRICTED EXECUTION
+
+GovernanceEffectivenessTelemetry:
+FUTURE NON-AUTHORITATIVE MEASUREMENT; NOT IMPLEMENTED
+
+Competitive validation:
+PLANNED RESEARCH ONLY / NOT EXECUTED
+```
+
+Future ownership direction:
+
+- **1.8** should define GovernanceProfile semantics and risk/profile binding, escalation/downgrade authority, `RELAY_GOVERNANCE_PROFILE_BOUND`, Protected Verification Asset designation and `RELAY_VERIFICATION_ASSETS_PROTECTED`, governance telemetry's non-authority boundary, and workflow-agnostic governance. No profile taxonomy or final scoring formula is frozen.
+- **1.9** should design Decision Cards, selected-profile/risk/rationale and required-gate presentation, and future governance-effectiveness telemetry UX. No dashboard or telemetry implementation is authorized.
+- **1.10** should define profile-selected promotion predicates, including required evidence/evaluation, Human acceptance and promotion authority, parent freshness, and protected-verification evidence. The promotion executor cannot create policy or authority.
+- **2.2** should define profile-required role separation and verification-asset read/create/modify/approve/evaluate permissions; role, actor identity, runtime/model identity, authority, and capability remain distinct.
+- **2.3** should define ContextManifest and interoperable `PlanningArtifactSourceRef`, `PlanningArtifactAdapter`, and `NormalizedEngineeringIntent`, preserving source and adapter identity/version, digest, mapping diagnostics, unknown required fields, and exact accepted references. Normalization does not authorize a Work Packet.
+- **2.4** should define workspace enforcement for profile restrictions, protected asset paths, allowed/denied writes, network, credentials, and tools, with evidence for scope conformance, provenance sufficiency, asset protection, and fail-closed behavior.
+- **3.1** should consume a normalized Relay Work Packet without hard-coding its upstream planning provider.
+
+The external planning landscape includes different spec/change/task processes [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026]. This informs interoperability planning only, not a comparative product claim.
 ```
 
 No planned Slice is opened by roadmap placement.

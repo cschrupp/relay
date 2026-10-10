@@ -3,6 +3,7 @@
 **Status:** FUTURE / PLANNED — NOT OPEN / NOT AUTHORIZED  
 **Phase:** 1 — Deterministic Governance Foundation  
 **Roadmap authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
+**Strategic amendment authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
 ## Objective
 
@@ -26,7 +27,7 @@ These facts are evidence of an enforcement gap, not authority to change reposito
 
 ## Design scope
 
-Define canonical-reference protection, exact required CI/status policy, force-push/deletion policy, exact promotion preconditions, stale-parent/evidence checks, a trusted mechanical promotion-executor boundary, promotion evidence/attestation, and any break-glass policy.
+Define canonical-reference protection, exact required CI/status policy, force-push/deletion policy, exact promotion preconditions, stale-parent/evidence checks, a trusted mechanical promotion-executor boundary, promotion evidence/attestation, and any break-glass policy. The applicable GovernanceProfile should select the required promotion predicates, including required evidence, evaluation, Human acceptance, promotion authority, canonical-parent freshness, and protected-verification evidence. The promotion executor checks and executes valid authority; it cannot create policy or authority.
 
 ## Core rule
 

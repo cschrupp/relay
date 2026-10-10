@@ -1,6 +1,8 @@
 # Relay
 
-Relay is a control plane for governed agentic software engineering.
+Relay is the governance control plane for AI software engineering.
+
+Coding agents and SDLC tools may plan and produce engineering work. Relay governs who authorized it, which exact constraints applied, what executed, what evidence resulted, who evaluated it, what a Human accepted, and whether it may become canonical. Relay-native planning is supported but not required; future adapters may accept external workflow artifacts without importing their authority.
 
 Its core thesis is:
 
@@ -20,9 +22,9 @@ Slice 1.9:                Human Decision Support — PLANNED / NOT OPEN / NOT AU
 Slice 1.10:               Canonical Source / Promotion — PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 2:                  OPEN
 Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
-Slice 2.2:                PLANNED / NOT OPEN
-Slice 2.3:                PLANNED / NOT OPEN
-Slice 2.4:                PLANNED / NOT OPEN
+Slice 2.2:                PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.3:                PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.4:                PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3:                  NOT OPEN / NOT AUTHORIZED
 Real-project execution:   NOT AUTHORIZED
 ```
@@ -52,7 +54,7 @@ Slice 2.1 closed at canonical head `ad0444337efcddb5694d14a57a99c22d18cdfb9c`.
 
 ## Architecture direction
 
-Relay is an **AI software-development and governance framework**. External standards validate applicable parts of Relay; they do not define Relay.
+Relay is the governance control plane for AI software engineering. Relay-native planning is supported, but Relay does not require a proprietary specification, task-decomposition, coding-agent, or SDLC methodology. Planning/workflow sources may eventually provide artifacts through explicit adapters; source claims such as “approved,” “ready,” “done,” or “green” never create Relay authority or acceptance. External standards may inform mappings, but they do not define Relay.
 
 ```text
 Relay native governance
@@ -73,6 +75,8 @@ Relay native governance
 The governing direction is:
 
 > **Relay semantics -> external compliance proof, never external standards -> Relay semantics.**
+
+Relay-native planning is supported but not required. Coding agents and upstream SDLC systems may produce plans and engineering artifacts; future explicit adapters may normalize them. Relay independently governs authority, policy, exact baseline and scope, execution identity, evidence, evaluation, Human decisions, and canonical transition. Upstream workflow labels never import Relay authority [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026].
 
 See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md` and `docs/references/GOVERNANCE_ASSURANCE_AND_AGENTIC_SDLC_SOURCES.md`. External references inform mappings; they do not define Relay authority.
 
@@ -142,6 +146,10 @@ Working future architecture/slice proposals are not implementation authority mer
 ## Key references
 
 - `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`
+- `docs/architecture/HUMAN_DECISION_SUPPORT.md`
+- `docs/decisions/ADR-0013-relay-is-a-workflow-agnostic-governance-control-plane.md`
+- `docs/references/GOVERNANCE_ASSURANCE_AND_AGENTIC_SDLC_SOURCES.md`
+- `docs/references/RELAY_COMPETITIVE_VALIDATION_PLAN.md`
 - `docs/architecture/AGENT_RUNTIME.md`
 - `docs/decisions/ADR-0011-agent-runtime-opencode-first.md`
 - `docs/slices/SLICE_1_8_GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`

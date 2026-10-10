@@ -11,13 +11,27 @@
 
 # 1. Product thesis
 
-Relay is a control plane for governed agentic software engineering.
+Relay is the governance control plane for AI software engineering.
 
 > **Nondeterministic agents should operate inside a deterministic engineering state machine.**
 
-Relay governs how engineering work is defined, authorized, handed over, implemented, evaluated, accepted, closed, and remembered.
+Relay governs authority, policy, exact subject and baseline, execution identity and scope, evidence, evaluation, Human decisions, promotion eligibility, and canonical transition.
 
-Relay is the authoritative AI software-development and governance framework. External assurance systems such as SLSA, NIST SSDF, and DORA may inform or evaluate applicable subsets of Relay; they do not define Relay's domain model, lifecycle, or authority semantics [SRC-SLSA-V1_2] [SRC-NIST-SSDF-1_1] [SRC-DORA-CHANGE-APPROVAL].
+## Product boundary
+
+Relay is the governance control plane, authority system, policy-enforcement layer, evidence/provenance framework, evaluation/acceptance framework, Human decision-support surface, and canonical-transition governance layer for AI software engineering.
+
+Relay-native planning is **SUPPORTED** and **NOT REQUIRED**. Relay does not require a proprietary specification method, task-decomposition method, coding agent, or orchestration methodology. Future explicit adapters may accept external planning/workflow artifacts, but their authority is never imported automatically. An upstream `approved`, `ready`, `accepted`, `done`, or `green` label is source information, not Relay Human acceptance, authorization, evaluation, or lifecycle state.
+
+Planning and specification generation are treated as commoditized, replaceable capabilities for product-boundary purposes; this is an assumption, not a claim that every method is interchangeable. Governance is Relay's core product thesis. Competitive differentiation and the value of its additional governance cost remain hypotheses for empirical validation, not proven superiority claims. Mature workflow interoperability is preferred to rebuilding planning methodology only for product completeness [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026] [SRC-CONSORT-PAPER-2026] [SRC-CONSORT-IMPLEMENTATION-2026].
+
+## Strategic architecture direction
+
+Future `GovernanceProfile` design is intended to select the minimum sufficient controls for exact work from policy and risk context. Implementers, runtimes, agent assertions, and workflow-provider metadata cannot lower that profile. Protected Verification Assets are policy-designated by mutation authority; this does not imply every test is immutable or hidden. `GovernanceEffectivenessTelemetry` is intended to compare assurance value with governance cost without a single score or automatic weakening of controls. These remain future concepts and hypotheses, not implemented product capabilities.
+
+External planning artifacts may eventually be normalized through explicit adapters, with source provenance and adapter identity/version preserved. A normalized artifact is not an authorized Relay Work Packet. Relay binds exact input to its own authority and policy. Spec Kit, OpenSpec, BMAD, and Consort document different workflows and controls; they are reference points for interoperability and research, not evidence of Relay superiority [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026] [SRC-CONSORT-PAPER-2026] [SRC-CONSORT-IMPLEMENTATION-2026]. A future controlled comparison is specified only as a non-authoritative research plan in `docs/references/RELAY_COMPETITIVE_VALIDATION_PLAN.md`; it has not been run.
+
+Relay is authoritative for its own governed subjects, policy, and lifecycle decisions. External assurance systems such as SLSA, NIST SSDF, and DORA may inform or evaluate applicable subsets of Relay; they do not define Relay's domain model, lifecycle, or authority semantics [SRC-SLSA-V1_2] [SRC-NIST-SSDF-1_1] [SRC-DORA-CHANGE-APPROVAL].
 
 # 2. Accepted technical foundation
 
@@ -131,7 +145,7 @@ Role Contract
     -> AgentRuntime (already accepted in Slice 2.1)
 ```
 
-Provider/model choice remains configurable beneath or alongside AgentRuntime. It is not restored as Relay's primary workflow abstraction.
+Runtime and provider/model choice remain execution-substrate concerns. Relay does not require a particular upstream planning or SDLC workflow.
 
 The first autonomous execution work is re-numbered as the first Phase 3 slice. Phase 3 requires separate Human opening authority.
 
@@ -189,6 +203,6 @@ Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a
 
 Slice 1.7 delivers exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Agent execution remains unauthorized.
 
-Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 viability is accepted and Human-accepted under `RLY-P1-M0-ACCEPT-001`; Phase 1 remains an accepted baseline under active hardening. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is complete, accepted, and closed after `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. The assurance / decision-support re-baseline pauses Slice 1.8 before review. Slice 1.9 is Human Decision Support, Slice 1.10 is Source/Promotion Enforcement, and Slices 2.2–2.4 remain planned. Phase 3 and real-project agent execution remain unauthorized.
+Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 viability is accepted and Human-accepted under `RLY-P1-M0-ACCEPT-001`; Phase 1 remains an accepted baseline under active hardening. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is complete, accepted, and closed after `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. The assurance / decision-support re-baseline and its authorized strategic amendment keep Slice 1.8 paused before review while incorporating workflow interoperability, GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement. Slice 1.9 is Human Decision Support, Slice 1.10 is Source/Promotion Enforcement, and Slices 2.2–2.4 remain planned. Phase 3 and real-project agent execution remain unauthorized.
 
 **Unblocked ≠ authorized.**

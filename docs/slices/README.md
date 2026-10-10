@@ -14,6 +14,8 @@ Current roadmap state:
 - Slices 2.2–2.4 — PLANNED / NOT OPEN / NOT AUTHORIZED
 - Phase 3 and agent execution — NOT OPEN / NOT AUTHORIZED
 
+The authorized strategic amendment adds workflow-agnostic governance, future risk-adaptive GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement to the paused Slice 1.8 design expectations. Slice 1.8 has not resumed and Design Revision 2 has not been produced. Slice 1.9's planned decision-support design now includes profile/risk explanation and telemetry presentation. No Slice has been opened by these amendments.
+
 The former Slice 1.9 source/promotion proposal is retained as a superseded roadmap proposal and renumbered to Slice 1.10. See `../CURRENT_BASELINE.md` for canonical state.
 
 Foundational records include:

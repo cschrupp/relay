@@ -2,7 +2,7 @@
 
 ADRs capture durable cross-slice engineering decisions.
 
-Current working proposal: [ADR-0012 — Human Decision Support Is Projection, Not Authority](ADR-0012-human-decision-support-is-projection-not-authority.md). It is proposed architecture under `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`, not implementation authority.
+Current working proposals: [ADR-0012 — Human Decision Support Is Projection, Not Authority](ADR-0012-human-decision-support-is-projection-not-authority.md) and [ADR-0013 — Relay Is a Workflow-Agnostic Governance Control Plane](ADR-0013-relay-is-a-workflow-agnostic-governance-control-plane.md). Both remain proposed architecture, not implementation authority.
 
 Lifecycle:
 
