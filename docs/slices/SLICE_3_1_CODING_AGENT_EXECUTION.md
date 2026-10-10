@@ -15,7 +15,8 @@ This future Slice may not open until the relevant upstream work is separately ac
 
 ```text
 1.8 Governance Assurance Reference Model
-1.9 Canonical Source and Promotion Enforcement
+1.9 Human Decision Support and Governance Review Surface
+1.10 Canonical Source and Promotion Enforcement
 2.2 Role Contracts
 2.3 Context and Work-Packet Contract
 2.4 Execution Workspace Authority

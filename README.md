@@ -15,8 +15,9 @@ Phase 0:                  COMPLETE / CLOSED
 Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1-1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
-Slice 1.8:                OPEN / DESIGN AUTHORIZED
-Slice 1.9:                PLANNED / NOT OPEN
+Slice 1.8:                OPEN / DESIGN AUTHORIZED / PAUSED — ARCHITECTURE / ROADMAP REBASE
+Slice 1.9:                Human Decision Support — PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 1.10:               Canonical Source / Promotion — PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 2:                  OPEN
 Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
 Slice 2.2:                PLANNED / NOT OPEN
@@ -63,9 +64,9 @@ Relay native governance
         +-- Promotion Plane
         |
         +-- external assurance mappings
-             +-- SLSA
-             +-- NIST SSDF
-             +-- DORA
+             +-- SLSA [SRC-SLSA-V1_2]
+             +-- NIST SSDF [SRC-NIST-SSDF-1_1]
+             +-- DORA [SRC-DORA-CHANGE-APPROVAL]
              +-- future standards / enterprise policy
 ```
 
@@ -73,14 +74,15 @@ The governing direction is:
 
 > **Relay semantics -> external compliance proof, never external standards -> Relay semantics.**
 
-See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`.
+See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md` and `docs/references/GOVERNANCE_ASSURANCE_AND_AGENTIC_SDLC_SOURCES.md`. External references inform mappings; they do not define Relay authority.
 
 ## Re-baselined development sequence
 
 ```text
-Phase 1 hardening
-  1.8 Governance Assurance Reference Model        OPEN — DESIGN AUTHORIZED
-  1.9 Canonical Source and Promotion Enforcement
+Phase 1 — Deterministic Governance Foundation
+  1.8 Governance Assurance Reference Model        OPEN — PAUSED FOR REBASE
+  1.9 Human Decision Support & Governance Review  PLANNED / NOT AUTHORIZED
+  1.10 Canonical Source and Promotion Enforcement PLANNED / NOT AUTHORIZED
 
 Phase 2 - provider and agent foundation
   2.1 Agent Runtime Contract                      CLOSED
@@ -114,14 +116,14 @@ OpenCode is an execution substrate, not project authority. Runtime permission ne
 
 The immediate hardening frontier is to make Relay's assurance model explicit and then make technical source/promotion enforcement match declared governance.
 
-At the roadmap re-baseline basis:
+Historical roadmap-rebaseline evidence recorded:
 
 ```text
 main protected = false
 repository rulesets = []
 ```
 
-Those facts are design input for planned Slice 1.9. They do not authorize repository-settings changes.
+Those facts remain historical design input for planned Slice 1.10. They do not authorize repository-settings changes.
 
 ## Canonical documentation
 
@@ -143,7 +145,10 @@ Working future architecture/slice proposals are not implementation authority mer
 - `docs/architecture/AGENT_RUNTIME.md`
 - `docs/decisions/ADR-0011-agent-runtime-opencode-first.md`
 - `docs/slices/SLICE_1_8_GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`
+- `docs/architecture/HUMAN_DECISION_SUPPORT.md`
+- `docs/slices/SLICE_1_9_HUMAN_DECISION_SUPPORT_GOVERNANCE_REVIEW_SURFACE.md`
 - `docs/slices/SLICE_1_9_CANONICAL_SOURCE_PROMOTION_ENFORCEMENT.md`
+- `docs/slices/SLICE_1_10_CANONICAL_SOURCE_PROMOTION_ENFORCEMENT.md`
 - `docs/slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
 - `docs/slices/SLICE_2_2_ROLE_CONTRACTS.md`
 - `docs/slices/SLICE_2_3_CONTEXT_WORK_PACKET_CONTRACT.md`

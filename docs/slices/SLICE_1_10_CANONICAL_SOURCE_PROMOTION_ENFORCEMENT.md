@@ -1,15 +1,16 @@
-# Slice 1.9 — Canonical Source and Promotion Enforcement
+# Slice 1.10 — Canonical Source and Promotion Enforcement
 
-**Status:** SUPERSEDED ROADMAP PROPOSAL — RETAINED HISTORICAL DESIGN INPUT
-**Phase:** 1 - Accepted Baseline / Hardening Active
-**Roadmap authority:** `RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED`
-**Superseded and renumbered:** Slice 1.10 by `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
-
-> Historical proposal retained. The scope below is carried forward to `SLICE_1_10_CANONICAL_SOURCE_PROMOTION_ENFORCEMENT.md`; the original rationale is preserved and does not authorize work.
+**Status:** FUTURE / PLANNED — NOT OPEN / NOT AUTHORIZED  
+**Phase:** 1 — Deterministic Governance Foundation  
+**Roadmap authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
 
 ## Objective
 
 Make technical source-control and promotion enforcement match Relay's declared governance semantics.
+
+## Prerequisites
+
+This proposal follows Slice 1.8 Governance Assurance and Slice 1.9 Human Decision Support. Both must be separately completed or explicitly superseded before this proposal is considered for opening. It remains unopened and unauthorized.
 
 ## Current design input
 
@@ -72,7 +73,7 @@ IMPLEMENTED != ACCEPTED
 ACCEPTED != PROMOTED
 ```
 
-Opening Slice 1.9 requires separate Human Authority.
+Opening Slice 1.10 requires separate Human Authority.
 
 Opening does not authorize design. Design requires separate explicit authorization.
 

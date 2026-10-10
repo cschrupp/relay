@@ -29,9 +29,9 @@ Current working documents for this direction are:
 - `slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
 - `slices/SLICE_3_3_CODING_AGENT_EXECUTION.md`
 
-These are **future planning/design artifacts**. They are not current canonical implementation authority and do not open or authorize Phase 2 or Phase 3 work.
+These are **future planning/design artifacts**. They do not open or authorize Phase 2 or Phase 3 work. Human Decision Support remains a derived, non-authoritative projection; its architecture is documented in `architecture/HUMAN_DECISION_SUPPORT.md`.
 
-Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted. Implementation and applying the accepted schema migration require separate Human Authority authorization. Agent execution is not authorized.
+Current roadmap: Slices 1.1–1.7 are closed; Slice 1.8 is open and paused for the architecture/roadmap re-baseline under `RLY-S18-PAUSE-001`; Slice 1.9 Human Decision Support and Slice 1.10 Source/Promotion Enforcement are planned, unopened, and unauthorized. Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3 and real-project agent execution are not authorized. See `CURRENT_BASELINE.md` and `.relay/registry.json` for canonical state.
 
 ## Slice records
 

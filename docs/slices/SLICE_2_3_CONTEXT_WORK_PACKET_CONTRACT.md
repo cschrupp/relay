@@ -10,6 +10,29 @@ Define the deterministic, reproducible packet that binds an authorized role to a
 
 ## Required packet content
 
+The future contract should define a `ContextManifest` that identifies the effective governed context and binds its provenance, version, and digest. Prompt text is not the effective governed context [SRC-GOOGLE-NEW-SDLC-2026].
+
+```text
+STATIC CONTEXT
+  role contract; system/repository rules; architecture refs; accepted design;
+  authority/non-authority; guardrails; stable conventions
+
+DYNAMIC CONTEXT
+  retrieved documents; task-specific skills; tool definitions; selected code;
+  runtime observations; external references; windowed session history
+
+context/version/digest identity
+skill identity/version
+retrieval provenance
+exact authority refs
+exact policy refs
+accepted design refs
+required verified properties
+decision-support relevance where applicable
+```
+
+The static/dynamic boundary and effective context provenance should themselves be reviewable and versioned [SRC-GOOGLE-NEW-SDLC-2026]. This is a future design requirement only; no ContextManifest implementation is authorized.
+
 ```text
 project / slice identity
 authority record

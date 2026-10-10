@@ -26,6 +26,11 @@ result extraction
 dirty-state handling
 cancellation cleanup
 backend isolation capabilities
+evidence sufficient to assess:
+  RELAY_SCOPE_CONFORMANCE
+  RELAY_EXECUTION_PROVENANCE_SUFFICIENT
+  RELAY_FAIL_CLOSED
+  RELAY_CONTROL_CONTINUITY_VERIFIED
 ```
 
 ## Backend model
@@ -38,6 +43,8 @@ WorkspaceProvider
 ```
 
 A local worktree may support development/dogfood but is not automatically a production security boundary.
+
+Workspace controls are enforcement and evidence mechanisms. They do not create implementation authority. Provenance sufficiency remains relative to applicable policy and execution risk; universal full-trajectory logging is not implied.
 
 ## Out of scope
 

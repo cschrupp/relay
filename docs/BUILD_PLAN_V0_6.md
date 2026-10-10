@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Phase 1 hardening active; Slice 1.8 open; design authorized; implementation not authorized; Phase 2 open
+**Status:** Current living implementation plan — Phase 1 deterministic governance foundation; Slice 1.8 paused for architecture/roadmap re-baseline; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -11,6 +11,27 @@
 ---
 
 # 1. Current project state
+
+```text
+Phase 1 — DETERMINISTIC GOVERNANCE FOUNDATION
+ACCEPTED BASELINE / HARDENING ACTIVE
+
+Slices 1.1–1.7: COMPLETE / ACCEPTED / CLOSED
+Slice 1.8 — Governance Assurance Reference Model:
+  OPEN; RLY-S18-OPEN-001; DESIGN AUTHORIZED under RLY-S18-DESIGN-AUTH-001;
+  PAUSED — ARCHITECTURE / ROADMAP REBASE under RLY-S18-PAUSE-001;
+  implementation NOT AUTHORIZED
+Slice 1.9 — Human Decision Support & Governance Review Surface:
+  PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 1.10 — Canonical Source and Promotion Enforcement:
+  PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
+  2.2–2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
+Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
+Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening
+Real-project agent execution: NOT AUTHORIZED
+```
 
 ```text
 Phase 0:
@@ -134,10 +155,17 @@ ACCEPTED / HUMAN-ACCEPTED — RLY-P1-M0-ACCEPT-001
 Roadmap re-baseline authority:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
-Slice 1.8 — Governance Assurance Reference Model:
-OPEN — RLY-S18-OPEN-001 / RLY-S18-DESIGN-AUTH-001 — DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+Assurance / decision-support re-baseline:
+RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001 — AUTHORIZED
+Slice 1.8 pause: RLY-S18-PAUSE-001 — PAUSED — ARCHITECTURE / ROADMAP REBASE
 
-Slice 1.9 — Canonical Source and Promotion Enforcement:
+Slice 1.8 — Governance Assurance Reference Model:
+OPEN — RLY-S18-OPEN-001 / DESIGN AUTHORIZED — PAUSED FOR ARCHITECTURE / ROADMAP REBASE — IMPLEMENTATION NOT AUTHORIZED
+
+Slice 1.9 — Human Decision Support and Governance Review Surface:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Phase 2:
@@ -183,8 +211,9 @@ ACCEPTED BASELINE / HARDENING ACTIVE
         |
         +-- M0 viability: PASSED / HUMAN-ACCEPTED
         +-- Slices 1.1-1.7: CLOSED
-        +-- 1.8 Governance Assurance Reference Model      NEXT
-        +-- 1.9 Canonical Source / Promotion Enforcement
+        +-- 1.8 Governance Assurance Reference Model      OPEN / PAUSED FOR REBASE
+        +-- 1.9 Human Decision Support                   PLANNED
+        +-- 1.10 Canonical Source / Promotion Enforcement PLANNED
                  |
                  +-------------------------------+
                                                  |
@@ -202,17 +231,20 @@ Phase 3 — first governed autonomous engineering loop
 NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 1 hardening and Phase 2 remain concurrent at the phase level, but the development frontier is deliberately ordered: 1.8, then 1.9, then 2.2.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level, but the development frontier is deliberately ordered: 1.8, then 1.9, then 1.10, then 2.2.
 
 Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 
 # 1B. Re-baselined development sequence
 
 ```text
-1.8  Governance Assurance Reference Model
-     -> independently review Relay-native vs external assurance semantics
+1.8  Governance Assurance Reference Model — OPEN / PAUSED FOR ARCHITECTURE / ROADMAP REBASE
+     -> design review has not started; implementation is unauthorized
 
-1.9  Canonical Source and Promotion Enforcement
+1.9  Human Decision Support and Governance Review Surface — PLANNED / NOT AUTHORIZED
+     -> future legibility and decision-scoped review design
+
+1.10 Canonical Source and Promotion Enforcement — PLANNED / NOT AUTHORIZED
      -> make SCM/promotion enforcement match declared governance
 
 2.2  Role Contracts
@@ -226,6 +258,8 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 
 3.1  Coding Agent Execution
      -> first governed autonomous implementation execution
+
+Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Human Decision Support, 1.10 Source/Promotion Enforcement, 2.2 Role Contracts, 2.3 Context/Work Packets, 2.4 Workspace Authority, and explicit Phase 3 opening.
 ```
 
 No planned Slice is opened by roadmap placement.
@@ -870,9 +904,12 @@ Roadmap re-baseline:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8:
-OPEN — RLY-S18-OPEN-001 / RLY-S18-DESIGN-AUTH-001 — DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+OPEN / DESIGN AUTHORIZED / PAUSED — RLY-S18-PAUSE-001 — ARCHITECTURE / ROADMAP REBASE / IMPLEMENTATION NOT AUTHORIZED
 
-Slice 1.9:
+Slice 1.9 — Human Decision Support and Governance Review Surface:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Phase 2:
