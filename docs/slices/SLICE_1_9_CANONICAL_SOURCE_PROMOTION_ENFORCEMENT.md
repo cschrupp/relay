@@ -30,6 +30,18 @@ Define canonical-reference protection, exact required CI/status policy, force-pu
 promotion executor != promotion decision maker
 ```
 
+Promotion authority is semantic, not necessarily a fresh manual approval at promotion time.
+
+A valid authority may be a dedicated exact promotion authorization or a previously issued exact finalization/closure authority whose terms explicitly permit promotion once specified verification predicates are satisfied.
+
+```text
+No valid promotion authority:
+promotion forbidden.
+
+Valid existing promotion authority + required predicates satisfied:
+mechanical promotion may proceed without another Human decision.
+```
+
 ## Out of scope
 
 Role Contracts, work packets, workspaces, OpenCode execution, real-project agent execution, and formal SLSA level claims.
@@ -47,4 +59,24 @@ Role Contracts, work packets, workspaces, OpenCode execution, real-project agent
 
 ## Hard stop
 
-Opening or implementing this Slice requires separate Human Authority.
+This proposal preserves Relay's gate grammar:
+
+```text
+PLANNED != OPEN
+OPEN != DESIGN AUTHORIZED
+DESIGN ACCEPTED != IMPLEMENTATION AUTHORIZED
+IMPLEMENTED != ACCEPTED
+ACCEPTED != PROMOTED
+```
+
+Opening Slice 1.9 requires separate Human Authority.
+
+Opening does not authorize design. Design requires separate explicit authorization.
+
+Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
+
+Neither opening nor design authorization permits mutation of GitHub branch protection, rulesets, repository settings, canonical-reference enforcement, or promotion mechanisms.
+
+Those mutations require the exact separately authorized implementation scope.
+
+This proposal itself authorizes none of those transitions or mutations.

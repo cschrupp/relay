@@ -40,7 +40,8 @@ INTENT
   -> EXECUTION EVIDENCE / PROVENANCE
   -> INDEPENDENT EVALUATION
   -> HUMAN TECHNICAL ACCEPTANCE
-  -> PROMOTION AUTHORIZATION
+  -> PROMOTION ELIGIBILITY
+  -> VALID PROMOTION AUTHORITY CHECK
   -> CANONICAL PROMOTION
 ```
 
@@ -55,6 +56,7 @@ Authorized != accepted
 Accepted != promoted
 Execution cannot manufacture authority
 Evidence cannot manufacture authority
+Evaluation cannot manufacture authority
 ```
 
 ## 3. Reference architecture
@@ -71,8 +73,8 @@ Evidence cannot manufacture authority
  Human Authority           Role Contract           provenance
  lifecycle                 Work Packet             CI evidence
  policy                    Workspace               artifacts
- authorization             AgentRuntime            evaluations
- promotion authority       tools/runtime           build evidence
+ authorization             AgentRuntime            build evidence
+ promotion authority       tools/runtime           runtime observations
         |                        |                        |
         +------------------------+------------------------+
                                  |
@@ -82,8 +84,8 @@ Evidence cannot manufacture authority
                  +---------------+---------------+
                  |                               |
                  v                               v
-          Relay policy                     External standards
-          verification                     conformance
+       Independent evaluation              External standards
+       Relay policy verifier               conformance verifier
                                                  |
                                        +---------+---------+
                                        |         |         |
@@ -96,11 +98,15 @@ Evidence cannot manufacture authority
                             PROMOTION
 ```
 
-The control plane never infers authority from the execution plane. CI, runtime execution, evaluation, and compliance checks are evidence unless an explicit Relay authority transition says otherwise.
+The control plane never infers authority from the execution plane.
+
+CI outputs, runtime observations, provenance, test results, artifacts, and external-conformance results are evidence. Independent evaluation is a separately governed verification judgment over evidence.
+
+Neither evidence nor evaluation can manufacture Human Authority. An evaluation result may satisfy a prerequisite for a later Human decision or for a transition already authorized by exact Relay policy, but the evaluation does not create that authority.
 
 ## 4. External assurance relationship
 
-**SLSA** tests source/build assurance, provenance, verification, and promotion controls. Relay is not a SLSA wrapper, frontend, or orchestration layer.
+**SLSA** tests applicable source/build assurance, provenance, and verification properties. Relay may map relevant SLSA controls and evidence into its own promotion eligibility and promotion policy. SLSA does not define Relay promotion semantics. Relay is not a SLSA wrapper, frontend, or orchestration layer.
 
 **NIST SSDF** is a secure-development control-coverage catalogue, not Relay's workflow.
 
@@ -154,7 +160,8 @@ Independent AI evaluation is Relay-native. It must not be misrepresented as sati
 Human Authority
       |
       v
-Relay Promotion Authorization
+Valid Promotion Authority
+(dedicated or pre-issued conditional)
       |
       v
 Policy Verifier
@@ -168,6 +175,9 @@ Policy Verifier
       +-- required attestations valid
       |
       v
+Promotion Eligible
+      |
+      v
 Trusted Promotion Executor
       |
       v
@@ -178,6 +188,23 @@ Promotion Evidence / Attestation
 ```
 
 The executor performs an already-authorized operation; it does not decide whether promotion is allowed.
+
+Promotion authority is a semantic requirement, not necessarily a new manual approval ceremony. Valid promotion authority may be either:
+
+- a dedicated exact promotion authorization; or
+- an earlier exact finalization/closure authority that explicitly authorizes promotion once stated verification predicates are satisfied.
+
+Therefore:
+
+```text
+No valid promotion authority:
+promotion forbidden.
+
+Valid existing promotion authority + required predicates satisfied:
+mechanical promotion may proceed without another Human decision.
+```
+
+Checking promotion authority at promotion time does not imply that the authority was created at that moment.
 
 At the roadmap re-baseline basis:
 

@@ -40,4 +40,20 @@ Branch/ruleset mutation, promotion implementation, typed attestation implementat
 
 ## Hard stop
 
-Opening this Slice requires separate Human Authority.
+This proposal preserves Relay's gate grammar:
+
+```text
+PLANNED != OPEN
+OPEN != DESIGN AUTHORIZED
+DESIGN ACCEPTED != IMPLEMENTATION AUTHORIZED
+IMPLEMENTED != ACCEPTED
+ACCEPTED != PROMOTED
+```
+
+Opening Slice 1.8 requires separate Human Authority.
+
+Opening does not authorize design. Design requires separate explicit authorization.
+
+Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
+
+This proposal itself authorizes none of those transitions.
