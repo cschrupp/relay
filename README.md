@@ -6,87 +6,126 @@ Its core thesis is:
 
 > **Agents perform engineering; Relay governs engineering.**
 
-Relay is being built inside-out: deterministic engineering governance first, then repository integration, human workflow, bounded agent execution, independent evaluation, and higher autonomy.
+Relay is being built inside-out: deterministic engineering governance first, then governed runtime/role/context/workspace foundations, then bounded autonomous execution.
 
 ## Current status
 
 ```text
 Phase 0:                  COMPLETE / CLOSED
 Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
-Slices 1.1–1.7:           COMPLETE / ACCEPTED / CLOSED
+Slices 1.1-1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
+Slice 1.8:                PLANNED - NEXT / NOT OPEN
+Slice 1.9:                PLANNED / NOT OPEN
 Phase 2:                  OPEN
-Slice 2.1:                OPEN — RUN 012R2 LISTENER PREFLIGHT READY
-Agent execution:          NOT AUTHORIZED
+Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
+Slice 2.2:                PLANNED / NOT OPEN
+Slice 2.3:                PLANNED / NOT OPEN
+Slice 2.4:                PLANNED / NOT OPEN
+Phase 3:                  NOT OPEN / NOT AUTHORIZED
+Real-project execution:   NOT AUTHORIZED
 ```
 
 The current authority is recorded in `docs/CURRENT_BASELINE.md`.
 
 ## What Relay currently provides
 
-The accepted foundation now includes:
+The accepted foundation includes:
 
 - immutable provider-neutral domain values;
 - deterministic lifecycle transitions and replay;
 - validity / authority / autonomy handover gates;
 - durable SQLite persistence and migration verification;
-- authorization and human-decision persistence;
-- repository-side canonical artifact governance through `.relay/registry.json`;
+- authorization and Human-decision persistence;
+- canonical artifact governance through `.relay/registry.json`;
 - exact raw-byte digest validation and repository-relative path safety;
-- historical artifact locking/supersession semantics;
-- explicit canonical living projections;
-- accepted GitHub App read integration with project-scoped installation/repository state;
-- fail-closed provider permission readiness;
-- signed GitHub installation webhooks;
-- optimistic integration-state concurrency;
-- deterministic webhook redelivery idempotency;
-- provider-neutral repository baseline resolution;
-- governed `.relay/` initialization and synchronization;
-- governed Project / Slice administration;
-- server-rendered Board Projection derived from governed state, with bounded
-  Human Authority actions for gate decisions, holds, and governed ADVANCE/CANCEL.
+- immutable historical authority and explicit living projections;
+- GitHub repository integration and governed baseline resolution;
+- Project / Slice administration;
+- Board Projection and bounded Human Authority actions;
+- manual evaluation, technical acceptance, and accepted-result promotion;
+- a Relay-owned `AgentRuntime` contract with an accepted OpenCode adapter;
+- live sidecar evidence for execution, provenance, cancellation, failure normalization, and evaluator-session separation.
 
-Slice 1.5 closed at canonical closure head `45a3acbc5a26c618176a2d5da32a70b67adb9883`.
+Slice 2.1 closed at canonical head `ad0444337efcddb5694d14a57a99c22d18cdfb9c`.
 
-## Agent runtime direction
+## Architecture direction
 
-Relay will **not** implement a bespoke coding-agent reasoning/tool loop unless a future accepted requirement proves that necessary.
-
-The planned boundary is:
+Relay is an **AI software-development and governance framework**. External standards validate applicable parts of Relay; they do not define Relay.
 
 ```text
-Relay
-  ├─ governance / authority
-  ├─ role contracts
-  ├─ work packets
-  ├─ workspace policy
-  ├─ evidence / provenance
-  ├─ independent evaluation
-  └─ acceptance / baseline promotion
-        │
-        ▼
-   AgentRuntime
-        │
-        ├─ OpenCodeRuntime   ← first planned implementation
-        └─ future runtimes   ← e.g. Codex or other compatible harnesses
+Relay native governance
+        |
+        +-- Control / Governance Plane
+        +-- Execution Plane
+        +-- Evidence / Provenance Plane
+        +-- Verification Plane
+        +-- Promotion Plane
+        |
+        +-- external assurance mappings
+             +-- SLSA
+             +-- NIST SSDF
+             +-- DORA
+             +-- future standards / enterprise policy
 ```
 
-The first planned runtime is **OpenCode** because it provides an embeddable coding-agent harness with sessions, event streaming, worktree support, permissions, provider/model flexibility, plugins, and subagents while allowing Relay to retain ownership of engineering governance.
+The governing direction is:
 
-OpenCode is an execution substrate, not a source of project authority. Relay remains responsible for exact baselines, authorization, role boundaries, independent evaluation, rework routing, human decisions, and acceptance.
+> **Relay semantics -> external compliance proof, never external standards -> Relay semantics.**
 
-Phase 2 is open under the accepted-baseline / active-hardening model. Slice 2.1 is open and its Agent Runtime Contract design is Human-accepted under `RLY-S21-DESIGN-ACCEPT-001`. Successor `4f785f08576e465cd0aa278f927fa4b7253e3f49` remains deterministically accepted under `RLY-S21-EVAL-005`. Run 012r1 stopped before readiness because the exact V2 server received `EPERM` while listening; `RLY-S21-SIDECAR-EVAL-012R1 — ESCALATE` establishes no candidate defect and no live execution occurred. Existing `RLY-S21-SIDECAR-AUTH-006` remains valid for fresh Run 012r2 under the listener-preflight corrective handoff. Run 012r2 must first prove generic loopback listening is available without invoking V2, then may attempt the single OpenCode server lifecycle. Human technical acceptance remains blocked. Phase 3 work and Relay agent execution against real work remain unauthorized.
+See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`.
 
-See:
+## Re-baselined development sequence
 
-- `docs/architecture/AGENT_RUNTIME.md`
-- `docs/decisions/ADR-0011-agent-runtime-opencode-first.md`
-- `docs/slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
-- `docs/slices/SLICE_3_3_CODING_AGENT_EXECUTION.md`
+```text
+Phase 1 hardening
+  1.8 Governance Assurance Reference Model        NEXT
+  1.9 Canonical Source and Promotion Enforcement
+
+Phase 2 - provider and agent foundation
+  2.1 Agent Runtime Contract                      CLOSED
+  2.2 Role Contracts                             PLANNED
+  2.3 Context and Work-Packet Contract           PLANNED
+  2.4 Execution Workspace Authority              PLANNED
+
+Phase 3 - first governed autonomous engineering loop
+  3.1 Coding Agent Execution                     FUTURE / NOT AUTHORIZED
+```
+
+Phase 3 cannot begin merely because OpenCode can execute successfully.
+
+## Agent runtime boundary
+
+Relay does **not** own a generic coding-agent reasoning/tool loop unless a future accepted requirement proves one necessary.
+
+```text
+Relay governance
+  -> Role Contract
+  -> Work Packet
+  -> Workspace Authority
+  -> AgentRuntime
+  -> OpenCodeRuntime / future runtime
+  -> configured provider/model
+```
+
+OpenCode is an execution substrate, not project authority. Runtime permission never creates Relay authorization.
+
+## Governance assurance direction
+
+The immediate hardening frontier is to make Relay's assurance model explicit and then make technical source/promotion enforcement match declared governance.
+
+At the roadmap re-baseline basis:
+
+```text
+main protected = false
+repository rulesets = []
+```
+
+Those facts are design input for planned Slice 1.9. They do not authorize repository-settings changes.
 
 ## Canonical documentation
 
-Canonical document identity is defined by `.relay/registry.json`, not by file name or modification time.
+Canonical document identity is defined by `.relay/registry.json`, not filename or modification time.
 
 Current canonical projections include:
 
@@ -96,7 +135,20 @@ Current canonical projections include:
 - Documentation Governance v0.3
 - Engineering Simplicity, Scope, and Quality
 
-The OpenCode / AgentRuntime documents above are currently **working future-architecture artifacts** and are not canonical implementation authority.
+Working future architecture/slice proposals are not implementation authority merely because they exist.
+
+## Key references
+
+- `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`
+- `docs/architecture/AGENT_RUNTIME.md`
+- `docs/decisions/ADR-0011-agent-runtime-opencode-first.md`
+- `docs/slices/SLICE_1_8_GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`
+- `docs/slices/SLICE_1_9_CANONICAL_SOURCE_PROMOTION_ENFORCEMENT.md`
+- `docs/slices/SLICE_2_1_AGENT_RUNTIME_CONTRACT.md`
+- `docs/slices/SLICE_2_2_ROLE_CONTRACTS.md`
+- `docs/slices/SLICE_2_3_CONTEXT_WORK_PACKET_CONTRACT.md`
+- `docs/slices/SLICE_2_4_EXECUTION_WORKSPACE_AUTHORITY.md`
+- `docs/slices/SLICE_3_1_CODING_AGENT_EXECUTION.md`
 
 ## Requirements
 
@@ -117,14 +169,4 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv build
-```
-
-## Repository structure
-
-```text
-src/relay_engine/              Relay runtime foundation
-src/relay_engine/integrations  GitHub/provider-specific integration boundary
-tests/                         deterministic regression coverage
-docs/                          governed architecture, decisions, slices, and projections
-.relay/registry.json           repository artifact/canonical contract
 ```
