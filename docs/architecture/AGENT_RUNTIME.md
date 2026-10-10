@@ -1,6 +1,6 @@
 # Relay — Agent Runtime Boundary
 
-**Status:** WORKING FUTURE ARCHITECTURE — NOT IMPLEMENTATION AUTHORITY  
+**Status:** ACCEPTED RUNTIME DIRECTION REALIZED BY CLOSED SLICE 2.1 — REFERENCE ARCHITECTURE / NOT NEW AUTHORITY  
 **Decision direction:** OpenCode first  
 **Applies to:** Future Phase 2 provider/agent foundation and Phase 3 autonomous engineering loop  
 **Date:** October 2026
@@ -19,7 +19,7 @@ Relay therefore owns a stable `AgentRuntime` contract and delegates runtime-loca
 
 The first planned runtime implementation is **OpenCode**.
 
-This document records future architecture only. Slice 1.6 is complete and closed. Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted, but implementation is not authorized. This document does not authorize agent execution.
+Slice 2.1 has implemented and closed the AgentRuntime boundary at accepted candidate `4f785f08576e465cd0aa278f927fa4b7253e3f49`, with closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. This document remains reference architecture, not new execution authority. The next prerequisites are Phase 1 assurance/promotion hardening, then Role Contracts, deterministic Context/Work Packets, and Execution Workspace Authority.
 
 ---
 
@@ -287,24 +287,26 @@ Experiment success is evidence only. It does not automatically make the integrat
 
 ---
 
-## 11. Relationship to existing roadmap
-
-The existing roadmap semantics remain valuable:
+## 11. Relationship to current roadmap
 
 ```text
-Phase 1: human workflow
-Phase 2: provider / role / context foundation
-Phase 3: first autonomous engineering loop
+Phase 1 hardening:
+  1.8 Governance Assurance Reference Model
+  1.9 Canonical Source and Promotion Enforcement
+
+Phase 2:
+  2.1 Agent Runtime Contract                  CLOSED
+  2.2 Role Contracts                         PLANNED
+  2.3 Context and Work-Packet Contract       PLANNED
+  2.4 Execution Workspace Authority          PLANNED
+
+Phase 3:
+  3.1 Coding Agent Execution                 FUTURE / NOT AUTHORIZED
 ```
 
-The expected change is architectural:
+Provider/model capability and routing remain beneath or alongside the runtime abstraction. Role, work-packet, workspace, evaluation, rework, acceptance, and promotion semantics remain Relay-owned.
 
-- Phase 2.1 should become an `AgentRuntime`-centered contract rather than a low-level model-provider/tool-loop abstraction.
-- provider/model capability and routing remain required but sit below or alongside the runtime abstraction;
-- Phase 3.3 uses the runtime contract rather than implementing a bespoke coding-agent loop;
-- Phase 3.4–3.7 remain Relay-owned because independent evaluation, rework, and acceptance are governance semantics.
-
-The current canonical Build Plan remains authoritative until it is formally revised under the appropriate future authority.
+The canonical Build Plan is authoritative for roadmap state.
 
 ---
 
