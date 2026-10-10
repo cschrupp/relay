@@ -1,6 +1,6 @@
 # Slice 2.1 — Agent Runtime Contract
 
-**Status:** OPEN — IMPLEMENTATION EVALUATED ACCEPT / LIVE SIDECAR AUTHORIZED  
+**Status:** COMPLETE / ACCEPTED / CLOSED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Opening authority:** `RLY-S21-OPEN-001`  
 **Design authority:** `RLY-S21-DESIGN-AUTH-001 — AUTHORIZED`  
@@ -8,9 +8,11 @@
 **Exact accepted design head:** `fc55a50167e8c83d05bad9664c6b8e8fed59db42`  
 **Implementation authority:** `RLY-S21-IMPL-AUTH-001 — AUTHORIZED`  
 **Authorized implementation baseline:** `aaec399b7d8cd1c4f39b7171f664cb85aa4ecf22`  
-**Accepted implementation candidate:** `ded3ed03b7070ea095a823129ebe44935cb57997`  
-**Implementation evaluation:** `RLY-S21-EVAL-002 — ACCEPT`  
-**Live sidecar authority:** `RLY-S21-SIDECAR-AUTH-001 — AUTHORIZED`  
+**Accepted implementation candidate:** `4f785f08576e465cd0aa278f927fa4b7253e3f49`  
+**Implementation evaluation:** `RLY-S21-EVAL-005 — ACCEPT`  
+**Live sidecar evaluation:** `RLY-S21-SIDECAR-EVAL-012R3 — ACCEPT`  
+**Human technical acceptance:** `RLY-S21-ACCEPT-001 — ACCEPTED`  
+**Closure evaluation:** `RLY-S21-CLOSE-EVAL-002 — ACCEPT`  
 **Opening baseline:** `eac62b054af3815cc179c95d0d31aa96f9a374e3`  
 **Supersedes roadmap concept:** low-level `Model Provider Interface` as the primary orchestration boundary  
 **First planned runtime:** OpenCode
@@ -23,7 +25,7 @@ Define the Relay-owned contract for executing governed engineering roles through
 
 The first planned implementation of the contract is `OpenCodeRuntime`.
 
-The detailed Agent Runtime Contract design has been independently reviewed and Human-accepted. This document remains a roadmap/proposal summary; the accepted Revision 1 + Revision 2 + Revision 3 design records govern implementation semantics. Implementation candidate `ded3ed03b7070ea095a823129ebe44935cb57997` is deterministically accepted under `RLY-S21-EVAL-002`. A bounded live OpenCode sidecar against a disposable fixture is now authorized under `RLY-S21-SIDECAR-AUTH-001`; real-project runtime execution remains unauthorized.
+The detailed Agent Runtime Contract design, implementation, live sidecar evidence, Human technical acceptance, and closure are complete. This document remains a roadmap/reference summary; accepted design/evaluation/acceptance records remain historical authority. Real-project runtime execution is still unauthorized.
 
 ---
 
@@ -297,4 +299,16 @@ This evidence informs implementation but does not substitute for independent des
 
 Do not proceed to coding-agent execution merely because OpenCode can run successfully.
 
-The next step requires separately accepted role contracts, context/work-packet semantics, execution-workspace authority, and explicit Human Authority for Phase 3.
+The roadmap is re-baselined under `RLY-P2-ROADMAP-REBASE-001`.
+
+Before Phase 3 autonomous execution, Relay plans:
+
+```text
+1.8 Governance Assurance Reference Model
+1.9 Canonical Source and Promotion Enforcement
+2.2 Role Contracts
+2.3 Context and Work-Packet Contract
+2.4 Execution Workspace Authority
+```
+
+Each requires separate opening/design/implementation authority as applicable. Phase 3 and real-project agent execution remain unauthorized.
