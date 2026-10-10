@@ -1,10 +1,12 @@
-# Slice 3.3 — Coding Agent Execution
+# Slice 3.3 — Coding Agent Execution (Superseded Roadmap Number)
 
-**Status:** FUTURE SLICE PROPOSAL — NOT OPEN / NOT AUTHORIZED  
+**Status:** SUPERSEDED WORKING ROADMAP PROPOSAL — SEE SLICE 3.1 / NOT OPEN / NOT AUTHORIZED  
 **Phase:** 3 — First Autonomous Engineering Loop  
 **Planned runtime:** `OpenCodeRuntime` through Relay `AgentRuntime`
 
 ---
+
+> Roadmap note: `RLY-P2-ROADMAP-REBASE-001` re-numbered the first autonomous coding-agent execution work as **Slice 3.1** after moving Role Contracts, Context/Work-Packet semantics, and Execution Workspace Authority into Phase 2 prerequisites. This file is retained as working historical context only. Use `SLICE_3_1_CODING_AGENT_EXECUTION.md` for the current future proposal.
 
 ## Objective
 
