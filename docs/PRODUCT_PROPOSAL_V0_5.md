@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 hardening frontier re-baselined; Phase 2 open; Slice 2.1 closed
+**Status:** Current living product and architecture proposal — Phase 1 hardening active; Slice 1.8 open; design not authorized; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -90,7 +90,7 @@ Phase 1 M0:
 ACCEPTED / HUMAN-ACCEPTED
 
 Slice 1.8 - Governance Assurance Reference Model:
-PLANNED - NEXT / NOT OPEN / NOT AUTHORIZED
+OPEN - RLY-S18-OPEN-001 / DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 
 Slice 1.9 - Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -174,7 +174,7 @@ Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the 
 Roadmap re-baseline authority:
 `RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED`
 
-The next planned development work is Slice 1.8. Slices 1.8, 1.9, 2.2, 2.3, and 2.4 remain unopened and unauthorized.
+Slice 1.8 is OPEN under RLY-S18-OPEN-001; design and implementation remain unauthorized. Slices 1.9, 2.2, 2.3, and 2.4 remain unopened and unauthorized.
 
 # 5. Implementation and closure governance
 

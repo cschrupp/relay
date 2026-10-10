@@ -15,7 +15,7 @@ Phase 0:                  COMPLETE / CLOSED
 Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1-1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
-Slice 1.8:                PLANNED - NEXT / NOT OPEN
+Slice 1.8:                OPEN / DESIGN NOT AUTHORIZED
 Slice 1.9:                PLANNED / NOT OPEN
 Phase 2:                  OPEN
 Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
@@ -79,7 +79,7 @@ See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md`.
 
 ```text
 Phase 1 hardening
-  1.8 Governance Assurance Reference Model        NEXT
+  1.8 Governance Assurance Reference Model        OPEN — DESIGN NOT AUTHORIZED
   1.9 Canonical Source and Promotion Enforcement
 
 Phase 2 - provider and agent foundation

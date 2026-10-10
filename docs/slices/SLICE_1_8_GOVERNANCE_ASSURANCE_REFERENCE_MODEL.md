@@ -1,8 +1,9 @@
 # Slice 1.8 - Governance Assurance Reference Model
 
-**Status:** FUTURE HARDENING SLICE PROPOSAL - NOT OPEN / NOT AUTHORIZED  
+**Status:** OPEN — ADMINISTRATIVE ONLY / DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 1 - Accepted Baseline / Hardening Active  
-**Roadmap authority:** `RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED`
+**Opening authority:** RLY-S18-OPEN-001 - OPEN  
+**Roadmap authority:** RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED
 
 ## Objective
 
@@ -50,10 +51,10 @@ IMPLEMENTED != ACCEPTED
 ACCEPTED != PROMOTED
 ```
 
-Opening Slice 1.8 requires separate Human Authority.
+Slice 1.8 is opened administratively under RLY-S18-OPEN-001.
 
-Opening does not authorize design. Design requires separate explicit authorization.
+Opening does not authorize design. Design requires separate explicit Human authorization.
 
 Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
 
-This proposal itself authorizes none of those transitions.
+This proposal and the opening record authorize no design or implementation transition. The next legitimate Human gate is Slice 1.8 design authorization.
