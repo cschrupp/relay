@@ -1,8 +1,9 @@
 # Slice 1.8 - Governance Assurance Reference Model
 
-**Status:** OPEN — ADMINISTRATIVE ONLY / DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 1 - Accepted Baseline / Hardening Active  
 **Opening authority:** RLY-S18-OPEN-001 - OPEN  
+**Design authority:** RLY-S18-DESIGN-AUTH-001 - AUTHORIZED  
 **Roadmap authority:** RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED
 
 ## Objective
@@ -53,8 +54,8 @@ ACCEPTED != PROMOTED
 
 Slice 1.8 is opened administratively under RLY-S18-OPEN-001.
 
-Opening does not authorize design. Design requires separate explicit Human authorization.
+Design is authorized under RLY-S18-DESIGN-AUTH-001. This authorization permits architecture, contract, and detailed design work only.
 
 Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
 
-This proposal and the opening record authorize no design or implementation transition. The next legitimate Human gate is Slice 1.8 design authorization.
+The opening and design-authorization records authorize design work but no implementation transition. After the design is produced and independently reviewed by Sol, Human design acceptance remains a separate gate.

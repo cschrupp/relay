@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Phase 1 hardening active; Slice 1.8 open; design not authorized; Phase 2 open
+**Status:** Current living implementation plan — Phase 1 hardening active; Slice 1.8 open; design authorized; implementation not authorized; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -135,7 +135,7 @@ Roadmap re-baseline authority:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8 — Governance Assurance Reference Model:
-OPEN — RLY-S18-OPEN-001 / DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+OPEN — RLY-S18-OPEN-001 / RLY-S18-DESIGN-AUTH-001 — DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 
 Slice 1.9 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -870,7 +870,7 @@ Roadmap re-baseline:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8:
-OPEN — RLY-S18-OPEN-001 / DESIGN NOT AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+OPEN — RLY-S18-OPEN-001 / RLY-S18-DESIGN-AUTH-001 — DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 
 Slice 1.9:
 PLANNED / NOT OPEN / NOT AUTHORIZED
