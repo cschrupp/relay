@@ -1,6 +1,6 @@
 # Slice 1.8 - Governance Assurance Reference Model
 
-**Status:** OPEN / DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
+**Status:** OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
 **Phase:** 1 - Accepted Baseline / Hardening Active
 **Opening authority:** RLY-S18-OPEN-001 - OPEN
 **Design authority:** RLY-S18-DESIGN-AUTH-001 - AUTHORIZED (historical scope); RLY-S18-DESIGN-AUTH-002 - AUTHORIZED FOR REVISION 2
@@ -23,7 +23,7 @@ Design Revision 1: PRESERVED PRE-REBASELINE INPUT
 Design Revision 2 + Rework 1: PRODUCED / INDEPENDENTLY ACCEPTED
 Design evaluation: RLY-S18-DESIGN-EVAL-002 — ACCEPT
 Human design acceptance: RLY-S18-DESIGN-ACCEPT-001 — ACCEPTED
-Implementation: NOT AUTHORIZED
+Implementation: AUTHORIZED — RLY-S18-IMPL-AUTH-001
 ```
 
 Design Revision 1 is the review-ready head `c67fe2147fcb9a37e7ab13de92bfc79bb8688919` on `design/slice-1.8-governance-assurance-reference-model`. It is preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Preserve that branch and head unchanged.
@@ -90,6 +90,6 @@ Slice 1.8 is opened administratively under RLY-S18-OPEN-001.
 
 Design was originally authorized under `RLY-S18-DESIGN-AUTH-001`; after the canonical re-baseline, Slice 1.8 resumed under `RLY-S18-RESUME-001` and supplemental Revision-2 design authority is `RLY-S18-DESIGN-AUTH-002`. These authorities permit architecture, contract, and detailed design work only.
 
-Human design acceptance is recorded as `RLY-S18-DESIGN-ACCEPT-001`. It does not authorize implementation; implementation requires separate explicit authorization.
+Human design acceptance is recorded as `RLY-S18-DESIGN-ACCEPT-001`. Separate implementation authority is now `RLY-S18-IMPL-AUTH-001 — AUTHORIZED`; implementation remains bounded to the accepted documentation/governance-model hardening surface.
 
 The opening and design-authorization records authorize design work but no implementation transition. After the design is produced and independently reviewed by Sol, Human design acceptance remains a separate gate.
