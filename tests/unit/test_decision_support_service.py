@@ -261,7 +261,16 @@ def test_authorization_and_approval_actions_group_into_one_decision_each() -> No
     assert "Human decision required" in approval.cards[0].why_required.text
 
 
-def test_current_rejection_is_recorded_revisable_not_missing() -> None:
+@pytest.mark.parametrize(
+    ("approval_value", "expected_text"),
+    (
+        (HumanApprovalValue.REJECT, "REJECT"),
+        (HumanApprovalValue.APPROVE, "APPROVE"),
+    ),
+)
+def test_current_approval_or_rejection_is_recorded_revisable_not_missing(
+    approval_value: HumanApprovalValue, expected_text: str
+) -> None:
     gate = _gate()
     decision = HumanApprovalDecision(
         decision_id="hdec_018f47c1-7b2c-7abc-8def-123456789032",
@@ -273,7 +282,7 @@ def test_current_rejection_is_recorded_revisable_not_missing() -> None:
         governance_revision=3,
         actor=ACTOR,
         occurred_at=NOW,
-        decision=HumanApprovalValue.REJECT,
+        decision=approval_value,
         reason="Risk remains unresolved.",
     )
     projection = _project(
@@ -303,7 +312,7 @@ def test_current_rejection_is_recorded_revisable_not_missing() -> None:
     )
     card = projection.cards[0]
     assert card.state is DecisionCardState.RECORDED_REVISABLE
-    assert card.current_recorded_decision == "REJECT"
+    assert card.current_recorded_decision == expected_text
     assert card.decision.identity.expected_current_approval_decision_id == decision.decision_id
     assert decision.decision_id in card.why_required.text
     assert "replacement decision remains available" in card.why_required.text
@@ -347,6 +356,15 @@ def test_path_choices_are_one_card_with_all_exact_outcomes_and_qa() -> None:
     assert evidence_component.applicability is DecisionBasisApplicability.MISSING_REQUIRED
     assert card.completeness is DecisionBasisCompleteness.INCOMPLETE
     assert any(
+        "exact selected gate choice" in item.text and "does not execute the handover" in item.text
+        for item in card.consequences
+    )
+    authority_component = next(
+        item for item in card.components if item.kind.value == "AUTHORITY_BASIS"
+    )
+    assert authority_component.applicability is DecisionBasisApplicability.OPTIONAL_PRESENT
+    assert authority_component.freshness.value == "CURRENT"
+    assert any(
         ref.kind.value == "HANDOVER_GATE" and ref.stable_ref == f"{GATE_B}@r1"
         for ref in card.source_refs
     )
@@ -371,6 +389,38 @@ def test_path_choices_are_one_card_with_all_exact_outcomes_and_qa() -> None:
     )
     assert present_evidence.applicability is DecisionBasisApplicability.REQUIRED_PRESENT
     assert present_card.completeness is DecisionBasisCompleteness.COMPLETE
+
+
+def test_path_evidence_answer_reports_present_ids_and_missing_applicability() -> None:
+    present_id = "evd_018f47c1-7b2c-7abc-8def-123456789051"
+    missing_id = "evd_018f47c1-7b2c-7abc-8def-123456789052"
+    gates = (
+        _gate(
+            GATE_A,
+            policy=HandoverPolicy.HUMAN_CHOICE,
+            evidence_ids=(present_id,),
+        ),
+        _gate(
+            GATE_B,
+            policy=HandoverPolicy.HUMAN_CHOICE,
+            target=LifecyclePhase.PLANNING,
+            evidence_ids=(missing_id,),
+        ),
+    )
+    actions = tuple(
+        HumanAction(
+            kind=HumanActionKind.CHOOSE_PATH,
+            gate_id=item.gate_id,
+            gate_revision=1,
+            target_phase=item.target_phase,
+        )
+        for item in gates
+    )
+    card = _project(gates, actions, available_evidence_ids=(present_id,)).cards[0]
+    answer = answer_decision_question(card, DecisionQuestionKind.WHAT_EVIDENCE_EXISTS).answer
+    assert present_id in answer
+    assert missing_id in answer
+    assert "MISSING_REQUIRED" in answer
     answer = answer_decision_question(card, DecisionQuestionKind.WHAT_WOULD_CHANGE)
     assert len(answer.answer.splitlines()) == 2
     assert (
@@ -611,44 +661,50 @@ def test_technical_acceptance_artifact_applicability_and_evidence(
         )
     assert any(item.basis.value == "EVALUATOR_JUDGMENT" for item in card.evaluation)
 
-    decision = HumanApprovalDecision(
-        decision_id="hdec_018f47c1-7b2c-7abc-8def-123456789034",
-        slice_id=SLICE_ID,
-        baseline_id=BASELINE_ID,
-        gate_id=GATE_A,
-        gate_revision=1,
-        lifecycle_revision=2,
-        governance_revision=3,
-        actor=ACTOR,
-        occurred_at=NOW,
-        decision=HumanApprovalValue.APPROVE,
-        reason="Accept this exact technical result.",
-    )
-    current_basis = basis.model_copy(
-        update={
-            "current_approval_decision_ids": (
-                HumanApprovalIdentity(gate_id=GATE_A, decision_id=decision.decision_id),
-            )
-        }
-    )
-    revisable = project_decision_support(
-        slice_definition=_slice(),
-        lifecycle=lifecycle,
-        gates=(gate,),
-        latest_evaluation=_latest((gate,), lifecycle, available_artifact_ids=available_artifacts),
-        evaluation_basis_status=EvaluationBasisStatus.MATCHING_DURABLE_BASIS,
-        executions=(),
-        human_actions=HumanActionProjection(
-            basis=current_basis, current_approval_decisions=(decision,)
-        ),
-        manual_evaluation=manual_projection.model_copy(
-            update={"current_technical_decision": decision}
-        ),
-    ).cards[0]
-    assert revisable.state is DecisionCardState.RECORDED_REVISABLE
-    assert decision.decision_id in revisable.why_required.text
-    assert "replacement decision remains available" in revisable.why_required.text
-    assert any(
-        item.kind.value == "HUMAN_DECISION" and item.stable_ref == decision.decision_id
-        for item in revisable.why_required.source_refs
-    )
+    for decision_value, decision_id in (
+        (HumanApprovalValue.APPROVE, "hdec_018f47c1-7b2c-7abc-8def-123456789034"),
+        (HumanApprovalValue.REJECT, "hdec_018f47c1-7b2c-7abc-8def-123456789036"),
+    ):
+        decision = HumanApprovalDecision(
+            decision_id=decision_id,
+            slice_id=SLICE_ID,
+            baseline_id=BASELINE_ID,
+            gate_id=GATE_A,
+            gate_revision=1,
+            lifecycle_revision=2,
+            governance_revision=3,
+            actor=ACTOR,
+            occurred_at=NOW,
+            decision=decision_value,
+            reason="Record this exact technical decision.",
+        )
+        current_basis = basis.model_copy(
+            update={
+                "current_approval_decision_ids": (
+                    HumanApprovalIdentity(gate_id=GATE_A, decision_id=decision.decision_id),
+                )
+            }
+        )
+        revisable = project_decision_support(
+            slice_definition=_slice(),
+            lifecycle=lifecycle,
+            gates=(gate,),
+            latest_evaluation=_latest(
+                (gate,), lifecycle, available_artifact_ids=available_artifacts
+            ),
+            evaluation_basis_status=EvaluationBasisStatus.MATCHING_DURABLE_BASIS,
+            executions=(),
+            human_actions=HumanActionProjection(
+                basis=current_basis, current_approval_decisions=(decision,)
+            ),
+            manual_evaluation=manual_projection.model_copy(
+                update={"current_technical_decision": decision}
+            ),
+        ).cards[0]
+        assert revisable.state is DecisionCardState.RECORDED_REVISABLE
+        assert decision.decision_id in revisable.why_required.text
+        assert "replacement decision remains available" in revisable.why_required.text
+        assert any(
+            item.kind.value == "HUMAN_DECISION" and item.stable_ref == decision.decision_id
+            for item in revisable.why_required.source_refs
+        )

@@ -12,6 +12,7 @@ from relay_engine.board.models import (
     GateProjection,
     ProjectBoard,
     SliceCard,
+    SliceDetail,
 )
 from relay_engine.domain.ids import BaselineId, HandoverGateId, ProjectId, SliceId
 from relay_engine.domain.models import Project
@@ -123,3 +124,8 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
             lifecycle_validity=None,
             invented_blocker=True,
         )
+
+
+def test_slice_detail_decision_support_is_a_required_model_field() -> None:
+    schema = SliceDetail.model_json_schema()
+    assert "decision_support" in schema["required"]

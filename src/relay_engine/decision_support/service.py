@@ -854,6 +854,9 @@ def _build_gate_card(
             "Records the exact Human approval or rejection and reevaluates governed state; "
             "it does not itself advance lifecycle or promote a result."
             if kind is DecisionKind.GATE_APPROVAL
+            else "Records the exact selected gate choice and reevaluates; "
+            "it does not execute the handover itself."
+            if kind is DecisionKind.GATE_PATH_CHOICE
             else "Records the exact current authorization grant and reevaluates; "
             "authorization does not itself advance lifecycle.",
             refs,
@@ -1135,8 +1138,26 @@ def project_decision_support(
             }
             component_refs = tuple(source_map[key] for key in sorted(source_map))
             if not required:
-                applicability = DecisionBasisApplicability.NOT_APPLICABLE
-                freshness = DecisionBasisFreshness.NOT_APPLICABLE
+                if any(
+                    item.applicability is DecisionBasisApplicability.OPTIONAL_PRESENT
+                    for item in values
+                ):
+                    applicability = DecisionBasisApplicability.OPTIONAL_PRESENT
+                    freshness = (
+                        DecisionBasisFreshness.STALE
+                        if any(item.freshness is DecisionBasisFreshness.STALE for item in values)
+                        else DecisionBasisFreshness.UNKNOWN
+                        if any(item.freshness is DecisionBasisFreshness.UNKNOWN for item in values)
+                        else DecisionBasisFreshness.CURRENT
+                    )
+                elif any(
+                    item.applicability is DecisionBasisApplicability.UNKNOWN for item in values
+                ):
+                    applicability = DecisionBasisApplicability.UNKNOWN
+                    freshness = DecisionBasisFreshness.UNKNOWN
+                else:
+                    applicability = DecisionBasisApplicability.NOT_APPLICABLE
+                    freshness = DecisionBasisFreshness.NOT_APPLICABLE
             else:
                 applicability = (
                     DecisionBasisApplicability.MISSING_REQUIRED
@@ -1476,9 +1497,9 @@ def answer_decision_question(card: DecisionCard, question: DecisionQuestionKind)
         )
 
     elif question is DecisionQuestionKind.WHAT_EVIDENCE_EXISTS:
-        statements = card.evidence or tuple(
+        component_statements = tuple(
             _statement(
-                item.summary,
+                f"Evidence applicability is {item.applicability.value}: {item.summary}",
                 item.source_refs,
                 DecisionStatementBasis.UNKNOWN
                 if item.applicability is DecisionBasisApplicability.UNKNOWN
@@ -1487,6 +1508,7 @@ def answer_decision_question(card: DecisionCard, question: DecisionQuestionKind)
             for item in card.components
             if item.kind is DecisionBasisComponentKind.EVIDENCE
         )
+        statements = card.evidence + component_statements
 
     elif question is DecisionQuestionKind.WHAT_DID_THE_EVALUATOR_FIND:
         statements = card.evaluation or (
