@@ -1,6 +1,6 @@
 # Slice 1.8 — Governance Assurance Reference Model
 
-**Status:** OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+**Status:** COMPLETE / ACCEPTED / CLOSED
 **Phase:** 1 — Accepted Baseline / Hardening Active
 **Opening authority:** `RLY-S18-OPEN-001`
 **Resume:** `RLY-S18-RESUME-001` (prior pause satisfied)
@@ -10,7 +10,7 @@
 **Implementation evaluation:** `RLY-S18-EVAL-002 — ACCEPT`
 **Human technical acceptance:** `RLY-S18-ACCEPT-001 — ACCEPTED`
 **Finalization authority:** `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`
-**Independent closure evaluation:** PENDING
+**Independent closure evaluation:** `RLY-S18-CLOSE-EVAL-001 — ACCEPT`
 
 ## Exact governed basis
 
@@ -27,7 +27,7 @@
 
 The combined design governs: Rework 1 overrides Revision 2 where explicit; Revision 2 overrides Revision 1 where explicit; Revision 1 remains normative elsewhere. All three design files and historical authority/evaluation/acceptance/promotion records remain byte-preserved. Revision 1 was not separately accepted in isolation; the combined design is Human-accepted.
 
-The earlier re-baseline authorities `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001` and `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` remain historical provenance. The implementation was authorized by `RLY-S18-IMPL-AUTH-001`; its exact candidate was accepted under `RLY-S18-EVAL-002` and `RLY-S18-ACCEPT-001`. Finalization is governed separately by `RLY-S18-CLOSE-AUTH-001`; independent closure evaluation remains pending.
+The earlier re-baseline authorities `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001` and `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` remain historical provenance. The implementation was authorized by `RLY-S18-IMPL-AUTH-001`; its exact candidate was accepted under `RLY-S18-EVAL-002` and `RLY-S18-ACCEPT-001`. Finalization was governed by `RLY-S18-CLOSE-AUTH-001`; `RLY-S18-CLOSE-EVAL-001 — ACCEPT` accepted the exact closure candidate.
 
 ## Implemented documentation surface
 
@@ -49,11 +49,11 @@ The [examples document](../architecture/GOVERNANCE_ASSURANCE_EXAMPLES.md) suppli
 
 This is documentation/governance-model hardening only. Production/runtime/test source, schema, dependencies, workflows, repository settings, branch protection, and provider/runtime configuration are unchanged. No attestation/compliance/profile engine, Decision Card/Q&A UI, planning adapter, ContextManifest, workspace/asset enforcement, telemetry collection, competitive experiment, or agent execution is implemented.
 
-Slice 1.8 owns assurance semantics. Slice 1.9 owns Human Decision Support; Slice 1.10 owns canonical source/promotion enforcement. Slices 2.2, 2.3, 2.4, and 3.1 consume role, context/work-packet, workspace, and execution boundaries respectively. No downstream Slice is opened by this closure-ready candidate.
+Slice 1.8 owns assurance semantics. Slice 1.9 owns Human Decision Support; Slice 1.10 owns canonical source/promotion enforcement. Slices 2.2, 2.3, 2.4, and 3.1 consume role, context/work-packet, workspace, and execution boundaries respectively. No downstream Slice is opened by this closure.
 
-## Remaining gates
+## Closure result
 
-Independent implementation evaluation accepted this exact candidate under `RLY-S18-EVAL-002 — ACCEPT`; Human technical acceptance is recorded under `RLY-S18-ACCEPT-001 — ACCEPTED`. Finalization is authorized under `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; closure evaluation remains pending. Passing tests/CI are evidence only.
+Independent implementation evaluation accepted this exact candidate under `RLY-S18-EVAL-002 — ACCEPT`; Human technical acceptance is recorded under `RLY-S18-ACCEPT-001 — ACCEPTED`. Finalization authority is `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; independent closure evaluation accepted exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc` under `RLY-S18-CLOSE-EVAL-001 — ACCEPT`. Passing tests/CI are evidence only.
 
 ```text
 IMPLEMENTED != ACCEPTED
@@ -61,8 +61,8 @@ ACCEPTED != PROMOTED
 IMPLEMENTATION AUTHORIZED != IMPLEMENTATION ACCEPTED
 ```
 
-Final disposition: **STOP FOR SOL INDEPENDENT CLOSURE REVIEW**.
+Final disposition: **COMPLETE / ACCEPTED / CLOSED**.
 
-## Closure-ready state
+## Closed state
 
-This Slice remains OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY. Slice 1.9 and Slice 1.10 remain NOT OPEN / NOT AUTHORIZED; Phase 3 and real-project agent execution remain NOT AUTHORIZED. Independent closure evaluation is PENDING.
+Slice 1.8 is COMPLETE / ACCEPTED / CLOSED following independent closure evaluation `RLY-S18-CLOSE-EVAL-001 — ACCEPT`. Slice 1.9 and Slice 1.10 remain NOT OPEN / NOT AUTHORIZED; Phase 3 and real-project agent execution remain NOT AUTHORIZED.
