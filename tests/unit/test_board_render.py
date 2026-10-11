@@ -16,6 +16,20 @@ from relay_engine.board.render import (
     render_project_index,
     render_slice_detail,
 )
+from relay_engine.decision_support.models import (
+    DecisionBasisCompleteness,
+    DecisionBasisIdentityV1,
+    DecisionCard,
+    DecisionCardState,
+    DecisionKind,
+    DecisionProposedOutcome,
+    DecisionSourceKind,
+    DecisionSourceRef,
+    DecisionStatement,
+    DecisionStatementBasis,
+    DecisionSupportProjection,
+    PendingDecisionRef,
+)
 from relay_engine.domain.ids import (
     AuthorizationId,
     BaselineId,
@@ -60,7 +74,7 @@ from relay_engine.governance.models import (
     ToolchainChangeStatus,
     TrafficLight,
 )
-from relay_engine.human_control.models import HumanActionProjection
+from relay_engine.human_control.models import HumanActionBasis, HumanActionProjection
 from relay_engine.lifecycle.models import (
     Blockage,
     BlockageStatus,
@@ -233,6 +247,73 @@ def _governance_summary(detail: SliceDetail) -> str:
     start = html.index('<section aria-labelledby="governance-status-heading">')
     end = html.index("<section><h2>Definition</h2>", start)
     return html[start:end]
+
+
+def test_decision_card_is_derived_accessible_and_has_digest_bound_question_links() -> None:
+    _, detail = _fixture()
+    basis = HumanActionBasis(
+        evaluation_record_id=detail.human_actions.basis.evaluation_record_id
+        if detail.human_actions.basis
+        else "geval_018f47c1-7b2c-7abc-8def-123456789099",
+        slice_id=SLICE_ID,
+        baseline_id=BASELINE_ID,
+        lifecycle_revision=1,
+        governance_revision=1,
+        gate_refs=(GateRevisionRef(gate_id=GATE_ID, gate_revision=1),),
+    )
+    identity = DecisionBasisIdentityV1(
+        decision_kind=DecisionKind.GATE_APPROVAL,
+        slice_id=SLICE_ID,
+        gate_ref=GateRevisionRef(gate_id=GATE_ID, gate_revision=1),
+        target_phase=LifecyclePhase.IMPLEMENTING,
+        human_action_basis=basis,
+        decision_state=DecisionCardState.PENDING_REQUIRED,
+    )
+    reference = DecisionSourceRef(
+        kind=DecisionSourceKind.HANDOVER_GATE,
+        stable_ref=f"{GATE_ID}@r1",
+        label="Current handover gate",
+    )
+    card = DecisionCard(
+        decision=PendingDecisionRef(identity=identity, basis_digest=identity.digest()),
+        title="Approve or reject",
+        state=DecisionCardState.PENDING_REQUIRED,
+        why_required=DecisionStatement(
+            text="The current gate requires a Human decision.",
+            basis=DecisionStatementBasis.CANONICAL_FACT,
+            source_refs=(reference,),
+        ),
+        current_state=DecisionStatement(
+            text="READY", basis=DecisionStatementBasis.CANONICAL_FACT, source_refs=(reference,)
+        ),
+        proposed_outcomes=(
+            DecisionProposedOutcome(
+                gate_ref=GateRevisionRef(gate_id=GATE_ID, gate_revision=1),
+                target_phase=LifecyclePhase.IMPLEMENTING,
+                label="Begin implementation",
+            ),
+        ),
+        choices=(),
+        components=(),
+        consequences=(
+            DecisionStatement(
+                text="Records the exact decision.", basis=DecisionStatementBasis.CANONICAL_FACT
+            ),
+        ),
+        governance_requirements=(),
+        source_refs=(reference,),
+        completeness=DecisionBasisCompleteness.COMPLETE,
+    )
+    projection = DecisionSupportProjection(cards=(card,))
+    detail = detail.model_copy(update={"decision_support": projection})
+    html = render_slice_detail(detail)
+    assert "Human Decisions" in html
+    assert "Derived / non-authoritative" in html
+    assert "Human decision required" in html
+    assert card.decision.basis_digest in html
+    assert "Ask: Why Required" in html
+    assert "Complete does not prove Human understanding" in html
+    assert "proposed_state" not in html
 
 
 def test_project_board_escapes_text_shows_textual_status_and_hides_stale_light() -> None:

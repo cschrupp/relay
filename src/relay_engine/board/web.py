@@ -1,6 +1,7 @@
 """Local FastAPI adapter for the read-only server-rendered Relay board."""
 
 import argparse
+import re
 import secrets
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
@@ -22,6 +23,8 @@ from relay_engine.board.render import (
     render_slice_detail,
 )
 from relay_engine.board.service import project_board, project_index, slice_detail
+from relay_engine.decision_support.models import DecisionQuestionKind
+from relay_engine.decision_support.service import answer_decision_question
 from relay_engine.domain.ids import (
     EvidenceId,
     GateEvaluationRecordId,
@@ -388,6 +391,41 @@ def create_app(
             return _error_response("UNAVAILABLE", 503, request.method)
         except MigrationError, PersistenceIntegrityError:
             return _error_response("INTEGRITY_ERROR", 500, request.method)
+        decision_values = request.query_params.getlist("decision")
+        question_values = request.query_params.getlist("question")
+        if not decision_values and not question_values:
+            return _success_response(
+                render_slice_detail(projection, cast(str, request.app.state.csrf_token)),
+                request.method,
+            )
+        if len(decision_values) != 1 or len(question_values) != 1:
+            return _error_response("DECISION_QUERY_INVALID", 422, request.method)
+        decision_digest = decision_values[0]
+        question_value = question_values[0]
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", decision_digest) is None:
+            return _error_response("DECISION_QUERY_INVALID", 422, request.method)
+        try:
+            question = DecisionQuestionKind(question_value)
+        except ValueError:
+            return _error_response("DECISION_QUERY_INVALID", 422, request.method)
+        card = next(
+            (
+                item
+                for item in projection.decision_support.cards
+                if item.decision.basis_digest == decision_digest
+            ),
+            None,
+        )
+        if card is None:
+            return _error_response("STALE_DECISION_BASIS", 409, request.method)
+        answer = answer_decision_question(card, question)
+        projection = projection.model_copy(
+            update={
+                "decision_support": projection.decision_support.model_copy(
+                    update={"answer": answer}
+                )
+            }
+        )
         return _success_response(
             render_slice_detail(projection, cast(str, request.app.state.csrf_token)),
             request.method,

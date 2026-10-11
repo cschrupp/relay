@@ -14,6 +14,21 @@ import httpx
 import pytest
 
 from relay_engine.board.web import create_app
+from relay_engine.decision_support.models import (
+    DecisionBasisCompleteness,
+    DecisionBasisIdentityV1,
+    DecisionCard,
+    DecisionCardState,
+    DecisionKind,
+    DecisionProposedOutcome,
+    DecisionQuestionKind,
+    DecisionSourceKind,
+    DecisionSourceRef,
+    DecisionStatement,
+    DecisionStatementBasis,
+    DecisionSupportProjection,
+    PendingDecisionRef,
+)
 from relay_engine.domain.ids import BaselineId, ProjectId, SliceId
 from relay_engine.domain.models import (
     AcceptanceCriterion,
@@ -23,6 +38,9 @@ from relay_engine.domain.models import (
     Slice,
 )
 from relay_engine.domain.references import ActorKind, ActorRef, CommitRef, RepositoryRef
+from relay_engine.governance.models import GateRevisionRef
+from relay_engine.human_control.models import HumanActionBasis
+from relay_engine.lifecycle.models import LifecyclePhase
 from relay_engine.persistence import (
     DatabaseUnavailable,
     RelayDatabase,
@@ -103,6 +121,129 @@ def database_path(tmp_path: Path) -> Path:
     path = tmp_path / "board-web.sqlite"
     _create_database(path)
     return path
+
+
+def _decision_card():
+    basis = HumanActionBasis(
+        evaluation_record_id="geval_018f47c1-7b2c-7abc-8def-123456789030",
+        slice_id=SLICE_A,
+        baseline_id=BASELINE_ID,
+        lifecycle_revision=0,
+        governance_revision=0,
+        gate_refs=(
+            GateRevisionRef(
+                gate_id="gate_018f47c1-7b2c-7abc-8def-123456789020",
+                gate_revision=1,
+            ),
+        ),
+    )
+    gate_ref = basis.gate_refs[0]
+    identity = DecisionBasisIdentityV1(
+        decision_kind=DecisionKind.GATE_APPROVAL,
+        slice_id=SLICE_A,
+        gate_ref=gate_ref,
+        target_phase=LifecyclePhase.DESIGNING,
+        human_action_basis=basis,
+        decision_state=DecisionCardState.PENDING_REQUIRED,
+    )
+    source = DecisionSourceRef(
+        kind=DecisionSourceKind.HANDOVER_GATE,
+        stable_ref=f"{gate_ref.gate_id}@r1",
+        label="Current gate",
+    )
+    return DecisionCard(
+        decision=PendingDecisionRef(identity=identity, basis_digest=identity.digest()),
+        title="Approve or reject",
+        state=DecisionCardState.PENDING_REQUIRED,
+        why_required=DecisionStatement(
+            text="The current gate requires a Human decision.",
+            basis=DecisionStatementBasis.CANONICAL_FACT,
+            source_refs=(source,),
+        ),
+        current_state=DecisionStatement(
+            text="PROPOSED", basis=DecisionStatementBasis.CANONICAL_FACT, source_refs=(source,)
+        ),
+        proposed_outcomes=(
+            DecisionProposedOutcome(
+                gate_ref=gate_ref,
+                target_phase=LifecyclePhase.DESIGNING,
+                label="Begin design",
+            ),
+        ),
+        choices=(),
+        components=(),
+        consequences=(
+            DecisionStatement(
+                text="Records the exact Human decision and reevaluates.",
+                basis=DecisionStatementBasis.CANONICAL_FACT,
+                source_refs=(source,),
+            ),
+        ),
+        governance_requirements=(),
+        source_refs=(source,),
+        completeness=DecisionBasisCompleteness.COMPLETE,
+    )
+
+
+def test_decision_q_and_a_is_read_only_freshness_bound_and_head_empty(
+    database_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import relay_engine.board.web as web
+
+    original = web._read_slice_detail
+    card = _decision_card()
+
+    def current_detail(path, project_id, slice_id):
+        detail = original(path, project_id, slice_id)
+        return detail.model_copy(
+            update={"decision_support": DecisionSupportProjection(cards=(card,))}
+        )
+
+    monkeypatch.setattr(web, "_read_slice_detail", current_detail)
+    app = create_app(database_path)
+    route = f"/projects/{PROJECT_ID}/slices/{SLICE_A}"
+    before = (
+        sqlite3.connect(database_path).execute("SELECT COUNT(*) FROM human_decisions").fetchone()
+    )
+    valid = _request(
+        app,
+        "GET",
+        f"{route}?decision={card.decision.basis_digest}&question={DecisionQuestionKind.WHY_REQUIRED.value}",
+    )
+    assert valid.status_code == 200
+    assert "The current gate requires a Human decision." in valid.text
+    assert _request(app, "GET", f"{route}?decision={card.decision.basis_digest}").status_code == 422
+    assert (
+        _request(
+            app,
+            "GET",
+            f"{route}?decision=sha256:{'0' * 64}&question=WHY_REQUIRED",
+        ).status_code
+        == 409
+    )
+    malformed = _request(
+        app,
+        "GET",
+        f"{route}?decision=not-a-digest&question=WHY_REQUIRED",
+    )
+    assert malformed.status_code == 422
+    head = _request(
+        app,
+        "HEAD",
+        f"{route}?decision=sha256:{'0' * 64}&question=WHY_REQUIRED",
+    )
+    assert head.status_code == 409
+    assert head.content == b""
+    assert (
+        _request(
+            app, "POST", f"{route}?decision={card.decision.basis_digest}&question=WHY_REQUIRED"
+        ).status_code
+        == 405
+    )
+    after = (
+        sqlite3.connect(database_path).execute("SELECT COUNT(*) FROM human_decisions").fetchone()
+    )
+    assert before == after
 
 
 def test_read_routes_head_not_found_methods_and_disabled_docs(database_path: Path) -> None:
