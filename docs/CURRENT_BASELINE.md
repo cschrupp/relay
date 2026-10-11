@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 design accepted / implementation authorized; Phase 2 open; agent execution unauthorized
+**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 implemented / awaiting independent implementation evaluation; Phase 2 open; agent execution unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -16,7 +16,8 @@ Slices 1.1–1.7: COMPLETE / ACCEPTED / CLOSED
 Slice 1.8 — Governance Assurance Reference Model:
   OPEN; RLY-S18-OPEN-001; resumed by RLY-S18-RESUME-001;
   combined design accepted by RLY-S18-DESIGN-ACCEPT-001;
-  implementation authorized by RLY-S18-IMPL-AUTH-001
+  IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION
+  Implementation authority: RLY-S18-IMPL-AUTH-001
 Slice 1.9 — Human Decision Support & Governance Review Surface:
   PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 1.10 — Canonical Source and Promotion Enforcement:
@@ -84,7 +85,7 @@ Human technical acceptance: RLY-S21-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 Roadmap re-baseline: RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
-Slice 1.8 — Governance Assurance Reference Model: OPEN / DESIGN ACCEPTED — RLY-S18-DESIGN-ACCEPT-001 / IMPLEMENTATION AUTHORIZED — RLY-S18-IMPL-AUTH-001
+Slice 1.8 — Governance Assurance Reference Model: IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION — RLY-S18-IMPL-AUTH-001
 Slice 1.9 — Human Decision Support and Governance Review Surface: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.2 — Role Contracts: PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -109,7 +110,7 @@ Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens a
 
 ```text
 Current Phase 1 roadmap:
-1.8 — Governance Assurance Reference Model: OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
+1.8 — Governance Assurance Reference Model: IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION
 1.9 — Human Decision Support and Governance Review Surface: PLANNED / NOT OPEN / NOT AUTHORIZED
 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 
@@ -126,7 +127,7 @@ This ordering places assurance and promotion hardening beneath later agent auton
 
 ## 1B.1 Strategic amendment state
 
-`RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` authorized the documentation and architecture re-baseline, which is now independently accepted, Human-accepted, and canonically promoted. The prior pause incorporated workflow interoperability, risk-adaptive governance through a future GovernanceProfile, Protected Verification Assets, and governance-effectiveness measurement. Slice 1.8 has resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Design Revision 2 and Rework 1 are independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`; implementation is authorized under `RLY-S18-IMPL-AUTH-001` for documentation/governance-model hardening only; production/runtime code remains unauthorized.
+`RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` authorized the documentation and architecture re-baseline, which is now independently accepted, Human-accepted, and canonically promoted. The prior pause incorporated workflow interoperability, risk-adaptive governance through a future GovernanceProfile, Protected Verification Assets, and governance-effectiveness measurement. Slice 1.8 has resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains byte-preserved and normative where not explicitly amended by the accepted Revision 2 + Rework 1 chain; acceptance applies to the combined design, not Revision 1 alone. Design Revision 2 and Rework 1 are independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`; implementation is authorized under `RLY-S18-IMPL-AUTH-001` for documentation/governance-model hardening only; production/runtime code remains unauthorized.
 
 ```text
 Relay:
@@ -139,7 +140,7 @@ External workflow authority:
 NEVER IMPORTED AUTOMATICALLY
 
 GovernanceProfile and protected-verification semantics:
-FUTURE DESIGN ONLY / NOT IMPLEMENTED
+SEMANTICS DOCUMENTED / NO EXECUTABLE ENGINE OR ENFORCEMENT
 
 GovernanceEffectivenessTelemetry:
 FUTURE / NON-AUTHORITATIVE / NOT IMPLEMENTED
@@ -147,6 +148,18 @@ FUTURE / NON-AUTHORITATIVE / NOT IMPLEMENTED
 Competitive validation:
 PLANNED RESEARCH ONLY / NOT EXECUTED
 ```
+
+## Slice 1.8 implementation candidate
+
+Status: **IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION**.
+
+Authority: `RLY-S18-IMPL-AUTH-001`; implementation start `a7cd87fea89e3b0273da1d0c0884336cc7857357`; accepted combined-design baseline `eae25f0837bbce435e54fc3437b502dea1224744`.
+
+The consolidated [reference model](architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md) contains all 17 native properties, exact subject/policy contracts, cross-cutting Decision Support, prospective GovernanceProfile rules, protected-asset mutation-authority separation, workflow neutrality, external mapping/freshness, and downstream ownership. Supporting documents provide [20 worked examples and 30 negative cases](architecture/GOVERNANCE_ASSURANCE_EXAMPLES.md) and [mapping/source traceability](references/GOVERNANCE_ASSURANCE_MAPPING_MATRIX.md). See the [implementation handoff](reviews/SLICE_1_8_IMPLEMENTATION_HANDOFF.md) for design coverage and quality evidence.
+
+Product Proposal revision 46 is byte-preserved under the implementation handoff constraint. Its inherited statements that Slice 1.8 implementation is unauthorized are superseded for current-state consultation by `RLY-S18-IMPL-AUTH-001` and this Current Baseline revision; no product-semantic change is introduced. Likewise, historical Slice 2.1 roadmap references to Slice 1.9 source/promotion enforcement are superseded by accepted RW1-D01: Slice 1.9 owns Decision Support and Slice 1.10 owns enforcement.
+
+No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation, Human technical acceptance, promotion, and closure remain pending. Slices 1.9/1.10 remain unopened; Phase 3 and agent execution remain unauthorized.
 
 # 1C. Slice 2.1 historical opening
 
@@ -535,7 +548,7 @@ Roadmap re-baseline:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8:
-OPEN / DESIGN AUTHORIZED / PAUSED — RLY-S18-PAUSE-001 — ARCHITECTURE / ROADMAP REBASE / IMPLEMENTATION NOT AUTHORIZED
+IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION — RLY-S18-IMPL-AUTH-001
 
 Slice 1.9 — Human Decision Support and Governance Review Surface:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -918,7 +931,7 @@ Roadmap re-baseline:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8:
-OPEN / DESIGN AUTHORIZED / PAUSED — RLY-S18-PAUSE-001 — ARCHITECTURE / ROADMAP REBASE / IMPLEMENTATION NOT AUTHORIZED
+IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION — RLY-S18-IMPL-AUTH-001
 
 Slice 1.9:
 PLANNED / NOT OPEN / NOT AUTHORIZED
