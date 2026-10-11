@@ -15,6 +15,7 @@ from relay_engine.board.models import (
     SliceCard,
     SliceDetail,
 )
+from relay_engine.decision_support.service import project_decision_support
 from relay_engine.domain.ids import ProjectId, SliceId
 from relay_engine.domain.models import Baseline, Slice
 from relay_engine.governance.models import GateRevisionRef, HandoverGate
@@ -425,6 +426,23 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                 for snapshot in child_snapshots
             )
             executions = load_execution_records_for_slice_from_connection(connection, slice_id)
+            human_actions = project_human_actions(connection, slice_id, lifecycle, gates, latest)
+            manual_evaluation = project_manual_evaluation_from_connection(
+                database,
+                connection,
+                slice_id,
+                slice_definition_revision=slice_snapshot.definition_revision,
+            )
+            decision_support = project_decision_support(
+                slice_definition=slice_snapshot,
+                lifecycle=lifecycle,
+                gates=gates,
+                latest_evaluation=latest,
+                evaluation_basis_status=status,
+                executions=executions,
+                human_actions=human_actions,
+                manual_evaluation=manual_evaluation,
+            )
             return SliceDetail(
                 project=project_snapshot.value,
                 project_definition_revision=project_snapshot.definition_revision,
@@ -440,13 +458,9 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                 baseline=current_baseline,
                 evaluation_baseline=evaluation_baseline,
                 relevant_execution_records=executions,
-                human_actions=project_human_actions(connection, slice_id, lifecycle, gates, latest),
-                manual_evaluation=project_manual_evaluation_from_connection(
-                    database,
-                    connection,
-                    slice_id,
-                    slice_definition_revision=slice_snapshot.definition_revision,
-                ),
+                human_actions=human_actions,
+                manual_evaluation=manual_evaluation,
+                decision_support=decision_support,
             )
     except ValidationError as error:
         raise PersistenceIntegrityError("Slice detail projection is invalid") from error

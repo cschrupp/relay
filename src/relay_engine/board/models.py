@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from pydantic import Field, field_validator
 
+from relay_engine.decision_support.models import DecisionSupportProjection
 from relay_engine.domain._base import DomainModel
 from relay_engine.domain.ids import (
     BaselineId,
@@ -145,6 +146,7 @@ class SliceDetail(DomainModel):
     manual_evaluation: ManualEvaluationProjection = Field(
         default_factory=ManualEvaluationProjection
     )
+    decision_support: DecisionSupportProjection
 
 
 __all__ = [
