@@ -2,6 +2,8 @@
 
 from datetime import UTC, datetime
 
+import pytest
+
 from relay_engine.board.models import EvaluationBasisStatus
 from relay_engine.decision_support.models import (
     DecisionBasisApplicability,
@@ -102,6 +104,7 @@ def _gate(
     target: LifecyclePhase = LifecyclePhase.IMPLEMENTING,
     policy: HandoverPolicy = HandoverPolicy.HUMAN_APPROVAL,
     evidence_ids: tuple[str, ...] = (),
+    artifact_ids: tuple[str, ...] = (),
 ) -> HandoverGate:
     return HandoverGate(
         gate_id=gate_id,
@@ -118,6 +121,7 @@ def _gate(
         hard_stop=False,
         authorization_required=False,
         required_evidence_ids=evidence_ids,
+        required_artifact_ids=artifact_ids,
     )
 
 
@@ -134,7 +138,13 @@ def _basis(gates: tuple[HandoverGate, ...]) -> HumanActionBasis:
     )
 
 
-def _latest(gates: tuple[HandoverGate, ...], lifecycle: SliceLifecycle) -> GateEvaluationRecord:
+def _latest(
+    gates: tuple[HandoverGate, ...],
+    lifecycle: SliceLifecycle,
+    *,
+    available_evidence_ids: tuple[str, ...] = (),
+    available_artifact_ids: tuple[str, ...] = (),
+) -> GateEvaluationRecord:
     refs = tuple(
         GateRevisionRef(gate_id=item.gate_id, gate_revision=item.revision) for item in gates
     )
@@ -142,6 +152,8 @@ def _latest(gates: tuple[HandoverGate, ...], lifecycle: SliceLifecycle) -> GateE
         baseline_id=BASELINE_ID,
         governance_revision=3,
         lifecycle=lifecycle,
+        available_evidence_ids=available_evidence_ids,
+        available_artifact_ids=available_artifact_ids,
         change_surface_status=ChangeSurfaceStatus.WITHIN_DECLARED,
         risk_status=RiskStatus.CLEAR,
         toolchain_change_status=ToolchainChangeStatus.NONE,
@@ -182,6 +194,8 @@ def _project(
     decisions: tuple[HumanApprovalDecision, ...] = (),
     choice: HumanChoiceDecision | None = None,
     basis: HumanActionBasis | None = None,
+    available_evidence_ids: tuple[str, ...] = (),
+    available_artifact_ids: tuple[str, ...] = (),
 ) -> object:
     current_lifecycle = lifecycle or _lifecycle()
     action_basis = basis or _basis(gates)
@@ -189,7 +203,12 @@ def _project(
         slice_definition=_slice(),
         lifecycle=current_lifecycle,
         gates=gates,
-        latest_evaluation=_latest(gates, current_lifecycle),
+        latest_evaluation=_latest(
+            gates,
+            current_lifecycle,
+            available_evidence_ids=available_evidence_ids,
+            available_artifact_ids=available_artifact_ids,
+        ),
         evaluation_basis_status=EvaluationBasisStatus.MATCHING_DURABLE_BASIS,
         executions=(),
         human_actions=HumanActionProjection(
@@ -239,6 +258,7 @@ def test_authorization_and_approval_actions_group_into_one_decision_each() -> No
     assert approval.cards[0].decision.identity.decision_kind is DecisionKind.GATE_APPROVAL
     assert len(approval.cards[0].choices) == 2
     assert len(approval.cards[0].proposed_outcomes) == 1
+    assert "Human decision required" in approval.cards[0].why_required.text
 
 
 def test_current_rejection_is_recorded_revisable_not_missing() -> None:
@@ -285,12 +305,24 @@ def test_current_rejection_is_recorded_revisable_not_missing() -> None:
     assert card.state is DecisionCardState.RECORDED_REVISABLE
     assert card.current_recorded_decision == "REJECT"
     assert card.decision.identity.expected_current_approval_decision_id == decision.decision_id
+    assert decision.decision_id in card.why_required.text
+    assert "replacement decision remains available" in card.why_required.text
+    assert any(
+        item.kind.value == "HUMAN_DECISION" and item.stable_ref == decision.decision_id
+        for item in card.why_required.source_refs
+    )
 
 
 def test_path_choices_are_one_card_with_all_exact_outcomes_and_qa() -> None:
+    evidence_id = "evd_018f47c1-7b2c-7abc-8def-123456789050"
     gates = (
         _gate(GATE_A, policy=HandoverPolicy.HUMAN_CHOICE),
-        _gate(GATE_B, policy=HandoverPolicy.HUMAN_CHOICE, target=LifecyclePhase.PLANNING),
+        _gate(
+            GATE_B,
+            policy=HandoverPolicy.HUMAN_CHOICE,
+            target=LifecyclePhase.PLANNING,
+            evidence_ids=(evidence_id,),
+        ),
     )
     projection = _project(
         gates,
@@ -311,10 +343,78 @@ def test_path_choices_are_one_card_with_all_exact_outcomes_and_qa() -> None:
     assert {
         (item.gate_ref.gate_id, item.gate_ref.gate_revision) for item in card.proposed_outcomes
     } == {(GATE_A, 1), (GATE_B, 1)}
+    evidence_component = next(item for item in card.components if item.kind.value == "EVIDENCE")
+    assert evidence_component.applicability is DecisionBasisApplicability.MISSING_REQUIRED
+    assert card.completeness is DecisionBasisCompleteness.INCOMPLETE
+    assert any(
+        ref.kind.value == "HANDOVER_GATE" and ref.stable_ref == f"{GATE_B}@r1"
+        for ref in card.source_refs
+    )
+    assert any(evidence_id in item.text for item in card.governance_requirements)
+
+    present_projection = _project(
+        gates,
+        tuple(
+            HumanAction(
+                kind=HumanActionKind.CHOOSE_PATH,
+                gate_id=item.gate_id,
+                gate_revision=1,
+                target_phase=item.target_phase,
+            )
+            for item in gates
+        ),
+        available_evidence_ids=(evidence_id,),
+    )
+    present_card = present_projection.cards[0]
+    present_evidence = next(
+        item for item in present_card.components if item.kind.value == "EVIDENCE"
+    )
+    assert present_evidence.applicability is DecisionBasisApplicability.REQUIRED_PRESENT
+    assert present_card.completeness is DecisionBasisCompleteness.COMPLETE
     answer = answer_decision_question(card, DecisionQuestionKind.WHAT_WOULD_CHANGE)
     assert len(answer.answer.splitlines()) == 2
     assert (
         "choose one" in answer_decision_question(card, DecisionQuestionKind.WHAT_IF_APPROVED).answer
+    )
+
+
+def test_recorded_path_choice_explains_revisability_and_exact_decision_source() -> None:
+    gates = (
+        _gate(GATE_A, policy=HandoverPolicy.HUMAN_CHOICE),
+        _gate(GATE_B, policy=HandoverPolicy.HUMAN_CHOICE, target=LifecyclePhase.PLANNING),
+    )
+    gate_refs = tuple(sorted(_basis(gates).gate_refs, key=lambda item: item.gate_id))
+    decision_id = "hdec_018f47c1-7b2c-7abc-8def-123456789033"
+    decision = HumanChoiceDecision(
+        decision_id=decision_id,
+        slice_id=SLICE_ID,
+        baseline_id=BASELINE_ID,
+        selected_gate_id=GATE_A,
+        selected_gate_revision=1,
+        choice_gate_refs=gate_refs,
+        lifecycle_revision=2,
+        governance_revision=3,
+        actor=ACTOR,
+        occurred_at=NOW,
+        reason="Choose the current path.",
+    )
+    basis = _basis(gates).model_copy(update={"current_choice_decision_id": decision_id})
+    actions = tuple(
+        HumanAction(
+            kind=HumanActionKind.CHOOSE_PATH,
+            gate_id=item.gate_id,
+            gate_revision=item.revision,
+            target_phase=item.target_phase,
+        )
+        for item in gates
+    )
+    card = _project(gates, actions, choice=decision, basis=basis).cards[0]
+    assert card.state is DecisionCardState.RECORDED_REVISABLE
+    assert decision_id in card.why_required.text
+    assert "replacement decision remains available" in card.why_required.text
+    assert any(
+        item.kind.value == "HUMAN_DECISION" and item.stable_ref == decision_id
+        for item in card.why_required.source_refs
     )
 
 
@@ -359,9 +459,72 @@ def test_gate_evidence_applicability_and_operational_controls() -> None:
     assert controls_only.cards == ()
 
 
-def test_technical_acceptance_is_one_card_with_exact_result_evaluation_and_evidence() -> None:
+@pytest.mark.parametrize(
+    ("required_artifacts", "available_artifacts", "expected"),
+    (
+        (
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            DecisionBasisApplicability.REQUIRED_PRESENT,
+        ),
+        (
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            (),
+            DecisionBasisApplicability.MISSING_REQUIRED,
+        ),
+        ((), (), DecisionBasisApplicability.NOT_APPLICABLE),
+    ),
+)
+def test_ordinary_gate_artifact_applicability_and_provenance(
+    required_artifacts: tuple[str, ...],
+    available_artifacts: tuple[str, ...],
+    expected: DecisionBasisApplicability,
+) -> None:
+    gate = _gate(artifact_ids=required_artifacts)
+    card = _project(
+        (gate,),
+        (
+            HumanAction(
+                kind=HumanActionKind.APPROVE,
+                gate_id=gate.gate_id,
+                gate_revision=gate.revision,
+                target_phase=gate.target_phase,
+            ),
+        ),
+        available_artifact_ids=available_artifacts,
+    ).cards[0]
+    component = next(item for item in card.components if item.kind.value == "DESIGN_OR_SCOPE_BASIS")
+    assert component.applicability is expected
+    if required_artifacts:
+        assert any(
+            item.kind.value == "ARTIFACT" and item.stable_ref == required_artifacts[0]
+            for item in component.source_refs
+        )
+
+
+@pytest.mark.parametrize(
+    ("required_artifacts", "available_artifacts", "expected_artifact_status"),
+    (
+        (
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            DecisionBasisApplicability.REQUIRED_PRESENT,
+        ),
+        (
+            ("art_018f47c1-7b2c-7abc-8def-123456789060",),
+            (),
+            DecisionBasisApplicability.MISSING_REQUIRED,
+        ),
+        ((), (), DecisionBasisApplicability.NOT_APPLICABLE),
+    ),
+)
+def test_technical_acceptance_artifact_applicability_and_evidence(
+    required_artifacts: tuple[str, ...],
+    available_artifacts: tuple[str, ...],
+    expected_artifact_status: DecisionBasisApplicability,
+) -> None:
     lifecycle = _lifecycle(LifecyclePhase.EVALUATING)
-    gate = _gate(target=LifecyclePhase.ACCEPTED)
+    gate = _gate(target=LifecyclePhase.ACCEPTED, artifact_ids=required_artifacts)
     result = SliceResultRecord(
         result_id="res_018f47c1-7b2c-7abc-8def-123456789034",
         slice_id=SLICE_ID,
@@ -401,32 +564,33 @@ def test_technical_acceptance_is_one_card_with_exact_result_evaluation_and_evide
             "current_manual_evaluation_id": evaluation.evaluation_id,
         }
     )
+    manual_projection = ManualEvaluationProjection(
+        action_basis=ManualEvaluationActionBasis(
+            slice_id=SLICE_ID,
+            lifecycle_revision=2,
+            slice_definition_revision=1,
+            current_result_id=result.result_id,
+            current_manual_evaluation_id=evaluation.evaluation_id,
+            latest_gate_evaluation_record_id="geval_018f47c1-7b2c-7abc-8def-123456789030",
+            gate_refs=(GateRevisionRef(gate_id=GATE_A, gate_revision=1),),
+        ),
+        actions=(
+            ManualEvaluationActionKind.TECHNICAL_ACCEPT,
+            ManualEvaluationActionKind.TECHNICAL_REJECT,
+        ),
+        technical_gate_refs=(GateRevisionRef(gate_id=GATE_A, gate_revision=1),),
+        current_result=result,
+        current_evaluation=evaluation,
+    )
     support = project_decision_support(
         slice_definition=_slice(),
         lifecycle=lifecycle,
         gates=(gate,),
-        latest_evaluation=_latest((gate,), lifecycle),
+        latest_evaluation=_latest((gate,), lifecycle, available_artifact_ids=available_artifacts),
         evaluation_basis_status=EvaluationBasisStatus.MATCHING_DURABLE_BASIS,
         executions=(),
         human_actions=HumanActionProjection(basis=basis),
-        manual_evaluation=ManualEvaluationProjection(
-            action_basis=ManualEvaluationActionBasis(
-                slice_id=SLICE_ID,
-                lifecycle_revision=2,
-                slice_definition_revision=1,
-                current_result_id=result.result_id,
-                current_manual_evaluation_id=evaluation.evaluation_id,
-                latest_gate_evaluation_record_id="geval_018f47c1-7b2c-7abc-8def-123456789030",
-                gate_refs=(GateRevisionRef(gate_id=GATE_A, gate_revision=1),),
-            ),
-            actions=(
-                ManualEvaluationActionKind.TECHNICAL_ACCEPT,
-                ManualEvaluationActionKind.TECHNICAL_REJECT,
-            ),
-            technical_gate_refs=(GateRevisionRef(gate_id=GATE_A, gate_revision=1),),
-            current_result=result,
-            current_evaluation=evaluation,
-        ),
+        manual_evaluation=manual_projection,
     )
     assert len(support.cards) == 1
     card = support.cards[0]
@@ -438,4 +602,53 @@ def test_technical_acceptance_is_one_card_with_exact_result_evaluation_and_evide
     assert len(card.proposed_outcomes) == 1
     evidence = next(item for item in card.components if item.kind.value == "EVIDENCE")
     assert evidence.applicability is DecisionBasisApplicability.REQUIRED_PRESENT
+    artifacts = next(item for item in card.components if item.kind.value == "DESIGN_OR_SCOPE_BASIS")
+    assert artifacts.applicability is expected_artifact_status
+    if required_artifacts:
+        assert any(
+            item.kind.value == "ARTIFACT" and item.stable_ref == required_artifacts[0]
+            for item in artifacts.source_refs
+        )
     assert any(item.basis.value == "EVALUATOR_JUDGMENT" for item in card.evaluation)
+
+    decision = HumanApprovalDecision(
+        decision_id="hdec_018f47c1-7b2c-7abc-8def-123456789034",
+        slice_id=SLICE_ID,
+        baseline_id=BASELINE_ID,
+        gate_id=GATE_A,
+        gate_revision=1,
+        lifecycle_revision=2,
+        governance_revision=3,
+        actor=ACTOR,
+        occurred_at=NOW,
+        decision=HumanApprovalValue.APPROVE,
+        reason="Accept this exact technical result.",
+    )
+    current_basis = basis.model_copy(
+        update={
+            "current_approval_decision_ids": (
+                HumanApprovalIdentity(gate_id=GATE_A, decision_id=decision.decision_id),
+            )
+        }
+    )
+    revisable = project_decision_support(
+        slice_definition=_slice(),
+        lifecycle=lifecycle,
+        gates=(gate,),
+        latest_evaluation=_latest((gate,), lifecycle, available_artifact_ids=available_artifacts),
+        evaluation_basis_status=EvaluationBasisStatus.MATCHING_DURABLE_BASIS,
+        executions=(),
+        human_actions=HumanActionProjection(
+            basis=current_basis, current_approval_decisions=(decision,)
+        ),
+        manual_evaluation=manual_projection.model_copy(
+            update={"current_technical_decision": decision}
+        ),
+    ).cards[0]
+    assert revisable.state is DecisionCardState.RECORDED_REVISABLE
+    assert decision.decision_id in revisable.why_required.text
+    assert "replacement decision remains available" in revisable.why_required.text
+    assert any(
+        item.kind.value == "HUMAN_DECISION" and item.stable_ref == decision.decision_id
+        for item in revisable.why_required.source_refs
+    )

@@ -75,6 +75,33 @@ def _statement(
     return DecisionStatement(text=text, basis=basis, source_refs=source_refs)
 
 
+def _decision_why(
+    *,
+    state: DecisionCardState,
+    pending_reason: str,
+    recorded_text: str | None,
+    recorded_id: str | None,
+    refs: tuple[DecisionSourceRef, ...],
+) -> DecisionStatement:
+    if state is DecisionCardState.PENDING_REQUIRED:
+        return _statement(f"Human decision required: {pending_reason}", refs)
+    decision_refs = tuple(
+        item
+        for item in refs
+        if item.kind is DecisionSourceKind.HUMAN_DECISION and item.stable_ref == recorded_id
+    )
+    if not decision_refs:
+        raise PersistenceIntegrityError(
+            "recorded revisable decision is missing its exact Human decision source"
+        )
+    return _statement(
+        f"Current Human decision {recorded_text} ({recorded_id}) is recorded. "
+        "A replacement decision remains available before the governed transition or control "
+        "ceases to be revisable.",
+        decision_refs,
+    )
+
+
 def _gate_ref(gate: HandoverGate) -> GateRevisionRef:
 
     return GateRevisionRef(gate_id=gate.gate_id, gate_revision=gate.revision)
@@ -114,6 +141,7 @@ def _sources(
     executions: tuple[ExecutionRecord, ...],
     decisions: Iterable[object],
     authorizations: Iterable[AuthorizationGrant] = (),
+    artifact_ids: Iterable[str] = (),
 ) -> tuple[DecisionSourceRef, ...]:
 
     refs = [
@@ -168,6 +196,11 @@ def _sources(
     refs.extend(
         _source(DecisionSourceKind.EVIDENCE, item, f"Evidence {item}")
         for item in sorted(evidence_ids)
+    )
+
+    refs.extend(
+        _source(DecisionSourceKind.ARTIFACT, item, f"Required artifact {item}")
+        for item in sorted(set(artifact_ids))
     )
 
     refs.extend(
@@ -362,7 +395,7 @@ def _gate_components(
                     artifact_applicability,
                     bool(gate.required_artifact_ids),
                     artifact_summary,
-                    refs,
+                    tuple(item for item in refs if item.kind is DecisionSourceKind.ARTIFACT),
                     freshness
                     if gate.required_artifact_ids
                     else DecisionBasisFreshness.NOT_APPLICABLE,
@@ -376,7 +409,7 @@ def _gate_components(
                     evidence_applicability,
                     bool(gate.required_evidence_ids),
                     evidence_summary,
-                    refs,
+                    tuple(item for item in refs if item.kind is DecisionSourceKind.EVIDENCE),
                     freshness
                     if gate.required_evidence_ids
                     else DecisionBasisFreshness.NOT_APPLICABLE,
@@ -440,10 +473,12 @@ def _gate_components(
 
 def _technical_components(
     refs: tuple[DecisionSourceRef, ...],
+    gate: HandoverGate,
+    latest: GateEvaluationRecord | None,
+    evaluation_status: EvaluationBasisStatus,
     result: SliceResultRecord | None,
     evaluation: ManualEvaluationRecord | None,
 ) -> tuple[DecisionBasisComponent, ...]:
-
     values: list[DecisionBasisComponent] = []
 
     for kind in DecisionBasisComponentKind:
@@ -486,11 +521,26 @@ def _technical_components(
             required = True
 
         elif kind is DecisionBasisComponentKind.DESIGN_OR_SCOPE_BASIS:
-            applicability = DecisionBasisApplicability.NOT_APPLICABLE
-
-            text = "No current gate policy requires additional design/scope material."
-
-            required = False
+            required_ids = gate.required_artifact_ids
+            available_ids: set[str] = (
+                set() if latest is None else set(latest.context.available_artifact_ids)
+            )
+            missing_ids = tuple(item for item in required_ids if item not in available_ids)
+            applicability = (
+                DecisionBasisApplicability.NOT_APPLICABLE
+                if not required_ids
+                else DecisionBasisApplicability.MISSING_REQUIRED
+                if missing_ids
+                else DecisionBasisApplicability.REQUIRED_PRESENT
+            )
+            text = (
+                "No current gate policy requires design/scope artifacts."
+                if not required_ids
+                else "Missing required artifacts: " + ", ".join(missing_ids)
+                if missing_ids
+                else "All required design/scope artifacts are present in the exact current basis."
+            )
+            required = bool(required_ids)
 
         elif kind is DecisionBasisComponentKind.AUTHORITY_BASIS:
             applicability = DecisionBasisApplicability.REQUIRED_PRESENT
@@ -528,7 +578,21 @@ def _technical_components(
 
             required = True
 
-        values.append(_component(kind, applicability, required, text, refs))
+        component_refs = (
+            tuple(item for item in refs if item.kind is DecisionSourceKind.ARTIFACT)
+            if kind is DecisionBasisComponentKind.DESIGN_OR_SCOPE_BASIS
+            else refs
+        )
+        freshness = (
+            DecisionBasisFreshness.NOT_APPLICABLE
+            if not required
+            else DecisionBasisFreshness.CURRENT
+            if evaluation_status is EvaluationBasisStatus.MATCHING_DURABLE_BASIS
+            else DecisionBasisFreshness.STALE
+            if evaluation_status is EvaluationBasisStatus.STALE_DURABLE_BASIS
+            else DecisionBasisFreshness.UNKNOWN
+        )
+        values.append(_component(kind, applicability, required, text, component_refs, freshness))
 
     return tuple(values)
 
@@ -683,6 +747,7 @@ def _build_gate_card(
         executions,
         decisions,
         human_actions.current_authorizations,
+        gate.required_artifact_ids,
     )
 
     components = _gate_components(kind, gate, refs, latest, None, evaluation_status)
@@ -812,7 +877,28 @@ def _build_gate_card(
                 else f"Selected {current_choice.selected_gate_id}@r{current_choice.selected_gate_revision}"  # noqa: E501
             )
         ),
-        why_required=_statement(why, refs),
+        why_required=_decision_why(
+            state=state,
+            pending_reason=why,
+            recorded_text=(
+                approval.decision.value
+                if approval is not None
+                else (
+                    None
+                    if current_choice is None
+                    else f"selected {current_choice.selected_gate_id}@r"
+                    f"{current_choice.selected_gate_revision}"
+                )
+            ),
+            recorded_id=(
+                approval.decision_id
+                if approval is not None
+                else None
+                if current_choice is None
+                else current_choice.decision_id
+            ),
+            refs=refs,
+        ),
         current_state=_statement(current_text, refs),
         proposed_outcomes=outcomes,
         choices=command_choices,
@@ -950,20 +1036,27 @@ def project_decision_support(
                 "current HUMAN_CHOICE gate is absent from HumanActionBasis"
             )
 
-        representative = choice_gates[0]
-
-        path_card = _build_gate_card(
-            kind=DecisionKind.GATE_PATH_CHOICE,
-            gate=representative,
-            definition=slice_definition,
-            lifecycle=lifecycle,
-            latest=latest_evaluation,
-            evaluation_status=evaluation_basis_status,
-            basis=basis,
-            human_actions=human_actions,
-            executions=executions,
-            actions=choice_actions,
+        choice_gates = tuple(sorted(choice_gates, key=lambda item: (item.gate_id, item.revision)))
+        gate_cards = tuple(
+            _build_gate_card(
+                kind=DecisionKind.GATE_PATH_CHOICE,
+                gate=gate,
+                definition=slice_definition,
+                lifecycle=lifecycle,
+                latest=latest_evaluation,
+                evaluation_status=evaluation_basis_status,
+                basis=basis,
+                human_actions=human_actions,
+                executions=executions,
+                actions=tuple(
+                    action
+                    for action in choice_actions
+                    if action.gate_id == gate.gate_id and action.gate_revision == gate.revision
+                ),
+            )
+            for gate in choice_gates
         )
+        path_card = gate_cards[0]
 
         outcomes = tuple(
             sorted(
@@ -1011,6 +1104,106 @@ def project_decision_support(
             else None
         )
 
+        source_refs_by_key = {
+            (ref.kind.value, ref.stable_ref, ref.label): ref
+            for card in gate_cards
+            for ref in card.source_refs
+        }
+        if is_current and choice is not None:
+            decision_ref = _source(
+                DecisionSourceKind.HUMAN_DECISION,
+                choice.decision_id,
+                "Current Human path-choice decision",
+            )
+            source_refs_by_key[
+                (decision_ref.kind.value, decision_ref.stable_ref, decision_ref.label)
+            ] = decision_ref
+        path_source_refs = tuple(source_refs_by_key[key] for key in sorted(source_refs_by_key))
+
+        components_by_kind: dict[DecisionBasisComponentKind, list[DecisionBasisComponent]] = {}
+        for card in gate_cards:
+            for component in card.components:
+                components_by_kind.setdefault(component.kind, []).append(component)
+        merged_components: list[DecisionBasisComponent] = []
+        for component_kind in DecisionBasisComponentKind:
+            values = components_by_kind[component_kind]
+            required = any(item.required for item in values)
+            source_map = {
+                (ref.kind.value, ref.stable_ref, ref.label): ref
+                for item in values
+                for ref in item.source_refs
+            }
+            component_refs = tuple(source_map[key] for key in sorted(source_map))
+            if not required:
+                applicability = DecisionBasisApplicability.NOT_APPLICABLE
+                freshness = DecisionBasisFreshness.NOT_APPLICABLE
+            else:
+                applicability = (
+                    DecisionBasisApplicability.MISSING_REQUIRED
+                    if any(
+                        item.applicability is DecisionBasisApplicability.MISSING_REQUIRED
+                        for item in values
+                        if item.required
+                    )
+                    else DecisionBasisApplicability.UNKNOWN
+                    if any(
+                        item.applicability is DecisionBasisApplicability.UNKNOWN
+                        for item in values
+                        if item.required
+                    )
+                    else DecisionBasisApplicability.REQUIRED_PRESENT
+                )
+                freshness = (
+                    DecisionBasisFreshness.STALE
+                    if any(
+                        item.freshness is DecisionBasisFreshness.STALE
+                        for item in values
+                        if item.required
+                    )
+                    else DecisionBasisFreshness.UNKNOWN
+                    if any(
+                        item.freshness is DecisionBasisFreshness.UNKNOWN
+                        for item in values
+                        if item.required
+                    )
+                    else DecisionBasisFreshness.CURRENT
+                )
+            summaries = tuple(dict.fromkeys(item.summary for item in values))
+            merged_components.append(
+                DecisionBasisComponent(
+                    kind=component_kind,
+                    applicability=applicability,
+                    freshness=freshness,
+                    required=required,
+                    summary="; ".join(summaries),
+                    source_refs=component_refs,
+                )
+            )
+
+        def merge_statements(name: str) -> tuple[DecisionStatement, ...]:
+            unique: dict[tuple[str, str, tuple[tuple[str, str, str], ...]], DecisionStatement] = {}
+            for card in gate_cards:
+                for statement in getattr(card, name):
+                    statement_key = (
+                        statement.text,
+                        statement.basis.value,
+                        tuple(
+                            (ref.kind.value, ref.stable_ref, ref.label)
+                            for ref in statement.source_refs
+                        ),
+                    )
+                    unique[statement_key] = statement
+            return tuple(unique[key] for key in sorted(unique))
+
+        path_why = "; ".join(card.why_required.text for card in gate_cards)
+        path_why_statement = _decision_why(
+            state=state,
+            pending_reason=path_why,
+            recorded_text=current_choice_text,
+            recorded_id=current_choice_id,
+            refs=path_source_refs,
+        )
+
         identity = path_card.decision.identity.model_copy(
             update={
                 "decision_state": state,
@@ -1039,6 +1232,16 @@ def project_decision_support(
                 "proposed_outcomes": outcomes,
                 "choices": choices,
                 "title": "Choose one of the current handover paths",
+                "why_required": path_why_statement,
+                "components": tuple(merged_components),
+                "evidence": merge_statements("evidence"),
+                "evaluation": merge_statements("evaluation"),
+                "risks": merge_statements("risks"),
+                "unknowns": merge_statements("unknowns"),
+                "blocking_findings": merge_statements("blocking_findings"),
+                "governance_requirements": merge_statements("governance_requirements"),
+                "source_refs": path_source_refs,
+                "completeness": _completeness(tuple(merged_components)),
             }
         )
 
@@ -1073,8 +1276,6 @@ def project_decision_support(
             raise PersistenceIntegrityError(
                 "technical decision projection does not bind the exact current result and evaluation"  # noqa: E501
             )
-
-        decisions = tuple(item for item in human_actions.current_approval_decisions)
 
         for reference in manual_evaluation.technical_gate_refs:
             gate = gate_by_ref.get((reference.gate_id, reference.gate_revision))
@@ -1132,11 +1333,19 @@ def project_decision_support(
                 result,
                 evaluation,
                 executions,
-                decisions,
+                () if current_decision is None else (current_decision,),
                 human_actions.current_authorizations,
+                gate.required_artifact_ids,
             )
 
-            components = _technical_components(refs, result, evaluation)
+            components = _technical_components(
+                refs,
+                gate,
+                latest_evaluation,
+                evaluation_basis_status,
+                result,
+                evaluation,
+            )
 
             outcomes = (
                 DecisionProposedOutcome(
@@ -1197,9 +1406,19 @@ def project_decision_support(
                     current_recorded_decision=None
                     if current_decision is None
                     else current_decision.decision.value,
-                    why_required=_statement(
-                        "The current manual evaluation outcome is ACCEPT and the exact accepted-target gate exposes technical Human decisions.",  # noqa: E501
-                        refs,
+                    why_required=_decision_why(
+                        state=state,
+                        pending_reason=(
+                            "the current manual evaluation outcome is ACCEPT and the exact "
+                            "accepted-target gate exposes technical Human decisions."
+                        ),
+                        recorded_text=(
+                            None if current_decision is None else current_decision.decision.value
+                        ),
+                        recorded_id=(
+                            None if current_decision is None else current_decision.decision_id
+                        ),
+                        refs=refs,
                     ),
                     current_state=_statement(
                         f"Result {result.result_id} with evaluation {evaluation.evaluation_id} ({evaluation.outcome.value}).",  # noqa: E501

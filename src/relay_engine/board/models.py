@@ -146,7 +146,7 @@ class SliceDetail(DomainModel):
     manual_evaluation: ManualEvaluationProjection = Field(
         default_factory=ManualEvaluationProjection
     )
-    decision_support: DecisionSupportProjection = Field(default_factory=DecisionSupportProjection)
+    decision_support: DecisionSupportProjection
 
 
 __all__ = [

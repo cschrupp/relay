@@ -16,6 +16,7 @@ from relay_engine.board.service import (
     project_index,
     slice_detail,
 )
+from relay_engine.decision_support.models import DecisionSupportProjection
 from relay_engine.domain.ids import (
     BaselineId,
     EventId,
@@ -268,6 +269,7 @@ def test_board_projection_orders_slices_and_keeps_relationships_navigational(tmp
         assert not hasattr(child, "traffic_light")
 
         detail = slice_detail(database, PROJECT_ID, SLICE_C)
+        assert isinstance(detail.decision_support, DecisionSupportProjection)
         assert detail.parent is not None and detail.parent.slice_id == SLICE_A
         assert detail.children == ()
         assert detail.dependencies[0].title == "beta"

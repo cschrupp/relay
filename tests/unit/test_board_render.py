@@ -2,6 +2,9 @@
 
 from datetime import UTC, datetime
 
+import pytest
+from pydantic import ValidationError
+
 from relay_engine.board.models import (
     BoardLane,
     DependencyProjection,
@@ -238,6 +241,7 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
         baseline=None,
         evaluation_baseline=None,
         relevant_execution_records=(),
+        decision_support=DecisionSupportProjection(),
     )
     return board, detail
 
@@ -247,6 +251,14 @@ def _governance_summary(detail: SliceDetail) -> str:
     start = html.index('<section aria-labelledby="governance-status-heading">')
     end = html.index("<section><h2>Definition</h2>", start)
     return html[start:end]
+
+
+def test_slice_detail_requires_decision_support_projection() -> None:
+    _, detail = _fixture()
+    data = detail.model_dump()
+    data.pop("decision_support")
+    with pytest.raises(ValidationError):
+        SliceDetail.model_validate(data)
 
 
 def test_decision_card_is_derived_accessible_and_has_digest_bound_question_links() -> None:
