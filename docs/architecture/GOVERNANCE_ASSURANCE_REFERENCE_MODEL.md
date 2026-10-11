@@ -6,7 +6,7 @@
 **Date:** October 2026
 
 **Current re-baseline:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
-**Slice 1.8:** OPEN / DESIGN AUTHORIZED / PAUSED — ARCHITECTURE / ROADMAP REBASE / IMPLEMENTATION NOT AUTHORIZED
+**Slice 1.8:** OPEN / RESUMED / DESIGN REVISION 2 AUTHORIZED / ACTIVE DESIGN / IMPLEMENTATION NOT AUTHORIZED
 
 ---
 
@@ -246,7 +246,7 @@ This generic mechanism is deferred until Relay-native controls are stable enough
 ```text
 Phase 1 — Deterministic Governance Foundation:
   1.1–1.7 COMPLETE / ACCEPTED / CLOSED
-  1.8 Governance Assurance Reference Model — OPEN / PAUSED FOR REBASE
+  1.8 Governance Assurance Reference Model — OPEN / ACTIVE DESIGN / REVISION 2 AUTHORIZED
   1.9 Human Decision Support — PLANNED / NOT AUTHORIZED
   1.10 Canonical Source and Promotion Enforcement — PLANNED / NOT AUTHORIZED
 

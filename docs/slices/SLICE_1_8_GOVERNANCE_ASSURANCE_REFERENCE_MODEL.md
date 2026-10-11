@@ -1,12 +1,13 @@
 # Slice 1.8 - Governance Assurance Reference Model
 
-**Status:** OPEN / DESIGN AUTHORIZED / PAUSED — ARCHITECTURE / ROADMAP REBASE / IMPLEMENTATION NOT AUTHORIZED
+**Status:** OPEN / RESUMED / DESIGN REVISION 2 AUTHORIZED / ACTIVE DESIGN / IMPLEMENTATION NOT AUTHORIZED
 **Phase:** 1 - Accepted Baseline / Hardening Active
 **Opening authority:** RLY-S18-OPEN-001 - OPEN
-**Design authority:** RLY-S18-DESIGN-AUTH-001 - AUTHORIZED
+**Design authority:** RLY-S18-DESIGN-AUTH-001 - AUTHORIZED (historical scope); RLY-S18-DESIGN-AUTH-002 - AUTHORIZED FOR REVISION 2
 **Roadmap authority:** RLY-P2-ROADMAP-REBASE-001 - AUTHORIZED
 
-**Pause:** `RLY-S18-PAUSE-001`
+**Pause history:** `RLY-S18-PAUSE-001` — SATISFIED
+**Resume:** `RLY-S18-RESUME-001` — RESUMED
 **Re-baseline authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
 **Strategic amendment authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
 
@@ -15,13 +16,14 @@
 ```text
 Slice 1.8: OPEN
 Opening: RLY-S18-OPEN-001 — OPEN
-Design authority: RLY-S18-DESIGN-AUTH-001 — AUTHORIZED
-Pause: RLY-S18-PAUSE-001 — PAUSED — ARCHITECTURE / ROADMAP REBASE
+Design authority: RLY-S18-DESIGN-AUTH-001 — HISTORICAL / STILL VALID WHERE NOT SUPERSEDED
+Resume: RLY-S18-RESUME-001 — RESUMED
+Supplemental design authority: RLY-S18-DESIGN-AUTH-002 — AUTHORIZED FOR REVISION 2
 Design Revision 1: PRESERVED PRE-REBASELINE INPUT
+Design Revision 2: AUTHORIZED / NOT YET PRODUCED
 Design review: NOT STARTED
 Human design acceptance: NOT GRANTED
 Implementation: NOT AUTHORIZED
-Design Revision 2: NOT PRODUCED / NOT AUTHORIZED
 ```
 
 Design Revision 1 is the review-ready head `c67fe2147fcb9a37e7ab13de92bfc79bb8688919` on `design/slice-1.8-governance-assurance-reference-model`. It is preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Preserve that branch and head unchanged.
@@ -54,7 +56,7 @@ Define and review:
 
 ### Future Design Revision 2 expectations
 
-If separately authorized after the complete amended re-baseline is reviewed, Human-accepted, and promoted, a future revision should address the requirements above as design questions. It should also resolve applicable versus unknown versus missing decision-basis components; define profile-selection inputs without a final scoring formula or taxonomy; prohibit implementer/runtime/provider self-downgrade; define policy-authorized escalation and durable downgrade; distinguish implementation tests from policy/acceptance/evaluation assets; and preserve tri-valued `PASS / FAIL / UNKNOWN` semantics. This is an expectation list, not Design Revision 2. No Revision 2 is produced or authorized here.
+The complete amended re-baseline has now been independently reviewed, Human-accepted, canonically promoted, and Slice 1.8 resumed. Design Revision 2 is authorized under `RLY-S18-DESIGN-AUTH-002` and should address the requirements above as design questions. It should also resolve applicable versus unknown versus missing decision-basis components; define profile-selection inputs without a final scoring formula or taxonomy; prohibit implementer/runtime/provider self-downgrade; define policy-authorized escalation and durable downgrade; distinguish implementation tests from policy/acceptance/evaluation assets; and preserve tri-valued `PASS / FAIL / UNKNOWN` semantics. This is the governing expectation list for the authorized Revision 2; no Revision 2 artifact has yet been produced.
 
 ## Out of scope
 
@@ -86,7 +88,7 @@ ACCEPTED != PROMOTED
 
 Slice 1.8 is opened administratively under RLY-S18-OPEN-001.
 
-Design is authorized under RLY-S18-DESIGN-AUTH-001. This authorization permits architecture, contract, and detailed design work only.
+Design was originally authorized under `RLY-S18-DESIGN-AUTH-001`; after the canonical re-baseline, Slice 1.8 resumed under `RLY-S18-RESUME-001` and supplemental Revision-2 design authority is `RLY-S18-DESIGN-AUTH-002`. These authorities permit architecture, contract, and detailed design work only.
 
 Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
 

@@ -33,9 +33,9 @@ Current working documents for this direction are:
 
 These are **reference and future planning/design artifacts**. Their presence does not open or authorize a future Slice or Phase 3 work. Human Decision Support remains a derived, non-authoritative projection; its architecture is documented in `architecture/HUMAN_DECISION_SUPPORT.md`.
 
-Current roadmap: Slices 1.1–1.7 are closed; Slice 1.8 is open and paused for the architecture/roadmap re-baseline under `RLY-S18-PAUSE-001`; Slice 1.9 Human Decision Support and Slice 1.10 Source/Promotion Enforcement are planned, unopened, and unauthorized. Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3 and real-project agent execution are not authorized. See `CURRENT_BASELINE.md` and `.relay/registry.json` for canonical state.
+Current roadmap: Slices 1.1–1.7 are closed; Slice 1.8 is open and resumed for active Design Revision 2 work under `RLY-S18-RESUME-001` and `RLY-S18-DESIGN-AUTH-002`; Slice 1.9 Human Decision Support and Slice 1.10 Source/Promotion Enforcement are planned, unopened, and unauthorized. Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3 and real-project agent execution are not authorized. See `CURRENT_BASELINE.md` and `.relay/registry.json` for canonical state.
 
-The current pause also includes the authorized strategic amendment for workflow interoperability, future risk-adaptive GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement. Slice 1.8 remains paused; Design Revision 2 has not been produced. The competitive comparison is planned research only and has not been executed.
+The prior pause incorporated the authorized strategic amendment for workflow interoperability, future risk-adaptive GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement. That pause is now satisfied; Slice 1.8 is resumed and Design Revision 2 is authorized but not yet produced. The competitive comparison remains planned research only and has not been executed.
 
 ## Slice records
 

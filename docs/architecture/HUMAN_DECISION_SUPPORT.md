@@ -132,9 +132,9 @@ Slice 2.3 should later define a `ContextManifest` distinguishing stable `STATIC 
 
 ## Roadmap and authority
 
-Phase 1 comprises Slices 1.1–1.10, with 1.1–1.7 closed; 1.8 open but paused for architecture/roadmap re-baseline; 1.9 Human Decision Support and 1.10 Source/Promotion Enforcement planned and unauthorized. Phase 2 Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3.1 remains future and requires 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, plus explicit Phase 3 opening. These statements do not open any Slice.
+Phase 1 comprises Slices 1.1–1.10, with 1.1–1.7 closed; 1.8 open and resumed for active Design Revision 2 work; 1.9 Human Decision Support and 1.10 Source/Promotion Enforcement planned and unauthorized. Phase 2 Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3.1 remains future and requires 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, plus explicit Phase 3 opening. These statements do not open any Slice.
 
-Slice 1.8 Design Revision 1 remains preserved pre-rebaseline input: not reviewed, not Human-accepted, and not implementation authority. Design review has not started; implementation remains unauthorized. No Design Revision 2 is produced by this re-baseline.
+Slice 1.8 Design Revision 1 remains preserved pre-rebaseline input: not reviewed, not Human-accepted, and not implementation authority. Slice 1.8 is resumed under `RLY-S18-RESUME-001`; Design Revision 2 is authorized under `RLY-S18-DESIGN-AUTH-002` but has not yet been produced. Design review has not started and implementation remains unauthorized.
 
 ## Source provenance and limitations
 
