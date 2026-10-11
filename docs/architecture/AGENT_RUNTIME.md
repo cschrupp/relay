@@ -293,7 +293,7 @@ Experiment success is evidence only. It does not automatically make the integrat
 
 ```text
 Phase 1 hardening:
-  1.8 Governance Assurance Reference Model — OPEN / PAUSED FOR ARCHITECTURE AND ROADMAP REBASE
+  1.8 Governance Assurance Reference Model — IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION
   1.9 Human Decision Support and Governance Review Surface — PLANNED
   1.10 Canonical Source and Promotion Enforcement — PLANNED
 
@@ -309,7 +309,7 @@ Phase 3:
 
 Provider/model capability and routing remain beneath or alongside the runtime abstraction. Role, work-packet, workspace, evaluation, rework, acceptance, and promotion semantics remain Relay-owned.
 
-Decision Support is a derived, non-authoritative projection between verification and Human Authority. It makes a decision legible but creates no evidence, evaluation, authority, or lifecycle transition. See `HUMAN_DECISION_SUPPORT.md`. Slice 3.1 depends on 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening authority.
+Decision Support is a cross-cutting, derived, non-authoritative projection at every policy-required Human decision, including before design or implementation evidence exists; it is not a lifecycle stage after verification. It makes a decision legible but creates no evidence, evaluation, authority, or lifecycle transition. See `HUMAN_DECISION_SUPPORT.md`. Slice 3.1 depends on 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening authority.
 
 The canonical Build Plan is authoritative for roadmap state.
 

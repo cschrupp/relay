@@ -17,7 +17,7 @@ Phase 0:                  COMPLETE / CLOSED
 Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1-1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
-Slice 1.8:                OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
+Slice 1.8:                IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION
 Slice 1.9:                Human Decision Support — PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 1.10:               Canonical Source / Promotion — PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 2:                  OPEN
@@ -29,7 +29,7 @@ Phase 3:                  NOT OPEN / NOT AUTHORIZED
 Real-project execution:   NOT AUTHORIZED
 ```
 
-The current authority is recorded in `docs/CURRENT_BASELINE.md`.
+The current authority is recorded in `docs/CURRENT_BASELINE.md`. Slice 1.8 documentation is implemented under `RLY-S18-IMPL-AUTH-001` and awaits independent implementation evaluation; it is not technically accepted or promoted. See the [implementation handoff](docs/reviews/SLICE_1_8_IMPLEMENTATION_HANDOFF.md).
 
 ## What Relay currently provides
 
@@ -84,7 +84,7 @@ See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md` and `docs/refere
 
 ```text
 Phase 1 — Deterministic Governance Foundation
-  1.8 Governance Assurance Reference Model        OPEN — DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
+  1.8 Governance Assurance Reference Model        IMPLEMENTED / AWAITING INDEPENDENT IMPLEMENTATION EVALUATION
   1.9 Human Decision Support & Governance Review  PLANNED / NOT AUTHORIZED
   1.10 Canonical Source and Promotion Enforcement PLANNED / NOT AUTHORIZED
 

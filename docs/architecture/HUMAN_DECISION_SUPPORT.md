@@ -106,7 +106,7 @@ Possible tags are scope, rationale, architecture, risk, evidence, evaluation, au
 
 ## GovernanceProfile in a decision basis
 
-When a future policy requires a `GovernanceProfile`, a Decision Card should be able to show the selected profile and version, why it applies, required Human decisions, required evidence, protected verification assets and their mutation permissions, evaluator separation, and expected promotion predicates. It should let the Human ask why the profile applies, why gates are required, whether policy permits a stricter or weaker profile, what would justify a permitted downgrade, and who may modify protected assets. The projection explains Relay policy; it cannot select or relax the profile. Profile taxonomy and selection mechanics remain future Slice 1.8 design work.
+When a future policy requires a `GovernanceProfile`, a Decision Card should be able to show the selected profile and version, why it applies, required Human decisions, required evidence, protected verification assets and their mutation permissions, evaluator separation, and expected promotion predicates. It should let the Human ask why the profile applies, why gates are required, whether policy permits a stricter or weaker profile, what would justify a permitted downgrade, and who may modify protected assets. The projection explains Relay policy; it cannot select or relax the profile. The accepted Slice 1.8 semantics are consolidated in [Governance Assurance Reference Model](GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md). No fixed profile taxonomy or selection engine is implemented. Profile changes are prospective: later downgrade cannot authorize earlier work retroactively. Evaluator review may be a prerequisite to asset mutation, but mutation authority must be explicit and policy-recognized.
 
 Governance-effectiveness telemetry may later surface the profile/rationale, expected governance cost, actual decision/evaluation latency, rework, clarity feedback, and the ratio of mechanical to Human gates. This is a future Slice 1.9 direction, not a dashboard design. Telemetry remains non-authoritative and cannot relax a profile [SRC-DORA-CHANGE-APPROVAL].
 
@@ -132,9 +132,9 @@ Slice 2.3 should later define a `ContextManifest` distinguishing stable `STATIC 
 
 ## Roadmap and authority
 
-Phase 1 comprises Slices 1.1–1.10, with 1.1–1.7 closed; 1.8 open with its combined design Human-accepted and implementation unauthorized; 1.9 Human Decision Support and 1.10 Source/Promotion Enforcement planned and unauthorized. Phase 2 Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3.1 remains future and requires 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, plus explicit Phase 3 opening. These statements do not open any Slice.
+Phase 1 comprises Slices 1.1–1.10, with 1.1–1.7 closed; 1.8 open with its combined design Human-accepted and documentation implemented / awaiting independent implementation evaluation; 1.9 Human Decision Support and 1.10 Source/Promotion Enforcement planned and unauthorized. Phase 2 Slice 2.1 is closed; 2.2–2.4 remain planned and unauthorized. Phase 3.1 remains future and requires 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, plus explicit Phase 3 opening. These statements do not open any Slice.
 
-Slice 1.8 Design Revision 1 remains preserved historical design input. Slice 1.8 was resumed under `RLY-S18-RESUME-001`; Revision 2 plus Rework 1 are independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`. Implementation remains unauthorized.
+Slice 1.8 Design Revision 1 remains preserved historical design input. Slice 1.8 was resumed under `RLY-S18-RESUME-001`; Revision 2 plus Rework 1 are independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`. Documentation implementation is authorized by `RLY-S18-IMPL-AUTH-001` and now awaits independent implementation evaluation. No Decision Card, Q&A, profile engine, or telemetry collection is implemented.
 
 ## Source provenance and limitations
 
