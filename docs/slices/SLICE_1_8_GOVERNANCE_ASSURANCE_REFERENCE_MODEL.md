@@ -1,6 +1,6 @@
 # Slice 1.8 - Governance Assurance Reference Model
 
-**Status:** OPEN / RESUMED / DESIGN REVISION 2 AUTHORIZED / ACTIVE DESIGN / IMPLEMENTATION NOT AUTHORIZED
+**Status:** OPEN / DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
 **Phase:** 1 - Accepted Baseline / Hardening Active
 **Opening authority:** RLY-S18-OPEN-001 - OPEN
 **Design authority:** RLY-S18-DESIGN-AUTH-001 - AUTHORIZED (historical scope); RLY-S18-DESIGN-AUTH-002 - AUTHORIZED FOR REVISION 2
@@ -20,9 +20,9 @@ Design authority: RLY-S18-DESIGN-AUTH-001 — HISTORICAL / STILL VALID WHERE NOT
 Resume: RLY-S18-RESUME-001 — RESUMED
 Supplemental design authority: RLY-S18-DESIGN-AUTH-002 — AUTHORIZED FOR REVISION 2
 Design Revision 1: PRESERVED PRE-REBASELINE INPUT
-Design Revision 2: AUTHORIZED / NOT YET PRODUCED
-Design review: NOT STARTED
-Human design acceptance: NOT GRANTED
+Design Revision 2 + Rework 1: PRODUCED / INDEPENDENTLY ACCEPTED
+Design evaluation: RLY-S18-DESIGN-EVAL-002 — ACCEPT
+Human design acceptance: RLY-S18-DESIGN-ACCEPT-001 — ACCEPTED
 Implementation: NOT AUTHORIZED
 ```
 
@@ -56,7 +56,7 @@ Define and review:
 
 ### Future Design Revision 2 expectations
 
-The complete amended re-baseline has now been independently reviewed, Human-accepted, canonically promoted, and Slice 1.8 resumed. Design Revision 2 is authorized under `RLY-S18-DESIGN-AUTH-002` and should address the requirements above as design questions. It should also resolve applicable versus unknown versus missing decision-basis components; define profile-selection inputs without a final scoring formula or taxonomy; prohibit implementer/runtime/provider self-downgrade; define policy-authorized escalation and durable downgrade; distinguish implementation tests from policy/acceptance/evaluation assets; and preserve tri-valued `PASS / FAIL / UNKNOWN` semantics. This is the governing expectation list for the authorized Revision 2; no Revision 2 artifact has yet been produced.
+The complete amended re-baseline was independently reviewed, Human-accepted, and canonically promoted. Slice 1.8 was resumed; Revision 2 and Rework 1 now address the requirements above and are accepted as part of the combined design. It should also resolve applicable versus unknown versus missing decision-basis components; define profile-selection inputs without a final scoring formula or taxonomy; prohibit implementer/runtime/provider self-downgrade; define policy-authorized escalation and durable downgrade; distinguish implementation tests from policy/acceptance/evaluation assets; and preserve tri-valued `PASS / FAIL / UNKNOWN` semantics. This expectation list is satisfied by the accepted Revision 2 Amendment and Rework 1, subject to their exact precedence over Revision 1.
 
 ## Out of scope
 
@@ -90,6 +90,6 @@ Slice 1.8 is opened administratively under RLY-S18-OPEN-001.
 
 Design was originally authorized under `RLY-S18-DESIGN-AUTH-001`; after the canonical re-baseline, Slice 1.8 resumed under `RLY-S18-RESUME-001` and supplemental Revision-2 design authority is `RLY-S18-DESIGN-AUTH-002`. These authorities permit architecture, contract, and detailed design work only.
 
-Design acceptance does not authorize implementation. Implementation requires separate explicit authorization.
+Human design acceptance is recorded as `RLY-S18-DESIGN-ACCEPT-001`. It does not authorize implementation; implementation requires separate explicit authorization.
 
 The opening and design-authorization records authorize design work but no implementation transition. After the design is produced and independently reviewed by Sol, Human design acceptance remains a separate gate.

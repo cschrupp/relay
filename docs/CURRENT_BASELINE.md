@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 active design under Revision 2 authority; Phase 2 open; agent execution unauthorized
+**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 design accepted / implementation not authorized; Phase 2 open; agent execution unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -15,7 +15,7 @@ ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7: COMPLETE / ACCEPTED / CLOSED
 Slice 1.8 — Governance Assurance Reference Model:
   OPEN; RLY-S18-OPEN-001; resumed by RLY-S18-RESUME-001;
-  Design Revision 2 authorized by RLY-S18-DESIGN-AUTH-002;
+  combined design accepted by RLY-S18-DESIGN-ACCEPT-001;
   implementation NOT AUTHORIZED; design review NOT STARTED
 Slice 1.9 — Human Decision Support & Governance Review Surface:
   PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -84,7 +84,7 @@ Human technical acceptance: RLY-S21-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 Roadmap re-baseline: RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
-Slice 1.8 — Governance Assurance Reference Model: OPEN / RESUMED — RLY-S18-RESUME-001 / DESIGN REVISION 2 AUTHORIZED — RLY-S18-DESIGN-AUTH-002 / IMPLEMENTATION NOT AUTHORIZED
+Slice 1.8 — Governance Assurance Reference Model: OPEN / DESIGN ACCEPTED — RLY-S18-DESIGN-ACCEPT-001 / IMPLEMENTATION NOT AUTHORIZED
 Slice 1.9 — Human Decision Support and Governance Review Surface: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.2 — Role Contracts: PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -109,7 +109,7 @@ Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens a
 
 ```text
 Current Phase 1 roadmap:
-1.8 — Governance Assurance Reference Model: OPEN / ACTIVE DESIGN / REVISION 2 AUTHORIZED
+1.8 — Governance Assurance Reference Model: OPEN / DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
 1.9 — Human Decision Support and Governance Review Surface: PLANNED / NOT OPEN / NOT AUTHORIZED
 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 
@@ -126,7 +126,7 @@ This ordering places assurance and promotion hardening beneath later agent auton
 
 ## 1B.1 Strategic amendment state
 
-`RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` authorized the documentation and architecture re-baseline, which is now independently accepted, Human-accepted, and canonically promoted. The prior pause incorporated workflow interoperability, risk-adaptive governance through a future GovernanceProfile, Protected Verification Assets, and governance-effectiveness measurement. Slice 1.8 has resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Design Revision 2 is authorized under `RLY-S18-DESIGN-AUTH-002` but has not yet been produced.
+`RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` authorized the documentation and architecture re-baseline, which is now independently accepted, Human-accepted, and canonically promoted. The prior pause incorporated workflow interoperability, risk-adaptive governance through a future GovernanceProfile, Protected Verification Assets, and governance-effectiveness measurement. Slice 1.8 has resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains preserved pre-rebaseline input, not reviewed, not Human-accepted, and not implementation authority. Design Revision 2 and Rework 1 are independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`; implementation is not authorized.
 
 ```text
 Relay:

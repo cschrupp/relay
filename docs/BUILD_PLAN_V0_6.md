@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Phase 1 deterministic governance foundation; Slice 1.8 active design under Revision 2 authority; Phase 2 open
+**Status:** Current living implementation plan — Phase 1 deterministic governance foundation; Slice 1.8 design accepted / implementation not authorized; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -19,7 +19,7 @@ ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1–1.7: COMPLETE / ACCEPTED / CLOSED
 Slice 1.8 — Governance Assurance Reference Model:
   OPEN; RLY-S18-OPEN-001; RESUMED under RLY-S18-RESUME-001;
-  DESIGN REVISION 2 AUTHORIZED under RLY-S18-DESIGN-AUTH-002;
+  DESIGN ACCEPTED under RLY-S18-DESIGN-ACCEPT-001;
   implementation NOT AUTHORIZED
 Slice 1.9 — Human Decision Support & Governance Review Surface:
   PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -160,6 +160,8 @@ RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001 — AUTHORIZED
 Slice 1.8 pause history: RLY-S18-PAUSE-001 — SATISFIED BY CANONICAL REBASELINE PROMOTION
 Slice 1.8 resume: RLY-S18-RESUME-001 — RESUMED
 Supplemental design authority: RLY-S18-DESIGN-AUTH-002 — AUTHORIZED FOR REVISION 2
+Combined design evaluation: RLY-S18-DESIGN-EVAL-002 — ACCEPT
+Human design acceptance: RLY-S18-DESIGN-ACCEPT-001 — ACCEPTED
 
 Slice 1.8 — Governance Assurance Reference Model:
 OPEN — RLY-S18-OPEN-001 / RESUMED — RLY-S18-RESUME-001 / DESIGN REVISION 2 AUTHORIZED — RLY-S18-DESIGN-AUTH-002 / IMPLEMENTATION NOT AUTHORIZED
@@ -240,7 +242,7 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 # 1B. Re-baselined development sequence
 
 ```text
-1.8  Governance Assurance Reference Model — OPEN / ACTIVE DESIGN / REVISION 2 AUTHORIZED
+1.8  Governance Assurance Reference Model — OPEN / DESIGN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
      -> design review has not started; implementation is unauthorized
 
 1.9  Human Decision Support and Governance Review Surface — PLANNED / NOT AUTHORIZED
@@ -265,7 +267,7 @@ Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Hu
 
 ## 1B.1 Strategic control-plane amendment — planned ownership
 
-This documentation-only amendment was authorized by `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` and has been canonically promoted. Slice 1.8 is now resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains preserved pre-rebaseline input, not reviewed or Human-accepted. Revision 2 is authorized under `RLY-S18-DESIGN-AUTH-002` but has not yet been produced. No implementation is authorized.
+This documentation-only amendment was authorized by `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001` and has been canonically promoted. Slice 1.8 is now resumed under `RLY-S18-RESUME-001`; Design Revision 1 remains preserved pre-rebaseline input, not reviewed or Human-accepted. Revision 2 and Rework 1 have been independently accepted under `RLY-S18-DESIGN-EVAL-002` and Human-accepted under `RLY-S18-DESIGN-ACCEPT-001`. No implementation is authorized.
 
 ```text
 Relay:
@@ -946,7 +948,7 @@ Roadmap re-baseline:
 RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 
 Slice 1.8:
-OPEN / RESUMED — RLY-S18-RESUME-001 / DESIGN REVISION 2 AUTHORIZED — RLY-S18-DESIGN-AUTH-002 / IMPLEMENTATION NOT AUTHORIZED
+OPEN / DESIGN ACCEPTED — RLY-S18-DESIGN-ACCEPT-001 / IMPLEMENTATION NOT AUTHORIZED
 
 Slice 1.9 — Human Decision Support and Governance Review Surface:
 PLANNED / NOT OPEN / NOT AUTHORIZED
