@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Phase 1 deterministic governance foundation; Slice 1.8 COMPLETE / ACCEPTED / CLOSED under RLY-S18-CLOSE-EVAL-001; Phase 2 open
+**Status:** Current living product and architecture proposal — Slice 1.8 COMPLETE / ACCEPTED / CLOSED; Slice 1.9 implementation complete / technically accepted / closure-ready under RLY-S19-CLOSE-AUTH-001; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -111,7 +111,10 @@ Accepted technical candidate: 35046bb378808a1325ecb84eace5aacd3040ca98
 Exact closure candidate: 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 
 Slice 1.9 - Human Decision Support and Governance Review Surface:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Accepted candidate: 77ad34cf47828464a430ebdbecf1b816f158ae55
+RLY-S19-EVAL-003 — ACCEPT; RLY-S19-ACCEPT-001 — ACCEPTED
+RLY-S19-CLOSE-AUTH-001 — AUTHORIZED; independent closure evaluation PENDING
 
 Slice 1.10 - Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -138,7 +141,7 @@ Real-project agent execution:
 NOT AUTHORIZED
 ```
 
-The development frontier intentionally returns to Phase 1 hardening before opening Slice 2.2. Slice 1.8's accepted governance-assurance reference model is implemented, technically accepted, and closed following `RLY-S18-CLOSE-EVAL-001 — ACCEPT` at exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is planned to design decision support; Slice 1.10 carries the former source/promotion enforcement proposal.
+The development frontier includes Slice 1.9 Human Decision Support implementation, which is complete and technically accepted at `77ad34cf47828464a430ebdbecf1b816f158ae55`; independent closure evaluation remains pending under `RLY-S19-CLOSE-AUTH-001`. Slice 1.10 carries the former source/promotion enforcement proposal and remains unopened and unauthorized.
 
 After those hardening prerequisites, Phase 2 continues upward from the accepted AgentRuntime boundary:
 
@@ -195,7 +198,7 @@ Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the 
 Roadmap re-baseline authority:
 `RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED`
 
-Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 Human Decision Support, Slice 1.10 Source/Promotion, and Slices 2.2–2.4 remain planned, unopened, and unauthorized.
+Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is OPEN and closure-ready at accepted candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`; independent closure evaluation is pending. Slice 1.10 and Slices 2.2–2.4 remain planned, unopened, and unauthorized.
 
 # 5. Implementation and closure governance
 

@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Phase 1 deterministic governance foundation; Slice 1.8 complete / accepted / closed under RLY-S18-CLOSE-EVAL-001; Phase 2 open
+**Status:** Current living implementation plan — Slice 1.8 complete / accepted / closed; Slice 1.9 implementation complete / technically accepted / closure-ready under RLY-S19-CLOSE-AUTH-001; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -26,7 +26,10 @@ Slice 1.8 — Governance Assurance Reference Model:
   Accepted technical candidate: 35046bb378808a1325ecb84eace5aacd3040ca98
   Exact closure candidate: 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 Slice 1.9 — Human Decision Support & Governance Review Surface:
-  PLANNED / NOT OPEN / NOT AUTHORIZED
+  OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+  Accepted candidate: 77ad34cf47828464a430ebdbecf1b816f158ae55
+  RLY-S19-EVAL-003 — ACCEPT; RLY-S19-ACCEPT-001 — ACCEPTED
+  RLY-S19-CLOSE-AUTH-001 — AUTHORIZED; independent closure evaluation PENDING
 Slice 1.10 — Canonical Source and Promotion Enforcement:
   PLANNED / NOT OPEN / NOT AUTHORIZED
 
@@ -172,7 +175,7 @@ Slice 1.8 — Governance Assurance Reference Model:
 COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 
 Slice 1.9 — Human Decision Support and Governance Review Surface:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
 
 Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -221,7 +224,7 @@ ACCEPTED BASELINE / HARDENING ACTIVE
         +-- M0 viability: PASSED / HUMAN-ACCEPTED
         +-- Slices 1.1-1.7: CLOSED
         +-- 1.8 Governance Assurance Reference Model      COMPLETE / ACCEPTED / CLOSED
-        +-- 1.9 Human Decision Support                   PLANNED
+        +-- 1.9 Human Decision Support                   CLOSURE-READY; closure evaluation PENDING
         +-- 1.10 Canonical Source / Promotion Enforcement PLANNED
                  |
                  +-------------------------------+
@@ -250,7 +253,7 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 1.8  Governance Assurance Reference Model — COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
      -> closed after independent closure evaluation RLY-S18-CLOSE-EVAL-001 — ACCEPT
 
-1.9  Human Decision Support and Governance Review Surface — PLANNED / NOT AUTHORIZED
+1.9  Human Decision Support and Governance Review Surface — CLOSURE-READY; independent closure evaluation PENDING
      -> future legibility and decision-scoped review design
 
 1.10 Canonical Source and Promotion Enforcement — PLANNED / NOT AUTHORIZED
@@ -966,7 +969,7 @@ Slice 1.8:
 COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 
 Slice 1.9 — Human Decision Support and Governance Review Surface:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
 
 Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED

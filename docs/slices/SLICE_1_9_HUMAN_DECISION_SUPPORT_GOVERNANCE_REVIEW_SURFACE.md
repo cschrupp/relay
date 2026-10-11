@@ -1,9 +1,11 @@
 # Slice 1.9 — Human Decision Support and Governance Review Surface
 
-**Status:** FUTURE / PLANNED — NOT OPEN / NOT AUTHORIZED  
+**Status:** OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 **Phase:** 1 — Deterministic Governance Foundation  
 **Roadmap authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-001`
 **Strategic amendment authority:** `RLY-P1-ASSURANCE-DECISION-SUPPORT-REBASE-STRATEGIC-AMEND-001`
+
+**Current implementation record:** Accepted candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`; `RLY-S19-EVAL-003 — ACCEPT`; `RLY-S19-ACCEPT-001 — ACCEPTED`. Finalization authority `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; independent closure evaluation PENDING. The proposal below records the original planning scope and is retained as historical context; the accepted combined design governs implementation semantics.
 
 ## Objective
 
@@ -29,6 +31,6 @@ These additions are scope direction only. They do not define dashboards, telemet
 
 This proposal does not define new Human Authority semantics, automatic authorization or acceptance, Q&A-triggered lifecycle mutation, mandatory comprehension tests or quizzes, new agent execution, promotion enforcement, Role Contract implementation, ContextManifest implementation, or workspace enforcement.
 
-## Hard stop
+## Historical proposal boundary
 
-Presence on the roadmap is not opening or design authority. A separate Human Authority is required to open this Slice and authorize design. No behavior is authorized by this proposal.
+The original proposal below was planning context and correctly stated that roadmap presence did not open the Slice. That status was superseded by separate design, implementation, acceptance, and finalization authorities. The accepted implementation is closure-ready; independent closure evaluation remains pending. Slice 1.10, Phase 3, and real-project agent execution remain unauthorized.
