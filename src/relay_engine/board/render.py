@@ -1936,16 +1936,35 @@ def _slice_situation_section(detail: SliceDetail) -> str:
         )
     )
     completed_facts: list[str] = []
+    execution_records = sorted(
+        detail.relevant_execution_records,
+        key=lambda record: (record.resulting_lifecycle_revision, record.execution_id),
+    )
+    if execution_records:
+        movements = "".join(
+            "<li>"
+            f"Lifecycle revision {_e(record.source_lifecycle_revision)} → "
+            f"{_e(record.resulting_lifecycle_revision)}; execution "
+            f"<code>{_e(record.execution_id)}</code>; selected gate "
+            f"<code>{_e(record.selected_gate_id)}@r{_e(record.selected_gate_revision)}</code>; "
+            f"completed {_e(record.occurred_at)}."
+            "</li>"
+            for record in execution_records
+        )
+        completed_facts.append(
+            f"<li><strong>Completed governed lifecycle movements</strong><ol>{movements}</ol></li>"
+        )
     if lifecycle is not None and lifecycle.phase in _TERMINAL_LIFECYCLE_PHASES:
-        completed_facts.append(f"Lifecycle terminal state: {_e(lifecycle.phase.value)}.")
+        completed_facts.append(f"<li>Lifecycle terminal state: {_e(lifecycle.phase.value)}.</li>")
     if manual.accepted_result is not None:
-        completed_facts.append(accepted_state)
+        completed_facts.append(f"<li>{accepted_state}</li>")
     if manual.current_evaluation is not None:
-        completed_facts.append(evaluation_state)
+        completed_facts.append(f"<li>{evaluation_state}</li>")
     completed = (
-        "<ul>" + "".join(f"<li>{fact}</li>" for fact in completed_facts) + "</ul>"
+        "<ul>" + "".join(completed_facts) + "</ul>"
         if completed_facts
-        else "<p>No terminal lifecycle or accepted-result record is projected.</p>"
+        else "<p>No completed governed movement, terminal lifecycle state, accepted result, "
+        "or evaluation record is projected.</p>"
     )
 
     return (

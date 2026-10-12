@@ -99,7 +99,7 @@ from relay_engine.manual_evaluation.models import (
     ManualEvaluationRecord,
     SliceResultRecord,
 )
-from relay_engine.persistence.records import GateEvaluationRecord
+from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
 from relay_engine.promotion.models import (
     CanonicalPromotionPolicyBindingResolution,
@@ -271,6 +271,32 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
         decision_support=DecisionSupportProjection(),
     )
     return board, detail
+
+
+def _execution_record(
+    *,
+    execution_id: ExecutionId,
+    event_id: str,
+    evaluation_record_id: str,
+    source_revision: int,
+    resulting_revision: int,
+    selected_gate_revision: int,
+    occurred_at: datetime,
+) -> ExecutionRecord:
+    return ExecutionRecord(
+        execution_id=execution_id,
+        gate_evaluation_record_id=evaluation_record_id,
+        slice_id=SLICE_ID,
+        baseline_id=BASELINE_ID,
+        selected_gate_id=GATE_ID,
+        selected_gate_revision=selected_gate_revision,
+        source_lifecycle_revision=source_revision,
+        resulting_lifecycle_revision=resulting_revision,
+        event_id=event_id,
+        actor=ACTOR,
+        occurred_at=occurred_at,
+        reason="Authorized lifecycle movement.",
+    )
 
 
 def _governance_summary(detail: SliceDetail) -> str:
@@ -855,3 +881,66 @@ def test_project_index_escapes_project_data_and_search_is_escaped() -> None:
     filtered = render_project_board(board, query='" autofocus onfocus="alert(1)')
     assert 'value="&quot; autofocus onfocus=&quot;alert(1)"' in filtered
     assert 'value="" autofocus' not in filtered
+
+
+def test_slice_situation_summarizes_completed_governed_movements_in_revision_order() -> None:
+    _, detail = _fixture()
+    first = _execution_record(
+        execution_id="exec_018f47c1-7b2c-7abc-8def-123456789051",
+        event_id="evt_018f47c1-7b2c-7abc-8def-123456789053",
+        evaluation_record_id="geval_018f47c1-7b2c-7abc-8def-123456789055",
+        source_revision=0,
+        resulting_revision=1,
+        selected_gate_revision=1,
+        occurred_at=NOW,
+    )
+    second = _execution_record(
+        execution_id="exec_018f47c1-7b2c-7abc-8def-123456789052",
+        event_id="evt_018f47c1-7b2c-7abc-8def-123456789054",
+        evaluation_record_id="geval_018f47c1-7b2c-7abc-8def-123456789056",
+        source_revision=1,
+        resulting_revision=2,
+        selected_gate_revision=2,
+        occurred_at=datetime(2026, 10, 3, tzinfo=UTC),
+    )
+    detail = detail.model_copy(update={"relevant_execution_records": (second, first)})
+
+    html = render_slice_detail(detail)
+    completed_start = html.index("<h3>What has completed</h3>")
+    completed_end = html.index("<h3>What remains deterministically visible</h3>")
+    completed = html[completed_start:completed_end]
+
+    assert "Lifecycle phase: <strong>READY</strong>" in html
+    assert "Completed governed lifecycle movements" in completed
+    assert "revision 0 → 1" in completed
+    assert "revision 1 → 2" in completed
+    assert completed.index("revision 0 → 1") < completed.index("revision 1 → 2")
+    assert first.execution_id in completed
+    assert second.execution_id in completed
+    assert f"{GATE_ID}@r1" in completed
+    assert f"{GATE_ID}@r2" in completed
+    assert str(NOW) in completed
+    assert str(second.occurred_at) in completed
+
+    situation_position = html.index('id="slice-situation-heading"')
+    execution_evidence_position = html.index("<section><h2>Execution evidence</h2>")
+    assert situation_position < execution_evidence_position
+    assert "Execution evidence" in html
+    assert first.execution_id in html[execution_evidence_position:]
+    assert second.execution_id in html[execution_evidence_position:]
+
+
+def test_active_slice_with_no_execution_records_has_truthful_empty_completion_state() -> None:
+    _, detail = _fixture()
+
+    html = render_slice_detail(detail)
+    completed_start = html.index("<h3>What has completed</h3>")
+    completed_end = html.index("<h3>What remains deterministically visible</h3>")
+    completed = html[completed_start:completed_end]
+
+    assert "Lifecycle phase: <strong>READY</strong>" in html
+    assert (
+        "No completed governed movement, terminal lifecycle state, accepted result, "
+        "or evaluation record is projected."
+    ) in completed
+    assert "Completed governed lifecycle movements" not in completed
