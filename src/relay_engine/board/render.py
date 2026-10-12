@@ -6,15 +6,25 @@ from urllib.parse import quote, urlencode
 
 from relay_engine.board.models import (
     BoardProjection,
+    CanonicalGovernanceInspection,
+    CanonicalTargetInspection,
     DependencyProjection,
     EvaluationBasisStatus,
+    FrontierCardinality,
     GateProjection,
+    LiveObservationStatus,
     ProjectBoard,
+    ProjectSliceIdentity,
+    PromotionAttemptInspection,
+    SituationBlocker,
+    SituationNextWorkState,
     SliceCard,
     SliceDetail,
+    StaleSituationState,
 )
 from relay_engine.decision_support.models import DecisionCard, DecisionKind, DecisionStatement
-from relay_engine.domain.models import Baseline
+from relay_engine.domain._base import DomainModel
+from relay_engine.domain.models import AcceptanceCriterion, Baseline
 from relay_engine.governance.models import (
     ChangeSurfaceStatus,
     EvaluationOutcome,
@@ -28,10 +38,16 @@ from relay_engine.human_control.models import (
     HumanActionKind,
     HumanActionProjection,
 )
-from relay_engine.lifecycle.models import BlockageStatus
+from relay_engine.lifecycle.models import BlockageStatus, LifecyclePhase
 from relay_engine.manual_evaluation.models import (
     ManualEvaluationActionKind,
     ManualEvaluationProjection,
+)
+from relay_engine.promotion.models import (
+    CanonicalPromotionPolicyBindingResolution,
+    CanonicalRefHealth,
+    binding_digest,
+    policy_digest,
 )
 
 _STYLE = """
@@ -268,6 +284,309 @@ def _card(card: SliceCard, project_id: str) -> str:
     )
 
 
+def _slice_identity_item(identity: ProjectSliceIdentity, project_id: str) -> str:
+    return (
+        f'<li><a href="{_slice_url(project_id, identity.slice_id)}">'
+        f"{_e(identity.title)}</a> — <code>{_e(identity.slice_id)}</code>; "
+        f"definition revision {_e(identity.definition_revision)}</li>"
+    )
+
+
+def _slice_identity_group(
+    label: str, identities: tuple[ProjectSliceIdentity, ...], project_id: str
+) -> str:
+    if not identities:
+        return f"<h3>{_e(label)}</h3><p>None.</p>"
+    return (
+        f"<h3>{_e(label)} ({len(identities)})</h3><ul>"
+        + "".join(_slice_identity_item(item, project_id) for item in identities)
+        + "</ul>"
+    )
+
+
+def _situation_blocker_item(blocker: SituationBlocker, project_id: str) -> str:
+    return (
+        f'<li><a href="{_slice_url(project_id, blocker.slice.slice_id)}">'
+        f"{_e(blocker.slice.title)}</a> — {_e(blocker.source.value)} / "
+        f"{_e(blocker.code)}: {_e(blocker.summary)}</li>"
+    )
+
+
+def _stale_state_item(state: StaleSituationState, project_id: str) -> str:
+    return (
+        f'<li><a href="{_slice_url(project_id, state.slice.slice_id)}">'
+        f"{_e(state.slice.title)}</a> — {_e(state.kind.value)} is STALE</li>"
+    )
+
+
+def _project_situation(board: ProjectBoard) -> str:
+    situation = board.situation
+    project_id = board.project.id
+    child_ids_by_slice = {row.slice_id: row.child_slice_ids for row in situation.hierarchy}
+    superseded_by_by_slice = {
+        row.slice_id: row.superseded_by_slice_id for row in situation.hierarchy
+    }
+    if situation.frontier_cardinality is FrontierCardinality.NONE:
+        frontier = "<p>No active leaf frontier exists.</p>"
+    elif situation.frontier_cardinality is FrontierCardinality.ONE:
+        frontier = (
+            "<p>Current frontier:</p><ul>"
+            + "".join(
+                _slice_identity_item(item, project_id) for item in situation.leaf_active_frontiers
+            )
+            + "</ul>"
+        )
+    else:
+        frontier = (
+            "<p>Current frontiers: <strong>MULTIPLE</strong></p><ul>"
+            + "".join(
+                _slice_identity_item(item, project_id) for item in situation.leaf_active_frontiers
+            )
+            + "</ul>"
+        )
+
+    blockers = (
+        "<p>No explicit current lifecycle or gate blockers are projected.</p>"
+        if not situation.blockers
+        else "<ul>"
+        + "".join(_situation_blocker_item(item, project_id) for item in situation.blockers)
+        + "</ul>"
+    )
+    stale = (
+        "<p>No stale lifecycle or gate-evaluation state is projected.</p>"
+        if not situation.stale_states
+        else "<ul>"
+        + "".join(_stale_state_item(item, project_id) for item in situation.stale_states)
+        + "</ul>"
+    )
+    gates = (
+        "<p>No current outgoing Human/governance gates are projected.</p>"
+        if not situation.current_outgoing_gates
+        else "<ul>"
+        + "".join(
+            "<li>"
+            f'<a href="{_slice_url(project_id, item.slice.slice_id)}">'
+            f"{_e(item.slice.title)}</a> — {_gate_item(item.gate)}</li>"
+            for item in situation.current_outgoing_gates
+        )
+        + "</ul>"
+    )
+    hierarchy_rows: list[str] = []
+    for card in board.cards:
+        superseded_by = superseded_by_by_slice[card.slice_id]
+        hierarchy_rows.append(
+            "<li>"
+            f'<a href="{_slice_url(project_id, card.slice_id)}">{_e(card.title)}</a> '
+            f"(<code>{_e(card.slice_id)}</code>): parent "
+            f"{_e(card.parent_slice_id) if card.parent_slice_id else 'none'}; children "
+            f"{', '.join(_e(item) for item in child_ids_by_slice[card.slice_id]) or 'none'}; "
+            f"dependencies {', '.join(_e(item) for item in card.dependency_ids) or 'none'}; "
+            f"superseded by {_e(superseded_by) if superseded_by else 'none'}"
+            "</li>"
+        )
+    hierarchy = "".join(hierarchy_rows)
+    next_work = (
+        "<p>Next governed work is NOT DETERMINABLE from current lifecycle and gate facts.</p>"
+        if situation.next_work_state is SituationNextWorkState.NOT_DETERMINABLE
+        else "<p>Current frontier gate targets are shown below. This is a navigation aid; "
+        "it does not establish gate passage or authorization.</p><ul>"
+        + "".join(
+            "<li>"
+            f'<a href="{_slice_url(project_id, item.slice.slice_id)}">'
+            f"{_e(item.slice.title)}</a> — target phase "
+            f"{_e(item.gate.target_phase.value)}; gate <code>{_e(item.gate.gate_id)}"
+            f"@r{_e(item.gate.gate_revision)}</code>; "
+            f"evaluation {_e(_evaluation_status(item.gate.evaluation_basis_status))}"
+            "</li>"
+            for item in situation.next_governed_work
+        )
+        + "</ul>"
+    )
+
+    return (
+        '<section aria-labelledby="project-situation-heading">'
+        '<h2 id="project-situation-heading">Project Situation</h2>'
+        f"<p>Project: {_e(board.project.name)} (<code>{_e(board.project.id)}</code>); "
+        f"primary repository: {_e(board.project.primary_repository.path)}.</p>"
+        f"<p>Project definition revision: {_e(board.project_definition_revision)}.</p>"
+        f"{frontier}"
+        f"{_slice_identity_group('DONE', situation.done_slices, project_id)}"
+        f"{_slice_identity_group('ACTIVE', situation.active_slices, project_id)}"
+        f"{_slice_identity_group('NOT STARTED', situation.not_started_slices, project_id)}"
+        f"{_slice_identity_group('SUPERSEDED', situation.superseded_slices, project_id)}"
+        f"{_slice_identity_group('CANCELLED', situation.cancelled_slices, project_id)}"
+        f"<h3>Current blockers</h3>{blockers}"
+        f"<h3>Current stale states</h3>{stale}"
+        f"<h3>Current outgoing Human/governance gates</h3>{gates}"
+        f"<h3>Slice hierarchy and declared dependencies</h3><ul>{hierarchy}</ul>"
+        f"<h3>Next governed work</h3>{next_work}"
+        "</section>"
+    )
+
+
+def _record_details(label: str, model: DomainModel) -> str:
+    return (
+        f"<details><summary>{_e(label)}</summary>"
+        f"<pre><code>{_e(model.model_dump_json(indent=2))}</code></pre></details>"
+    )
+
+
+def _promotion_attempt_item(attempt: PromotionAttemptInspection, health: CanonicalRefHealth) -> str:
+    body = (
+        f"<p>Promotion ID: <code>{_e(attempt.promotion_id)}</code>; original Human "
+        f"authority verification: {_e(attempt.original_authority_status.value)}.</p>"
+    )
+    if attempt.intent is None:
+        body += "<p>Promotion intent: NOT AVAILABLE / UNKNOWN.</p>"
+    else:
+        body += (
+            "<p>Intent subject digest: "
+            f"<code>{_e(attempt.intent.subject_digest)}</code>; Human promotion authority: "
+            f"<code>{_e(attempt.intent.authorization_id)}</code>; expected parent: "
+            f"<code>{_e(attempt.intent.expected_parent.sha)}</code>; target: "
+            f"<code>{_e(attempt.intent.target_commit.sha)}</code>; binding: "
+            f"<code>{_e(attempt.intent.binding.binding_id)}</code> revision "
+            f"{_e(attempt.intent.binding.revision)}; policy digest: "
+            f"<code>{_e(attempt.intent.subject.promotion_policy_digest)}</code>; binding "
+            f"digest: <code>{_e(binding_digest(attempt.intent.binding))}</code>; "
+            f"governance-basis digest: "
+            f"<code>{_e(attempt.intent.governance_basis_digest)}</code>; authority digest: "
+            f"<code>{_e(attempt.intent.authorization_subject_digest)}</code>; required-check "
+            f"observation digest: "
+            f"<code>{_e(attempt.intent.required_check_observation_digest)}</code>; "
+            f"source-control digest: "
+            f"<code>{_e(attempt.intent.source_control_observation_digest)}</code>.</p>"
+        )
+        body += _record_details("Exact promotion intent", attempt.intent)
+    if attempt.result is None:
+        body += "<p>Terminal promotion result: NOT RECORDED.</p>"
+    else:
+        observed_head = (
+            "UNKNOWN" if attempt.result.observed_head is None else _e(attempt.result.observed_head)
+        )
+        source_control_digest = (
+            "UNAVAILABLE"
+            if attempt.result.source_control_observation_digest is None
+            else _e(attempt.result.source_control_observation_digest)
+        )
+        body += (
+            f"<p>Terminal promotion result: <strong>"
+            f"{_e(attempt.result.outcome.value)}</strong>; observed head "
+            f"<code>{observed_head}"
+            f"</code>; source-control digest: <code>{source_control_digest}</code>.</p>"
+            + _record_details("Exact terminal promotion result", attempt.result)
+        )
+    if not attempt.reconciliations:
+        body += "<p>Reconciliation: none recorded.</p>"
+    else:
+        body += "<h5>Reconciliation records</h5>"
+        body += "".join(
+            "<p>Reconciliation <code>"
+            f"{_e(record.reconciliation_id)}</code>; authority "
+            f"<code>{_e(record.authorization_id)}</code>; subject digest "
+            f"<code>{_e(record.reconciliation_subject_digest)}</code>; original policy "
+            f"<code>{_e(record.original_policy_digest)}</code>; source-control digest "
+            f"<code>{_e(record.current_source_control_observation_digest)}</code>.</p>"
+            + _record_details(
+                f"Exact reconciliation {_e(record.reconciliation_id)}",
+                record,
+            )
+            for record in attempt.reconciliations
+        )
+    if health is CanonicalRefHealth.UNKNOWN:
+        body += "<p>Canonical health is UNKNOWN; stored causal validity is not established.</p>"
+    return f"<li>{body}</li>"
+
+
+def _canonical_target(target: CanonicalTargetInspection) -> str:
+    target_status = (
+        "ESTABLISHED"
+        if target.current_binding is not None
+        and target.binding_resolution
+        in {
+            CanonicalPromotionPolicyBindingResolution.MANAGED,
+            CanonicalPromotionPolicyBindingResolution.UNMANAGED,
+        }
+        else "NOT ESTABLISHED"
+    )
+    body = (
+        f"<p>Durable canonical governance target: <strong>{target_status}</strong>.</p>"
+        f"<p>Repository: {_e(target.repository.path)} (<code>"
+        f"{_e(target.repository.id)}</code>); canonical ref: "
+        f"<code>{_e(target.canonical_ref)}</code>.</p>"
+        f"<p>Binding resolution: <strong>{_e(target.binding_resolution.value)}</strong>; "
+        f"canonical ref health: <strong>{_e(target.health.value)}</strong>.</p>"
+        f"<p>Current authorizability: {_e(target.current_authorizability.value)}; "
+        f"execution eligibility: {_e(target.current_eligibility.value)}.</p>"
+    )
+    if target.current_binding is None:
+        body += "<p>Current durable binding: UNKNOWN_OR_INVALID; it is not assumed UNMANAGED.</p>"
+    else:
+        current_binding = target.current_binding
+        binding_policy_digest = (
+            "NOT_APPLICABLE"
+            if current_binding.policy is None
+            else _e(policy_digest(current_binding.policy))
+        )
+        body += (
+            "<p>Current binding identity: <code>"
+            f"{_e(current_binding.binding_id)}</code>; revision "
+            f"{_e(current_binding.revision)}; state <strong>"
+            f"{_e(current_binding.state.value)}</strong>; binding digest "
+            f"<code>{_e(binding_digest(current_binding))}</code>; policy digest "
+            f"<code>{binding_policy_digest}</code>; "
+            f"authorization <code>{_e(current_binding.authorization_id)}</code>.</p>"
+        )
+        body += _record_details("Exact current durable binding", target.current_binding)
+    if target.reconciliation_preparation_state is not None:
+        body += (
+            "<p>Reconciliation preparation: "
+            f"{_e(target.reconciliation_preparation_state.value)}.</p>"
+        )
+    body += (
+        f"<p>Live source-control observation: "
+        f"{_e(target.live_observation_status.value)}; conformance: "
+        f"<strong>{_e(target.live_source_control_conformance.value)}</strong>.</p>"
+    )
+    if target.live_observation_status is LiveObservationStatus.UNAVAILABLE:
+        body += "<p>Current conformance is UNKNOWN because no live observation was supplied.</p>"
+    elif target.live_source_control_observation is not None:
+        body += _record_details(
+            "Exact supplied source-control observation",
+            target.live_source_control_observation,
+        )
+    if not target.promotion_attempts:
+        body += "<p>No promotion intents, terminal results, or reconciliations are recorded.</p>"
+    else:
+        body += "<h4>Promotion attempts and evidence</h4><ul>"
+        body += "".join(
+            _promotion_attempt_item(attempt, target.health) for attempt in target.promotion_attempts
+        )
+        body += "</ul>"
+    return (
+        f"<section><h3>Canonical ref <code>{_e(target.canonical_ref)}</code></h3>{body}</section>"
+    )
+
+
+def _canonical_governance(inspection: CanonicalGovernanceInspection) -> str:
+    if not inspection.durable_target_established:
+        body = (
+            "<p><strong>Durable canonical governance target: NOT ESTABLISHED.</strong></p>"
+            "<p>No branch name is assumed. A missing binding is not UNMANAGED.</p>"
+        )
+    else:
+        body = ""
+    if not inspection.targets:
+        body += "<p>Live source-control observation: UNAVAILABLE; current conformance: UNKNOWN.</p>"
+    else:
+        body += "".join(_canonical_target(target) for target in inspection.targets)
+    return (
+        '<section aria-labelledby="canonical-governance-heading">'
+        '<h2 id="canonical-governance-heading">Canonical Governance Inspection</h2>'
+        f"{body}</section>"
+    )
+
+
 def render_project_index(projection: BoardProjection) -> str:
     """Render the verified current Project index."""
 
@@ -295,6 +614,8 @@ def render_project_board(board: ProjectBoard, query: str = "") -> str:
         f'<nav aria-label="Primary"><a href="/">All Projects</a></nav>'
         f"<p>Project ID: <code>{_e(board.project.id)}</code></p>"
         f"<p>Primary repository: {_e(board.project.primary_repository.path)}</p>"
+        f"{_project_situation(board)}"
+        f"{_canonical_governance(board.canonical_governance)}"
         '<form method="get"><label for="q">Search Slice title or exact ID</label> '
         f'<input id="q" name="q" value="{_e(query)}">'
         '<button type="submit">Search</button></form>'
@@ -1502,6 +1823,162 @@ def _decision_support_section(detail: SliceDetail) -> str:
     return "".join(body)
 
 
+_TERMINAL_LIFECYCLE_PHASES = {
+    LifecyclePhase.ACCEPTED,
+    LifecyclePhase.SUPERSEDED,
+    LifecyclePhase.CANCELLED,
+}
+
+
+def _slice_situation_section(detail: SliceDetail) -> str:
+    """Render the current Slice situation before its detailed history sections."""
+
+    value = detail.slice_definition.value
+    lifecycle = detail.lifecycle
+    phase = "NOT_STARTED" if lifecycle is None else lifecycle.phase.value
+    validity = "NOT_APPLICABLE" if lifecycle is None else lifecycle.validity.value
+    blockage = "NOT_APPLICABLE" if lifecycle is None else lifecycle.blockage.status.value
+    if lifecycle is not None and lifecycle.blockage.status is BlockageStatus.BLOCKED:
+        blocker_list = (
+            "<ul>"
+            + "".join(
+                f"<li>{_e(reason.code)}: {_e(reason.summary)}</li>"
+                for reason in lifecycle.blockage.reasons
+            )
+            + "</ul>"
+        )
+    else:
+        blocker_list = "<p>No lifecycle blockage is recorded.</p>"
+
+    parent = (
+        "<p>Parent: none.</p>"
+        if detail.parent is None
+        else "<p>Parent:</p><ul>" + _dependency_item(detail.parent, detail.project.id) + "</ul>"
+    )
+    children = (
+        "<p>Children: none.</p>"
+        if not detail.children
+        else "<p>Children:</p><ul>"
+        + "".join(_dependency_item(item, detail.project.id) for item in detail.children)
+        + "</ul>"
+    )
+    dependencies = (
+        "<p>Dependencies: none.</p>"
+        if not detail.dependencies
+        else "<p>Declared dependencies:</p><ul>"
+        + "".join(_dependency_item(item, detail.project.id) for item in detail.dependencies)
+        + "</ul>"
+    )
+    in_scope = "".join(f"<li>{_e(item)}</li>" for item in value.scope.in_scope)
+    out_of_scope = "".join(f"<li>{_e(item)}</li>" for item in value.scope.out_of_scope)
+    required_criteria = tuple(item for item in value.acceptance_criteria if item.required)
+    optional_criteria = tuple(item for item in value.acceptance_criteria if not item.required)
+
+    def criteria_list(criteria: tuple[AcceptanceCriterion, ...]) -> str:
+        if not criteria:
+            return "<p>None declared.</p>"
+        items = "".join(
+            f"<li><strong>{_e(item.key)}</strong>: {_e(item.statement)}</li>" for item in criteria
+        )
+        return f"<ul>{items}</ul>"
+
+    gate_content = (
+        "<p>No current outgoing gates.</p>"
+        if not detail.outgoing_gates
+        else "<ul>" + "".join(_gate_item(item) for item in detail.outgoing_gates) + "</ul>"
+    )
+    action_items = "".join(
+        "<li>"
+        f"{_e(action.kind.value)}"
+        + (
+            ""
+            if action.gate_id is None
+            else f" — gate <code>{_e(action.gate_id)}@r{_e(action.gate_revision)}</code>"
+        )
+        + "</li>"
+        for action in detail.human_actions.actions
+    )
+    decision_cards = "".join(
+        f"<li>{_e(card.decision.identity.decision_kind.value)} — "
+        f"{_e(card.state.value)}: {_e(card.title)}</li>"
+        for card in detail.decision_support.cards
+    )
+    human_state = (
+        "<ul>" + decision_cards + action_items + "</ul>"
+        if decision_cards or action_items
+        else "<p>No current Human action or Decision Card is projected.</p>"
+    )
+
+    manual = detail.manual_evaluation
+    result_state = (
+        "No current result is projected."
+        if manual.current_result is None
+        else (
+            f"Current result <code>{_e(manual.current_result.result_id)}</code>; "
+            f"baseline <code>{_e(manual.current_result.result_baseline_id)}</code>."
+        )
+    )
+    evaluation_state = (
+        "No current manual evaluation is projected."
+        if manual.current_evaluation is None
+        else (
+            f"Current manual evaluation <code>{_e(manual.current_evaluation.evaluation_id)}"
+            f"</code>: {_e(manual.current_evaluation.outcome.value)}; subject result "
+            f"<code>{_e(manual.current_evaluation.result_id)}</code>."
+        )
+    )
+    accepted_state = (
+        "No accepted result is projected."
+        if manual.accepted_result is None
+        else (
+            f"Accepted result <code>{_e(manual.accepted_result.result_id)}</code>; commit "
+            f"<code>{_e(manual.accepted_result.commit)}</code>."
+        )
+    )
+    completed_facts: list[str] = []
+    if lifecycle is not None and lifecycle.phase in _TERMINAL_LIFECYCLE_PHASES:
+        completed_facts.append(f"Lifecycle terminal state: {_e(lifecycle.phase.value)}.")
+    if manual.accepted_result is not None:
+        completed_facts.append(accepted_state)
+    if manual.current_evaluation is not None:
+        completed_facts.append(evaluation_state)
+    completed = (
+        "<ul>" + "".join(f"<li>{fact}</li>" for fact in completed_facts) + "</ul>"
+        if completed_facts
+        else "<p>No terminal lifecycle or accepted-result record is projected.</p>"
+    )
+
+    return (
+        '<section aria-labelledby="slice-situation-heading">'
+        '<h2 id="slice-situation-heading">Slice Situation</h2>'
+        f"<p>Title: {_e(value.title)}; Slice ID: <code>{_e(value.id)}</code>; "
+        f"definition revision {_e(detail.slice_definition.definition_revision)}.</p>"
+        f"<p>Lifecycle phase: <strong>{_e(phase)}</strong>; validity: "
+        f"{_e(validity)}; blockage: {_e(blockage)}.</p>{blocker_list}"
+        f"<h3>Parent, children, and dependencies</h3>{parent}{children}{dependencies}"
+        f"<h3>In scope</h3><ul>{in_scope}</ul>"
+        f"<h3>Out of scope</h3><ul>{out_of_scope}</ul>"
+        "<p>Boundary definition: PRESENT. Automated scope-drift assessment: "
+        "NOT REPRESENTED. Convergence assessment: NOT REPRESENTED. Human review is "
+        "REQUIRED when the declared boundary itself is questioned.</p>"
+        "<p>Explicit objective: NOT REPRESENTED IN CURRENT RELAY MODEL. Investment "
+        "appetite: NOT REPRESENTED IN CURRENT RELAY MODEL. Convergence / architectural-"
+        "drift assessment: NOT REPRESENTED IN CURRENT RELAY MODEL.</p>"
+        f"<h3>Required acceptance criteria</h3>{criteria_list(required_criteria)}"
+        f"<h3>Optional acceptance criteria</h3>{criteria_list(optional_criteria)}"
+        "<p>Acceptance-criterion completion: NOT REPRESENTED IN CURRENT RELAY MODEL.</p>"
+        f"<h3>Current gates and evaluation</h3>{gate_content}"
+        f"<h3>Current Human authority state</h3>{human_state}"
+        f"<h3>Current result and evaluation state</h3><p>{result_state}</p>"
+        f"<p>{evaluation_state}</p><p>{accepted_state}</p>"
+        f"<h3>What has completed</h3>{completed}"
+        "<h3>What remains deterministically visible</h3>"
+        f"<p>Current lifecycle phase: {_e(phase)}. Current outgoing gates and their "
+        "basis freshness are shown above. Criterion completion is not represented.</p>"
+        "</section>"
+    )
+
+
 def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> str:
     """Render one complete Slice projection without database access."""
 
@@ -1513,6 +1990,7 @@ def render_slice_detail(detail: SliceDetail, csrf_token: str | None = None) -> s
         f"<p>Project: {_e(detail.project.name)} (<code>{_e(detail.project.id)}</code>); "
         f"definition revision {_e(detail.project_definition_revision)}.</p>"
         f"<p>Slice ID: <code>{_e(value.id)}</code></p>"
+        f"{_slice_situation_section(detail)}"
         f"{_governance_status_section(detail)}{_definition_section(detail)}"
         f"{_lifecycle_section(detail)}"
         f"{_observation_section(detail)}{_decision_support_section(detail)}"

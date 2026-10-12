@@ -317,7 +317,9 @@ def test_search_is_display_only_and_cannot_hide_integrity_failure(database_path:
     response = _request(app, "GET", f"/projects/{PROJECT_ID}?q=Board")
     assert response.status_code == 200
     assert "Board slice" in response.text
-    assert "Other slice" not in response.text
+    assert "Other slice" in response.text
+    lane_content = response.text.split('<div class="lanes">', maxsplit=1)[1]
+    assert "Other slice" not in lane_content
 
     corrupted = open_database(database_path, apply_migrations=False)
     payload = json.loads(

@@ -5,8 +5,10 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from relay_engine.board.inspection import project_project_situation
 from relay_engine.board.models import (
     BoardLane,
+    CanonicalGovernanceInspection,
     DependencyProjection,
     EvaluationBasisStatus,
     GateProjection,
@@ -103,6 +105,11 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
     board = ProjectBoard(
         project=project,
         project_definition_revision=1,
+        situation=project_project_situation((card,)),
+        canonical_governance=CanonicalGovernanceInspection(
+            durable_target_established=False,
+            targets=(),
+        ),
         lanes=tuple(BoardLane),
         cards=(card,),
     )
@@ -113,6 +120,11 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
         ProjectBoard(
             project=project,
             project_definition_revision=1,
+            situation=project_project_situation((card,)),
+            canonical_governance=CanonicalGovernanceInspection(
+                durable_target_established=False,
+                targets=(),
+            ),
             lanes=tuple(reversed(tuple(BoardLane))),
             cards=(card,),
         )

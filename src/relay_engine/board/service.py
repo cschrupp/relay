@@ -4,6 +4,10 @@ from sqlite3 import Connection
 
 from pydantic import ValidationError
 
+from relay_engine.board.inspection import (
+    project_canonical_governance,
+    project_project_situation,
+)
 from relay_engine.board.models import (
     BoardLane,
     BoardProjection,
@@ -42,6 +46,7 @@ from relay_engine.project_slice import (
     list_projects,
     list_slices,
 )
+from relay_engine.promotion.controls import SourceControlObservationV1
 
 
 def _lane_for(lifecycle: SliceLifecycle | None) -> BoardLane:
@@ -290,7 +295,12 @@ def project_index(database: RelayDatabase) -> BoardProjection:
         raise PersistenceIntegrityError("Project index projection is invalid") from error
 
 
-def project_board(database: RelayDatabase, project_id: ProjectId) -> ProjectBoard:
+def project_board(
+    database: RelayDatabase,
+    project_id: ProjectId,
+    *,
+    live_source_control_observations: tuple[SourceControlObservationV1, ...] = (),
+) -> ProjectBoard:
     """Project all current Slices and required evidence from one read snapshot."""
 
     try:
@@ -353,11 +363,21 @@ def project_board(database: RelayDatabase, project_id: ProjectId) -> ProjectBoar
                         evaluation_basis_status=status,
                     )
                 )
+            ordered_cards = _ordered_cards(cards)
+            situation = project_project_situation(ordered_cards)
+            canonical_governance = project_canonical_governance(
+                database,
+                connection,
+                project_snapshot.value,
+                live_source_control_observations=live_source_control_observations,
+            )
             return ProjectBoard(
                 project=project_snapshot.value,
                 project_definition_revision=project_snapshot.definition_revision,
+                situation=situation,
+                canonical_governance=canonical_governance,
                 lanes=tuple(BoardLane),
-                cards=_ordered_cards(cards),
+                cards=ordered_cards,
             )
     except ValidationError as error:
         raise PersistenceIntegrityError("Project board projection is invalid") from error

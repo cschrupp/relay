@@ -1,5 +1,6 @@
 """Deterministic derivation and full evaluation-observation identity tests."""
 
+import json
 from datetime import UTC, datetime
 from typing import cast
 
@@ -62,8 +63,10 @@ from relay_engine.persistence import (
     GateEvaluationRecord,
     PersistenceIntegrityError,
     insert_baseline,
+    insert_canonical_promotion_policy_binding,
     insert_gate_evaluation_record,
     insert_handover_gate,
+    insert_repository_mutation_authorization,
     open_database,
     persist_lifecycle_initialization,
 )
@@ -72,6 +75,34 @@ from relay_engine.project_slice import (
     create_project,
     create_slice,
 )
+from relay_engine.promotion.bindings import (
+    BindingTransitionState,
+    authorize_policy_binding_transition,
+    execute_policy_binding_transition,
+    prepare_policy_binding_transition,
+)
+from relay_engine.promotion.controls import (
+    NormalizedRulesetV1,
+    RulesetBypassActorV1,
+    SourceControlObservationV1,
+    source_control_observation_digest,
+)
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionPolicyBindingResolution,
+    CanonicalPromotionPolicyBindingState,
+    CanonicalPromotionPolicyBindingV1,
+    CanonicalPromotionPolicyV1,
+    CanonicalRefHealth,
+    GitHubRequiredCheckV1,
+    PromotionAuthorizability,
+    PromotionEligibilityState,
+    PromotionPropertyOutcome,
+    PromotionPropertyRequirementV1,
+    canonical_policy_binding_subject_digest,
+    policy_digest,
+)
+from relay_engine.repository_sync.models import RepositoryMutationAuthorization
 
 NOW = datetime(2026, 10, 2, 12, tzinfo=UTC)
 PROJECT_ID: ProjectId = "prj_018f47c1-7b2c-7abc-8def-123456789001"
@@ -195,6 +226,124 @@ def _database(path) -> object:
     return database
 
 
+def _managed_policy() -> CanonicalPromotionPolicyV1:
+    return CanonicalPromotionPolicyV1(
+        policy_id="cpol_018f47c1-7b2c-7abc-8def-123456789095",
+        canonical_branch="main",
+        promotion_app_id=41,
+        control_verifier_app_id=42,
+        integrity_ruleset_id=5,
+        writer_ruleset_id=6,
+        required_checks=(GitHubRequiredCheckV1(name="quality", expected_app_id=41),),
+        allowed_update_actor_app_id=41,
+        human_acceptance_must_bind_target=False,
+        independent_evaluation_must_bind_target=False,
+        promotion_property_requirements=(
+            PromotionPropertyRequirementV1(property_name="RELAY_FAIL_CLOSED"),
+        ),
+    )
+
+
+def _insert_managed_binding(database, canonical_ref: str) -> CanonicalPromotionPolicyBindingV1:
+    policy = _managed_policy()
+    subject = CanonicalPolicyBindingSubjectV1(
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        canonical_ref=canonical_ref,
+        expected_current_binding_id=None,
+        expected_current_revision=0,
+        expected_current_binding_digest=None,
+        target_revision=1,
+        target_state=CanonicalPromotionPolicyBindingState.MANAGED,
+        target_policy=policy,
+        target_policy_digest=policy_digest(policy),
+    )
+    authorization = RepositoryMutationAuthorization(
+        authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789094",
+        project_id=PROJECT_ID,
+        subject=subject,
+        subject_digest=canonical_policy_binding_subject_digest(subject),
+        actor=ACTOR,
+        granted_at=NOW,
+        reason="Authorize an exact test policy binding.",
+    )
+    insert_repository_mutation_authorization(database, authorization)
+    binding = CanonicalPromotionPolicyBindingV1(
+        binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789093",
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        canonical_ref=canonical_ref,
+        revision=1,
+        state=CanonicalPromotionPolicyBindingState.MANAGED,
+        policy=policy,
+        policy_digest=policy_digest(policy),
+        authorization_id=authorization.authorization_id,
+        supersedes_binding_id=None,
+        bound_at=NOW,
+    )
+    insert_canonical_promotion_policy_binding(database, binding)
+    return binding
+
+
+def _matching_source_control_observation(canonical_ref: str) -> SourceControlObservationV1:
+    conditions = (
+        ("ref_name.exclude", "[]"),
+        ("ref_name.include", json.dumps([canonical_ref])),
+    )
+    integrity = NormalizedRulesetV1(
+        ruleset_id=5,
+        version_id="51",
+        updated_at=NOW,
+        source_type="Repository",
+        source=REPOSITORY.path,
+        target="branch",
+        enforcement="active",
+        conditions=conditions,
+        rules=(
+            ("deletion", "{}"),
+            ("non_fast_forward", "{}"),
+            (
+                "required_status_checks",
+                json.dumps(
+                    {
+                        "required_status_checks": [{"context": "quality", "integration_id": 41}],
+                        "strict_required_status_checks_policy": True,
+                    }
+                ),
+            ),
+        ),
+        bypass_actors=(),
+    )
+    writer = NormalizedRulesetV1(
+        ruleset_id=6,
+        version_id="61",
+        updated_at=NOW,
+        source_type="Repository",
+        source=REPOSITORY.path,
+        target="branch",
+        enforcement="active",
+        conditions=conditions,
+        rules=(("update", json.dumps({"update_allows_fetch_and_merge": False})),),
+        bypass_actors=(
+            RulesetBypassActorV1(actor_type="Integration", actor_id=41, bypass_mode="always"),
+        ),
+    )
+    observation = SourceControlObservationV1(
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        github_repository_id=501,
+        github_node_id="R_501",
+        canonical_ref=canonical_ref,
+        verifier_app_id=42,
+        observed_at=NOW,
+        rulesets=(integrity, writer),
+        observation_digest="sha256:" + "0" * 64,
+    )
+    return observation.model_copy(
+        update={"observation_digest": source_control_observation_digest(observation)}
+    )
+
+
 def _persist_initial_lifecycle(database, slice_id: SliceId = SLICE_A) -> SliceLifecycle:
     state, event = initialize_lifecycle(
         slice_id,
@@ -254,6 +403,10 @@ def test_board_projection_orders_slices_and_keeps_relationships_navigational(tmp
 
         board = project_board(database, PROJECT_ID)
         assert board.lanes == tuple(BoardLane)
+        assert board.situation.leaf_active_frontiers == ()
+        assert len(board.situation.not_started_slices) == 3
+        assert board.canonical_governance.durable_target_established is False
+        assert board.canonical_governance.targets == ()
         assert tuple(card.title for card in board.cards) == (
             "Alpha",
             "beta",
@@ -274,6 +427,188 @@ def test_board_projection_orders_slices_and_keeps_relationships_navigational(tmp
         assert detail.children == ()
         assert detail.dependencies[0].title == "beta"
         assert detail.slice_definition.value.scope.out_of_scope == ("write state",)
+    finally:
+        database.close()
+
+
+def test_canonical_governance_projects_exact_binding_and_supplied_observation(tmp_path) -> None:
+    database = _database(tmp_path / "canonical-inspection.sqlite")
+    canonical_ref = "refs/heads/stable"
+    try:
+        preparation = prepare_policy_binding_transition(
+            database,
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            canonical_ref=canonical_ref,
+            target_state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+            target_policy=None,
+            control_observation=None,
+        )
+        assert preparation.state is BindingTransitionState.AUTHORIZABLE
+        authorization = authorize_policy_binding_transition(
+            database,
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789099",
+            preparation=preparation,
+            actor=ACTOR,
+            granted_at=NOW,
+            reason="Persist the explicit test binding.",
+        )
+        binding = execute_policy_binding_transition(
+            database,
+            preparation=preparation,
+            authorization_id=authorization.authorization_id,
+            binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789098",
+            bound_at=NOW,
+        )
+
+        supplied_observation = SourceControlObservationV1(
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            github_repository_id=100,
+            github_node_id="R_100",
+            canonical_ref=canonical_ref,
+            verifier_app_id=200,
+            observed_at=NOW,
+            rulesets=(),
+            observation_digest="sha256:" + "0" * 64,
+        )
+        board = project_board(
+            database,
+            PROJECT_ID,
+            live_source_control_observations=(supplied_observation,),
+        )
+
+        assert board.canonical_governance.durable_target_established is True
+        assert len(board.canonical_governance.targets) == 1
+        target = board.canonical_governance.targets[0]
+        assert target.canonical_ref == canonical_ref
+        assert target.current_binding == binding
+        assert target.binding_resolution is CanonicalPromotionPolicyBindingResolution.UNMANAGED
+        assert target.health is CanonicalRefHealth.HEALTHY
+        assert target.current_authorizability is PromotionAuthorizability.UNKNOWN
+        assert target.current_eligibility is PromotionEligibilityState.UNKNOWN
+        assert target.live_source_control_conformance is PromotionPropertyOutcome.UNKNOWN
+        assert target.live_observation_status.value == "SUPPLIED"
+        assert target.live_source_control_observation == supplied_observation
+    finally:
+        database.close()
+
+
+def test_canonical_governance_projects_managed_policy_and_supplied_conformance(tmp_path) -> None:
+    database = _database(tmp_path / "managed-canonical-inspection.sqlite")
+    canonical_ref = "refs/heads/main"
+    try:
+        binding = _insert_managed_binding(database, canonical_ref)
+        without_observation = project_board(database, PROJECT_ID)
+        unavailable = without_observation.canonical_governance.targets[0]
+        assert unavailable.binding_resolution is CanonicalPromotionPolicyBindingResolution.MANAGED
+        assert unavailable.current_binding == binding
+        assert unavailable.live_observation_status.value == "UNAVAILABLE"
+        assert unavailable.live_source_control_conformance is PromotionPropertyOutcome.UNKNOWN
+
+        observation = _matching_source_control_observation(canonical_ref)
+        with_observation = project_board(
+            database,
+            PROJECT_ID,
+            live_source_control_observations=(observation,),
+        )
+        target = with_observation.canonical_governance.targets[0]
+        assert target.binding_resolution is CanonicalPromotionPolicyBindingResolution.MANAGED
+        assert target.current_binding == binding
+        assert target.live_source_control_observation == observation
+        assert target.live_source_control_conformance is PromotionPropertyOutcome.PASS
+    finally:
+        database.close()
+
+
+def test_invalid_durable_binding_is_not_projected_as_unmanaged(tmp_path) -> None:
+    database = _database(tmp_path / "invalid-canonical-binding.sqlite")
+    canonical_ref = "refs/heads/never-assume-main"
+    try:
+        database.connection.execute(
+            "INSERT INTO canonical_promotion_policy_bindings "
+            "(binding_id, project_id, repository_id, canonical_ref, revision, state, "
+            "policy_digest, authorization_id, supersedes_binding_id, bound_at, payload_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "cpb_018f47c1-7b2c-7abc-8def-123456789097",
+                PROJECT_ID,
+                REPOSITORY.id,
+                canonical_ref,
+                1,
+                "UNMANAGED",
+                None,
+                "rma_018f47c1-7b2c-7abc-8def-123456789096",
+                None,
+                NOW.isoformat(),
+                "{malformed",
+            ),
+        )
+
+        board = project_board(database, PROJECT_ID)
+
+        assert board.canonical_governance.durable_target_established is False
+        target = board.canonical_governance.targets[0]
+        assert target.canonical_ref == canonical_ref
+        assert (
+            target.binding_resolution
+            is CanonicalPromotionPolicyBindingResolution.UNKNOWN_OR_INVALID
+        )
+        assert target.current_binding is None
+        assert target.canonical_ref.removeprefix("refs/heads/") != "main"
+    finally:
+        database.close()
+
+
+def test_invalid_promotion_causal_evidence_projects_unknown_health(tmp_path) -> None:
+    database = _database(tmp_path / "invalid-canonical-history.sqlite")
+    canonical_ref = "refs/heads/review-target"
+    promotion_id = "malformed-promotion-id"
+    parent_sha = "a" * 40
+    target_sha = "b" * 40
+    try:
+        database.connection.execute(
+            "INSERT INTO repository_promotion_intents "
+            "(promotion_id, project_id, repository_id, canonical_ref, subject_digest, "
+            "expected_parent_sha, target_sha, created_at, payload_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                promotion_id,
+                PROJECT_ID,
+                REPOSITORY.id,
+                canonical_ref,
+                "sha256:" + "1" * 64,
+                parent_sha,
+                target_sha,
+                NOW.isoformat(),
+                "{malformed",
+            ),
+        )
+        database.connection.execute(
+            "INSERT INTO repository_promotion_results "
+            "(promotion_id, project_id, repository_id, canonical_ref, target_sha, outcome, "
+            "observed_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                promotion_id,
+                PROJECT_ID,
+                REPOSITORY.id,
+                canonical_ref,
+                target_sha,
+                "VISIBLE_UNVERIFIED",
+                NOW.isoformat(),
+                "{malformed",
+            ),
+        )
+
+        board = project_board(database, PROJECT_ID)
+
+        target = board.canonical_governance.targets[0]
+        assert target.health is CanonicalRefHealth.UNKNOWN
+        assert len(target.promotion_attempts) == 1
+        attempt = target.promotion_attempts[0]
+        assert attempt.original_authority_status.value == "UNKNOWN"
+        assert attempt.intent is None
+        assert attempt.result is None
     finally:
         database.close()
 

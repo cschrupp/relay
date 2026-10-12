@@ -5,12 +5,18 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from relay_engine.board.inspection import project_project_situation
 from relay_engine.board.models import (
     BoardLane,
+    CanonicalGovernanceInspection,
+    CanonicalTargetInspection,
     DependencyProjection,
     EvaluationBasisStatus,
     GateProjection,
+    LiveObservationStatus,
     ProjectBoard,
+    PromotionAttemptInspection,
+    PromotionIntentAuthorityStatus,
     SliceCard,
     SliceDetail,
 )
@@ -95,6 +101,17 @@ from relay_engine.manual_evaluation.models import (
 )
 from relay_engine.persistence.records import GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
+from relay_engine.promotion.models import (
+    CanonicalPromotionPolicyBindingResolution,
+    CanonicalPromotionReconciliationV1,
+    CanonicalRefHealth,
+    PromotionAuthorizability,
+    PromotionEligibilityState,
+    PromotionPropertyOutcome,
+    PromotionResultOutcome,
+    ReconciliationPreparationState,
+    RepositoryPromotionResultV1,
+)
 
 NOW = datetime(2026, 10, 2, tzinfo=UTC)
 PROJECT_ID: ProjectId = "prj_018f47c1-7b2c-7abc-8def-123456789001"
@@ -136,6 +153,11 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
                 key="A01",
                 statement="<svg onload=alert(1)>",
                 required=True,
+            ),
+            AcceptanceCriterion(
+                key="A02",
+                statement="Optional display behavior.",
+                required=False,
             ),
         ),
     )
@@ -223,6 +245,11 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
     board = ProjectBoard(
         project=project,
         project_definition_revision=2,
+        situation=project_project_situation((card,)),
+        canonical_governance=CanonicalGovernanceInspection(
+            durable_target_established=False,
+            targets=(),
+        ),
         lanes=tuple(BoardLane),
         cards=(card,),
     )
@@ -378,6 +405,169 @@ def test_slice_detail_shows_escaped_older_evidence_and_typed_context() -> None:
     assert "Full recorded HandoverContext" in html
     assert "&quot;baseline_id&quot;" in html
     assert "Latest recorded evaluation on current durable basis" not in html
+
+
+def test_project_situation_and_canonical_inspection_precede_existing_lanes() -> None:
+    board, _ = _fixture()
+
+    html = render_project_board(board)
+
+    situation_position = html.index("Project Situation")
+    canonical_position = html.index("Canonical Governance Inspection")
+    lanes_position = html.index('<div class="lanes">')
+    assert situation_position < canonical_position < lanes_position
+    assert "Current frontier:" in html
+    assert "ACTIVE (1)" in html
+    assert "DONE" in html
+    assert "SUPERSEDED" in html
+    assert "CANCELLED" in html
+    assert "Durable canonical governance target: NOT ESTABLISHED" in html
+    assert "Live source-control observation: UNAVAILABLE" in html
+    assert "current conformance: UNKNOWN" in html
+    assert "No branch name is assumed" in html
+    assert 'class="lane"' in html
+
+
+def test_canonical_inspection_preserves_promotion_outcomes_exactly() -> None:
+    board, _ = _fixture()
+    outcomes = tuple(PromotionResultOutcome)
+    attempts: list[PromotionAttemptInspection] = []
+    for index, outcome in enumerate(outcomes, start=1):
+        promotion_id = f"prom_018f47c1-7b2c-7abc-8def-{index:012d}"
+        attempts.append(
+            PromotionAttemptInspection(
+                promotion_id=promotion_id,
+                intent=None,
+                original_authority_status=PromotionIntentAuthorityStatus.UNKNOWN,
+                result=RepositoryPromotionResultV1(
+                    promotion_id=promotion_id,
+                    project_id=PROJECT_ID,
+                    repository=REPOSITORY,
+                    canonical_ref="refs/heads/review-target",
+                    outcome=outcome,
+                    expected_parent=CommitRef(repository=REPOSITORY, sha="a" * 40),
+                    target_commit=CommitRef(repository=REPOSITORY, sha="b" * 40),
+                    observed_head=CommitRef(repository=REPOSITORY, sha="b" * 40),
+                    observed_at=NOW,
+                ),
+                reconciliations=(),
+            )
+        )
+    target = CanonicalTargetInspection(
+        repository=REPOSITORY,
+        canonical_ref="refs/heads/review-target",
+        binding_resolution=CanonicalPromotionPolicyBindingResolution.UNKNOWN_OR_INVALID,
+        current_binding=None,
+        health=CanonicalRefHealth.QUARANTINED,
+        current_authorizability=PromotionAuthorizability.UNKNOWN,
+        current_eligibility=PromotionEligibilityState.UNKNOWN,
+        reconciliation_preparation_state=ReconciliationPreparationState.UNKNOWN,
+        live_observation_status=LiveObservationStatus.UNAVAILABLE,
+        live_source_control_observation=None,
+        live_source_control_conformance=PromotionPropertyOutcome.UNKNOWN,
+        promotion_attempts=tuple(attempts),
+    )
+    inspection = CanonicalGovernanceInspection(
+        durable_target_established=False,
+        targets=(target,),
+    )
+    board_with_history = board.model_copy(update={"canonical_governance": inspection})
+
+    html = render_project_board(board_with_history)
+
+    assert "canonical ref health: <strong>QUARANTINED</strong>" in html
+    for outcome in outcomes:
+        assert f"<strong>{outcome.value}</strong>" in html
+    assert "Reconciliation preparation: UNKNOWN" in html
+    assert "Current conformance is UNKNOWN because no live observation was supplied." in html
+
+
+def test_canonical_inspection_shows_stored_reconciliation_provenance() -> None:
+    board, _ = _fixture()
+    promotion_id = "prom_018f47c1-7b2c-7abc-8def-123456789091"
+    reconciliation = CanonicalPromotionReconciliationV1(
+        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789090",
+        promotion_id=promotion_id,
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        canonical_ref="refs/heads/review-target",
+        original_visible_unverified_result_digest="sha256:" + "1" * 64,
+        target_commit=CommitRef(repository=REPOSITORY, sha="b" * 40),
+        authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789089",
+        reconciliation_subject_digest="sha256:" + "2" * 64,
+        original_binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789088",
+        original_binding_revision=1,
+        original_binding_digest="sha256:" + "3" * 64,
+        original_policy_digest="sha256:" + "4" * 64,
+        original_governance_basis_digest="sha256:" + "5" * 64,
+        current_required_check_observation_digest="sha256:" + "6" * 64,
+        current_source_control_observation_digest="sha256:" + "7" * 64,
+        reconciled_at=NOW,
+        reconciled_by=ActorRef(
+            kind=ActorKind.HUMAN,
+            id="act_018f47c1-7b2c-7abc-8def-123456789092",
+        ),
+    )
+    attempt = PromotionAttemptInspection(
+        promotion_id=promotion_id,
+        intent=None,
+        original_authority_status=PromotionIntentAuthorityStatus.UNKNOWN,
+        result=None,
+        reconciliations=(reconciliation,),
+    )
+    target = CanonicalTargetInspection(
+        repository=REPOSITORY,
+        canonical_ref="refs/heads/review-target",
+        binding_resolution=CanonicalPromotionPolicyBindingResolution.UNKNOWN_OR_INVALID,
+        current_binding=None,
+        health=CanonicalRefHealth.UNKNOWN,
+        current_authorizability=PromotionAuthorizability.UNKNOWN,
+        current_eligibility=PromotionEligibilityState.UNKNOWN,
+        reconciliation_preparation_state=None,
+        live_observation_status=LiveObservationStatus.UNAVAILABLE,
+        live_source_control_observation=None,
+        live_source_control_conformance=PromotionPropertyOutcome.UNKNOWN,
+        promotion_attempts=(attempt,),
+    )
+    board_with_history = board.model_copy(
+        update={
+            "canonical_governance": CanonicalGovernanceInspection(
+                durable_target_established=False,
+                targets=(target,),
+            )
+        }
+    )
+
+    html = render_project_board(board_with_history)
+
+    assert promotion_id in html
+    assert "Canonical health is UNKNOWN; stored causal validity is not established." in html
+    assert reconciliation.reconciliation_id in html
+    assert reconciliation.authorization_id in html
+    assert reconciliation.original_visible_unverified_result_digest in html
+
+
+def test_slice_situation_shows_declared_boundary_and_model_limitations_first() -> None:
+    _, detail = _fixture()
+
+    html = render_slice_detail(detail)
+
+    situation_position = html.index("Slice Situation")
+    governance_position = html.index("Governance status")
+    definition_position = html.index("<h2>Definition</h2>")
+    assert situation_position < governance_position < definition_position
+    assert "&lt;script&gt;scope()&lt;/script&gt;" in html
+    assert "&lt;b&gt;not HTML&lt;/b&gt;" in html
+    assert "Required acceptance criteria" in html
+    assert "Optional acceptance criteria" in html
+    assert "A01" in html and "A02" in html
+    assert "Explicit objective: NOT REPRESENTED IN CURRENT RELAY MODEL" in html
+    assert "Investment appetite: NOT REPRESENTED IN CURRENT RELAY MODEL" in html
+    assert "Automated scope-drift assessment: NOT REPRESENTED" in html
+    assert "Convergence assessment: NOT REPRESENTED" in html
+    assert "WITHIN SCOPE" not in html
+    assert "NO DRIFT" not in html
+    assert "ARCHITECTURE HEALTHY" not in html
     assert "READY is a phase and does not grant execution authorization" in html
 
 
