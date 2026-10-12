@@ -335,25 +335,33 @@ CANONICAL_PROMOTION_MIGRATION = Migration(
             repository_id TEXT NOT NULL,
             canonical_ref TEXT NOT NULL,
             subject_digest TEXT NOT NULL,
+            expected_parent_sha TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
             created_at TEXT NOT NULL,
             payload_json TEXT NOT NULL
         )""",
         """CREATE INDEX repository_promotion_intents_by_project_ref_subject
-        ON repository_promotion_intents(project_id, repository_id, canonical_ref,
-            subject_digest, promotion_id)""",
+        ON repository_promotion_intents(project_id, canonical_ref, subject_digest)""",
+        """CREATE INDEX repository_promotion_intents_by_parent_target
+        ON repository_promotion_intents(project_id, canonical_ref,
+            expected_parent_sha, target_sha)""",
         """CREATE TABLE repository_promotion_results (
             promotion_id TEXT PRIMARY KEY REFERENCES repository_promotion_intents(promotion_id),
             project_id TEXT NOT NULL REFERENCES projects(id),
             repository_id TEXT NOT NULL,
             canonical_ref TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
             outcome TEXT NOT NULL CHECK (outcome IN
                 ('SUCCEEDED', 'NOT_APPLIED', 'CONFLICT', 'VISIBLE_UNVERIFIED')),
-            completed_at TEXT NOT NULL,
+            observed_at TEXT NOT NULL,
             payload_json TEXT NOT NULL
         )""",
         """CREATE INDEX repository_promotion_results_by_project_ref_outcome
         ON repository_promotion_results(project_id, repository_id, canonical_ref,
             outcome, promotion_id)""",
+        """CREATE UNIQUE INDEX repository_promotion_results_unique_successful_target
+        ON repository_promotion_results(project_id, canonical_ref, target_sha)
+        WHERE outcome = 'SUCCEEDED'""",
         """CREATE TABLE repository_promotion_reconciliations (
             reconciliation_id TEXT PRIMARY KEY,
             promotion_id TEXT NOT NULL UNIQUE
@@ -464,7 +472,9 @@ REQUIRED_INDEXES = frozenset(
         "manual_evaluations_by_slice_result_sequence",
         "canonical_promotion_bindings_by_ref_revision",
         "repository_promotion_intents_by_project_ref_subject",
+        "repository_promotion_intents_by_parent_target",
         "repository_promotion_results_by_project_ref_outcome",
+        "repository_promotion_results_unique_successful_target",
         "repository_promotion_reconciliations_by_project_ref",
     }
 )

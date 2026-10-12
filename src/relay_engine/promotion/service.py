@@ -33,6 +33,8 @@ from relay_engine.persistence import (
     load_repository_mutation_authorization,
     load_repository_promotion_intent,
     load_repository_promotion_result,
+    load_repository_promotion_results_for_ref,
+    load_unresolved_repository_promotion_intent_for_subject,
 )
 from relay_engine.promotion.bindings import canonical_ref_health, resolve_canonical_policy_binding
 from relay_engine.promotion.controls import (
@@ -85,6 +87,13 @@ class RequiredCheckStatus(StrEnum):
     PASS = "PASS"
     FAIL = "FAIL"
     UNKNOWN = "UNKNOWN"
+
+
+class PromotionHeadExpectation(StrEnum):
+    """Exact canonical-ref state expected during one evidence observation."""
+
+    EXPECTED_PARENT = "EXPECTED_PARENT"
+    VISIBLE_TARGET = "VISIBLE_TARGET"
 
 
 class RequiredCheckObservationV1(PromotionModel):
@@ -270,9 +279,7 @@ class CanonicalPromotionService:
                 raise PromotionAlreadyCompletedConflict(
                     "promotion ID is terminal for a different exact request"
                 )
-            if prior_result.outcome is PromotionResultOutcome.SUCCEEDED:
-                return prior_result
-            raise PromotionAlreadyCompletedConflict("promotion attempt already has terminal result")
+            return prior_result
         evidence: _FreshPromotionEvidence | None = None
         if prior_intent is not None:
             if (
@@ -304,9 +311,7 @@ class CanonicalPromotionService:
                     reason="THIRD_HEAD",
                     observed_at=observed_at,
                 )
-            evidence = self.fresh_evidence(
-                request, observed_at=observed_at, allow_visible_target=True
-            )
+            evidence = self.fresh_evidence(request, observed_at=observed_at)
             if evidence.basis_digest != prior_intent.prewrite_basis_digest:
                 return self._append_terminal(
                     prior_intent,
@@ -318,12 +323,54 @@ class CanonicalPromotionService:
                     observed_at=observed_at,
                 )
         else:
+            current_head = self._current_head(request, observed_at=observed_at)
+            if current_head.sha == request.target_commit.sha:
+                visible_evidence = self.fresh_evidence(
+                    request,
+                    observed_at=observed_at,
+                    head_expectation=PromotionHeadExpectation.VISIBLE_TARGET,
+                )
+                successful_results = load_repository_promotion_results_for_ref(
+                    self._database,
+                    project_id=request.selection.project_id,
+                    repository_id=request.selection.repository.id,
+                    canonical_ref=request.canonical_ref,
+                )
+                for result in successful_results:
+                    if (
+                        result.outcome is PromotionResultOutcome.SUCCEEDED
+                        and result.target_commit == request.target_commit
+                    ):
+                        successful_intent = load_repository_promotion_intent(
+                            self._database, result.promotion_id
+                        )
+                        if (
+                            successful_intent is not None
+                            and successful_intent.subject_digest
+                            == canonical_promotion_subject_digest(visible_evidence.subject)
+                        ):
+                            return result
+                raise PromotionCanonicalRefChanged(
+                    "target is already visible without matching durable success evidence"
+                )
             evidence = self.fresh_evidence(request, observed_at=observed_at)
+            unresolved = load_unresolved_repository_promotion_intent_for_subject(
+                self._database,
+                project_id=request.selection.project_id,
+                canonical_ref=request.canonical_ref,
+                subject_digest=canonical_promotion_subject_digest(evidence.subject),
+            )
+            if unresolved is not None:
+                raise PromotionAlreadyCompletedConflict(
+                    "an older unresolved intent exists for this exact promotion subject"
+                )
 
         assert evidence is not None
         authorization = load_repository_mutation_authorization(self._database, authorization_id)
         if authorization is None:
             raise PromotionAuthorizationRequired("exact Human promotion authorization is missing")
+        if prior_intent is not None and authorization_id != prior_intent.authorization_id:
+            raise PromotionAuthorizationStale("retry must use the exact authority stored in intent")
         if (
             authorization.actor.kind is not ActorKind.HUMAN
             or authorization.project_id != request.selection.project_id
@@ -371,13 +418,7 @@ class CanonicalPromotionService:
             selection=request.selection, observed_at=observed_at
         )
         try:
-            self._github_client.update_git_ref(
-                token=write_token,
-                repository_path=request.selection.repository.path,
-                branch=request.canonical_ref.removeprefix("refs/heads/"),
-                commit_sha=request.target_commit.sha,
-                force=False,
-            )
+            self._write_canonical_ref(request, token=write_token)
         except GitHubRefUpdateRejected:
             visible = self._try_current_head(request, observed_at)
             if visible is not None and visible.sha == request.target_commit.sha:
@@ -398,11 +439,11 @@ class CanonicalPromotionService:
                     request, prior_intent, executor, observed_at, success_allowed=True
                 )
             if visible is not None and visible.sha == request.expected_parent.sha:
-                return self._append_terminal(
+                return self._retry_indeterminate_parent(
+                    request,
                     prior_intent,
-                    outcome=PromotionResultOutcome.NOT_APPLIED,
-                    observed_head=visible,
-                    reason="REF_UPDATE_NOT_VISIBLE",
+                    authorization_id=authorization_id,
+                    executor=executor,
                     observed_at=observed_at,
                 )
             return self._append_terminal(
@@ -416,12 +457,86 @@ class CanonicalPromotionService:
             request, prior_intent, executor, observed_at, success_allowed=True
         )
 
+    def _retry_indeterminate_parent(
+        self,
+        request: CanonicalPromotionRequestV1,
+        intent: RepositoryPromotionIntentV1,
+        *,
+        authorization_id: RepositoryMutationAuthorizationId,
+        executor: ActorRef,
+        observed_at: datetime,
+    ) -> RepositoryPromotionResultV1:
+        """Allow one same-process retry only after exact parent/basis revalidation."""
+
+        try:
+            evidence = self.fresh_evidence(request, observed_at=observed_at)
+        except Exception:
+            evidence = None
+        if evidence is None or not self._fresh_basis_matches_intent(evidence, intent):
+            return self._append_terminal(
+                intent,
+                outcome=PromotionResultOutcome.NOT_APPLIED,
+                observed_head=request.expected_parent,
+                reason="STALE_INTENT",
+                observed_at=observed_at,
+            )
+        authorization = load_repository_mutation_authorization(self._database, authorization_id)
+        if authorization_id != intent.authorization_id or not self._intent_authority_matches(
+            authorization, intent
+        ):
+            return self._append_terminal(
+                intent,
+                outcome=PromotionResultOutcome.NOT_APPLIED,
+                observed_head=request.expected_parent,
+                reason="AUTHORIZATION_STALE",
+                observed_at=observed_at,
+            )
+        properties = self._property_results(
+            evidence, governance=request.governance_basis, authorized=True
+        )
+        if any(item.outcome is not PromotionPropertyOutcome.PASS for item in properties):
+            return self._append_terminal(
+                intent,
+                outcome=PromotionResultOutcome.NOT_APPLIED,
+                observed_head=request.expected_parent,
+                reason="STALE_INTENT",
+                observed_at=observed_at,
+            )
+        self._require_write_profile(request)
+        token = self._github_integration.create_repository_write_token(
+            selection=request.selection, observed_at=observed_at
+        )
+        try:
+            self._write_canonical_ref(request, token=token)
+        except GitHubRefUpdateIndeterminate, GitHubRefUpdateRejected:
+            visible = self._try_current_head(request, observed_at)
+            if visible is not None and visible.sha == request.target_commit.sha:
+                return self._postwrite_result(
+                    request, intent, executor, observed_at, success_allowed=True
+                )
+            if visible is not None and visible.sha == request.expected_parent.sha:
+                return self._append_terminal(
+                    intent,
+                    outcome=PromotionResultOutcome.NOT_APPLIED,
+                    observed_head=visible,
+                    reason="RETRY_NOT_VISIBLE",
+                    observed_at=observed_at,
+                )
+            return self._append_terminal(
+                intent,
+                outcome=PromotionResultOutcome.CONFLICT,
+                observed_head=visible,
+                reason="RETRY_INDETERMINATE",
+                observed_at=observed_at,
+            )
+        return self._postwrite_result(request, intent, executor, observed_at, success_allowed=True)
+
     def fresh_evidence(
         self,
         request: CanonicalPromotionRequestV1,
         *,
         observed_at: datetime,
-        allow_visible_target: bool = False,
+        head_expectation: PromotionHeadExpectation = PromotionHeadExpectation.EXPECTED_PARENT,
     ) -> _FreshPromotionEvidence:
         selection = request.selection
         if request.expected_parent.sha == request.target_commit.sha:
@@ -432,7 +547,10 @@ class CanonicalPromotionService:
             repository_id=selection.repository.id,
             canonical_ref=request.canonical_ref,
         )
-        if health is not CanonicalRefHealth.HEALTHY and not allow_visible_target:
+        if (
+            health is not CanonicalRefHealth.HEALTHY
+            and head_expectation is PromotionHeadExpectation.EXPECTED_PARENT
+        ):
             raise PromotionNotEligible("canonical ref health is not HEALTHY")
         if health is CanonicalRefHealth.UNKNOWN:
             raise PromotionBasisUnknown("canonical ref health is unknown")
@@ -497,7 +615,9 @@ class CanonicalPromotionService:
         if head.object_type is not GitHubGitObjectType.COMMIT:
             raise PromotionBasisUnknown("canonical ref does not resolve to a commit")
         expected_head = (
-            request.target_commit.sha if allow_visible_target else request.expected_parent.sha
+            request.target_commit.sha
+            if head_expectation is PromotionHeadExpectation.VISIBLE_TARGET
+            else request.expected_parent.sha
         )
         if head.sha != expected_head:
             raise PromotionCanonicalRefChanged("canonical head is not the exact expected parent")
@@ -943,6 +1063,7 @@ class CanonicalPromotionService:
         observed_head: CommitRef | None,
         reason: str,
         observed_at: datetime,
+        reconciled_after_restart: bool = False,
     ) -> RepositoryPromotionResultV1:
         result = RepositoryPromotionResultV1(
             promotion_id=intent.promotion_id,
@@ -955,7 +1076,8 @@ class CanonicalPromotionService:
             observed_head=observed_head,
             reason_code=reason,
             source_control_observation_digest=intent.source_control_observation_digest,
-            completed_at=observed_at,
+            observed_at=observed_at,
+            reconciled_after_restart=reconciled_after_restart,
         )
         insert_repository_promotion_result(self._database, result)
         return result
@@ -971,23 +1093,25 @@ class CanonicalPromotionService:
     ) -> RepositoryPromotionResultV1:
         observed_head = self._try_current_head(request, observed_at)
         try:
-            fresh = self.fresh_evidence(request, observed_at=observed_at, allow_visible_target=True)
-            controls_match = (
-                fresh.control_observation.observation_digest
-                == intent.source_control_observation_digest
+            fresh = self.fresh_evidence(
+                request,
+                observed_at=observed_at,
+                head_expectation=PromotionHeadExpectation.VISIBLE_TARGET,
             )
-            checks_pass = (
-                required_checks_outcome(fresh.check_observation) is PromotionPropertyOutcome.PASS
+            authorization = load_repository_mutation_authorization(
+                self._database, intent.authorization_id
             )
+            basis_matches = self._fresh_basis_matches_intent(fresh, intent)
+            authority_matches = self._intent_authority_matches(authorization, intent)
         except Exception:
-            controls_match = False
-            checks_pass = False
+            basis_matches = False
+            authority_matches = False
         clean = (
             success_allowed
             and observed_head is not None
             and observed_head.sha == intent.target_commit.sha
-            and controls_match
-            and checks_pass
+            and basis_matches
+            and authority_matches
         )
         return self._append_terminal(
             intent,
@@ -1014,10 +1138,12 @@ class CanonicalPromotionService:
     ) -> RepositoryPromotionResultV1:
         authorization = load_repository_mutation_authorization(self._database, authorization_id)
         if (
-            authorization is None
+            authorization_id != intent.authorization_id
+            or authorization is None
             or authorization.actor.kind is not ActorKind.HUMAN
             or authorization.subject != intent.subject
             or authorization.subject_digest != intent.subject_digest
+            or authorization.subject_digest != intent.authorization_subject_digest
         ):
             return self._append_terminal(
                 intent,
@@ -1027,11 +1153,16 @@ class CanonicalPromotionService:
                 observed_at=observed_at,
             )
         try:
-            fresh = self.fresh_evidence(request, observed_at=observed_at, allow_visible_target=True)
+            fresh = self.fresh_evidence(
+                request,
+                observed_at=observed_at,
+                head_expectation=PromotionHeadExpectation.VISIBLE_TARGET,
+            )
         except Exception:
             fresh = None
         clean = (
             fresh is not None
+            and self._fresh_basis_matches_intent(fresh, intent)
             and fresh.check_observation.observation_digest
             == intent.required_check_observation_digest
             and fresh.control_observation.observation_digest
@@ -1047,6 +1178,41 @@ class CanonicalPromotionService:
             observed_head=intent.target_commit,
             reason="RESTART_RECONCILED" if clean else "RESTART_VISIBLE_UNVERIFIED",
             observed_at=observed_at,
+            reconciled_after_restart=clean,
+        )
+
+    @staticmethod
+    def _fresh_basis_matches_intent(
+        fresh: _FreshPromotionEvidence, intent: RepositoryPromotionIntentV1
+    ) -> bool:
+        if fresh.binding.policy is None:
+            return False
+        return (
+            fresh.subject == intent.subject
+            and fresh.basis_digest == intent.prewrite_basis_digest
+            and fresh.binding.binding_id == intent.binding.binding_id
+            and fresh.binding.revision == intent.binding.revision
+            and binding_digest(fresh.binding) == binding_digest(intent.binding)
+            and policy_digest(fresh.binding.policy) == policy_digest(intent.policy)
+            and fresh.check_observation.observation_digest
+            == intent.required_check_observation_digest
+            and fresh.control_observation.observation_digest
+            == intent.source_control_observation_digest
+        )
+
+    @staticmethod
+    def _intent_authority_matches(
+        authorization: RepositoryMutationAuthorization | None,
+        intent: RepositoryPromotionIntentV1,
+    ) -> bool:
+        return (
+            authorization is not None
+            and authorization.authorization_id == intent.authorization_id
+            and authorization.actor.kind is ActorKind.HUMAN
+            and authorization.project_id == intent.project_id
+            and authorization.subject == intent.subject
+            and authorization.subject_digest == intent.subject_digest
+            and authorization.subject_digest == intent.authorization_subject_digest
         )
 
     @staticmethod
@@ -1065,6 +1231,22 @@ class CanonicalPromotionService:
             raise PromotionAccessChanged(
                 "promotion requires the captured installation state and exact WRITE profile"
             )
+
+    def _write_canonical_ref(
+        self,
+        request: CanonicalPromotionRequestV1,
+        *,
+        token: GitHubInstallationToken,
+    ) -> None:
+        """Perform the sole non-force canonical ref update owned by this service."""
+
+        self._github_client.update_git_ref(
+            token=token,
+            repository_path=request.selection.repository.path,
+            branch=request.canonical_ref.removeprefix("refs/heads/"),
+            commit_sha=request.target_commit.sha,
+            force=False,
+        )
 
 
 def evaluate_required_check_runs(

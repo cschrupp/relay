@@ -46,7 +46,7 @@ def _json_arrays_to_tuples(value: object) -> object:
         }
         # A before-validator switches Pydantic into Python-mode validation, where
         # strict datetime fields no longer accept the ISO strings from JSON.
-        for key in ("bound_at", "accepted_at", "created_at", "completed_at", "reconciled_at"):
+        for key in ("bound_at", "accepted_at", "created_at", "observed_at", "reconciled_at"):
             timestamp = converted.get(key)
             if isinstance(timestamp, str):
                 converted[key] = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
@@ -571,7 +571,7 @@ class RepositoryPromotionResultV1(PromotionModel):
     reconciled_after_restart: bool = False
     reason_code: str | None = None
     source_control_observation_digest: ContentDigest | None = None
-    completed_at: datetime
+    observed_at: datetime
 
 
 class CanonicalPromotionReconciliationV1(PromotionModel):

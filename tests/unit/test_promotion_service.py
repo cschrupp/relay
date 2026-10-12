@@ -1,19 +1,31 @@
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import Mock
 
+import pytest
+
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, Project, RepositoryRef
-from relay_engine.integrations.github import GitHubCheckRun
+from relay_engine.integrations.github import GitHubCheckRun, GitHubGitObjectType
 from relay_engine.persistence import (
+    RelayDatabase,
+    insert_canonical_promotion_policy_binding,
+    insert_canonical_promotion_reconciliation,
     insert_repository_mutation_authorization,
+    insert_repository_promotion_intent,
+    insert_repository_promotion_result,
     load_repository_promotion_intent,
+    load_repository_promotion_result,
     open_database,
 )
 from relay_engine.project_slice import MutationMetadata, create_project
 from relay_engine.promotion.controls import SourceControlObservationV1
 from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
     CanonicalPromotionPolicyBindingState,
     CanonicalPromotionPolicyBindingV1,
     CanonicalPromotionPolicyV1,
+    CanonicalPromotionReconciliationV1,
     CanonicalPromotionSubjectV1,
     GitHubRequiredCheckV1,
     PromotionAcceptedResultRefV1,
@@ -22,12 +34,16 @@ from relay_engine.promotion.models import (
     PromotionPropertyOutcome,
     PromotionPropertyRequirementV1,
     PromotionResultOutcome,
+    ReconciliationPreparationState,
+    RepositoryPromotionIntentV1,
     RepositoryPromotionResultV1,
     binding_digest,
+    canonical_policy_binding_subject_digest,
     canonical_promotion_subject_digest,
     governance_basis_digest,
     policy_digest,
 )
+from relay_engine.promotion.reconciliation import CanonicalPromotionReconciliationService
 from relay_engine.promotion.service import (
     CanonicalPromotionRequestV1,
     CanonicalPromotionService,
@@ -39,6 +55,21 @@ from relay_engine.promotion.service import (
     required_checks_outcome,
 )
 from relay_engine.repository_sync.models import RepositoryMutationAuthorization
+
+
+@dataclass
+class _ExecutionCase:
+    database: RelayDatabase
+    service: CanonicalPromotionService
+    request: CanonicalPromotionRequestV1
+    actor: ActorRef
+    now: datetime
+    evidence: _FreshPromotionEvidence
+    github_client: Mock
+    promotion_id: str
+    authorization_id: str
+    expected_result: RepositoryPromotionResultV1
+    head: dict[str, str]
 
 
 def _run(
@@ -119,7 +150,7 @@ def test_missing_ambiguous_wrong_identity_and_non_success_checks_fail_closed() -
     assert required_checks_outcome(failed) is PromotionPropertyOutcome.FAIL
 
 
-def test_execution_commits_intent_before_nonforce_ref_update(monkeypatch) -> None:
+def _execution_case(monkeypatch):
     repository = RepositoryRef(
         id="repo_018f47c1-7b2c-7abc-8def-123456789002",
         host="github.com",
@@ -294,10 +325,11 @@ def test_execution_commits_intent_before_nonforce_ref_update(monkeypatch) -> Non
     )
     monkeypatch.setattr(service, "fresh_evidence", lambda *args, **kwargs: evidence)
     monkeypatch.setattr(service, "_require_write_profile", lambda request: None)
+    head = {"sha": subject.expected_parent.sha}
     monkeypatch.setattr(
         service,
         "_current_head",
-        lambda *args, **kwargs: Mock(sha=subject.expected_parent.sha),
+        lambda *args, **kwargs: Mock(sha=head["sha"], object_type=GitHubGitObjectType.COMMIT),
     )
     expected_result = RepositoryPromotionResultV1(
         promotion_id=promotion_id,
@@ -308,18 +340,651 @@ def test_execution_commits_intent_before_nonforce_ref_update(monkeypatch) -> Non
         expected_parent=subject.expected_parent,
         target_commit=subject.target_commit,
         observed_head=subject.target_commit,
-        completed_at=now,
+        observed_at=now,
     )
     monkeypatch.setattr(service, "_postwrite_result", lambda *args, **kwargs: expected_result)
 
-    result = service.execute(
-        request,
-        promotion_id=expected_result.promotion_id,
+    return _ExecutionCase(
+        database=database,
+        service=service,
+        request=request,
+        actor=actor,
+        now=now,
+        evidence=evidence,
+        github_client=github_client,
+        promotion_id=promotion_id,
         authorization_id=auth_id,
-        executor=actor,
-        observed_at=now,
+        expected_result=expected_result,
+        head=head,
     )
 
-    assert result == expected_result
-    assert github_client.update_git_ref.call_args.kwargs["force"] is False
-    assert load_repository_promotion_intent(database, expected_result.promotion_id) is not None
+
+def test_execution_commits_intent_before_nonforce_ref_update(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.expected_result.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result == case.expected_result
+    assert case.github_client.update_git_ref.call_args.kwargs["force"] is False
+    assert (
+        load_repository_promotion_intent(case.database, case.expected_result.promotion_id)
+        is not None
+    )
+
+
+def _insert_unresolved_intent(case: _ExecutionCase, *, basis_digest: str | None = None) -> None:
+    evidence = case.evidence
+    insert_repository_promotion_intent(
+        case.database,
+        RepositoryPromotionIntentV1(
+            promotion_id=case.promotion_id,
+            project_id=evidence.subject.project_id,
+            repository=evidence.subject.repository,
+            canonical_ref=evidence.subject.canonical_ref,
+            subject=evidence.subject,
+            subject_digest=canonical_promotion_subject_digest(evidence.subject),
+            authorization_id=case.authorization_id,
+            authorization_subject_digest=canonical_promotion_subject_digest(evidence.subject),
+            binding=evidence.binding,
+            policy=evidence.binding.policy,
+            governance_basis_digest=evidence.subject.governance_basis_digest,
+            required_check_observation_digest=evidence.check_observation.observation_digest,
+            source_control_observation_digest=evidence.control_observation.observation_digest,
+            prewrite_basis_digest=basis_digest or evidence.basis_digest,
+            expected_parent=case.request.expected_parent,
+            target_commit=case.request.target_commit,
+            created_at=case.now,
+            executor=case.actor,
+        ),
+    )
+
+
+def test_restart_parent_same_basis_retries_once(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result == case.expected_result
+    assert case.github_client.update_git_ref.call_count == 1
+
+
+def test_restart_parent_changed_basis_records_stale_intent(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case, basis_digest="sha256:" + "7" * 64)
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.NOT_APPLIED
+    assert result.reason_code == "STALE_INTENT"
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_indeterminate_parent_same_basis_uses_one_bounded_retry(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    from relay_engine.integrations.github.errors import GitHubRefUpdateIndeterminate
+
+    case.github_client.update_git_ref.side_effect = [GitHubRefUpdateIndeterminate(), None]
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result == case.expected_result
+    assert case.github_client.update_git_ref.call_count == 2
+    assert all(
+        call.kwargs["force"] is False for call in case.github_client.update_git_ref.call_args_list
+    )
+
+
+def test_indeterminate_parent_changed_basis_is_terminal_stale(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    changed = case.evidence.model_copy(update={"basis_digest": "sha256:" + "7" * 64})
+    monkeypatch.setattr(case.service, "fresh_evidence", Mock(side_effect=[case.evidence, changed]))
+    from relay_engine.integrations.github.errors import GitHubRefUpdateIndeterminate
+
+    case.github_client.update_git_ref.side_effect = GitHubRefUpdateIndeterminate()
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.NOT_APPLIED
+    assert result.reason_code == "STALE_INTENT"
+    assert case.github_client.update_git_ref.call_count == 1
+
+
+def test_restart_visible_target_with_control_drift_is_unverified(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    case.head["sha"] = case.request.target_commit.sha
+    changed_control = case.evidence.control_observation.model_copy(
+        update={"observation_digest": "sha256:" + "8" * 64}
+    )
+    changed = case.evidence.model_copy(update={"control_observation": changed_control})
+    monkeypatch.setattr(case.service, "fresh_evidence", lambda *args, **kwargs: changed)
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.VISIBLE_UNVERIFIED
+    assert result.reconciled_after_restart is False
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_restart_visible_target_records_clean_crash_recovery(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    case.head["sha"] = case.request.target_commit.sha
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.SUCCEEDED
+    assert result.reconciled_after_restart is True
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_restart_third_head_is_terminal_conflict_without_patch(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    case.head["sha"] = "c" * 40
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.CONFLICT
+    assert result.reason_code == "THIRD_HEAD"
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_terminal_non_success_replay_returns_exact_stored_result(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    terminal = RepositoryPromotionResultV1(
+        promotion_id=case.promotion_id,
+        project_id=case.request.selection.project_id,
+        repository=case.request.selection.repository,
+        canonical_ref=case.request.canonical_ref,
+        outcome=PromotionResultOutcome.NOT_APPLIED,
+        expected_parent=case.request.expected_parent,
+        target_commit=case.request.target_commit,
+        observed_head=case.request.expected_parent,
+        reason_code="STALE_INTENT",
+        source_control_observation_digest=case.evidence.control_observation.observation_digest,
+        observed_at=case.now,
+    )
+    insert_repository_promotion_result(case.database, terminal)
+
+    replay = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert replay == terminal
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_new_promotion_id_is_blocked_by_unresolved_exact_subject(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    import pytest
+
+    from relay_engine.promotion.errors import PromotionAlreadyCompletedConflict
+
+    with pytest.raises(PromotionAlreadyCompletedConflict, match="unresolved intent"):
+        case.service.execute(
+            case.request,
+            promotion_id="prom_018f47c1-7b2c-7abc-8def-123456789099",
+            authorization_id=case.authorization_id,
+            executor=case.actor,
+            observed_at=case.now,
+        )
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_prior_success_at_visible_target_is_an_exact_noop(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    success = RepositoryPromotionResultV1(
+        promotion_id=case.promotion_id,
+        project_id=case.request.selection.project_id,
+        repository=case.request.selection.repository,
+        canonical_ref=case.request.canonical_ref,
+        outcome=PromotionResultOutcome.SUCCEEDED,
+        expected_parent=case.request.expected_parent,
+        target_commit=case.request.target_commit,
+        observed_head=case.request.target_commit,
+        source_control_observation_digest=case.evidence.control_observation.observation_digest,
+        observed_at=case.now,
+    )
+    insert_repository_promotion_result(case.database, success)
+    case.head["sha"] = case.request.target_commit.sha
+
+    result = case.service.execute(
+        case.request,
+        promotion_id="prom_018f47c1-7b2c-7abc-8def-123456789098",
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result == success
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def _evidence_with_successor_binding(case: _ExecutionCase) -> _FreshPromotionEvidence:
+    original = case.evidence.binding
+    successor = original.model_copy(
+        update={
+            "binding_id": "cpb_018f47c1-7b2c-7abc-8def-123456789097",
+            "revision": original.revision + 1,
+            "supersedes_binding_id": original.binding_id,
+        }
+    )
+    subject = case.evidence.subject.model_copy(
+        update={
+            "binding_id": successor.binding_id,
+            "binding_revision": successor.revision,
+            "binding_digest": binding_digest(successor),
+        }
+    )
+    return case.evidence.model_copy(update={"binding": successor, "subject": subject})
+
+
+def test_changed_binding_revision_cannot_be_postwrite_success(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    case.head["sha"] = case.request.target_commit.sha
+    successor_evidence = _evidence_with_successor_binding(case)
+    monkeypatch.setattr(case.service, "fresh_evidence", lambda *args, **kwargs: successor_evidence)
+    intent = load_repository_promotion_intent(case.database, case.promotion_id)
+    assert intent is not None
+    assert not case.service._fresh_basis_matches_intent(successor_evidence, intent)
+    monkeypatch.delattr(case.service, "_postwrite_result")
+
+    result = case.service._postwrite_result(
+        case.request, intent, case.actor, case.now, success_allowed=True
+    )
+
+    assert result.outcome is PromotionResultOutcome.VISIBLE_UNVERIFIED
+    assert result.observed_head == case.request.target_commit
+
+
+def test_changed_binding_revision_cannot_be_restart_success(monkeypatch) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    case.head["sha"] = case.request.target_commit.sha
+    successor_evidence = _evidence_with_successor_binding(case)
+    monkeypatch.setattr(case.service, "fresh_evidence", lambda *args, **kwargs: successor_evidence)
+
+    result = case.service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        executor=case.actor,
+        observed_at=case.now,
+    )
+
+    assert result.outcome is PromotionResultOutcome.VISIBLE_UNVERIFIED
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_structured_acceptance_and_evaluation_continuity_is_required(monkeypatch) -> None:
+    import relay_engine.promotion.service as promotion_service
+    from relay_engine.governance.models import HumanApprovalDecision, HumanApprovalValue
+
+    case = _execution_case(monkeypatch)
+    basis = case.request.governance_basis
+    accepted = basis.accepted_result_ref
+    result_projection = SimpleNamespace(
+        result_id=accepted.result_id,
+        slice_id=basis.slice_id,
+        result_baseline_id=accepted.result_baseline_id,
+        commit=accepted.accepted_commit.sha,
+        manual_evaluation_id=accepted.manual_evaluation_id,
+        human_approval_decision_id=accepted.human_approval_decision_id,
+        accepted_execution_id=accepted.accepted_execution_id,
+        accepted_at=accepted.accepted_at,
+    )
+    recorded_by = SimpleNamespace(id="act_018f47c1-7b2c-7abc-8def-123456789020")
+    result_record = SimpleNamespace(result_id=accepted.result_id, recorded_by=recorded_by)
+    evaluation = SimpleNamespace(
+        evaluation_id=accepted.manual_evaluation_id,
+        result_id=accepted.result_id,
+        outcome=SimpleNamespace(value="ACCEPT"),
+        evaluator=SimpleNamespace(id="act_018f47c1-7b2c-7abc-8def-123456789021"),
+    )
+    human = HumanApprovalDecision(
+        decision_id=accepted.human_approval_decision_id,
+        slice_id=basis.slice_id,
+        baseline_id=accepted.result_baseline_id,
+        gate_id="gate_018f47c1-7b2c-7abc-8def-123456789022",
+        gate_revision=1,
+        lifecycle_revision=1,
+        governance_revision=1,
+        actor=case.actor,
+        occurred_at=case.now,
+        decision=HumanApprovalValue.APPROVE,
+        reason="Exact structured acceptance fixture.",
+    )
+    memory = SimpleNamespace(
+        accepted_results=(result_projection,),
+        result_history=(result_record,),
+        evaluation_history=(evaluation,),
+    )
+    monkeypatch.setattr(promotion_service, "project_development_memory", lambda *args: memory)
+    monkeypatch.setattr(promotion_service, "load_human_decision", lambda *args: human)
+    monkeypatch.setattr(case.service, "_is_ancestor", lambda *args: True)
+
+    structured = case.service._verify_governance_basis(
+        basis,
+        policy=case.evidence.binding.policy,
+        token=Mock(),
+        repository_path=case.request.selection.repository.path,
+    )
+    assert dict(structured)["RELAY_HUMAN_ACCEPTED"] is PromotionPropertyOutcome.PASS
+    assert dict(structured)["RELAY_INDEPENDENT_EVALUATION"] is PromotionPropertyOutcome.PASS
+    assert dict(structured)["RELAY_CONTROL_CONTINUITY_VERIFIED"] is PromotionPropertyOutcome.PASS
+
+    monkeypatch.setattr(
+        promotion_service,
+        "project_development_memory",
+        lambda *args: SimpleNamespace(
+            accepted_results=(result_projection,),
+            result_history=(result_record,),
+            evaluation_history=(),
+        ),
+    )
+    missing_evaluation = case.service._verify_governance_basis(
+        basis,
+        policy=case.evidence.binding.policy,
+        token=Mock(),
+        repository_path=case.request.selection.repository.path,
+    )
+    assert (
+        dict(missing_evaluation)["RELAY_INDEPENDENT_EVALUATION"] is PromotionPropertyOutcome.UNKNOWN
+    )
+
+    prose_only_basis = basis.model_copy(update={"independent_evaluation_refs": ()})
+    prose_only = case.service._verify_governance_basis(
+        prose_only_basis,
+        policy=case.evidence.binding.policy,
+        token=Mock(),
+        repository_path=case.request.selection.repository.path,
+    )
+    assert dict(prose_only)["RELAY_INDEPENDENT_EVALUATION"] is PromotionPropertyOutcome.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "requested_reconciliation_id",
+    [
+        "recon_018f47c1-7b2c-7abc-8def-123456789095",
+        "recon_018f47c1-7b2c-7abc-8def-123456789094",
+    ],
+)
+def test_reconciliation_target_state_replay_returns_exact_record(
+    monkeypatch, requested_reconciliation_id: str
+) -> None:
+    case = _execution_case(monkeypatch)
+    _insert_unresolved_intent(case)
+    record = CanonicalPromotionReconciliationV1(
+        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789095",
+        promotion_id=case.promotion_id,
+        project_id=case.request.selection.project_id,
+        repository=case.request.selection.repository,
+        canonical_ref=case.request.canonical_ref,
+        original_visible_unverified_result_digest="sha256:" + "1" * 64,
+        target_commit=case.request.target_commit,
+        authorization_id=case.authorization_id,
+        reconciliation_subject_digest="sha256:" + "2" * 64,
+        original_binding_id=case.evidence.binding.binding_id,
+        original_binding_revision=case.evidence.binding.revision,
+        original_binding_digest=binding_digest(case.evidence.binding),
+        original_policy_digest=policy_digest(case.evidence.binding.policy),
+        original_governance_basis_digest=case.request.governance_basis.governance_basis_digest,
+        current_required_check_observation_digest=case.evidence.check_observation.observation_digest,
+        current_source_control_observation_digest=case.evidence.control_observation.observation_digest,
+        reconciled_at=case.now,
+        reconciled_by=case.actor,
+    )
+    insert_canonical_promotion_reconciliation(case.database, record)
+    service = CanonicalPromotionReconciliationService(
+        database=case.database,
+        promotion_service=case.service,
+    )
+
+    replay = service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=case.authorization_id,
+        reconciliation_id=requested_reconciliation_id,
+        reconciled_by=case.actor,
+        observed_at=case.now,
+    )
+
+    assert replay == record
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def _reconciliation_case(
+    monkeypatch,
+) -> tuple[_ExecutionCase, CanonicalPromotionReconciliationService]:
+    case = _execution_case(monkeypatch)
+    binding = case.evidence.binding
+    binding_subject = CanonicalPolicyBindingSubjectV1(
+        project_id=binding.project_id,
+        repository=binding.repository,
+        canonical_ref=binding.canonical_ref,
+        expected_current_binding_id=None,
+        expected_current_revision=0,
+        expected_current_binding_digest=None,
+        target_revision=1,
+        target_state=CanonicalPromotionPolicyBindingState.MANAGED,
+        target_policy=binding.policy,
+        target_policy_digest=policy_digest(binding.policy),
+    )
+    insert_repository_mutation_authorization(
+        case.database,
+        RepositoryMutationAuthorization(
+            authorization_id=binding.authorization_id,
+            project_id=binding.project_id,
+            subject=binding_subject,
+            subject_digest=canonical_policy_binding_subject_digest(binding_subject),
+            actor=case.actor,
+            granted_at=case.now,
+            reason="Exact original binding authority for reconciliation tests.",
+        ),
+    )
+    insert_canonical_promotion_policy_binding(case.database, binding)
+    _insert_unresolved_intent(case)
+    visible = RepositoryPromotionResultV1(
+        promotion_id=case.promotion_id,
+        project_id=case.request.selection.project_id,
+        repository=case.request.selection.repository,
+        canonical_ref=case.request.canonical_ref,
+        outcome=PromotionResultOutcome.VISIBLE_UNVERIFIED,
+        expected_parent=case.request.expected_parent,
+        target_commit=case.request.target_commit,
+        observed_head=case.request.target_commit,
+        source_control_observation_digest=case.evidence.control_observation.observation_digest,
+        observed_at=case.now,
+    )
+    insert_repository_promotion_result(case.database, visible)
+    service = CanonicalPromotionReconciliationService(
+        database=case.database,
+        promotion_service=case.service,
+    )
+    return case, service
+
+
+def test_restored_original_policy_evidence_is_reconcilable_and_zero_write(monkeypatch) -> None:
+    case, service = _reconciliation_case(monkeypatch)
+    intent_before = load_repository_promotion_intent(case.database, case.promotion_id)
+    result_before = load_repository_promotion_result(case.database, case.promotion_id)
+    assert intent_before is not None and result_before is not None
+
+    preparation = service.prepare(
+        case.request, promotion_id=case.promotion_id, observed_at=case.now
+    )
+    assert preparation.state is ReconciliationPreparationState.RECONCILABLE
+    authorization = service.authorize(
+        authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789093",
+        preparation=preparation,
+        actor=case.actor,
+        granted_at=case.now,
+        reason="Reconcile the exact target under the original policy.",
+    )
+
+    record = service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=authorization.authorization_id,
+        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789092",
+        reconciled_by=case.actor,
+        observed_at=case.now,
+    )
+
+    assert record.outcome == "RECONCILED"
+    assert case.github_client.update_git_ref.call_count == 0
+    assert load_repository_promotion_intent(case.database, case.promotion_id) == intent_before
+    assert load_repository_promotion_result(case.database, case.promotion_id) == result_before
+
+
+@pytest.mark.parametrize("policy_change", ["weaker", "stronger"])
+def test_successor_policy_cannot_substitute_for_original_binding(
+    monkeypatch, policy_change: str
+) -> None:
+    case, service = _reconciliation_case(monkeypatch)
+    current = case.evidence.binding
+    assert current.policy is not None
+    if policy_change == "weaker":
+        successor_policy = current.policy.model_copy(
+            update={
+                "policy_id": "cpol_018f47c1-7b2c-7abc-8def-123456789091",
+                "promotion_property_requirements": (),
+            }
+        )
+    else:
+        successor_policy = current.policy.model_copy(
+            update={
+                "policy_id": "cpol_018f47c1-7b2c-7abc-8def-123456789090",
+                "human_acceptance_must_bind_target": True,
+            }
+        )
+    binding_subject = CanonicalPolicyBindingSubjectV1(
+        project_id=current.project_id,
+        repository=current.repository,
+        canonical_ref=current.canonical_ref,
+        expected_current_binding_id=current.binding_id,
+        expected_current_revision=current.revision,
+        expected_current_binding_digest=binding_digest(current),
+        target_revision=current.revision + 1,
+        target_state=CanonicalPromotionPolicyBindingState.MANAGED,
+        target_policy=successor_policy,
+        target_policy_digest=policy_digest(successor_policy),
+    )
+    authorization_id = "rma_018f47c1-7b2c-7abc-8def-123456789089"
+    insert_repository_mutation_authorization(
+        case.database,
+        RepositoryMutationAuthorization(
+            authorization_id=authorization_id,
+            project_id=current.project_id,
+            subject=binding_subject,
+            subject_digest=canonical_policy_binding_subject_digest(binding_subject),
+            actor=case.actor,
+            granted_at=case.now,
+            reason="Injected successor binding to test frozen original basis.",
+        ),
+    )
+    insert_canonical_promotion_policy_binding(
+        case.database,
+        CanonicalPromotionPolicyBindingV1(
+            binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789088",
+            project_id=current.project_id,
+            repository=current.repository,
+            canonical_ref=current.canonical_ref,
+            revision=current.revision + 1,
+            state=CanonicalPromotionPolicyBindingState.MANAGED,
+            policy=successor_policy,
+            policy_digest=policy_digest(successor_policy),
+            authorization_id=authorization_id,
+            supersedes_binding_id=current.binding_id,
+            bound_at=case.now,
+        ),
+    )
+
+    preparation = service.prepare(
+        case.request, promotion_id=case.promotion_id, observed_at=case.now
+    )
+
+    assert preparation.state is ReconciliationPreparationState.INELIGIBLE
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+def test_original_policy_violation_is_ineligible_and_unverifiable_is_unknown(monkeypatch) -> None:
+    case, service = _reconciliation_case(monkeypatch)
+    from relay_engine.promotion.errors import (
+        PromotionBasisUnknown,
+        PromotionSourceControlNonconformant,
+    )
+
+    monkeypatch.setattr(
+        case.service,
+        "fresh_evidence",
+        Mock(side_effect=PromotionSourceControlNonconformant("original P1 controls fail")),
+    )
+    violated = service.prepare(case.request, promotion_id=case.promotion_id, observed_at=case.now)
+    assert violated.state is ReconciliationPreparationState.INELIGIBLE
+
+    monkeypatch.setattr(
+        case.service,
+        "fresh_evidence",
+        Mock(side_effect=PromotionBasisUnknown("original P1 cannot be observed")),
+    )
+    unknown = service.prepare(case.request, promotion_id=case.promotion_id, observed_at=case.now)
+    assert unknown.state is ReconciliationPreparationState.UNKNOWN
+    assert case.github_client.update_git_ref.call_count == 0

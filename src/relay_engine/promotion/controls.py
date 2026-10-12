@@ -4,7 +4,7 @@ import hashlib
 import json
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 
 from pydantic import Field, field_validator
 
@@ -144,11 +144,23 @@ def evaluate_source_control_conformance(
     writer_rules = dict(writer.rules)
     if not {"deletion", "non_fast_forward", "required_status_checks"} <= set(integrity_rules):
         return SourceControlConformance.FAIL
-    required_checks = json.loads(integrity_rules["required_status_checks"])
+    try:
+        parsed_parameters: object = json.loads(integrity_rules["required_status_checks"])
+    except json.JSONDecodeError, TypeError:
+        return SourceControlConformance.UNKNOWN
+    if not isinstance(parsed_parameters, dict):
+        return SourceControlConformance.UNKNOWN
+    required_check_parameters = cast(dict[str, object], parsed_parameters)
+    required_checks = required_check_parameters.get("required_status_checks")
+    strict_checks = required_check_parameters.get("strict_required_status_checks_policy")
     expected_checks = [
         {"context": check.name, "integration_id": check.expected_app_id}
         for check in policy.required_checks
     ]
+    if not isinstance(required_checks, list) or not isinstance(strict_checks, bool):
+        return SourceControlConformance.UNKNOWN
+    if strict_checks is False:
+        return SourceControlConformance.FAIL
     if required_checks != expected_checks:
         return SourceControlConformance.FAIL
     if "update" not in writer_rules:

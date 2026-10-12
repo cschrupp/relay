@@ -14,6 +14,10 @@ from relay_engine.integrations.github.ruleset_verifier import (
     GitHubRulesetObservationError,
     GitHubRulesetVerifier,
 )
+from relay_engine.promotion.controls import (
+    SourceControlConformance,
+    evaluate_source_control_conformance,
+)
 from relay_engine.promotion.models import (
     CanonicalPromotionPolicyV1,
     GitHubRequiredCheckV1,
@@ -62,8 +66,31 @@ def _versioned_ruleset(ruleset_id: int, version_id: int) -> tuple[object, ...]:
         "target": "branch",
         "enforcement": "active",
         "conditions": {"ref_name": {"include": ["refs/heads/main"], "exclude": []}},
-        "rules": [],
-        "bypass_actors": [],
+        "rules": (
+            [
+                {"type": "deletion", "parameters": {}},
+                {"type": "non_fast_forward", "parameters": {}},
+                {
+                    "type": "required_status_checks",
+                    "parameters": {
+                        "required_status_checks": [{"context": "quality", "integration_id": 41}],
+                        "strict_required_status_checks_policy": True,
+                    },
+                },
+            ]
+            if ruleset_id == 5
+            else [
+                {
+                    "type": "update",
+                    "parameters": {"update_allows_fetch_and_merge": False},
+                }
+            ]
+        ),
+        "bypass_actors": (
+            []
+            if ruleset_id == 5
+            else [{"actor_type": "Integration", "actor_id": 41, "bypass_mode": "always"}]
+        ),
     }
     history = [{"version_id": version_id}]
     return (
@@ -111,6 +138,9 @@ def test_verifier_uses_stable_version_reads_and_only_get_requests() -> None:
     assert all(
         request.headers["Authorization"] == "Bearer control-verifier-token"
         for request in transport.requests
+    )
+    assert evaluate_source_control_conformance(observation, policy=_policy()) is (
+        SourceControlConformance.PASS
     )
 
 

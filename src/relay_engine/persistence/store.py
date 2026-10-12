@@ -1136,6 +1136,18 @@ def insert_repository_promotion_intent(
     """Commit immutable pre-write evidence for one exact promotion attempt."""
 
     with _write(database) as connection:
+        unresolved = connection.execute(
+            "SELECT 1 FROM repository_promotion_intents intent "
+            "LEFT JOIN repository_promotion_results result "
+            "ON result.promotion_id = intent.promotion_id "
+            "WHERE intent.project_id = ? AND intent.canonical_ref = ? "
+            "AND intent.subject_digest = ? AND result.promotion_id IS NULL LIMIT 1",
+            (value.project_id, value.canonical_ref, value.subject_digest),
+        ).fetchone()
+        if unresolved is not None:
+            raise PersistenceIntegrityError(
+                "an unresolved intent already exists for the exact promotion subject"
+            )
         _insert_payload(
             connection,
             "repository_promotion_intents",
@@ -1147,7 +1159,9 @@ def insert_repository_promotion_intent(
                 "repository_id": value.repository.id,
                 "canonical_ref": value.canonical_ref,
                 "subject_digest": value.subject_digest,
-                "created_at": value.created_at,
+                "expected_parent_sha": value.expected_parent.sha,
+                "target_sha": value.target_commit.sha,
+                "created_at": _datetime_text(value.created_at),
             },
         )
 
@@ -1169,9 +1183,55 @@ def load_repository_promotion_intent(
                 "repository_id": "repository.id",
                 "canonical_ref": "canonical_ref",
                 "subject_digest": "subject_digest",
+                "expected_parent_sha": "expected_parent.sha",
+                "target_sha": "target_commit.sha",
+                "created_at": "created_at",
             },
         ),
     )
+
+
+def load_unresolved_repository_promotion_intent_for_subject(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    canonical_ref: str,
+    subject_digest: str,
+) -> RepositoryPromotionIntentV1 | None:
+    """Find the unique unresolved intent for an exact promotion subject."""
+
+    def read(connection: sqlite3.Connection) -> RepositoryPromotionIntentV1 | None:
+        rows = connection.execute(
+            "SELECT intent.* FROM repository_promotion_intents intent "
+            "LEFT JOIN repository_promotion_results result "
+            "ON result.promotion_id = intent.promotion_id "
+            "WHERE intent.project_id = ? AND intent.canonical_ref = ? "
+            "AND intent.subject_digest = ? AND result.promotion_id IS NULL "
+            "ORDER BY intent.promotion_id LIMIT 2",
+            (project_id, canonical_ref, subject_digest),
+        ).fetchall()
+        if len(rows) > 1:
+            raise PersistenceIntegrityError(
+                "multiple unresolved intents exist for the exact promotion subject"
+            )
+        if not rows:
+            return None
+        return _parse_payload(
+            rows[0],
+            RepositoryPromotionIntentV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "subject_digest": "subject_digest",
+                "expected_parent_sha": "expected_parent.sha",
+                "target_sha": "target_commit.sha",
+                "created_at": "created_at",
+            },
+        )
+
+    return _read(database, read)
 
 
 def insert_repository_promotion_result(
@@ -1190,8 +1250,9 @@ def insert_repository_promotion_result(
                 "project_id": value.project_id,
                 "repository_id": value.repository.id,
                 "canonical_ref": value.canonical_ref,
+                "target_sha": value.target_commit.sha,
                 "outcome": value.outcome.value,
-                "completed_at": value.completed_at,
+                "observed_at": _datetime_text(value.observed_at),
             },
         )
 
@@ -1212,7 +1273,9 @@ def load_repository_promotion_result(
                 "project_id": "project_id",
                 "repository_id": "repository.id",
                 "canonical_ref": "canonical_ref",
+                "target_sha": "target_commit.sha",
                 "outcome": "outcome",
+                "observed_at": "observed_at",
             },
         ),
     )
@@ -1242,7 +1305,9 @@ def load_repository_promotion_results_for_ref(
                     "project_id": "project_id",
                     "repository_id": "repository.id",
                     "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
                     "outcome": "outcome",
+                    "observed_at": "observed_at",
                 },
             )
             for row in rows
@@ -1270,7 +1335,7 @@ def insert_canonical_promotion_reconciliation(
                 "canonical_ref": value.canonical_ref,
                 "target_sha": value.target_commit.sha,
                 "authorization_id": value.authorization_id,
-                "reconciled_at": value.reconciled_at,
+                "reconciled_at": _datetime_text(value.reconciled_at),
             },
         )
 

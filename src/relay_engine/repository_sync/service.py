@@ -350,6 +350,15 @@ class RepositorySyncService:
         if current_head.sha != preparation.prior_commit.sha:
             raise RepositorySyncConflict("default-branch head advanced after preparation")
 
+        # The durable canonical reservation can change while remote objects are built.
+        # Recheck it at the final visibility boundary, after all existing late CAS checks.
+        require_repository_sync_unmanaged_healthy(
+            self._database,
+            project_id=request.selection.project_id,
+            repository=request.selection.repository,
+            canonical_ref=f"refs/heads/{provider.default_branch}",
+        )
+
         visible_commit = commit.sha
         try:
             updated = self._github_client.update_git_ref(

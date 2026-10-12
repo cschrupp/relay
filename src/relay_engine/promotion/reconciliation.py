@@ -22,7 +22,14 @@ from relay_engine.promotion.bindings import (
     canonical_ref_health,
     resolve_canonical_policy_binding,
 )
-from relay_engine.promotion.errors import PromotionAuthorizationRequired
+from relay_engine.promotion.errors import (
+    PromotionAuthorizationRequired,
+    PromotionCanonicalRefChanged,
+    PromotionNotEligible,
+    PromotionRequiredCheckFailed,
+    PromotionSourceControlNonconformant,
+    PromotionTargetInvalid,
+)
 from relay_engine.promotion.models import (
     CanonicalPromotionReconciliationPreparationV1,
     CanonicalPromotionReconciliationSubjectV1,
@@ -38,6 +45,7 @@ from relay_engine.promotion.models import (
 from relay_engine.promotion.service import (
     CanonicalPromotionRequestV1,
     CanonicalPromotionService,
+    PromotionHeadExpectation,
 )
 from relay_engine.repository_sync.models import RepositoryMutationAuthorization
 
@@ -126,8 +134,18 @@ class CanonicalPromotionReconciliationService:
             return self._ineligible("an accepted reconciliation already exists")
         try:
             fresh = self._promotion_service.fresh_evidence(
-                request, observed_at=observed_at, allow_visible_target=True
+                request,
+                observed_at=observed_at,
+                head_expectation=PromotionHeadExpectation.VISIBLE_TARGET,
             )
+        except (
+            PromotionNotEligible,
+            PromotionCanonicalRefChanged,
+            PromotionRequiredCheckFailed,
+            PromotionSourceControlNonconformant,
+            PromotionTargetInvalid,
+        ) as error:
+            return self._ineligible(f"original promotion policy is positively violated: {error}")
         except Exception as error:
             return self._unknown(f"original-policy evidence is unavailable: {type(error).__name__}")
         fresh_policy = fresh.binding.policy
@@ -214,6 +232,22 @@ class CanonicalPromotionReconciliationService:
     ) -> CanonicalPromotionReconciliationV1:
         """Revalidate and append one reconciliation record; perform no Git writes."""
 
+        existing_records = load_canonical_promotion_reconciliations_for_ref(
+            self._database,
+            project_id=request.selection.project_id,
+            repository_id=request.selection.repository.id,
+            canonical_ref=request.canonical_ref,
+        )
+        existing = next(
+            (item for item in existing_records if item.promotion_id == promotion_id), None
+        )
+        if existing is not None:
+            if (
+                existing.repository != request.selection.repository
+                or existing.target_commit != request.target_commit
+            ):
+                raise ValueError("stored reconciliation conflicts with the exact request")
+            return existing
         preparation = self.prepare(request, promotion_id=promotion_id, observed_at=observed_at)
         subject = preparation.subject
         if (
@@ -235,17 +269,6 @@ class CanonicalPromotionReconciliationService:
             raise PromotionAuthorizationRequired(
                 "exact Human reconciliation authority is missing or stale"
             )
-        existing = load_canonical_promotion_reconciliations_for_ref(
-            self._database,
-            project_id=subject.project_id,
-            repository_id=subject.repository.id,
-            canonical_ref=subject.canonical_ref,
-        )
-        if any(item.promotion_id == promotion_id for item in existing):
-            match = next(item for item in existing if item.promotion_id == promotion_id)
-            if match.reconciliation_id == reconciliation_id:
-                return match
-            raise ValueError("promotion already has a different accepted reconciliation")
         record = CanonicalPromotionReconciliationV1(
             reconciliation_id=reconciliation_id,
             promotion_id=promotion_id,

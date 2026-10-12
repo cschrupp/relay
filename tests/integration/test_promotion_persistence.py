@@ -34,10 +34,98 @@ def test_migration_v6_creates_exact_four_append_only_tables(tmp_path) -> None:
         }
         assert promotion_tables <= tables
         assert not any("quarantine" in table for table in tables)
+        intent_columns = {
+            row["name"]
+            for row in database.connection.execute(
+                "PRAGMA table_info(repository_promotion_intents)"
+            )
+        }
+        result_columns = {
+            row["name"]
+            for row in database.connection.execute(
+                "PRAGMA table_info(repository_promotion_results)"
+            )
+        }
+        assert {"expected_parent_sha", "target_sha"} <= intent_columns
+        assert {"target_sha", "observed_at"} <= result_columns
+        indexes = {
+            row["name"]
+            for row in database.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'index'"
+            )
+        }
+        assert "repository_promotion_intents_by_project_ref_subject" in indexes
+        assert "repository_promotion_intents_by_parent_target" in indexes
+        assert "repository_promotion_results_unique_successful_target" in indexes
 
         database.connection.execute(
             "INSERT INTO projects(id, payload_json) VALUES (?, ?)", (PROJECT_ID, "{}")
         )
+        database.connection.execute(
+            "INSERT INTO repository_promotion_intents "
+            "(promotion_id, project_id, repository_id, canonical_ref, subject_digest, "
+            "expected_parent_sha, target_sha, created_at, payload_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "prom_018f47c1-7b2c-7abc-8def-123456789015",
+                PROJECT_ID,
+                "repo_018f47c1-7b2c-7abc-8def-123456789002",
+                "refs/heads/main",
+                "sha256:" + "c" * 64,
+                "b" * 40,
+                "c" * 40,
+                NOW,
+                "{}",
+            ),
+        )
+        database.connection.execute(
+            "INSERT INTO repository_promotion_results "
+            "(promotion_id, project_id, repository_id, canonical_ref, target_sha, outcome, "
+            "observed_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "prom_018f47c1-7b2c-7abc-8def-123456789015",
+                PROJECT_ID,
+                "repo_018f47c1-7b2c-7abc-8def-123456789002",
+                "refs/heads/main",
+                "c" * 40,
+                "SUCCEEDED",
+                NOW,
+                "{}",
+            ),
+        )
+        database.connection.execute(
+            "INSERT INTO repository_promotion_intents "
+            "(promotion_id, project_id, repository_id, canonical_ref, subject_digest, "
+            "expected_parent_sha, target_sha, created_at, payload_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "prom_018f47c1-7b2c-7abc-8def-123456789016",
+                PROJECT_ID,
+                "repo_018f47c1-7b2c-7abc-8def-123456789002",
+                "refs/heads/main",
+                "sha256:" + "d" * 64,
+                "b" * 40,
+                "c" * 40,
+                NOW,
+                "{}",
+            ),
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="UNIQUE"):
+            database.connection.execute(
+                "INSERT INTO repository_promotion_results "
+                "(promotion_id, project_id, repository_id, canonical_ref, target_sha, outcome, "
+                "observed_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    "prom_018f47c1-7b2c-7abc-8def-123456789016",
+                    PROJECT_ID,
+                    "repo_018f47c1-7b2c-7abc-8def-123456789002",
+                    "refs/heads/main",
+                    "c" * 40,
+                    "SUCCEEDED",
+                    NOW,
+                    "{}",
+                ),
+            )
         database.connection.execute(
             "INSERT INTO canonical_promotion_policy_bindings "
             "(binding_id, project_id, repository_id, canonical_ref, revision, state, "
@@ -60,26 +148,30 @@ def test_migration_v6_creates_exact_four_append_only_tables(tmp_path) -> None:
         database.connection.execute(
             "INSERT INTO repository_promotion_intents "
             "(promotion_id, project_id, repository_id, canonical_ref, subject_digest, "
-            "created_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "expected_parent_sha, target_sha, created_at, payload_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 "prom_018f47c1-7b2c-7abc-8def-123456789012",
                 PROJECT_ID,
                 "repo_018f47c1-7b2c-7abc-8def-123456789002",
                 "refs/heads/main",
                 "sha256:" + "a" * 64,
+                "a" * 40,
+                "b" * 40,
                 NOW,
                 "{}",
             ),
         )
         database.connection.execute(
             "INSERT INTO repository_promotion_results "
-            "(promotion_id, project_id, repository_id, canonical_ref, outcome, completed_at, "
-            "payload_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "(promotion_id, project_id, repository_id, canonical_ref, target_sha, outcome, "
+            "observed_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 "prom_018f47c1-7b2c-7abc-8def-123456789012",
                 PROJECT_ID,
                 "repo_018f47c1-7b2c-7abc-8def-123456789002",
                 "refs/heads/main",
+                "b" * 40,
                 "VISIBLE_UNVERIFIED",
                 NOW,
                 "{}",

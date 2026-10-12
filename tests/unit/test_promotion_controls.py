@@ -59,7 +59,12 @@ def _observation(
             ("non_fast_forward", "{}"),
             (
                 "required_status_checks",
-                json.dumps([{"context": "quality", "integration_id": 41}]),
+                json.dumps(
+                    {
+                        "required_status_checks": [{"context": "quality", "integration_id": 41}],
+                        "strict_required_status_checks_policy": True,
+                    }
+                ),
             ),
         ),
         bypass_actors=(
@@ -124,3 +129,64 @@ def test_bypass_and_fetch_merge_writer_rule_are_nonconformant() -> None:
     assert (
         evaluate_source_control_conformance(merge, policy=policy) is SourceControlConformance.FAIL
     )
+
+
+def test_required_check_rule_requires_exact_strict_parameter() -> None:
+    policy = _policy()
+    base = _observation(observed_at=datetime(2026, 10, 2, tzinfo=UTC))
+    integrity = base.rulesets[0]
+
+    missing_strict = integrity.model_copy(
+        update={
+            "rules": tuple(
+                (
+                    name,
+                    json.dumps(
+                        {"required_status_checks": [{"context": "quality", "integration_id": 41}]}
+                    ),
+                )
+                if name == "required_status_checks"
+                else (name, value)
+                for name, value in integrity.rules
+            )
+        }
+    )
+    malformed = integrity.model_copy(
+        update={
+            "rules": tuple(
+                (name, "not-json") if name == "required_status_checks" else (name, value)
+                for name, value in integrity.rules
+            )
+        }
+    )
+    non_strict = integrity.model_copy(
+        update={
+            "rules": tuple(
+                (
+                    name,
+                    json.dumps(
+                        {
+                            "required_status_checks": [
+                                {"context": "quality", "integration_id": 41}
+                            ],
+                            "strict_required_status_checks_policy": False,
+                        }
+                    ),
+                )
+                if name == "required_status_checks"
+                else (name, value)
+                for name, value in integrity.rules
+            )
+        }
+    )
+
+    for changed, expected in (
+        (missing_strict, SourceControlConformance.UNKNOWN),
+        (malformed, SourceControlConformance.UNKNOWN),
+        (non_strict, SourceControlConformance.FAIL),
+    ):
+        observation = base.model_copy(update={"rulesets": (changed, base.rulesets[1])})
+        observation = observation.model_copy(
+            update={"observation_digest": source_control_observation_digest(observation)}
+        )
+        assert evaluate_source_control_conformance(observation, policy=policy) is expected

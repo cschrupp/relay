@@ -57,6 +57,7 @@ from relay_engine.persistence import (
     PersistenceIntegrityError,
     insert_canonical_promotion_policy_binding,
     insert_repository_mutation_authorization,
+    load_canonical_promotion_policy_bindings,
     load_repository_mutation_authorization,
     open_database,
 )
@@ -65,7 +66,11 @@ from relay_engine.promotion.models import (
     CanonicalPolicyBindingSubjectV1,
     CanonicalPromotionPolicyBindingState,
     CanonicalPromotionPolicyBindingV1,
+    CanonicalPromotionPolicyV1,
+    GitHubRequiredCheckV1,
+    binding_digest,
     canonical_policy_binding_subject_digest,
+    policy_digest,
 )
 from relay_engine.repository_contract import (
     RepositoryArtifactClass,
@@ -1014,6 +1019,89 @@ def test_local_permission_and_membership_races_block_visibility(fixture_env, rac
         )
 
     assert github.git_object_writes > 0
+    assert github.ref_updates == 0
+
+
+def test_late_managed_binding_transition_blocks_repository_sync_visibility(fixture_env) -> None:
+    database, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    transitioned = False
+
+    def reserve_managed_ref() -> None:
+        nonlocal transitioned
+        if transitioned:
+            return
+        transitioned = True
+        current = load_canonical_promotion_policy_bindings(
+            database,
+            project_id=PROJECT_ID,
+            repository_id=REPOSITORY_ID,
+            canonical_ref="refs/heads/main",
+        )[-1]
+        policy = CanonicalPromotionPolicyV1(
+            policy_id="cpol_018f47c1-7b2c-7abc-8def-123456789020",
+            canonical_branch="main",
+            promotion_app_id=77,
+            control_verifier_app_id=78,
+            integrity_ruleset_id=5,
+            writer_ruleset_id=6,
+            required_checks=(GitHubRequiredCheckV1(name="quality", expected_app_id=77),),
+            allowed_update_actor_app_id=77,
+            human_acceptance_must_bind_target=False,
+            independent_evaluation_must_bind_target=False,
+            promotion_property_requirements=(),
+        )
+        subject = CanonicalPolicyBindingSubjectV1(
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            canonical_ref="refs/heads/main",
+            expected_current_binding_id=current.binding_id,
+            expected_current_revision=current.revision,
+            expected_current_binding_digest=binding_digest(current),
+            target_revision=current.revision + 1,
+            target_state=CanonicalPromotionPolicyBindingState.MANAGED,
+            target_policy=policy,
+            target_policy_digest=policy_digest(policy),
+        )
+        authorization_id = "rma_018f47c1-7b2c-7abc-8def-123456789021"
+        insert_repository_mutation_authorization(
+            database,
+            RepositoryMutationAuthorization(
+                authorization_id=authorization_id,
+                project_id=PROJECT_ID,
+                subject=subject,
+                subject_digest=canonical_policy_binding_subject_digest(subject),
+                actor=ACTOR,
+                granted_at=NOW,
+                reason="Reserve canonical writer ownership during the race test.",
+            ),
+        )
+        insert_canonical_promotion_policy_binding(
+            database,
+            CanonicalPromotionPolicyBindingV1(
+                binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789022",
+                project_id=PROJECT_ID,
+                repository=REPOSITORY,
+                canonical_ref="refs/heads/main",
+                revision=current.revision + 1,
+                state=CanonicalPromotionPolicyBindingState.MANAGED,
+                policy=policy,
+                policy_digest=policy_digest(policy),
+                authorization_id=authorization_id,
+                supersedes_binding_id=current.binding_id,
+                bound_at=NOW,
+            ),
+        )
+
+    github.before_ref_check = reserve_managed_ref
+    from relay_engine.repository_sync.errors import RepositorySyncCanonicalRefReserved
+
+    authorized_request = request.model_copy(update={"authorization_id": AUTHORIZATION_ID})
+    with pytest.raises(RepositorySyncCanonicalRefReserved):
+        service.execute_repository_sync(authorized_request, observed_at=NOW)
+
+    assert transitioned is True
+    assert github.commit_creations == 1
     assert github.ref_updates == 0
 
 
