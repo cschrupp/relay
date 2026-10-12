@@ -109,6 +109,31 @@ def test_exact_completed_success_check_passes_and_digest_is_deterministic() -> N
     assert required_checks_outcome(first) is PromotionPropertyOutcome.PASS
 
 
+def test_authorizability_does_not_create_execution_authority(monkeypatch) -> None:
+    from relay_engine.promotion.errors import PromotionAuthorizationRequired
+
+    case = _execution_case(monkeypatch)
+    prepared = case.service.prepare(case.request, observed_at=case.now)
+
+    assert prepared.state.value == "AUTHORIZABLE"
+    assert prepared.subject == case.evidence.subject
+    assert (
+        dict((item.property_name, item.outcome) for item in prepared.eligibility.properties)[
+            "RELAY_PROMOTION_AUTHORIZED"
+        ]
+        is PromotionPropertyOutcome.UNKNOWN
+    )
+    with pytest.raises(PromotionAuthorizationRequired):
+        case.service.execute(
+            case.request,
+            promotion_id=case.promotion_id,
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789099",
+            executor=case.actor,
+            observed_at=case.now,
+        )
+    assert case.github_client.update_git_ref.call_count == 0
+
+
 def test_missing_ambiguous_wrong_identity_and_non_success_checks_fail_closed() -> None:
     spec = GitHubRequiredCheckV1(name="quality", expected_app_id=41)
     missing = evaluate_required_check_runs(
@@ -729,6 +754,24 @@ def test_structured_acceptance_and_evaluation_continuity_is_required(monkeypatch
     assert dict(structured)["RELAY_HUMAN_ACCEPTED"] is PromotionPropertyOutcome.PASS
     assert dict(structured)["RELAY_INDEPENDENT_EVALUATION"] is PromotionPropertyOutcome.PASS
     assert dict(structured)["RELAY_CONTROL_CONTINUITY_VERIFIED"] is PromotionPropertyOutcome.PASS
+
+    target_bound_policy = case.evidence.binding.policy.model_copy(
+        update={
+            "human_acceptance_must_bind_target": True,
+            "independent_evaluation_must_bind_target": True,
+        }
+    )
+    target_bound = case.service._verify_governance_basis(
+        basis,
+        policy=target_bound_policy,
+        token=Mock(),
+        repository_path=case.request.selection.repository.path,
+    )
+    assert dict(target_bound)["RELAY_HUMAN_ACCEPTED"] is PromotionPropertyOutcome.UNKNOWN
+    assert dict(target_bound)["RELAY_INDEPENDENT_EVALUATION"] is PromotionPropertyOutcome.UNKNOWN
+    assert (
+        dict(target_bound)["RELAY_CONTROL_CONTINUITY_VERIFIED"] is PromotionPropertyOutcome.UNKNOWN
+    )
 
     monkeypatch.setattr(
         promotion_service,
