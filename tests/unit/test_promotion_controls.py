@@ -190,3 +190,33 @@ def test_required_check_rule_requires_exact_strict_parameter() -> None:
             update={"observation_digest": source_control_observation_digest(observation)}
         )
         assert evaluate_source_control_conformance(observation, policy=policy) is expected
+
+
+def test_writer_update_parameters_fail_closed() -> None:
+    policy = _policy()
+    base = _observation(observed_at=datetime(2026, 10, 2, tzinfo=UTC))
+    writer = base.rulesets[1]
+    malformed_values = (
+        ("not-json", SourceControlConformance.UNKNOWN),
+        ("[]", SourceControlConformance.UNKNOWN),
+        (json.dumps({}), SourceControlConformance.UNKNOWN),
+        (
+            json.dumps({"update_allows_fetch_and_merge": True}),
+            SourceControlConformance.FAIL,
+        ),
+    )
+
+    for value, expected in malformed_values:
+        changed_writer = writer.model_copy(
+            update={
+                "rules": tuple(
+                    (name, value) if name == "update" else (name, original)
+                    for name, original in writer.rules
+                )
+            }
+        )
+        observation = base.model_copy(update={"rulesets": (base.rulesets[0], changed_writer)})
+        observation = observation.model_copy(
+            update={"observation_digest": source_control_observation_digest(observation)}
+        )
+        assert evaluate_source_control_conformance(observation, policy=policy) is expected

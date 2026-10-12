@@ -165,8 +165,19 @@ def evaluate_source_control_conformance(
         return SourceControlConformance.FAIL
     if "update" not in writer_rules:
         return SourceControlConformance.FAIL
-    update_parameters = json.loads(writer_rules["update"])
-    if update_parameters.get("update_allows_fetch_and_merge") is not False:
+    try:
+        parsed_update_parameters: object = json.loads(writer_rules["update"])
+    except json.JSONDecodeError, TypeError:
+        return SourceControlConformance.UNKNOWN
+    if not isinstance(parsed_update_parameters, dict):
+        return SourceControlConformance.UNKNOWN
+    update_parameters = cast(dict[str, object], parsed_update_parameters)
+    update_allows_fetch_and_merge = update_parameters.get("update_allows_fetch_and_merge")
+    if update_allows_fetch_and_merge is None:
+        return SourceControlConformance.UNKNOWN
+    if not isinstance(update_allows_fetch_and_merge, bool):
+        return SourceControlConformance.UNKNOWN
+    if update_allows_fetch_and_merge is True:
         return SourceControlConformance.FAIL
     return SourceControlConformance.PASS
 

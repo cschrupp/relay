@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import UTC, datetime
 
 import pytest
@@ -5,6 +6,7 @@ import pytest
 import relay_engine.promotion.bindings as bindings
 from relay_engine.domain import ActorKind, ActorRef, Project, RepositoryRef
 from relay_engine.persistence import open_database
+from relay_engine.persistence.database import RelayDatabase
 from relay_engine.project_slice import MutationMetadata, create_project
 from relay_engine.promotion.bindings import (
     BindingTransitionState,
@@ -189,3 +191,111 @@ def test_competing_binding_cas_allows_only_one_next_revision() -> None:
             bound_at=now,
         )
     database.connection.close()
+
+
+def test_binding_health_and_append_share_immediate_write_boundary(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    now = datetime.now(UTC)
+    database_path = tmp_path / "binding-health-race.sqlite"
+    database = open_database(database_path, apply_migrations=True, migration_applied_at=now)
+    competing_connection = sqlite3.connect(database_path, timeout=0, isolation_level=None)
+    competing_connection.row_factory = sqlite3.Row
+    competing_connection.execute("PRAGMA foreign_keys = ON")
+    competing = RelayDatabase(path=str(database_path), connection=competing_connection)
+    repository = RepositoryRef(
+        id="repo_018f47c1-7b2c-7abc-8def-123456789002",
+        host="github.com",
+        path="cschrupp/relay",
+    )
+    project_id = "prj_018f47c1-7b2c-7abc-8def-123456789001"
+    actor = ActorRef(kind=ActorKind.HUMAN, id="act_018f47c1-7b2c-7abc-8def-123456789003")
+    create_project(
+        database,
+        Project(id=project_id, name="Relay", primary_repository=repository),
+        MutationMetadata(actor=actor, occurred_at=now, reason="Binding health race."),
+    )
+    preparation = prepare_policy_binding_transition(
+        database,
+        project_id=project_id,
+        repository=repository,
+        canonical_ref="refs/heads/main",
+        target_state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+        target_policy=None,
+        control_observation=None,
+    )
+    authorization = authorize_policy_binding_transition(
+        database,
+        authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789008",
+        preparation=preparation,
+        actor=actor,
+        granted_at=now,
+        reason="Exact authority for the atomic health race test.",
+    )
+    competing.connection.execute(
+        "INSERT INTO repository_promotion_intents "
+        "(promotion_id, project_id, repository_id, canonical_ref, subject_digest, "
+        "expected_parent_sha, target_sha, created_at, payload_json) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            "prom_018f47c1-7b2c-7abc-8def-123456789009",
+            project_id,
+            repository.id,
+            "refs/heads/main",
+            "sha256:" + "1" * 64,
+            "a" * 40,
+            "b" * 40,
+            now.isoformat(),
+            "{}",
+        ),
+    )
+
+    real_health = bindings.canonical_ref_health
+    quarantine_write_blocked = False
+
+    def attempt_quarantine_result_write(*args, **kwargs):
+        nonlocal quarantine_write_blocked
+        health = real_health(*args, **kwargs)
+        if database.connection.in_transaction:
+            try:
+                competing.connection.execute("BEGIN IMMEDIATE")
+            except sqlite3.OperationalError:
+                quarantine_write_blocked = True
+            else:
+                competing.connection.execute(
+                    "INSERT INTO repository_promotion_results "
+                    "(promotion_id, project_id, repository_id, canonical_ref, target_sha, "
+                    "outcome, observed_at, payload_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        "prom_018f47c1-7b2c-7abc-8def-123456789009",
+                        project_id,
+                        repository.id,
+                        "refs/heads/main",
+                        "b" * 40,
+                        "VISIBLE_UNVERIFIED",
+                        now.isoformat(),
+                        "{}",
+                    ),
+                )
+                competing.connection.commit()
+        return health
+
+    monkeypatch.setattr(bindings, "canonical_ref_health", attempt_quarantine_result_write)
+    execute_policy_binding_transition(
+        database,
+        preparation=preparation,
+        authorization_id=authorization.authorization_id,
+        binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789010",
+        bound_at=now,
+    )
+
+    assert quarantine_write_blocked is True
+    assert (
+        competing.connection.execute(
+            "SELECT 1 FROM repository_promotion_results WHERE promotion_id = ?",
+            ("prom_018f47c1-7b2c-7abc-8def-123456789009",),
+        ).fetchone()
+        is None
+    )
+    competing.close()
+    database.close()

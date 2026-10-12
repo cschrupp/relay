@@ -1035,24 +1035,33 @@ def insert_canonical_promotion_policy_binding(
     """Append one immutable exact canonical-ref policy-binding revision."""
 
     with _write(database) as connection:
-        _insert_payload(
-            connection,
-            "canonical_promotion_policy_bindings",
-            "binding_id",
-            value.binding_id,
-            value,
-            {
-                "project_id": value.project_id,
-                "repository_id": value.repository.id,
-                "canonical_ref": value.canonical_ref,
-                "revision": value.revision,
-                "state": value.state.value,
-                "policy_digest": value.policy_digest,
-                "authorization_id": value.authorization_id,
-                "supersedes_binding_id": value.supersedes_binding_id,
-                "bound_at": value.bound_at,
-            },
-        )
+        insert_canonical_promotion_policy_binding_from_connection(connection, value)
+
+
+def insert_canonical_promotion_policy_binding_from_connection(
+    connection: sqlite3.Connection,
+    value: CanonicalPromotionPolicyBindingV1,
+) -> None:
+    """Append one immutable binding row inside a caller-owned transaction."""
+
+    _insert_payload(
+        connection,
+        "canonical_promotion_policy_bindings",
+        "binding_id",
+        value.binding_id,
+        value,
+        {
+            "project_id": value.project_id,
+            "repository_id": value.repository.id,
+            "canonical_ref": value.canonical_ref,
+            "revision": value.revision,
+            "state": value.state.value,
+            "policy_digest": value.policy_digest,
+            "authorization_id": value.authorization_id,
+            "supersedes_binding_id": value.supersedes_binding_id,
+            "bound_at": _datetime_text(value.bound_at),
+        },
+    )
 
 
 def load_canonical_promotion_policy_bindings(

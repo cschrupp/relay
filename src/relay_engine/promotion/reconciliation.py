@@ -10,6 +10,7 @@ from relay_engine.domain.ids import (
 )
 from relay_engine.persistence import (
     PersistenceError,
+    PersistenceIntegrityError,
     RelayDatabase,
     insert_canonical_promotion_reconciliation,
     insert_repository_mutation_authorization,
@@ -20,7 +21,9 @@ from relay_engine.persistence import (
 )
 from relay_engine.promotion.bindings import (
     canonical_ref_health,
+    promotion_intent_authority_is_valid,
     resolve_canonical_policy_binding,
+    validate_canonical_promotion_reconciliation_integrity,
 )
 from relay_engine.promotion.errors import (
     PromotionAuthorizationRequired,
@@ -91,6 +94,8 @@ class CanonicalPromotionReconciliationService:
             return self._ineligible(
                 "request does not reconstruct the exact original promotion basis"
             )
+        if not promotion_intent_authority_is_valid(self._database, intent):
+            return self._unknown("original promotion authorization cannot be verified exactly")
         health = canonical_ref_health(
             self._database,
             project_id=intent.project_id,
@@ -247,6 +252,12 @@ class CanonicalPromotionReconciliationService:
                 or existing.target_commit != request.target_commit
             ):
                 raise ValueError("stored reconciliation conflicts with the exact request")
+            try:
+                validate_canonical_promotion_reconciliation_integrity(self._database, existing)
+            except PersistenceError as error:
+                raise PersistenceIntegrityError(
+                    "stored reconciliation is not an accepted exact causal record"
+                ) from error
             return existing
         preparation = self.prepare(request, promotion_id=promotion_id, observed_at=observed_at)
         subject = preparation.subject

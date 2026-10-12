@@ -14,6 +14,7 @@ from relay_engine.persistence import (
     insert_repository_mutation_authorization,
     insert_repository_promotion_intent,
     insert_repository_promotion_result,
+    load_repository_mutation_authorization,
     load_repository_promotion_intent,
     load_repository_promotion_result,
     open_database,
@@ -402,7 +403,13 @@ def test_execution_commits_intent_before_nonforce_ref_update(monkeypatch) -> Non
     )
 
 
-def _insert_unresolved_intent(case: _ExecutionCase, *, basis_digest: str | None = None) -> None:
+def _insert_unresolved_intent(
+    case: _ExecutionCase,
+    *,
+    basis_digest: str | None = None,
+    authorization_id: str | None = None,
+    authorization_subject_digest: str | None = None,
+) -> None:
     evidence = case.evidence
     insert_repository_promotion_intent(
         case.database,
@@ -413,8 +420,10 @@ def _insert_unresolved_intent(case: _ExecutionCase, *, basis_digest: str | None 
             canonical_ref=evidence.subject.canonical_ref,
             subject=evidence.subject,
             subject_digest=canonical_promotion_subject_digest(evidence.subject),
-            authorization_id=case.authorization_id,
-            authorization_subject_digest=canonical_promotion_subject_digest(evidence.subject),
+            authorization_id=authorization_id or case.authorization_id,
+            authorization_subject_digest=(
+                authorization_subject_digest or canonical_promotion_subject_digest(evidence.subject)
+            ),
             binding=evidence.binding,
             policy=evidence.binding.policy,
             governance_basis_digest=evidence.subject.governance_basis_digest,
@@ -812,38 +821,30 @@ def test_structured_acceptance_and_evaluation_continuity_is_required(monkeypatch
 def test_reconciliation_target_state_replay_returns_exact_record(
     monkeypatch, requested_reconciliation_id: str
 ) -> None:
-    case = _execution_case(monkeypatch)
-    _insert_unresolved_intent(case)
-    record = CanonicalPromotionReconciliationV1(
-        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789095",
-        promotion_id=case.promotion_id,
-        project_id=case.request.selection.project_id,
-        repository=case.request.selection.repository,
-        canonical_ref=case.request.canonical_ref,
-        original_visible_unverified_result_digest="sha256:" + "1" * 64,
-        target_commit=case.request.target_commit,
-        authorization_id=case.authorization_id,
-        reconciliation_subject_digest="sha256:" + "2" * 64,
-        original_binding_id=case.evidence.binding.binding_id,
-        original_binding_revision=case.evidence.binding.revision,
-        original_binding_digest=binding_digest(case.evidence.binding),
-        original_policy_digest=policy_digest(case.evidence.binding.policy),
-        original_governance_basis_digest=case.request.governance_basis.governance_basis_digest,
-        current_required_check_observation_digest=case.evidence.check_observation.observation_digest,
-        current_source_control_observation_digest=case.evidence.control_observation.observation_digest,
-        reconciled_at=case.now,
-        reconciled_by=case.actor,
+    case, service = _reconciliation_case(monkeypatch)
+    preparation = service.prepare(
+        case.request, promotion_id=case.promotion_id, observed_at=case.now
     )
-    insert_canonical_promotion_reconciliation(case.database, record)
-    service = CanonicalPromotionReconciliationService(
-        database=case.database,
-        promotion_service=case.service,
+    authorization = service.authorize(
+        authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789093",
+        preparation=preparation,
+        actor=case.actor,
+        granted_at=case.now,
+        reason="Authorize one exact reconciliation for replay tests.",
+    )
+    record = service.execute(
+        case.request,
+        promotion_id=case.promotion_id,
+        authorization_id=authorization.authorization_id,
+        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789095",
+        reconciled_by=case.actor,
+        observed_at=case.now,
     )
 
     replay = service.execute(
         case.request,
         promotion_id=case.promotion_id,
-        authorization_id=case.authorization_id,
+        authorization_id=authorization.authorization_id,
         reconciliation_id=requested_reconciliation_id,
         reconciled_by=case.actor,
         observed_at=case.now,
@@ -853,8 +854,60 @@ def test_reconciliation_target_state_replay_returns_exact_record(
     assert case.github_client.update_git_ref.call_count == 0
 
 
+def test_reconciliation_replay_rejects_valid_shaped_record_with_wrong_authority(
+    monkeypatch,
+) -> None:
+    from relay_engine.persistence import PersistenceIntegrityError
+
+    case, service = _reconciliation_case(monkeypatch)
+    preparation = service.prepare(
+        case.request, promotion_id=case.promotion_id, observed_at=case.now
+    )
+    assert preparation.subject is not None
+    assert preparation.subject_digest is not None
+    subject = preparation.subject
+    invalid_record = CanonicalPromotionReconciliationV1(
+        reconciliation_id="recon_018f47c1-7b2c-7abc-8def-123456789094",
+        promotion_id=case.promotion_id,
+        project_id=subject.project_id,
+        repository=subject.repository,
+        canonical_ref=subject.canonical_ref,
+        original_visible_unverified_result_digest=subject.visible_unverified_result_digest,
+        target_commit=subject.original_target_commit,
+        authorization_id=case.authorization_id,
+        reconciliation_subject_digest=preparation.subject_digest,
+        original_binding_id=subject.original_binding_id,
+        original_binding_revision=subject.original_binding_revision,
+        original_binding_digest=subject.original_binding_digest,
+        original_policy_digest=subject.original_policy_digest,
+        original_governance_basis_digest=subject.original_governance_basis_digest,
+        current_required_check_observation_digest=(
+            subject.current_required_check_observation_digest
+        ),
+        current_source_control_observation_digest=(
+            subject.current_source_control_observation_digest
+        ),
+        reconciled_at=case.now,
+        reconciled_by=case.actor,
+    )
+    insert_canonical_promotion_reconciliation(case.database, invalid_record)
+
+    with pytest.raises(PersistenceIntegrityError, match="not an accepted exact causal record"):
+        service.execute(
+            case.request,
+            promotion_id=case.promotion_id,
+            authorization_id=case.authorization_id,
+            reconciliation_id=invalid_record.reconciliation_id,
+            reconciled_by=case.actor,
+            observed_at=case.now,
+        )
+    assert case.github_client.update_git_ref.call_count == 0
+
+
 def _reconciliation_case(
     monkeypatch,
+    *,
+    original_authority: str = "valid",
 ) -> tuple[_ExecutionCase, CanonicalPromotionReconciliationService]:
     case = _execution_case(monkeypatch)
     binding = case.evidence.binding
@@ -883,7 +936,38 @@ def _reconciliation_case(
         ),
     )
     insert_canonical_promotion_policy_binding(case.database, binding)
-    _insert_unresolved_intent(case)
+    intent_authorization_id = case.authorization_id
+    intent_authorization_digest = canonical_promotion_subject_digest(case.evidence.subject)
+    if original_authority == "missing":
+        intent_authorization_id = "rma_018f47c1-7b2c-7abc-8def-123456789096"
+    elif original_authority == "wrong_subject":
+        intent_authorization_id = binding.authorization_id
+    elif original_authority == "wrong_digest":
+        intent_authorization_digest = "sha256:" + "9" * 64
+    elif original_authority == "non_human":
+        import json
+
+        source = load_repository_mutation_authorization(case.database, case.authorization_id)
+        assert source is not None
+        payload = source.model_dump(mode="json")
+        payload["authorization_id"] = "rma_018f47c1-7b2c-7abc-8def-123456789095"
+        payload["actor"]["kind"] = "AGENT"
+        case.database.connection.execute(
+            "INSERT INTO repository_mutation_authorizations "
+            "(authorization_id, project_id, subject_digest, payload_json) VALUES (?, ?, ?, ?)",
+            (
+                payload["authorization_id"],
+                payload["project_id"],
+                payload["subject_digest"],
+                json.dumps(payload, sort_keys=True, separators=(",", ":")),
+            ),
+        )
+        intent_authorization_id = payload["authorization_id"]
+    _insert_unresolved_intent(
+        case,
+        authorization_id=intent_authorization_id,
+        authorization_subject_digest=intent_authorization_digest,
+    )
     visible = RepositoryPromotionResultV1(
         promotion_id=case.promotion_id,
         project_id=case.request.selection.project_id,
@@ -1030,4 +1114,29 @@ def test_original_policy_violation_is_ineligible_and_unverifiable_is_unknown(mon
     )
     unknown = service.prepare(case.request, promotion_id=case.promotion_id, observed_at=case.now)
     assert unknown.state is ReconciliationPreparationState.UNKNOWN
+    assert case.github_client.update_git_ref.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "authority_state", ["missing", "wrong_subject", "wrong_digest", "non_human"]
+)
+def test_invalid_original_promotion_authority_keeps_quarantine_unknown(
+    monkeypatch, authority_state: str
+) -> None:
+    from relay_engine.promotion.bindings import canonical_ref_health
+
+    case, service = _reconciliation_case(monkeypatch, original_authority=authority_state)
+    health = canonical_ref_health(
+        case.database,
+        project_id=case.request.selection.project_id,
+        repository_id=case.request.selection.repository.id,
+        canonical_ref=case.request.canonical_ref,
+    )
+    preparation = service.prepare(
+        case.request, promotion_id=case.promotion_id, observed_at=case.now
+    )
+
+    assert health.value == "UNKNOWN"
+    assert preparation.state is ReconciliationPreparationState.UNKNOWN
+    assert preparation.subject is None
     assert case.github_client.update_git_ref.call_count == 0
