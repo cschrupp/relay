@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 closed; Slice 1.9 implementation complete / technically accepted / closure-ready; Phase 2 open; agent execution unauthorized
+**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 closed; Slice 1.9 COMPLETE / ACCEPTED / CLOSED; Phase 2 open; agent execution unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
@@ -22,10 +22,12 @@ Slice 1.8 — Governance Assurance Reference Model:
   Accepted technical candidate: 35046bb378808a1325ecb84eace5aacd3040ca98
   Exact closure candidate: 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 Slice 1.9 — Human Decision Support & Governance Review Surface:
-  OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
-  Accepted candidate: 77ad34cf47828464a430ebdbecf1b816f158ae55
+  COMPLETE / ACCEPTED / CLOSED
+  Accepted technical candidate: 77ad34cf47828464a430ebdbecf1b816f158ae55
   RLY-S19-EVAL-003 — ACCEPT; RLY-S19-ACCEPT-001 — ACCEPTED
-  RLY-S19-CLOSE-AUTH-001 — AUTHORIZED; independent closure evaluation PENDING
+  RLY-S19-CLOSE-EVAL-001 — REWORK; RLY-S19-CLOSE-EVAL-002 — ACCEPT
+  RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
+  Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement:
   PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
@@ -92,7 +94,7 @@ Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 Roadmap re-baseline: RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 Slice 1.8 — Governance Assurance Reference Model: COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
-Slice 1.9 — Human Decision Support and Governance Review Surface: OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
+Slice 1.9 — Human Decision Support and Governance Review Surface: COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.2 — Role Contracts: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.3 — Context and Work-Packet Contract: PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -117,7 +119,7 @@ Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens a
 ```text
 Current Phase 1 roadmap:
 1.8 — Governance Assurance Reference Model: COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
-1.9 — Human Decision Support and Governance Review Surface: OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
+1.9 — Human Decision Support and Governance Review Surface: COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Then Phase 2 continues:
@@ -163,9 +165,9 @@ Authority: `RLY-S18-IMPL-AUTH-001`; implementation start `a7cd87fea89e3b0273da1d
 
 The consolidated [reference model](architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md) contains all 17 native properties, exact subject/policy contracts, cross-cutting Decision Support, prospective GovernanceProfile rules, protected-asset mutation-authority separation, workflow neutrality, external mapping/freshness, and downstream ownership. Supporting documents provide [20 worked examples and 30 negative cases](architecture/GOVERNANCE_ASSURANCE_EXAMPLES.md) and [mapping/source traceability](references/GOVERNANCE_ASSURANCE_MAPPING_MATRIX.md). See the [implementation handoff](reviews/SLICE_1_8_IMPLEMENTATION_HANDOFF_REV2.md) for design coverage and quality evidence.
 
-Product Proposal revision 49 records Slice 1.8 closure and Slice 1.9 implementation acceptance and closure readiness. Slice 1.9 remains open pending independent closure evaluation under `RLY-S19-CLOSE-AUTH-001`. Historical Slice 2.1 roadmap references to Slice 1.9 source/promotion enforcement are superseded by accepted RW1-D01: Slice 1.9 owns Decision Support and Slice 1.10 owns enforcement.
+Product Proposal revision 50 records Slice 1.8 and Slice 1.9 closure. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Historical Slice 2.1 roadmap references to Slice 1.9 source/promotion enforcement are superseded by accepted RW1-D01: Slice 1.9 owns Decision Support and Slice 1.10 owns enforcement.
 
-No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation and Human technical acceptance were followed by `RLY-S18-CLOSE-EVAL-001 — ACCEPT`; Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; `RLY-S19-CLOSE-EVAL-001 — REWORK` requires the bounded projection correction. Slice 1.10 remains PLANNED / NOT OPEN / NOT AUTHORIZED. Phase 3 and agent execution remain unauthorized.
+No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation and Human technical acceptance were followed by `RLY-S18-CLOSE-EVAL-001 — ACCEPT`; Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is COMPLETE / ACCEPTED / CLOSED after `RLY-S19-CLOSE-EVAL-001 — REWORK` and corrective `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 remains PLANNED / NOT OPEN / NOT AUTHORIZED. Phase 3 and agent execution remain unauthorized.
 
 # 1C. Slice 2.1 historical opening
 
@@ -557,7 +559,7 @@ Slice 1.8:
 COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 
 Slice 1.9 — Human Decision Support and Governance Review Surface:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
+COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 
 Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -940,7 +942,7 @@ Slice 1.8:
 COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 
 Slice 1.9:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
+COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 
 Phase 2:
 OPEN — RLY-P2-OPEN-001
