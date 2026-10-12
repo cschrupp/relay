@@ -304,12 +304,113 @@ MANUAL_EVALUATION_MIGRATION = Migration(
     ),
 )
 
+CANONICAL_PROMOTION_MIGRATION = Migration(
+    version=6,
+    name="repository canonical promotion evidence",
+    statements=(
+        """CREATE TABLE canonical_promotion_policy_bindings (
+            binding_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            revision INTEGER NOT NULL CHECK (revision >= 1),
+            state TEXT NOT NULL CHECK (state IN ('UNMANAGED', 'MANAGED')),
+            policy_digest TEXT,
+            authorization_id TEXT NOT NULL,
+            supersedes_binding_id TEXT,
+            bound_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            UNIQUE(project_id, repository_id, canonical_ref, revision),
+            UNIQUE(supersedes_binding_id),
+            CHECK ((state = 'UNMANAGED' AND policy_digest IS NULL)
+                OR (state = 'MANAGED' AND policy_digest IS NOT NULL))
+        )""",
+        """CREATE INDEX canonical_promotion_bindings_by_ref_revision
+        ON canonical_promotion_policy_bindings(
+            project_id, repository_id, canonical_ref, revision, binding_id
+        )""",
+        """CREATE TABLE repository_promotion_intents (
+            promotion_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            subject_digest TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_intents_by_project_ref_subject
+        ON repository_promotion_intents(project_id, repository_id, canonical_ref,
+            subject_digest, promotion_id)""",
+        """CREATE TABLE repository_promotion_results (
+            promotion_id TEXT PRIMARY KEY REFERENCES repository_promotion_intents(promotion_id),
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            outcome TEXT NOT NULL CHECK (outcome IN
+                ('SUCCEEDED', 'NOT_APPLIED', 'CONFLICT', 'VISIBLE_UNVERIFIED')),
+            completed_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_results_by_project_ref_outcome
+        ON repository_promotion_results(project_id, repository_id, canonical_ref,
+            outcome, promotion_id)""",
+        """CREATE TABLE repository_promotion_reconciliations (
+            reconciliation_id TEXT PRIMARY KEY,
+            promotion_id TEXT NOT NULL UNIQUE
+                REFERENCES repository_promotion_intents(promotion_id),
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
+            authorization_id TEXT NOT NULL,
+            reconciled_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_reconciliations_by_project_ref
+        ON repository_promotion_reconciliations(project_id, repository_id, canonical_ref,
+            promotion_id)""",
+        """CREATE TRIGGER canonical_promotion_policy_bindings_no_update
+        BEFORE UPDATE ON canonical_promotion_policy_bindings BEGIN
+            SELECT RAISE(ABORT, 'Canonical promotion policy bindings are append-only');
+        END""",
+        """CREATE TRIGGER canonical_promotion_policy_bindings_no_delete
+        BEFORE DELETE ON canonical_promotion_policy_bindings BEGIN
+            SELECT RAISE(ABORT, 'Canonical promotion policy bindings are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_intents_no_update
+        BEFORE UPDATE ON repository_promotion_intents BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion intents are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_intents_no_delete
+        BEFORE DELETE ON repository_promotion_intents BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion intents are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_results_no_update
+        BEFORE UPDATE ON repository_promotion_results BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion results are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_results_no_delete
+        BEFORE DELETE ON repository_promotion_results BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion results are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_reconciliations_no_update
+        BEFORE UPDATE ON repository_promotion_reconciliations BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion reconciliations are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_reconciliations_no_delete
+        BEFORE DELETE ON repository_promotion_reconciliations BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion reconciliations are append-only');
+        END""",
+    ),
+)
+
 DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     INITIAL_MIGRATION,
     GITHUB_INTEGRATION_MIGRATION,
     REPOSITORY_MUTATION_AUTHORITY_MIGRATION,
     PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION,
     MANUAL_EVALUATION_MIGRATION,
+    CANONICAL_PROMOTION_MIGRATION,
 )
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
@@ -343,6 +444,10 @@ REQUIRED_TABLES = frozenset(
         "slice_definition_revisions",
         "slice_results",
         "manual_evaluations",
+        "canonical_promotion_policy_bindings",
+        "repository_promotion_intents",
+        "repository_promotion_results",
+        "repository_promotion_reconciliations",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -357,6 +462,10 @@ REQUIRED_INDEXES = frozenset(
         "slice_definition_revisions_by_project_revision",
         "slice_results_by_slice_sequence",
         "manual_evaluations_by_slice_result_sequence",
+        "canonical_promotion_bindings_by_ref_revision",
+        "repository_promotion_intents_by_project_ref_subject",
+        "repository_promotion_results_by_project_ref_outcome",
+        "repository_promotion_reconciliations_by_project_ref",
     }
 )
 REQUIRED_TRIGGERS = frozenset(
@@ -369,6 +478,14 @@ REQUIRED_TRIGGERS = frozenset(
         "slice_results_no_delete",
         "manual_evaluations_no_update",
         "manual_evaluations_no_delete",
+        "canonical_promotion_policy_bindings_no_update",
+        "canonical_promotion_policy_bindings_no_delete",
+        "repository_promotion_intents_no_update",
+        "repository_promotion_intents_no_delete",
+        "repository_promotion_results_no_update",
+        "repository_promotion_results_no_delete",
+        "repository_promotion_reconciliations_no_update",
+        "repository_promotion_reconciliations_no_delete",
     }
 )
 

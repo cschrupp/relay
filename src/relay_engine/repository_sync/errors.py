@@ -45,6 +45,14 @@ class RepositorySyncWorkflowMutationUnsupported(RepositorySyncError):
     """Contents-only repository tokens cannot create or change workflow files."""
 
 
+class RepositorySyncCanonicalRefReserved(RepositorySyncError):
+    """A managed canonical ref is reserved for CanonicalPromotionService."""
+
+
+class RepositorySyncCanonicalPolicyUnknown(RepositorySyncError):
+    """Binding or health cannot prove a canonical ref safe for sync mutation."""
+
+
 class RepositorySyncProtectedBranch(RepositorySyncError):
     """GitHub rejected the non-force update under branch protection or rules."""
 
@@ -74,6 +82,8 @@ __all__ = [
     "RepositorySyncAuthorizationRequired",
     "RepositorySyncAuthorizationStale",
     "RepositorySyncConflict",
+    "RepositorySyncCanonicalPolicyUnknown",
+    "RepositorySyncCanonicalRefReserved",
     "RepositorySyncDefaultBranchChanged",
     "RepositorySyncError",
     "RepositorySyncInvalidRemote",

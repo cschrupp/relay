@@ -101,6 +101,49 @@ def test_client_403_rate_limit_precedes_permission_classification() -> None:
         )
 
 
+def test_latest_check_run_request_pins_sha_name_app_and_latest_filter() -> None:
+    transport = FakeTransport(
+        [
+            _response(
+                200,
+                {
+                    "check_runs": [
+                        {
+                            "id": 900,
+                            "name": "quality",
+                            "head_sha": "a" * 40,
+                            "status": "completed",
+                            "conclusion": "success",
+                            "app": {"id": 77},
+                            "completed_at": "2026-09-27T17:00:00Z",
+                        }
+                    ]
+                },
+            )
+        ]
+    )
+    client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)
+    token = GitHubInstallationToken(
+        token=SecretStr("read-token"), expires_at=NOW + timedelta(hours=1)
+    )
+
+    runs = client.get_latest_check_runs(
+        token=token,
+        repository_path="cschrupp/relay",
+        commit_sha="a" * 40,
+        check_name="quality",
+        app_id=77,
+    )
+
+    assert len(runs) == 1
+    assert runs[0].head_sha == "a" * 40
+    assert runs[0].app_id == 77
+    assert transport.requests[0].method == "GET"
+    assert transport.requests[0].url.endswith(
+        "/commits/" + "a" * 40 + "/check-runs?check_name=quality&app_id=77&filter=latest"
+    )
+
+
 def test_client_ordinary_403_is_permission_error() -> None:
     transport = FakeTransport([_response(403, {"message": "forbidden"})])
     client = GitHubClient(GitHubAppConfig(client_id="Iv1.test"), transport)

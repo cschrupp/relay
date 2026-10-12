@@ -4,9 +4,9 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated, Literal, cast
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from relay_engine.domain import (
     ActorKind,
@@ -23,6 +23,14 @@ from relay_engine.domain._base import (
     require_repository_relative_path,
 )
 from relay_engine.integrations.github.models import GitHubRepositoryAccessSelection
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionReconciliationSubjectV1,
+    CanonicalPromotionSubjectV1,
+    canonical_policy_binding_subject_digest,
+    canonical_promotion_subject_digest,
+    reconciliation_subject_digest,
+)
 from relay_engine.repository_contract.models import RepositoryRegistry
 
 
@@ -63,9 +71,41 @@ class ArtifactWriteDigest(DomainModel):
         return require_repository_relative_path(value)
 
 
+def _add_legacy_repository_sync_discriminator(value: object) -> object:
+    """Read only the exact pre-discriminator RepositorySync wire shape."""
+
+    if isinstance(value, dict):
+        payload = cast(dict[str, object], value)
+        expected_sync_keys = {
+            "schema_version",
+            "project_id",
+            "repository",
+            "installation_id",
+            "github_repository_id",
+            "github_node_id",
+            "expected_state_revision",
+            "expected_default_branch",
+            "expected_base_commit",
+            "target_registry_digest",
+            "artifact_write_digests",
+        }
+        if "subject_type" not in payload and set(payload) == expected_sync_keys:
+            payload = {**payload, "subject_type": "RepositorySyncSubjectV1"}
+        if payload.get("subject_type") == "RepositorySyncSubjectV1":
+            writes = payload.get("artifact_write_digests")
+            if isinstance(writes, list):
+                payload = {
+                    **payload,
+                    "artifact_write_digests": tuple(cast(list[object], writes)),
+                }
+        return payload
+    return value
+
+
 class RepositorySyncSubjectV1(DomainModel):
     """Deterministic, exact mutation subject approved by Human Authority."""
 
+    subject_type: Literal["RepositorySyncSubjectV1"] = "RepositorySyncSubjectV1"
     schema_version: Literal[1] = 1
     project_id: ProjectId
     repository: RepositoryRef
@@ -114,6 +154,14 @@ class RepositorySyncSubjectV1(DomainModel):
         if self.expected_base_commit.repository != self.repository:
             raise ValueError("expected base commit must use the subject RepositoryRef")
         return self
+
+
+type RepositoryMutationSubject = (
+    RepositorySyncSubjectV1
+    | CanonicalPromotionSubjectV1
+    | CanonicalPolicyBindingSubjectV1
+    | CanonicalPromotionReconciliationSubjectV1
+)
 
 
 class RepositorySyncRequest(DomainModel):
@@ -190,7 +238,11 @@ class RepositoryMutationAuthorization(DomainModel):
     authorization_id: RepositoryMutationAuthorizationId
     project_id: ProjectId
     subject_schema_version: Literal[1] = 1
-    subject: RepositorySyncSubjectV1
+    subject: Annotated[
+        RepositoryMutationSubject,
+        Field(discriminator="subject_type"),
+        BeforeValidator(_add_legacy_repository_sync_discriminator),
+    ]
     subject_digest: ContentDigest
     actor: ActorRef
     granted_at: datetime
@@ -216,7 +268,10 @@ class RepositoryMutationAuthorization(DomainModel):
             raise ValueError("authorization project does not match its subject")
         if self.subject_schema_version != self.subject.schema_version:
             raise ValueError("authorization subject schema version does not match its subject")
-        if self.subject_digest != repository_sync_subject_digest(self.subject):
+        accepted_digests = {repository_mutation_subject_digest(self.subject)}
+        if isinstance(self.subject, RepositorySyncSubjectV1):
+            accepted_digests.add(repository_sync_legacy_subject_digest(self.subject))
+        if self.subject_digest not in accepted_digests:
             raise ValueError("authorization digest does not match its exact subject")
         return self
 
@@ -256,6 +311,32 @@ def repository_sync_subject_digest(subject: RepositorySyncSubjectV1) -> ContentD
         separators=(",", ":"),
     ).encode("utf-8")
     return _sha256_digest(raw)
+
+
+def repository_sync_legacy_subject_digest(subject: RepositorySyncSubjectV1) -> ContentDigest:
+    """Digest the pre-Slice-1.10 RepositorySync subject wire representation."""
+
+    payload = subject.model_dump(mode="json")
+    payload.pop("subject_type", None)
+    raw = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return _sha256_digest(raw)
+
+
+def repository_mutation_subject_digest(
+    subject: RepositoryMutationSubject,
+) -> ContentDigest:
+    if isinstance(subject, RepositorySyncSubjectV1):
+        return repository_sync_subject_digest(subject)
+    if isinstance(subject, CanonicalPromotionSubjectV1):
+        return canonical_promotion_subject_digest(subject)
+    if isinstance(subject, CanonicalPolicyBindingSubjectV1):
+        return canonical_policy_binding_subject_digest(subject)
+    return reconciliation_subject_digest(subject)
 
 
 def artifact_write_digest(raw_bytes: bytes) -> ContentDigest:

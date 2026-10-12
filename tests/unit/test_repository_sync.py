@@ -55,11 +55,18 @@ from relay_engine.lifecycle import (
 )
 from relay_engine.persistence import (
     PersistenceIntegrityError,
+    insert_canonical_promotion_policy_binding,
     insert_repository_mutation_authorization,
     load_repository_mutation_authorization,
     open_database,
 )
 from relay_engine.project_slice import MutationMetadata, create_project
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionPolicyBindingState,
+    CanonicalPromotionPolicyBindingV1,
+    canonical_policy_binding_subject_digest,
+)
 from relay_engine.repository_contract import (
     RepositoryArtifactClass,
     RepositoryArtifactRevision,
@@ -172,6 +179,7 @@ def _event(
 
 def _permissions(*, write: bool) -> tuple[GitHubPermissionGrant, ...]:
     return (
+        GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
         GitHubPermissionGrant(
             name="contents",
             level=GitHubPermissionLevel.WRITE if write else GitHubPermissionLevel.READ,
@@ -383,6 +391,46 @@ class _FakeGitHub:
 def fixture_env():
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=NOW)
     _create_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
+    binding_subject = CanonicalPolicyBindingSubjectV1(
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        canonical_ref="refs/heads/main",
+        expected_current_binding_id=None,
+        expected_current_revision=0,
+        expected_current_binding_digest=None,
+        target_revision=1,
+        target_state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+        target_policy=None,
+        target_policy_digest=None,
+    )
+    insert_repository_mutation_authorization(
+        database,
+        RepositoryMutationAuthorization(
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789011",
+            project_id=PROJECT_ID,
+            subject=binding_subject,
+            subject_digest=canonical_policy_binding_subject_digest(binding_subject),
+            actor=ACTOR,
+            granted_at=NOW,
+            reason="Test fixture binds the non-managed canonical ref.",
+        ),
+    )
+    insert_canonical_promotion_policy_binding(
+        database,
+        CanonicalPromotionPolicyBindingV1(
+            binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789010",
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            canonical_ref="refs/heads/main",
+            revision=1,
+            state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+            policy=None,
+            policy_digest=None,
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789011",
+            supersedes_binding_id=None,
+            bound_at=NOW,
+        ),
+    )
     github_store = GitHubIntegrationStore(database)
     state = _make_state(write=True)
     github_store.apply_mutation(
@@ -1362,7 +1410,7 @@ def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions[-1] == 5
+        assert versions[-1] == 6
     finally:
         restarted.close()
 

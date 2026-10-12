@@ -23,6 +23,10 @@ type IdPrefix = Literal[
     "rma_",
     "res_",
     "eval_",
+    "cpol_",
+    "cpb_",
+    "prom_",
+    "recon_",
 ]
 
 _UUID_TEXT = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -44,6 +48,10 @@ type ExecutionId = Annotated[str, Field(pattern=rf"^exec_{_UUID_TEXT}$")]
 type RepositoryMutationAuthorizationId = Annotated[str, Field(pattern=rf"^rma_{_UUID_TEXT}$")]
 type SliceResultId = Annotated[str, Field(pattern=rf"^res_{_UUID_TEXT}$")]
 type ManualEvaluationId = Annotated[str, Field(pattern=rf"^eval_{_UUID_TEXT}$")]
+type CanonicalPromotionPolicyId = Annotated[str, Field(pattern=rf"^cpol_{_UUID_TEXT}$")]
+type CanonicalPromotionBindingId = Annotated[str, Field(pattern=rf"^cpb_{_UUID_TEXT}$")]
+type RepositoryPromotionId = Annotated[str, Field(pattern=rf"^prom_{_UUID_TEXT}$")]
+type CanonicalPromotionReconciliationId = Annotated[str, Field(pattern=rf"^recon_{_UUID_TEXT}$")]
 
 
 def new_id(prefix: IdPrefix) -> str:
@@ -67,6 +75,10 @@ def new_id(prefix: IdPrefix) -> str:
         "rma_",
         "res_",
         "eval_",
+        "cpol_",
+        "cpb_",
+        "prom_",
+        "recon_",
     ):
         raise ValueError("unsupported domain identifier prefix")
     return f"{prefix}{uuid7()}"

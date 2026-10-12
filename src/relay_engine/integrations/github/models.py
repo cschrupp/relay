@@ -220,6 +220,28 @@ class GitHubCommitObject(DomainModel):
         return value
 
 
+class GitHubCommitComparison(DomainModel):
+    """Exact provider ancestry observation for a base/head commit pair."""
+
+    base_sha: str
+    head_sha: str
+    merge_base_sha: str
+    status: str
+    ahead_by: int = Field(ge=0)
+
+    @field_validator("base_sha", "head_sha", "merge_base_sha")
+    @classmethod
+    def comparison_shas_are_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+    @field_validator("status")
+    @classmethod
+    def comparison_status_is_supported(cls, value: str) -> str:
+        if value not in {"ahead", "behind", "identical", "diverged"}:
+            raise ValueError("GitHub compare status is unknown")
+        return value
+
+
 class GitHubRefTarget(DomainModel):
     """One provider ref and its exact Git object target."""
 
@@ -236,6 +258,35 @@ class GitHubRefTarget(DomainModel):
     @classmethod
     def ref_sha_is_canonical(cls, value: str) -> str:
         return _canonical_git_sha(value)
+
+
+class GitHubCheckRun(DomainModel):
+    """One exact GitHub check-run observation on a commit."""
+
+    id: int = Field(gt=0)
+    name: str = Field(min_length=1)
+    head_sha: str
+    status: str = Field(min_length=1)
+    conclusion: str | None = None
+    app_id: int | None = Field(default=None, gt=0)
+    completed_at: datetime | None = None
+
+    @field_validator("name", "status")
+    @classmethod
+    def required_text_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
+
+    @field_validator("head_sha")
+    @classmethod
+    def head_is_canonical(cls, value: str) -> str:
+        return _canonical_git_sha(value)
+
+    @field_validator("completed_at")
+    @classmethod
+    def completion_time_is_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("completed_at must be timezone-aware")
+        return value
 
 
 class GitHubCreatedObject(DomainModel):

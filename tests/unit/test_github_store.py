@@ -47,6 +47,7 @@ def _snapshot(project_id: str, *, status=GitHubInstallationStatus.ACTIVE):
         repository_selection=GitHubRepositorySelectionMode.SELECTED,
         status=status,
         permissions=(
+            GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
             GitHubPermissionGrant(name="contents", level=GitHubPermissionLevel.READ),
             GitHubPermissionGrant(name="metadata", level=GitHubPermissionLevel.READ),
         ),
@@ -106,7 +107,7 @@ def test_migration_v3_preserves_github_tables_and_adds_sync_authority() -> None:
         versions = database.connection.execute(
             "SELECT version FROM relay_schema_migrations ORDER BY version"
         ).fetchall()
-        assert [row[0] for row in versions] == [1, 2, 3, 4, 5]
+        assert [row[0] for row in versions] == [1, 2, 3, 4, 5, 6]
 
 
 def test_store_creates_binding_and_round_trips_current_state() -> None:

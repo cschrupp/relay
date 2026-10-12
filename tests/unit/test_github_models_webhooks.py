@@ -46,6 +46,7 @@ def _private_key() -> SecretStr:
 
 def _permissions() -> tuple[GitHubPermissionGrant, ...]:
     return (
+        GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
         GitHubPermissionGrant(name="contents", level=GitHubPermissionLevel.READ),
         GitHubPermissionGrant(name="metadata", level=GitHubPermissionLevel.READ),
     )

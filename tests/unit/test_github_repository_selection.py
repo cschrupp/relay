@@ -63,6 +63,7 @@ def _state(readiness: GitHubAccessReadiness) -> GitHubInstallationState:
             repository_selection=GitHubRepositorySelectionMode.SELECTED,
             status=GitHubInstallationStatus.ACTIVE,
             permissions=(
+                GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
                 GitHubPermissionGrant(name="contents", level=GitHubPermissionLevel.READ),
                 GitHubPermissionGrant(name="metadata", level=GitHubPermissionLevel.READ),
             ),

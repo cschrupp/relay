@@ -57,6 +57,15 @@ from relay_engine.persistence.errors import (
     PersistenceIntegrityError,
 )
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionPolicyBindingV1,
+    CanonicalPromotionReconciliationV1,
+    RepositoryPromotionIntentV1,
+    RepositoryPromotionResultV1,
+    binding_digest,
+    canonical_policy_binding_subject_digest,
+)
 from relay_engine.repository_sync.models import RepositoryMutationAuthorization
 
 _EVENT_ADAPTER: TypeAdapter[LifecycleEvent] = TypeAdapter(LifecycleEvent)
@@ -1018,6 +1027,317 @@ def load_repository_mutation_authorization(
             },
         ),
     )
+
+
+def insert_canonical_promotion_policy_binding(
+    database: RelayDatabase, value: CanonicalPromotionPolicyBindingV1
+) -> None:
+    """Append one immutable exact canonical-ref policy-binding revision."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "canonical_promotion_policy_bindings",
+            "binding_id",
+            value.binding_id,
+            value,
+            {
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "revision": value.revision,
+                "state": value.state.value,
+                "policy_digest": value.policy_digest,
+                "authorization_id": value.authorization_id,
+                "supersedes_binding_id": value.supersedes_binding_id,
+                "bound_at": value.bound_at,
+            },
+        )
+
+
+def load_canonical_promotion_policy_bindings(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[CanonicalPromotionPolicyBindingV1, ...]:
+    """Load and validate the unique linear binding history for one exact ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionPolicyBindingV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM canonical_promotion_policy_bindings "
+            "WHERE project_id = ? AND repository_id = ? AND canonical_ref = ? "
+            "ORDER BY revision, binding_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        values = tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionPolicyBindingV1,
+                {
+                    "binding_id": "binding_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "revision": "revision",
+                    "state": "state",
+                    "policy_digest": "policy_digest",
+                    "authorization_id": "authorization_id",
+                    "supersedes_binding_id": "supersedes_binding_id",
+                },
+            )
+            for row in rows
+        )
+        for expected_revision, value in enumerate(values, start=1):
+            expected_parent = (
+                None if expected_revision == 1 else values[expected_revision - 2].binding_id
+            )
+            if (
+                value.revision != expected_revision
+                or value.supersedes_binding_id != expected_parent
+            ):
+                raise PersistenceIntegrityError("canonical policy binding history is not linear")
+            if value.repository.id != repository_id:
+                raise PersistenceIntegrityError("canonical policy binding identity is invalid")
+            prior = None if expected_revision == 1 else values[expected_revision - 2]
+            transition_subject = CanonicalPolicyBindingSubjectV1(
+                project_id=value.project_id,
+                repository=value.repository,
+                canonical_ref=value.canonical_ref,
+                expected_current_binding_id=None if prior is None else prior.binding_id,
+                expected_current_revision=0 if prior is None else prior.revision,
+                expected_current_binding_digest=None if prior is None else binding_digest(prior),
+                target_revision=value.revision,
+                target_state=value.state,
+                target_policy=value.policy,
+                target_policy_digest=value.policy_digest,
+            )
+            authorization = load_repository_mutation_authorization(database, value.authorization_id)
+            if (
+                authorization is None
+                or authorization.actor.kind.value != "HUMAN"
+                or authorization.project_id != value.project_id
+                or authorization.subject != transition_subject
+                or authorization.subject_digest
+                != canonical_policy_binding_subject_digest(transition_subject)
+            ):
+                raise PersistenceIntegrityError(
+                    "binding transition lacks its exact durable Human authorization"
+                )
+        return values
+
+    return _read(database, read)
+
+
+def insert_repository_promotion_intent(
+    database: RelayDatabase, value: RepositoryPromotionIntentV1
+) -> None:
+    """Commit immutable pre-write evidence for one exact promotion attempt."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_promotion_intents",
+            "promotion_id",
+            value.promotion_id,
+            value,
+            {
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "subject_digest": value.subject_digest,
+                "created_at": value.created_at,
+            },
+        )
+
+
+def load_repository_promotion_intent(
+    database: RelayDatabase, promotion_id: str
+) -> RepositoryPromotionIntentV1 | None:
+    return _read(
+        database,
+        lambda connection: _read_one(
+            connection,
+            "repository_promotion_intents",
+            "promotion_id",
+            promotion_id,
+            RepositoryPromotionIntentV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "subject_digest": "subject_digest",
+            },
+        ),
+    )
+
+
+def insert_repository_promotion_result(
+    database: RelayDatabase, value: RepositoryPromotionResultV1
+) -> None:
+    """Append the one terminal observed result for an exact promotion intent."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_promotion_results",
+            "promotion_id",
+            value.promotion_id,
+            value,
+            {
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "outcome": value.outcome.value,
+                "completed_at": value.completed_at,
+            },
+        )
+
+
+def load_repository_promotion_result(
+    database: RelayDatabase, promotion_id: str
+) -> RepositoryPromotionResultV1 | None:
+    return _read(
+        database,
+        lambda connection: _read_one(
+            connection,
+            "repository_promotion_results",
+            "promotion_id",
+            promotion_id,
+            RepositoryPromotionResultV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "outcome": "outcome",
+            },
+        ),
+    )
+
+
+def load_repository_promotion_results_for_ref(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[RepositoryPromotionResultV1, ...]:
+    """Load terminal promotion evidence for one exact canonical ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[RepositoryPromotionResultV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_results WHERE project_id = ? "
+            "AND repository_id = ? AND canonical_ref = ? ORDER BY promotion_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                RepositoryPromotionResultV1,
+                {
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "outcome": "outcome",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
+
+
+def insert_canonical_promotion_reconciliation(
+    database: RelayDatabase, value: CanonicalPromotionReconciliationV1
+) -> None:
+    """Append an exact Human-authorized reconciliation without provider writes."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_promotion_reconciliations",
+            "reconciliation_id",
+            value.reconciliation_id,
+            value,
+            {
+                "promotion_id": value.promotion_id,
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "target_sha": value.target_commit.sha,
+                "authorization_id": value.authorization_id,
+                "reconciled_at": value.reconciled_at,
+            },
+        )
+
+
+def load_canonical_promotion_reconciliations(
+    database: RelayDatabase, promotion_id: str
+) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_reconciliations "
+            "WHERE promotion_id = ? ORDER BY reconciliation_id",
+            (promotion_id,),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionReconciliationV1,
+                {
+                    "reconciliation_id": "reconciliation_id",
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
+                    "authorization_id": "authorization_id",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
+
+
+def load_canonical_promotion_reconciliations_for_ref(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+    """Load exact reconciliation evidence for one canonical ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_reconciliations WHERE project_id = ? "
+            "AND repository_id = ? AND canonical_ref = ? ORDER BY promotion_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionReconciliationV1,
+                {
+                    "reconciliation_id": "reconciliation_id",
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
+                    "authorization_id": "authorization_id",
+                    "reconciled_at": "reconciled_at",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
 
 
 def insert_human_decision(database: RelayDatabase, value: HumanGateDecision) -> None:

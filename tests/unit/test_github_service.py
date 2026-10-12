@@ -58,6 +58,7 @@ def _private_key() -> SecretStr:
 
 def _permissions(level: GitHubPermissionLevel = GitHubPermissionLevel.READ):
     return (
+        GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
         GitHubPermissionGrant(name="contents", level=level),
         GitHubPermissionGrant(name="metadata", level=GitHubPermissionLevel.READ),
     )

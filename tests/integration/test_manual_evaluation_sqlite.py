@@ -428,9 +428,9 @@ def test_v4_upgrade_and_fresh_schema_install_only_v5_slice_tables(tmp_path: Path
         )
     )
     assert after[:4] == before
-    assert after[-1][0] == 5
+    assert after[-1][0] == 6
     assert MANUAL_EVALUATION_MIGRATION.version == 5
-    assert MANUAL_EVALUATION_MIGRATION.checksum == DEFAULT_MIGRATIONS[-1].checksum
+    assert MANUAL_EVALUATION_MIGRATION.checksum == DEFAULT_MIGRATIONS[4].checksum
     assert tuple(item.checksum for item in DEFAULT_MIGRATIONS[:4]) == (
         "sha256:00d78d5794e1196b7435a95679cab94cda4e2ea31742a0e6a2e63d4b58eae38e",
         "sha256:735dc501d65e5f3430bacd77503cca9ec6ca726986c786108b9319a9c1e52cb1",
@@ -454,7 +454,7 @@ def test_v4_upgrade_and_fresh_schema_install_only_v5_slice_tables(tmp_path: Path
             fresh.connection.execute("SELECT max(version) FROM relay_schema_migrations").fetchone()[
                 0
             ]
-            == 5
+            == 6
         )
         for name in (
             "slice_results_by_slice_sequence",
