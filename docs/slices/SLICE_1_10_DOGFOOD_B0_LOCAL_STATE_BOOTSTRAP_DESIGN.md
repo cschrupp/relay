@@ -91,7 +91,7 @@ The snapshot states its inclusion boundary and identifies omitted history. It mu
 
 **Decision:** Use UTF-8 canonical JSON with a fixed format identifier, `schema_version = 1`, and `snapshot_version = 1`. Require sorted object keys, compact separators, no duplicate JSON keys, no unknown fields, explicit null/empty collections where applicable, and canonical ordering for every record array. Arrays whose order represents database insertion order carry explicit sequence values. Other arrays sort by stable exact identities and revisions.
 
-Define the snapshot digest as SHA-256 over the exact canonical file bytes. Do not embed a self-digest in the file. The snapshot's registry entry and separate Human acceptance record bind the same exact digest. The CLI requires that digest as explicit input and verifies the file bytes before parsing.
+Define the snapshot digest as SHA-256 over the exact canonical file bytes. Do not embed a self-digest in the file. The CLI requires that digest as explicit input and verifies the snapshot bytes against both the snapshot registry entry and `acceptance.snapshot.sha256`. The acceptance artifact's registry entry separately binds the acceptance-record bytes.
 
 **Alternatives and tradeoffs:** A Python script is executable and can hide behavior. Markdown cannot be validated as the typed persisted model. SQL is schema-coupled. JSON adds a versioned data contract but remains diffable and can be validated before a target database is created.
 
@@ -125,11 +125,11 @@ Do not reissue past authorization, Human decisions, lifecycle events, evaluation
 
 **Decision:** Before creating a database, the importer:
 
-1. Verifies the exact snapshot file bytes against the required 64-hex SHA-256, the registered snapshot artifact digest, and a separate Human acceptance record that names the same digest.
+1. Let `snapshot_hex` be the lowercase 64-hex SHA-256 of the exact snapshot bytes. Require `snapshot_hex == --expected-sha256 == acceptance.snapshot.sha256` and `"sha256:" + snapshot_hex == snapshot registry content_digest`. Separately require `"sha256:" + lowercase_hex_SHA256(acceptance-record bytes) == acceptance artifact registry content_digest`.
 2. Validates snapshot format/schema/version and supported Relay schema version, canonical UTF-8 JSON encoding, and every strict typed payload using existing immutable Relay models.
 3. Requires one exact `ProjectId` and exact `RepositoryRef` (`host`, `id`, and `path`) to agree at the envelope, Project, and all applicable record locations. It validates closed references across Slice hierarchy/dependencies, baselines, gate revisions/evaluations, lifecycle events, Human decisions, results/evaluations, execution records, and promotion evidence.
 4. Rejects duplicate identities, missing/unknown subject discriminators, mismatched payload/index identities, malformed digests, noncanonical record order, contradictory current state, invalid lifecycle histories, and invalid causal chains. It never repairs or guesses.
-5. Carries exact provenance references to the source repository, full source commit, registered artifact path/artifact ID/content digest, and the record identities supported by each source. The Human acceptance binds the snapshot digest and provenance set.
+5. Carries exact provenance references to the source repository, full source commit, source artifact path/ArtifactId/content digest, and the record identities supported by each source. These historical source references are frozen accepted provenance inside the snapshot and acceptance record; bootstrap does not resolve them against the mutable current registry. The Human acceptance binds the snapshot digest and provenance set.
 
 The importer verifies the snapshot as supplied; it does not interpret Markdown or chat to fill omissions. An omitted fact remains absent. A snapshot that cannot explain a required imported fact is not eligible for acceptance.
 
@@ -266,7 +266,7 @@ The snapshot is one strict JSON object. It represents one exact Project and the 
 
 `schema_version` versions this envelope and its strict typed payload contract. `snapshot_version` versions the curated snapshot instance format. `relay_schema_version` must equal 6 for this design. `project_id` and `repository` must exactly equal `project.value.id` and `project.value.primary_repository` respectively. The repository comparison includes host, repository ID, and path.
 
-`source_repository` is a complete `RepositoryRef` identifying the Relay source checkout; `source_commit` is a full canonical lowercase commit SHA in that repository. Every `source_artifacts` item identifies an exact registered artifact by path, ArtifactId, and registered digest, and lists the exact snapshot records it supports. Each `supports` item contains a `state_key` and a strict `identity` object containing exactly that record family's persisted primary-key fields. The importer verifies that every referenced source artifact exists in the registry with the stated digest, that its path and ArtifactId agree, and that each supported record exists in the snapshot. The source repository must equal the bootstrapped Project repository in this dogfood instance.
+`source_repository` is a complete `RepositoryRef` identifying the Relay source checkout; `source_commit` is a full canonical lowercase commit SHA in that repository. Every `source_artifacts` item preserves the path, ArtifactId, registered content digest, and snapshot record identities from the registry state asserted at that exact `source_commit`. Human acceptance freezes those values as historical provenance. They are not looked up in Git or the current registry at bootstrap time: living projections can advance and leave the current registry while the accepted snapshot remains valid. The source repository must equal the bootstrapped Project repository in this dogfood instance.
 
 Every persisted-record array item uses an envelope with `record_type`, `source_refs`, and `value`; current Project/Slice values additionally carry `definition_revision`, and gate-evaluation, slice-result, and manual-evaluation rows additionally carry exact SQLite `sequence`. `record_type` is the exact model class name shown below, including a concrete subtype for union records. `source_refs` is a sorted, duplicate-free array of ArtifactIds from `provenance.source_artifacts`; every listed artifact must include that record's exact identity in `supports`. The `identity` object for each support reference is exactly the primary-key column set of the mapped migration table, using the exact column names in migration versions 1–6; for records without a backing table, it uses the exact domain ID field. It may be empty when the accepted snapshot itself is the explicit source assertion. `value` is the exact `model_dump(mode="json")` serialization of the existing corresponding Pydantic model or persistence-history record, including default and nullable fields. No unknown fields or type coercion are accepted. The non-record `not_started_slice_ids` array contains exact Slice IDs and must equal the complement of slices with a `lifecycle_current` record; it is a checked consistency assertion, not an imported database row.
 
@@ -313,7 +313,7 @@ The exact snapshot is registered as a locked record only after Human acceptance.
       "outcome": "ACCEPTED",
       "accepted_by": {
         "schema_version": 1,
-        "id": "actor_<exact id>",
+        "id": "act_<exact id>",
         "kind": "HUMAN",
         "display_name": null
       },
@@ -353,11 +353,26 @@ The exact snapshot is registered as a locked record only after Human acceptance.
       }
     }
 
-The acceptance artifact registry entry must be `IMMUTABLE_RECORD` / `IMMUTABLE`; the snapshot artifact entry must be `LOCKABLE_RECORD` / `LOCKED`. Both registry entries bind exact file digests. The acceptance `accepted_by` is the exact serialized `ActorRef` and its `kind` must be `HUMAN`; `accepted_at` is a UTC-aware timestamp. The acceptance record's `provenance.source_artifacts` must equal the snapshot's source-artifact provenance, including each exact `supports` list. No `signature`, credential, or new authorization token is required or inferred.
+The acceptance artifact registry entry must be `IMMUTABLE_RECORD` / `IMMUTABLE`; the snapshot artifact entry must be `LOCKABLE_RECORD` / `LOCKED`. The snapshot registry digest binds snapshot bytes; the acceptance registry digest independently binds acceptance-record bytes. The acceptance `accepted_by` is the exact serialized `ActorRef` and its `kind` must be `HUMAN`; `accepted_at` is a UTC-aware timestamp. The acceptance record's provenance (`source_repository`, `source_commit`, and `source_artifacts`) must equal the snapshot's corresponding provenance as strictly typed values and canonical serialized bytes, including each exact `supports` list. No `signature`, credential, or new authorization token is required or inferred.
 
-The snapshot refers to the acceptance record by its exact record ID and path, but does not embed the acceptance record digest. The acceptance record binds the snapshot digest, so this avoids a circular digest. The registry binds the acceptance record's own bytes. The importer resolves both exact registry entries, checks their artifact states/types and digests, parses the acceptance JSON strictly, and requires its fields to match the snapshot. The acceptance record documents the Human act under existing Relay governance; it is not a cryptographic signature or a new authority system.
+The snapshot refers to the acceptance record by its exact record ID and path, but does not embed the acceptance record digest. The acceptance record binds the snapshot digest, so this avoids a circular digest. The current repository registry binds the acceptance record's own bytes. The importer checks the current registry entries and states/types for the exact snapshot and acceptance artifacts, verifies each artifact's own bytes against its own registry digest, parses the acceptance JSON strictly, and requires its snapshot identity, project/repository identity, versions, and provenance to match the snapshot. It does not require historical source artifacts to remain in the current registry. The acceptance record documents the Human act under existing Relay governance; it is not a cryptographic signature or a new authority system.
 
-The supplied `--expected-sha256` is exactly 64 lowercase hexadecimal characters, without a `sha256:` prefix. The importer computes SHA-256 over the exact snapshot bytes and requires equality with that argument, the snapshot registry `content_digest` (with the registry's `sha256:` prefix), and the accepted digest in the acceptance record. No other artifact or narrative source can supply missing snapshot values.
+The supplied `--expected-sha256` is exactly 64 lowercase hexadecimal characters, without a `sha256:` prefix. Require these separate relations:
+
+    snapshot_hex = lowercase_hex_SHA256(snapshot bytes)
+    snapshot_hex == --expected-sha256 == acceptance.snapshot.sha256
+    "sha256:" + snapshot_hex == snapshot registry content_digest
+
+    acceptance_hex = lowercase_hex_SHA256(acceptance-record bytes)
+    "sha256:" + acceptance_hex == acceptance artifact registry content_digest
+
+The acceptance artifact digest is never compared to the snapshot digest. No other artifact or narrative source can supply missing snapshot values.
+
+### 3.4 Repository-root and registry resolution
+
+The three-argument CLI discovers repository context from `--snapshot`; it adds no repository-root argument. Resolve the supplied snapshot path to an absolute path, require it to be a regular non-symlink file, and inspect its ancestor directories for a valid Relay root containing a real `.relay` directory and regular non-symlink `.relay/registry.json`. Exactly one ancestor may qualify. Zero or multiple qualifying roots, an invalid registry, or a snapshot outside that root is an error before staging begins.
+
+The resolved repository-relative POSIX snapshot path must equal the path of exactly one current registry entry. The existing repository-contract validator must verify the current registry and every registered artifact file. The selected snapshot entry must be the exact `LOCKABLE_RECORD` / `LOCKED` artifact named by the acceptance record; the acceptance path must resolve to exactly one `IMMUTABLE_RECORD` / `IMMUTABLE` artifact. Verify the snapshot file against its registry digest and the acceptance file against its separate registry digest, then apply the distinct digest equalities above. A source-artifact reference in the accepted provenance is not required to exist in this later current registry; its exact identity, digest, and supported record references remain frozen evidence accepted with the snapshot.
 
 ### 3.3 Canonical bytes, strictness, and ordering
 
@@ -403,7 +418,7 @@ The implementation must pass this matrix against the staged database before it c
 
 | Check | Required proof | Failure behavior |
 |---|---|---|
-| Snapshot/acceptance | Raw-byte digest equals CLI argument, both registry digests, and the typed accepted snapshot record; schema versions and identities match exactly. | Reject before opening/creating the staging DB. |
+| Snapshot/acceptance | `snapshot_hex == --expected-sha256 == acceptance.snapshot.sha256`; `"sha256:" + snapshot_hex == snapshot registry content_digest`; and `"sha256:" + acceptance_hex == acceptance artifact registry content_digest`, where each hex value is SHA-256 of that specific file. Strictly validate the acceptance record and require exact snapshot identity, project/repository identity, versions, and provenance equality. | Reject before opening/creating the staging DB. |
 | Schema | Existing verifier accepts exactly migration versions 1–6 and their checksums; required tables, indexes, and triggers are present; no B0 table or migration exists. | Reject and remove only owned staging files. |
 | SQLite integrity | `PRAGMA integrity_check` returns `ok`; `PRAGMA foreign_key_check` returns no rows. | Do not publish. |
 | Excluded live-integration state | No rows are imported into `github_installations`, `github_installation_repositories`, or `github_installation_events`; these remain empty in the fresh database. | Do not publish if any such row appears. |
@@ -430,7 +445,7 @@ Importing historical Human authority records reproduces those exact records; it 
 
 The later implementation must prove:
 
-- canonical snapshot digest, registry digest, CLI digest, and Human-accepted digest agree;
+- snapshot bytes, CLI digest, snapshot registry digest, and `acceptance.snapshot.sha256` agree under the distinct prefixed/raw-hex representation above; acceptance-record bytes match their own acceptance-artifact registry digest;
 - unsupported version, malformed/duplicate JSON, unknown fields, invalid IDs, wrong project/repository, missing references, duplicate identities, noncanonical ordering, and bad causal history fail closed;
 - a valid snapshot imports exact typed records and produces expected Project Situation, Slice Situation, execution summaries, Human/evaluation state, and canonical-governance inspection;
 - no lifecycle event, authority, decision, evaluation, execution, or promotion record is generated by the importer;
@@ -447,7 +462,7 @@ Required focused proof is organized as follows:
 
 - `test_bootstrap_models.py`: canonical UTF-8 bytes/digest, duplicate-key and unknown-field rejection, unsupported versions, strict record envelopes, exact project/repository identity, and Human acceptance binding.
 - `test_bootstrap_service.py`: record-ID uniqueness, reference closure, hierarchy/dependency validity, definition-history continuity, lifecycle replay, gate/evaluation/execution causality, decision/result/evaluation lineage, and promotion/binding/reconciliation integrity. Include valid materialization and malformed cases for each family.
-- `test_bootstrap_cli.py`: mandatory explicit arguments, raw 64-hex expected digest, accepted snapshot/registry matching, `TARGET_EXISTS` for database and each sidecar, no overwrite, and deterministic result reporting.
+- `test_bootstrap_cli.py`: mandatory explicit arguments, raw 64-hex expected digest and the two distinct digest relationships, unique repository-root discovery and exact registered snapshot path, zero/multiple root and symlink rejection, acceptance-to-snapshot provenance equality, and no re-resolution of historical source artifacts after current living projections advance; `TARGET_EXISTS` for database and each sidecar, no overwrite, and deterministic result reporting.
 - `test_bootstrap_sqlite.py`: migration 1–6 checksums and schema objects, exact row round-trip including SQLite sequence, foreign-key/integrity checks, V1 projection verification, failure-before-publication, final no-replace collision, atomic-publication-unavailable behavior, and cleanup limited to staging files.
 - Existing repository-contract and full-suite tests: registered snapshot/acceptance artifact integrity, no schema expansion, and no change to board routes or existing Human POST behavior.
 
@@ -550,11 +565,11 @@ Stop and return for architecture review if implementation requires:
 - **Snapshot schema:** Envelope schema 1, snapshot version 1, Relay schema version 6; exact Project and RepositoryRef; source commit and registered source-artifact provenance; current Project plus state arrays with exact model `record_type`, source references, values, and sequence where persisted ordering requires it. Record families and exact models are listed in §3.1.
 - **Included state:** One Project, every current Slice, complete required Project/Slice definition histories, lifecycle state and causal events, referenced Baselines/Artifacts/Decisions/Evidence, gates and required evaluation/authorization/Human-decision/execution history, result/evaluation lineage, and complete causal promotion/binding history for represented canonical refs.
 - **Excluded state:** Other Projects and unrelated history; narrative/Git-derived facts; secrets and credentials; D1 treated as current; live observations absent separate authority; GitHub installation rows; caches/logs; the local SQLite database from repository artifacts.
-- **Integrity and provenance:** Exact raw-byte SHA-256; strict duplicate-key/unknown-field rejection; exact schema and identity checks; registered source artifacts bind exact record identities; reference closure, hierarchy, lifecycle replay, authority/evaluation/result causality, promotion integrity, and post-import loader/projection verification. Invalid or incomplete evidence yields no published target.
+- **Integrity and provenance:** Exact and distinct raw-byte digest relationships for snapshot and acceptance record; strict duplicate-key/unknown-field rejection; exact schema and identity checks; current registry verification for the locked snapshot and immutable acceptance artifacts; historical source-artifact identities/digests and supported records frozen as accepted provenance, not re-resolved against a mutable current registry; reference closure, hierarchy, lifecycle replay, authority/evaluation/result causality, promotion integrity, and post-import loader/projection verification. Invalid or incomplete evidence yields no published target.
 - **Importer semantics:** Hybrid validated importer. Reuse operations when they preserve exact identity/provenance/chronology/authority; use narrow persistence materializers when command replay would manufacture history. Bootstrap service performs no direct SQL and issues no historical authority or events.
 - **Idempotency:** Refuse any existing target or SQLite sidecar with `TARGET_EXISTS`; never overwrite, merge, repair, resume, or infer a no-op.
 - **Migration interaction:** Fresh same-directory staging file, migrations 1–6, exact materialization, full verification, closed single-file database, then atomic no-replace publication. No B0 migration or table. Unsupported atomic publication fails without creating the requested target.
-- **CLI contract:** `relay-bootstrap --snapshot <path> --expected-sha256 <64 lowercase hex> --database <fresh path>` initializes; `relay-board --database <path>` serves the existing board unchanged.
+- **CLI contract:** `relay-bootstrap --snapshot <path> --expected-sha256 <64 lowercase hex> --database <fresh path>` initializes. The snapshot path deterministically identifies exactly one valid containing Relay root and registry; ambiguous or invalid roots fail closed. `relay-board --database <path>` serves the existing board unchanged.
 - **Expected Human workflow:**
 
       uv sync --frozen --group dev
