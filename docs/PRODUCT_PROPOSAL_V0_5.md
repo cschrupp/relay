@@ -121,6 +121,13 @@ Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 - Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
+Slice 1.11 - Bounded Development, Convergence, and Design Decision Support:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+Future hardening target for explicit start/finish boundaries, scope/no-go and investment limits,
+stop/reframe and convergence controls, recommendation-first architecture/design questionnaires,
+optional repository-aware frontier-model escalation, and durable model/Human decision provenance.
+Planning input: docs/architecture/BOUNDED_DEVELOPMENT_AND_DESIGN_DECISION_SUPPORT.md
+
 Phase 2:
 OPEN - RLY-P2-OPEN-001
 
@@ -143,7 +150,7 @@ Real-project agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED. Accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55` was accepted for closure by `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 carries the former source/promotion enforcement proposal and remains unopened and unauthorized.
+Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED. Accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55` was accepted for closure by `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 carries the former source/promotion enforcement proposal and remains unopened and unauthorized. Slice 1.11 is recorded only as a future hardening target for bounded-development/convergence controls and interactive design decision support; it is not open and carries no design or implementation authority.
 
 After those hardening prerequisites, Phase 2 continues upward from the accepted AgentRuntime boundary:
 
