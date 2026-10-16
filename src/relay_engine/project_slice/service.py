@@ -57,6 +57,7 @@ from relay_engine.project_slice.origin import (
     definition_payload_digest,
     origin_resolution_not_established,
     resolve_origin_chain,
+    unresolved_origin_dependency_scope,
 )
 
 
@@ -507,13 +508,7 @@ def require_slice_origin_governance_scope_from_connection(
             f"Project {first.value.project_id} origin is not established"
         )
 
-    pending = [slice_id]
-    visited: set[SliceId] = set()
-    while pending:
-        current_id = pending.pop()
-        if current_id in visited:
-            continue
-        visited.add(current_id)
+    def scope_facts(current_id: SliceId) -> tuple[tuple[SliceId, ...], bool]:
         current = _load_slice(connection, current_id)
         if current is None or current.value.project_id != first.value.project_id:
             raise PersistenceIntegrityError(
@@ -522,9 +517,14 @@ def require_slice_origin_governance_scope_from_connection(
         resolution = resolve_slice_origin_from_connection(
             database, connection, current_id, first.value.project_id
         )
-        if resolution.state is not OriginResolutionState.ESTABLISHED:
-            raise OperationalOriginNotEstablished(f"Slice {current_id} origin is not established")
-        pending.extend(current.value.dependency_ids)
+        return (
+            current.value.dependency_ids,
+            resolution.state is OriginResolutionState.ESTABLISHED,
+        )
+
+    unresolved = unresolved_origin_dependency_scope(slice_id, scope_facts)
+    if unresolved:
+        raise OperationalOriginNotEstablished(f"Slice {unresolved[0]} origin is not established")
 
 
 def _native_origin_record(

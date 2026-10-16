@@ -71,6 +71,7 @@ def _card(
     *,
     phase: LifecyclePhase | None,
     parent: SliceId | None = None,
+    dependency_ids: tuple[SliceId, ...] = (),
     validity: LifecycleValidity = LifecycleValidity.CURRENT,
     blocked: bool = False,
     superseded_by: SliceId | None = None,
@@ -103,7 +104,7 @@ def _card(
         title=f"Slice {slice_id[-1]}",
         definition_revision=1,
         parent_slice_id=parent,
-        dependency_ids=(),
+        dependency_ids=dependency_ids,
         lane=(
             None
             if phase is None and (not origin_established or origin is OperationalOrigin.PRE_GENESIS)
@@ -217,6 +218,7 @@ def test_origin_groups_exclude_pre_genesis_and_mark_unknown_inventory_incomplete
     active_with_unknown_dependency = _card(
         SLICE_D,
         phase=LifecyclePhase.IMPLEMENTING,
+        dependency_ids=(SLICE_B,),
         dependencies=(
             DependencyProjection(
                 slice_id=SLICE_B,
@@ -245,6 +247,61 @@ def test_origin_groups_exclude_pre_genesis_and_mark_unknown_inventory_incomplete
     assert tuple(item.slice_id for item in projection.leaf_active_frontiers) == (SLICE_D,)
     assert projection.next_work_state.value == "INCOMPLETE_ORIGIN"
     assert tuple(item.slice_id for item in projection.next_work_incomplete_slices) == (SLICE_D,)
+
+
+def test_next_work_origin_incompleteness_follows_transitive_dependencies() -> None:
+    frontier = _card(
+        SLICE_A,
+        phase=LifecyclePhase.IMPLEMENTING,
+        dependency_ids=(SLICE_B,),
+        dependencies=(
+            DependencyProjection(
+                slice_id=SLICE_B,
+                title="Established dependency",
+                lifecycle_phase=None,
+                lifecycle_validity=None,
+                origin_resolution=make_test_origin_resolution(
+                    OriginSubjectType.SLICE,
+                    SLICE_B,
+                    project_id=PROJECT_ID,
+                    origin=OperationalOrigin.NATIVE_RELAY,
+                ),
+            ),
+        ),
+    )
+    dependency = _card(
+        SLICE_B,
+        phase=None,
+        dependency_ids=(SLICE_C,),
+        dependencies=(
+            DependencyProjection(
+                slice_id=SLICE_C,
+                title="Unclassified transitive dependency",
+                lifecycle_phase=None,
+                lifecycle_validity=None,
+                origin_resolution=make_test_origin_not_established(
+                    OriginSubjectType.SLICE, SLICE_C
+                ),
+            ),
+        ),
+    )
+    transitive_dependency = _card(SLICE_C, phase=None, origin_established=False)
+    unrelated_frontier = _card(SLICE_D, phase=LifecyclePhase.IMPLEMENTING)
+
+    projection = project_project_situation(
+        (frontier, dependency, transitive_dependency, unrelated_frontier)
+    )
+
+    assert {item.slice_id for item in projection.leaf_active_frontiers} == {
+        SLICE_A,
+        SLICE_D,
+    }
+    assert projection.next_work_state.value == "INCOMPLETE_ORIGIN"
+    assert tuple(item.slice_id for item in projection.next_work_incomplete_slices) == (SLICE_A,)
+    assert {item.slice.slice_id for item in projection.next_governed_work} == {
+        SLICE_A,
+        SLICE_D,
+    }
 
 
 def test_unestablished_origin_does_not_hide_exact_current_lifecycle() -> None:

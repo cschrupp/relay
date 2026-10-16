@@ -349,12 +349,21 @@ def test_native_project_and_slice_each_bind_their_own_create_revision(tmp_path) 
 
 def test_unestablished_dependency_blocks_only_its_governance_scope(tmp_path) -> None:
     database = _database(tmp_path / "scoped-origin.sqlite")
-    dependency_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789013"
-    dependent_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789014"
-    unrelated_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789015"
+    transitive_dependency_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789013"
+    dependency_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789014"
+    dependent_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789015"
+    unrelated_id: SliceId = "slc_018f47c1-7b2c-7abc-8def-123456789016"
     try:
         create_project(database, _project(), _mutation())
-        create_slice(database, _slice(dependency_id), _mutation())
+        create_slice(database, _slice(transitive_dependency_id), _mutation())
+        create_slice(
+            database,
+            _slice(
+                dependency_id,
+                dependencies=(transitive_dependency_id,),
+            ),
+            _mutation(),
+        )
         create_slice(
             database,
             _slice(dependent_id, dependencies=(dependency_id,)),
@@ -365,7 +374,7 @@ def test_unestablished_dependency_blocks_only_its_governance_scope(tmp_path) -> 
         database.connection.execute(
             "DELETE FROM operational_origin_records "
             "WHERE subject_type = 'SLICE' AND subject_id = ?",
-            (dependency_id,),
+            (transitive_dependency_id,),
         )
 
         with pytest.raises(OperationalOriginNotEstablished, match="origin is not established"):

@@ -22,6 +22,7 @@ from relay_engine.board.models import (
     StaleSituationState,
     StaleStateKind,
 )
+from relay_engine.domain.ids import SliceId
 from relay_engine.domain.models import Project
 from relay_engine.governance.models import GateReasonKind
 from relay_engine.lifecycle.models import BlockageStatus, LifecyclePhase, LifecycleValidity
@@ -32,7 +33,11 @@ from relay_engine.persistence import (
     load_repository_promotion_intent,
     load_repository_promotion_result,
 )
-from relay_engine.project_slice.origin import OperationalOrigin, OriginResolutionState
+from relay_engine.project_slice.origin import (
+    OperationalOrigin,
+    OriginResolutionState,
+    unresolved_origin_dependency_scope,
+)
 from relay_engine.promotion.bindings import (
     canonical_ref_health,
     promotion_intent_authority_is_valid,
@@ -211,14 +216,20 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
     stale_states.sort(key=lambda item: (item.slice.slice_id, item.kind.value))
     next_work = tuple(item for item in current_gates if item.slice.slice_id in frontier_ids)
     frontier_cards = tuple(card for card in cards if card.slice_id in frontier_ids)
+
+    def origin_scope_facts(slice_id: SliceId) -> tuple[tuple[SliceId, ...], bool] | None:
+        card = cards_by_id.get(slice_id)
+        if card is None:
+            return None
+        return (
+            card.dependency_ids,
+            card.origin_resolution.state is OriginResolutionState.ESTABLISHED,
+        )
+
     next_work_incomplete = tuple(
         identities[card.slice_id]
         for card in frontier_cards
-        if card.origin_resolution.state is OriginResolutionState.NOT_ESTABLISHED
-        or any(
-            dependency.origin_resolution.state is OriginResolutionState.NOT_ESTABLISHED
-            for dependency in card.dependencies
-        )
+        if unresolved_origin_dependency_scope(card.slice_id, origin_scope_facts)
     )
     next_work_incomplete = tuple(
         sorted(

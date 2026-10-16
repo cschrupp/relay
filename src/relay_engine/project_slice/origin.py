@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated, Any, Literal, cast
@@ -61,6 +62,34 @@ class OriginResolutionState(StrEnum):
 
     ESTABLISHED = "ESTABLISHED"
     NOT_ESTABLISHED = "NOT_ESTABLISHED"
+
+
+type OriginScopeFacts = tuple[tuple[SliceId, ...], bool] | None
+
+
+def unresolved_origin_dependency_scope(
+    slice_id: SliceId,
+    facts_for_slice: Callable[[SliceId], OriginScopeFacts],
+) -> tuple[SliceId, ...]:
+    """Return every Slice in the transitive dependency scope with unknown origin."""
+
+    pending = [slice_id]
+    visited: set[SliceId] = set()
+    unresolved: set[SliceId] = set()
+    while pending:
+        current_id = pending.pop()
+        if current_id in visited:
+            continue
+        visited.add(current_id)
+        facts = facts_for_slice(current_id)
+        if facts is None:
+            unresolved.add(current_id)
+            continue
+        dependencies, origin_established = facts
+        if not origin_established:
+            unresolved.add(current_id)
+        pending.extend(dependencies)
+    return tuple(sorted(unresolved))
 
 
 class OriginDiagnosticCode(StrEnum):
