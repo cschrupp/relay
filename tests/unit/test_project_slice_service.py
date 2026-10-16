@@ -9,6 +9,7 @@ from threading import Barrier
 import pytest
 
 import relay_engine.persistence as persistence
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import (
     AcceptanceCriterion,
     ActorKind,
@@ -106,6 +107,7 @@ def db(tmp_path):
     database = open_database(
         tmp_path / "definitions.sqlite", apply_migrations=True, migration_applied_at=NOW
     )
+    ensure_test_operational_epoch(database)
     yield database
     database.close()
 
@@ -517,6 +519,7 @@ def test_slice_revision_project_identity_corruption_fails_closed_without_repair(
 def test_two_connections_cannot_both_update_from_same_revision(tmp_path) -> None:
     path = tmp_path / "concurrent.sqlite"
     setup = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(setup)
     _create_project(setup)
     setup.close()
 
@@ -538,6 +541,7 @@ def test_two_connections_cannot_both_update_from_same_revision(tmp_path) -> None
 def test_two_connections_serialize_update_vs_delete_from_same_revision(tmp_path) -> None:
     path = tmp_path / "update-delete-race.sqlite"
     setup = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(setup)
     _create_project(setup)
     setup.close()
     start = Barrier(2)

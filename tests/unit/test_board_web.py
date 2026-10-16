@@ -13,6 +13,7 @@ from threading import Lock, get_ident
 import httpx
 import pytest
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.board.web import create_app
 from relay_engine.decision_support.models import (
     DecisionBasisCompleteness,
@@ -91,6 +92,7 @@ def _slice(slice_id: SliceId = SLICE_A, title: str = "Board slice") -> Slice:
 
 def _create_database(path: Path) -> None:
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     metadata = MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Web fixture setup.")
     create_project(database, _project(), metadata)
     insert_baseline(

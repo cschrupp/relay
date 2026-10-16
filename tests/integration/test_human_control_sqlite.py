@@ -14,6 +14,7 @@ from fastapi import FastAPI
 
 import relay_engine.board.web as board_web
 import relay_engine.human_control.service as human_service
+from conftest import ensure_test_operational_epoch
 from relay_engine.board.web import create_app
 from relay_engine.domain.ids import (
     ArtifactId,
@@ -192,6 +193,7 @@ def _seed(
     evaluate: bool = True,
 ):
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     project = Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY)
     slice_value = Slice(
         id=SLICE_ID,
@@ -798,6 +800,36 @@ def test_hold_without_valid_evaluation_persists_without_fabricating_observation(
         assert updated.revision == lifecycle.revision + 1
         assert load_gate_evaluation_records(database) == ()
         assert updated.blockage.reasons[-1].code == "HUMAN_DEFER"
+    finally:
+        database.close()
+
+
+def test_human_control_fails_closed_when_origin_provenance_is_missing(tmp_path: Path) -> None:
+    database, lifecycle, _, _ = _seed(
+        tmp_path / "missing-origin.sqlite",
+        (_gate(source_phase=LifecyclePhase.READY, target_phase=LifecyclePhase.IMPLEMENTING),),
+        phase=LifecyclePhase.READY,
+        evaluate=False,
+    )
+    try:
+        database.connection.execute("DROP TRIGGER operational_origin_records_no_delete")
+        database.connection.execute("DELETE FROM operational_origin_records")
+        before_changes = database.connection.total_changes
+        before_events = load_lifecycle_events(database, SLICE_ID)
+
+        with pytest.raises(HumanActionNotAvailable, match="origin is not established"):
+            set_human_hold(
+                database,
+                SLICE_ID,
+                HumanActionKind.PAUSE,
+                lifecycle.revision,
+                ACTOR,
+                "This action must fail closed.",
+                **_lifecycle_inputs(database),
+            )
+
+        assert database.connection.total_changes == before_changes
+        assert load_lifecycle_events(database, SLICE_ID) == before_events
     finally:
         database.close()
 

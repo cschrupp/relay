@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from conftest import make_test_origin_resolution
 from relay_engine.board.inspection import project_project_situation
 from relay_engine.board.models import (
     BoardLane,
@@ -101,6 +102,7 @@ from relay_engine.manual_evaluation.models import (
 )
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
+from relay_engine.project_slice.origin import OperationalOrigin, OriginSubjectType
 from relay_engine.promotion.models import (
     CanonicalPromotionPolicyBindingResolution,
     CanonicalPromotionReconciliationV1,
@@ -215,6 +217,11 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
         title="<b>dependency</b>",
         lifecycle_phase=LifecyclePhase.READY,
         lifecycle_validity=LifecycleValidity.STALE,
+        origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.SLICE,
+            SLICE_ID,
+            project_id=PROJECT_ID,
+        ),
     )
     gate_projection = GateProjection(
         gate_id=GATE_ID,
@@ -236,6 +243,11 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
         dependency_ids=(SLICE_ID,),
         lane=BoardLane.READY,
         lifecycle=lifecycle,
+        origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.SLICE,
+            SLICE_ID,
+            project_id=PROJECT_ID,
+        ),
         dependencies=(dependency,),
         outgoing_gates=(gate_projection,),
         latest_evaluation_record_id=record.id,
@@ -245,6 +257,10 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
     board = ProjectBoard(
         project=project,
         project_definition_revision=2,
+        project_origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.PROJECT,
+            PROJECT_ID,
+        ),
         situation=project_project_situation((card,)),
         canonical_governance=CanonicalGovernanceInspection(
             durable_target_established=False,
@@ -258,6 +274,12 @@ def _fixture() -> tuple[ProjectBoard, SliceDetail]:
         project_definition_revision=2,
         slice_definition=SliceDefinitionSnapshot(value=slice_value, definition_revision=1),
         lifecycle=lifecycle,
+        origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.SLICE,
+            SLICE_ID,
+            project_id=PROJECT_ID,
+        ),
+        origin_governance_scope_available=True,
         parent=None,
         children=(),
         dependencies=(dependency,),
@@ -872,6 +894,7 @@ def test_project_index_escapes_project_data_and_search_is_escaped() -> None:
                     project=board.project,
                     definition_revision=2,
                     slice_count=1,
+                    origin_resolution=board.project_origin_resolution,
                 ),
             )
         )
@@ -881,6 +904,39 @@ def test_project_index_escapes_project_data_and_search_is_escaped() -> None:
     filtered = render_project_board(board, query='" autofocus onfocus="alert(1)')
     assert 'value="&quot; autofocus onfocus=&quot;alert(1)"' in filtered
     assert 'value="" autofocus' not in filtered
+
+
+def test_pre_genesis_without_lifecycle_renders_outside_not_started_lane() -> None:
+    board, _ = _fixture()
+    card = board.cards[0].model_copy(
+        update={
+            "lane": None,
+            "lifecycle": None,
+            "origin_resolution": make_test_origin_resolution(
+                OriginSubjectType.SLICE,
+                SLICE_ID,
+                project_id=PROJECT_ID,
+                origin=OperationalOrigin.PRE_GENESIS,
+            ),
+        }
+    )
+    projection = board.model_copy(
+        update={
+            "project_origin_resolution": make_test_origin_resolution(
+                OriginSubjectType.PROJECT,
+                PROJECT_ID,
+                origin=OperationalOrigin.PRE_GENESIS,
+            ),
+            "cards": (card,),
+            "situation": project_project_situation((card,)),
+        }
+    )
+
+    html = render_project_board(projection)
+
+    assert "PRE-GENESIS — NO RELAY LIFECYCLE (1)" in html
+    assert "NOT STARTED</h3><p>None." in html
+    assert "NO RELAY LIFECYCLE — ORIGIN NOT ESTABLISHED" not in html
 
 
 def test_slice_situation_summarizes_completed_governed_movements_in_revision_order() -> None:

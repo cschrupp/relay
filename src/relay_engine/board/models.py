@@ -28,6 +28,7 @@ from relay_engine.lifecycle.models import LifecyclePhase, LifecycleValidity, Sli
 from relay_engine.manual_evaluation.models import ManualEvaluationProjection
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
 from relay_engine.project_slice.models import SliceDefinitionSnapshot
+from relay_engine.project_slice.origin import OperationalOriginResolution
 from relay_engine.promotion.controls import SourceControlObservationV1
 from relay_engine.promotion.models import (
     CanonicalPromotionPolicyBindingResolution,
@@ -69,6 +70,7 @@ class ProjectSummary(DomainModel):
     project: Project
     definition_revision: int = Field(ge=1)
     slice_count: int = Field(ge=0)
+    origin_resolution: OperationalOriginResolution
 
 
 class ProjectSliceIdentity(DomainModel):
@@ -102,6 +104,14 @@ class SituationNextWorkState(StrEnum):
 
     CURRENT_FRONTIER_GATES = "CURRENT_FRONTIER_GATES"
     NOT_DETERMINABLE = "NOT_DETERMINABLE"
+    INCOMPLETE_ORIGIN = "INCOMPLETE_ORIGIN"
+
+
+class ProjectionCompleteness(StrEnum):
+    """Completeness of a read-model aggregate that depends on origin evidence."""
+
+    COMPLETE = "COMPLETE"
+    INCOMPLETE_NOT_ESTABLISHED = "INCOMPLETE_NOT_ESTABLISHED"
 
 
 class ProjectGateReference(DomainModel):
@@ -143,16 +153,23 @@ class ProjectSituationProjection(DomainModel):
     done_slices: tuple[ProjectSliceIdentity, ...]
     active_slices: tuple[ProjectSliceIdentity, ...]
     not_started_slices: tuple[ProjectSliceIdentity, ...]
+    pre_genesis_no_lifecycle_slices: tuple[ProjectSliceIdentity, ...]
+    origin_not_established_slices: tuple[ProjectSliceIdentity, ...]
+    lifecycle_inventory_completeness: ProjectionCompleteness
+    lifecycle_inventory_incomplete_slices: tuple[ProjectSliceIdentity, ...]
     superseded_slices: tuple[ProjectSliceIdentity, ...]
     cancelled_slices: tuple[ProjectSliceIdentity, ...]
     leaf_active_frontiers: tuple[ProjectSliceIdentity, ...]
     frontier_cardinality: FrontierCardinality
+    frontier_completeness: ProjectionCompleteness
+    frontier_incomplete_slices: tuple[ProjectSliceIdentity, ...]
     blockers: tuple[SituationBlocker, ...]
     stale_states: tuple[StaleSituationState, ...]
     current_outgoing_gates: tuple[ProjectGateReference, ...]
     hierarchy: tuple[ProjectSliceHierarchy, ...]
     next_governed_work: tuple[ProjectGateReference, ...]
     next_work_state: SituationNextWorkState
+    next_work_incomplete_slices: tuple[ProjectSliceIdentity, ...]
 
     @model_validator(mode="after")
     def cardinality_matches_frontiers(self) -> ProjectSituationProjection:
@@ -222,6 +239,7 @@ class DependencyProjection(DomainModel):
     title: str | None
     lifecycle_phase: LifecyclePhase | None
     lifecycle_validity: LifecycleValidity | None
+    origin_resolution: OperationalOriginResolution
 
 
 class GateProjection(DomainModel):
@@ -247,8 +265,9 @@ class SliceCard(DomainModel):
     definition_revision: int = Field(ge=1)
     parent_slice_id: SliceId | None
     dependency_ids: tuple[SliceId, ...]
-    lane: BoardLane
+    lane: BoardLane | None
     lifecycle: SliceLifecycle | None
+    origin_resolution: OperationalOriginResolution
     dependencies: tuple[DependencyProjection, ...]
     outgoing_gates: tuple[GateProjection, ...]
     latest_evaluation_record_id: GateEvaluationRecordId | None
@@ -268,6 +287,7 @@ class ProjectBoard(DomainModel):
 
     project: Project
     project_definition_revision: int = Field(ge=1)
+    project_origin_resolution: OperationalOriginResolution
     situation: ProjectSituationProjection
     canonical_governance: CanonicalGovernanceInspection
     lanes: tuple[BoardLane, ...]
@@ -302,6 +322,8 @@ class SliceDetail(DomainModel):
     project_definition_revision: int = Field(ge=1)
     slice_definition: SliceDefinitionSnapshot
     lifecycle: SliceLifecycle | None
+    origin_resolution: OperationalOriginResolution
+    origin_governance_scope_available: bool
     parent: DependencyProjection | None
     children: tuple[DependencyProjection, ...]
     dependencies: tuple[DependencyProjection, ...]
@@ -335,6 +357,7 @@ __all__ = [
     "ProjectSliceHierarchy",
     "ProjectSliceIdentity",
     "ProjectSummary",
+    "ProjectionCompleteness",
     "PromotionAttemptInspection",
     "PromotionIntentAuthorityStatus",
     "SliceCard",

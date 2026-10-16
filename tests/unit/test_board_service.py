@@ -6,6 +6,7 @@ from typing import cast
 
 import pytest
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.board.models import BoardLane, EvaluationBasisStatus
 from relay_engine.board.service import (
     _check_duplicate_evaluation_outputs,
@@ -220,6 +221,7 @@ def _metadata() -> MutationMetadata:
 
 def _database(path) -> object:
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     create_project(database, _project(), _metadata())
     insert_baseline(database, _baseline())
     create_slice(database, _slice(), _metadata())

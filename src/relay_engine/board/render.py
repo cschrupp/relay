@@ -14,6 +14,7 @@ from relay_engine.board.models import (
     GateProjection,
     LiveObservationStatus,
     ProjectBoard,
+    ProjectionCompleteness,
     ProjectSliceIdentity,
     PromotionAttemptInspection,
     SituationBlocker,
@@ -42,6 +43,11 @@ from relay_engine.lifecycle.models import BlockageStatus, LifecyclePhase
 from relay_engine.manual_evaluation.models import (
     ManualEvaluationActionKind,
     ManualEvaluationProjection,
+)
+from relay_engine.project_slice.origin import (
+    OperationalOrigin,
+    OperationalOriginResolution,
+    OriginResolutionState,
 )
 from relay_engine.promotion.models import (
     CanonicalPromotionPolicyBindingResolution,
@@ -159,10 +165,51 @@ def _dependency_item(dependency: DependencyProjection, project_id: str) -> str:
     if dependency.lifecycle_validity is not None:
         state += f"; lifecycle validity {_e(dependency.lifecycle_validity.value)}"
 
+    origin = (
+        "NOT ESTABLISHED"
+        if dependency.origin_resolution.origin is None
+        else dependency.origin_resolution.origin.value
+    )
+
     return (
         f'<li><a href="{_slice_url(project_id, dependency.slice_id)}">'
-        f"{_e(dependency.slice_id)}</a> — {title}; {state}</li>"
+        f"{_e(dependency.slice_id)}</a> — {title}; {state}; origin {_e(origin)}"
+        "</li>"
     )
+
+
+def _origin_status_html(resolution: OperationalOriginResolution, label: str) -> str:
+    if resolution.state is OriginResolutionState.ESTABLISHED:
+        assert resolution.origin is not None and resolution.record is not None
+        summary = (
+            f"<p>{_e(label)}: <strong>{_e(resolution.origin.value)}</strong>; record "
+            f"<code>{_e(resolution.record.record_id)}</code>; digest "
+            f"<code>{_e(resolution.record.record_digest)}</code>.</p>"
+        )
+        record = _record_details(f"{label} proof and origin record", resolution.record)
+    else:
+        diagnostic = resolution.diagnostic
+        reason = (
+            "No validated origin record is available." if diagnostic is None else diagnostic.message
+        )
+        code = "UNKNOWN" if diagnostic is None else diagnostic.code.value
+        identities = (
+            ""
+            if diagnostic is None or not diagnostic.record_ids
+            else " Record identities: " + ", ".join(diagnostic.record_ids) + "."
+        )
+        summary = (
+            f"<p><strong>{_e(label)}: ORIGIN NOT ESTABLISHED</strong> — "
+            f"{_e(code)}: {_e(reason)}{_e(identities)}</p>"
+            "<p>Origin-dependent governance actions: UNAVAILABLE.</p>"
+        )
+        record = ""
+    epoch = (
+        ""
+        if resolution.epoch is None
+        else _record_details("Operational-history epoch", resolution.epoch)
+    )
+    return summary + record + epoch
 
 
 def _gate_status(gate: GateProjection) -> str:
@@ -236,8 +283,14 @@ def _blockage(card: SliceCard) -> str:
 
 
 def _card(card: SliceCard, project_id: str) -> str:
-
-    phase = "NOT_STARTED" if card.lifecycle is None else card.lifecycle.phase.value
+    if card.lifecycle is not None:
+        phase = card.lifecycle.phase.value
+    elif card.origin_resolution.origin is OperationalOrigin.PRE_GENESIS:
+        phase = "PRE-GENESIS — NO RELAY LIFECYCLE"
+    elif card.origin_resolution.state is OriginResolutionState.ESTABLISHED:
+        phase = "NOT_STARTED"
+    else:
+        phase = "NO RELAY LIFECYCLE — ORIGIN NOT ESTABLISHED"
 
     validity = ""
 
@@ -275,11 +328,12 @@ def _card(card: SliceCard, project_id: str) -> str:
         )
 
     detail = _slice_url(project_id, card.slice_id)
+    origin = _origin_status_html(card.origin_resolution, "Slice operational origin")
 
     return (
         f'<article><h3><a href="{detail}">{_e(card.title)}</a></h3>'
         f"<p>Slice ID: <code>{_e(card.slice_id)}</code></p>"
-        f"<p>Lifecycle: <strong>{_e(phase)}</strong></p>{validity}{_blockage(card)}"
+        f"<p>Lifecycle: <strong>{_e(phase)}</strong></p>{origin}{validity}{_blockage(card)}"
         f"{parent}{dependencies}{evaluation}{gates}</article>"
     )
 
@@ -344,6 +398,8 @@ def _project_situation(board: ProjectBoard) -> str:
             )
             + "</ul>"
         )
+    if situation.frontier_completeness is ProjectionCompleteness.INCOMPLETE_NOT_ESTABLISHED:
+        frontier = "<p>Frontier: <strong>INCOMPLETE / NOT ESTABLISHED</strong>.</p>" + frontier
 
     blockers = (
         "<p>No explicit current lifecycle or gate blockers are projected.</p>"
@@ -385,22 +441,71 @@ def _project_situation(board: ProjectBoard) -> str:
             "</li>"
         )
     hierarchy = "".join(hierarchy_rows)
-    next_work = (
-        "<p>Next governed work is NOT DETERMINABLE from current lifecycle and gate facts.</p>"
-        if situation.next_work_state is SituationNextWorkState.NOT_DETERMINABLE
-        else "<p>Current frontier gate targets are shown below. This is a navigation aid; "
-        "it does not establish gate passage or authorization.</p><ul>"
-        + "".join(
-            "<li>"
-            f'<a href="{_slice_url(project_id, item.slice.slice_id)}">'
-            f"{_e(item.slice.title)}</a> — target phase "
-            f"{_e(item.gate.target_phase.value)}; gate <code>{_e(item.gate.gate_id)}"
-            f"@r{_e(item.gate.gate_revision)}</code>; "
-            f"evaluation {_e(_evaluation_status(item.gate.evaluation_basis_status))}"
-            "</li>"
-            for item in situation.next_governed_work
+    if situation.next_work_state is SituationNextWorkState.INCOMPLETE_ORIGIN:
+        next_work = (
+            "<p>Next governed work: <strong>INCOMPLETE / NOT ESTABLISHED</strong> because "
+            "origin evidence for a frontier Slice or declared dependency is unresolved.</p>"
         )
-        + "</ul>"
+    elif situation.next_work_state is SituationNextWorkState.NOT_DETERMINABLE:
+        next_work = (
+            "<p>Next governed work is NOT DETERMINABLE from current lifecycle and gate facts.</p>"
+        )
+    else:
+        next_work = (
+            "<p>Current frontier gate targets are shown below. This is a navigation aid; "
+            "it does not establish gate passage or authorization.</p><ul>"
+            + "".join(
+                "<li>"
+                f'<a href="{_slice_url(project_id, item.slice.slice_id)}">'
+                f"{_e(item.slice.title)}</a> — target phase "
+                f"{_e(item.gate.target_phase.value)}; gate <code>{_e(item.gate.gate_id)}"
+                f"@r{_e(item.gate.gate_revision)}</code>; "
+                f"evaluation {_e(_evaluation_status(item.gate.evaluation_basis_status))}"
+                "</li>"
+                for item in situation.next_governed_work
+            )
+            + "</ul>"
+        )
+    inventory_status = (
+        ""
+        if situation.lifecycle_inventory_completeness is ProjectionCompleteness.COMPLETE
+        else (
+            "<p>Lifecycle inventory: <strong>INCOMPLETE / NOT ESTABLISHED</strong>; "
+            "some no-lifecycle Slices cannot be classified as NOT_STARTED or pre-genesis.</p>"
+            + _slice_identity_group(
+                "Unresolved origin affecting lifecycle inventory",
+                situation.lifecycle_inventory_incomplete_slices,
+                project_id,
+            )
+        )
+    )
+    frontier_incomplete = (
+        ""
+        if not situation.frontier_incomplete_slices
+        else _slice_identity_group(
+            "Unresolved origin affecting frontier",
+            situation.frontier_incomplete_slices,
+            project_id,
+        )
+    )
+    next_work_incomplete = (
+        ""
+        if not situation.next_work_incomplete_slices
+        else _slice_identity_group(
+            "Unresolved origin affecting next-work view",
+            situation.next_work_incomplete_slices,
+            project_id,
+        )
+    )
+    pre_genesis_group = _slice_identity_group(
+        "PRE-GENESIS — NO RELAY LIFECYCLE",
+        situation.pre_genesis_no_lifecycle_slices,
+        project_id,
+    )
+    origin_not_established_group = _slice_identity_group(
+        "ORIGIN NOT ESTABLISHED",
+        situation.origin_not_established_slices,
+        project_id,
     )
 
     return (
@@ -409,17 +514,21 @@ def _project_situation(board: ProjectBoard) -> str:
         f"<p>Project: {_e(board.project.name)} (<code>{_e(board.project.id)}</code>); "
         f"primary repository: {_e(board.project.primary_repository.path)}.</p>"
         f"<p>Project definition revision: {_e(board.project_definition_revision)}.</p>"
+        f"{_origin_status_html(board.project_origin_resolution, 'Project operational origin')}"
         f"{frontier}"
         f"{_slice_identity_group('DONE', situation.done_slices, project_id)}"
         f"{_slice_identity_group('ACTIVE', situation.active_slices, project_id)}"
         f"{_slice_identity_group('NOT STARTED', situation.not_started_slices, project_id)}"
+        f"{pre_genesis_group}"
+        f"{origin_not_established_group}"
+        f"{inventory_status}{frontier_incomplete}"
         f"{_slice_identity_group('SUPERSEDED', situation.superseded_slices, project_id)}"
         f"{_slice_identity_group('CANCELLED', situation.cancelled_slices, project_id)}"
         f"<h3>Current blockers</h3>{blockers}"
         f"<h3>Current stale states</h3>{stale}"
         f"<h3>Current outgoing Human/governance gates</h3>{gates}"
         f"<h3>Slice hierarchy and declared dependencies</h3><ul>{hierarchy}</ul>"
-        f"<h3>Next governed work</h3>{next_work}"
+        f"<h3>Next governed work</h3>{next_work}{next_work_incomplete}"
         "</section>"
     )
 
@@ -598,7 +707,8 @@ def render_project_index(projection: BoardProjection) -> str:
         f'<h2><a href="{_project_url(item.project.id)}">{_e(item.project.name)}</a></h2>'
         f"<p>Project ID: <code>{_e(item.project.id)}</code></p>"
         f"<p>Primary repository: {_e(item.project.primary_repository.path)}</p>"
-        f"<p>Current Slices: {_e(item.slice_count)}</p></li>"
+        f"<p>Current Slices: {_e(item.slice_count)}</p>"
+        f"{_origin_status_html(item.origin_resolution, 'Project operational origin')}</li>"
         for item in projection.projects
     )
 
@@ -660,7 +770,11 @@ def _governance_lifecycle_summary(detail: SliceDetail) -> str:
     lifecycle = detail.lifecycle
 
     if lifecycle is None:
-        return "<p>Lifecycle: NOT_STARTED — no lifecycle record.</p>"
+        if detail.origin_resolution.origin is OperationalOrigin.PRE_GENESIS:
+            return "<p>Lifecycle: no Relay lifecycle; Slice is in the pre-genesis inventory.</p>"
+        if detail.origin_resolution.state is OriginResolutionState.ESTABLISHED:
+            return "<p>Lifecycle: NOT_STARTED — no lifecycle record.</p>"
+        return "<p>Lifecycle: no Relay lifecycle record; origin is NOT ESTABLISHED.</p>"
 
     body = (
         f"<p>Lifecycle: <strong>{_e(lifecycle.phase.value)}</strong>; validity "
@@ -968,7 +1082,13 @@ def _lifecycle_section(detail: SliceDetail) -> str:
     lifecycle = detail.lifecycle
 
     if lifecycle is None:
-        return "<section><h2>Lifecycle</h2><p>NOT_STARTED; no lifecycle record.</p></section>"
+        if detail.origin_resolution.origin is OperationalOrigin.PRE_GENESIS:
+            label = "Pre-genesis — no Relay lifecycle"
+        elif detail.origin_resolution.state is OriginResolutionState.ESTABLISHED:
+            label = "NOT_STARTED; no lifecycle record"
+        else:
+            label = "No lifecycle record; ORIGIN NOT ESTABLISHED"
+        return f"<section><h2>Lifecycle</h2><p>{_e(label)}.</p></section>"
 
     reasons = "".join(
         f"<li>{_e(reason.code)}: {_e(reason.summary)}</li>" for reason in lifecycle.blockage.reasons
@@ -1835,7 +1955,14 @@ def _slice_situation_section(detail: SliceDetail) -> str:
 
     value = detail.slice_definition.value
     lifecycle = detail.lifecycle
-    phase = "NOT_STARTED" if lifecycle is None else lifecycle.phase.value
+    if lifecycle is not None:
+        phase = lifecycle.phase.value
+    elif detail.origin_resolution.origin is OperationalOrigin.PRE_GENESIS:
+        phase = "PRE-GENESIS — NO RELAY LIFECYCLE"
+    elif detail.origin_resolution.state is OriginResolutionState.ESTABLISHED:
+        phase = "NOT_STARTED"
+    else:
+        phase = "NO RELAY LIFECYCLE — ORIGIN NOT ESTABLISHED"
     validity = "NOT_APPLICABLE" if lifecycle is None else lifecycle.validity.value
     blockage = "NOT_APPLICABLE" if lifecycle is None else lifecycle.blockage.status.value
     if lifecycle is not None and lifecycle.blockage.status is BlockageStatus.BLOCKED:
@@ -1966,14 +2093,28 @@ def _slice_situation_section(detail: SliceDetail) -> str:
         else "<p>No completed governed movement, terminal lifecycle state, accepted result, "
         "or evaluation record is projected.</p>"
     )
+    activation = (
+        "<p>First-lifecycle activation: UNAVAILABLE under the current Human-control authority "
+        "surface.</p>"
+        if detail.lifecycle is None
+        and detail.origin_resolution.origin is OperationalOrigin.PRE_GENESIS
+        else ""
+    )
+    governance_scope = (
+        ""
+        if detail.origin_governance_scope_available
+        else "<p>Origin-dependent governance actions: UNAVAILABLE because the required "
+        "origin/dependency scope is not established.</p>"
+    )
 
     return (
         '<section aria-labelledby="slice-situation-heading">'
         '<h2 id="slice-situation-heading">Slice Situation</h2>'
         f"<p>Title: {_e(value.title)}; Slice ID: <code>{_e(value.id)}</code>; "
         f"definition revision {_e(detail.slice_definition.definition_revision)}.</p>"
+        f"{_origin_status_html(detail.origin_resolution, 'Slice operational origin')}"
         f"<p>Lifecycle phase: <strong>{_e(phase)}</strong>; validity: "
-        f"{_e(validity)}; blockage: {_e(blockage)}.</p>{blocker_list}"
+        f"{_e(validity)}; blockage: {_e(blockage)}.</p>{blocker_list}{activation}{governance_scope}"
         f"<h3>Parent, children, and dependencies</h3>{parent}{children}{dependencies}"
         f"<h3>In scope</h3><ul>{in_scope}</ul>"
         f"<h3>Out of scope</h3><ul>{out_of_scope}</ul>"

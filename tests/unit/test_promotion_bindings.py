@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 import pytest
 
 import relay_engine.promotion.bindings as bindings
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, Project, RepositoryRef
 from relay_engine.persistence import open_database
 from relay_engine.persistence.database import RelayDatabase
@@ -127,6 +128,7 @@ def test_managed_binding_reserves_canonical_ref_for_promotion(
 def test_competing_binding_cas_allows_only_one_next_revision() -> None:
     now = datetime.now(UTC)
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=now)
+    ensure_test_operational_epoch(database)
     repository = RepositoryRef(
         id="repo_018f47c1-7b2c-7abc-8def-123456789002",
         host="github.com",
@@ -199,6 +201,7 @@ def test_binding_health_and_append_share_immediate_write_boundary(
     now = datetime.now(UTC)
     database_path = tmp_path / "binding-health-race.sqlite"
     database = open_database(database_path, apply_migrations=True, migration_applied_at=now)
+    ensure_test_operational_epoch(database)
     competing_connection = sqlite3.connect(database_path, timeout=0, isolation_level=None)
     competing_connection.row_factory = sqlite3.Row
     competing_connection.execute("PRAGMA foreign_keys = ON")

@@ -412,6 +412,100 @@ CANONICAL_PROMOTION_MIGRATION = Migration(
     ),
 )
 
+OPERATIONAL_ORIGIN_MIGRATION = Migration(
+    version=7,
+    name="operational history epoch and origin provenance",
+    statements=(
+        """CREATE TABLE operational_history_epochs (
+            epoch_slot INTEGER PRIMARY KEY CHECK (epoch_slot = 1),
+            epoch_id TEXT NOT NULL UNIQUE,
+            genesis_cut_at TEXT NOT NULL,
+            source_commit_sha TEXT NOT NULL,
+            genesis_package_artifact_id TEXT NOT NULL,
+            genesis_package_path TEXT NOT NULL,
+            genesis_package_digest TEXT NOT NULL,
+            package_acceptance_artifact_id TEXT NOT NULL,
+            package_acceptance_digest TEXT NOT NULL,
+            epoch_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX operational_history_epochs_by_digest
+        ON operational_history_epochs(epoch_id, epoch_digest)""",
+        """CREATE TABLE operational_origin_records (
+            record_id TEXT PRIMARY KEY,
+            subject_type TEXT NOT NULL CHECK (subject_type IN ('PROJECT', 'SLICE')),
+            subject_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            record_kind TEXT NOT NULL CHECK (record_kind IN ('INITIAL', 'CORRECTION')),
+            origin TEXT NOT NULL CHECK (origin IN ('PRE_GENESIS', 'NATIVE_RELAY')),
+            epoch_id TEXT NOT NULL REFERENCES operational_history_epochs(epoch_id),
+            epoch_digest TEXT NOT NULL,
+            supersedes_record_id TEXT,
+            supersedes_record_digest TEXT,
+            recorded_at TEXT NOT NULL,
+            recorded_by_json TEXT NOT NULL,
+            establishing_authority_id TEXT NOT NULL,
+            correction_authorization_id TEXT,
+            correction_authorization_digest TEXT,
+            rationale TEXT,
+            record_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            UNIQUE(subject_type, subject_id, record_id),
+            FOREIGN KEY(subject_type, subject_id, supersedes_record_id)
+                REFERENCES operational_origin_records(subject_type, subject_id, record_id),
+            CHECK ((record_kind = 'INITIAL' AND supersedes_record_id IS NULL
+                    AND supersedes_record_digest IS NULL
+                    AND correction_authorization_id IS NULL
+                    AND correction_authorization_digest IS NULL
+                    AND rationale IS NULL)
+                OR (record_kind = 'CORRECTION' AND supersedes_record_id IS NOT NULL
+                    AND supersedes_record_digest IS NOT NULL
+                    AND correction_authorization_id IS NOT NULL
+                    AND correction_authorization_digest IS NOT NULL
+                    AND rationale IS NOT NULL))
+        )""",
+        """CREATE INDEX operational_origin_records_by_subject
+        ON operational_origin_records(subject_type, subject_id, project_id)""",
+        """CREATE INDEX operational_origin_records_by_epoch
+        ON operational_origin_records(epoch_id, epoch_digest)""",
+        """CREATE UNIQUE INDEX operational_origin_records_unique_initial
+        ON operational_origin_records(subject_type, subject_id)
+        WHERE record_kind = 'INITIAL'""",
+        """CREATE UNIQUE INDEX operational_origin_records_unique_successor
+        ON operational_origin_records(supersedes_record_id)
+        WHERE supersedes_record_id IS NOT NULL""",
+        """CREATE TRIGGER operational_origin_records_subject_matches_insert
+        BEFORE INSERT ON operational_origin_records
+        WHEN (NEW.subject_type = 'PROJECT' AND (
+              NEW.subject_id != NEW.project_id
+              OR NOT EXISTS (SELECT 1 FROM projects WHERE id = NEW.project_id)
+          ))
+          OR (NEW.subject_type = 'SLICE' AND NOT EXISTS (
+              SELECT 1 FROM slices
+              WHERE slices.id = NEW.subject_id AND slices.project_id = NEW.project_id
+          ))
+        BEGIN
+            SELECT RAISE(ABORT, 'Operational origin subject/project mismatch');
+        END""",
+        """CREATE TRIGGER operational_history_epochs_no_update
+        BEFORE UPDATE ON operational_history_epochs BEGIN
+            SELECT RAISE(ABORT, 'Operational history epochs are append-only');
+        END""",
+        """CREATE TRIGGER operational_history_epochs_no_delete
+        BEFORE DELETE ON operational_history_epochs BEGIN
+            SELECT RAISE(ABORT, 'Operational history epochs are append-only');
+        END""",
+        """CREATE TRIGGER operational_origin_records_no_update
+        BEFORE UPDATE ON operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Operational origin records are append-only');
+        END""",
+        """CREATE TRIGGER operational_origin_records_no_delete
+        BEFORE DELETE ON operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Operational origin records are append-only');
+        END""",
+    ),
+)
+
 DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     INITIAL_MIGRATION,
     GITHUB_INTEGRATION_MIGRATION,
@@ -419,6 +513,7 @@ DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION,
     MANUAL_EVALUATION_MIGRATION,
     CANONICAL_PROMOTION_MIGRATION,
+    OPERATIONAL_ORIGIN_MIGRATION,
 )
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
@@ -456,6 +551,8 @@ REQUIRED_TABLES = frozenset(
         "repository_promotion_intents",
         "repository_promotion_results",
         "repository_promotion_reconciliations",
+        "operational_history_epochs",
+        "operational_origin_records",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -476,6 +573,11 @@ REQUIRED_INDEXES = frozenset(
         "repository_promotion_results_by_project_ref_outcome",
         "repository_promotion_results_unique_successful_target",
         "repository_promotion_reconciliations_by_project_ref",
+        "operational_history_epochs_by_digest",
+        "operational_origin_records_by_subject",
+        "operational_origin_records_by_epoch",
+        "operational_origin_records_unique_initial",
+        "operational_origin_records_unique_successor",
     }
 )
 REQUIRED_TRIGGERS = frozenset(
@@ -496,6 +598,11 @@ REQUIRED_TRIGGERS = frozenset(
         "repository_promotion_results_no_delete",
         "repository_promotion_reconciliations_no_update",
         "repository_promotion_reconciliations_no_delete",
+        "operational_history_epochs_no_update",
+        "operational_history_epochs_no_delete",
+        "operational_origin_records_no_update",
+        "operational_origin_records_no_delete",
+        "operational_origin_records_subject_matches_insert",
     }
 )
 

@@ -49,6 +49,10 @@ class SliceDependencyCycle(ProjectSliceError):
     """The resulting dependency graph contains a cycle."""
 
 
+class OperationalOriginNotEstablished(ProjectSliceError):
+    """An origin-dependent operation lacks a valid epoch or subject origin."""
+
+
 class SliceDefinitionFrozen(ProjectSliceError):
     """Lifecycle or gate evidence freezes this Slice definition."""
 

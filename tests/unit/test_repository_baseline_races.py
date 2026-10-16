@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, Project, RepositoryRef
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
@@ -59,6 +60,7 @@ REPOSITORY = RepositoryRef(
 
 
 def _create_project(database: object, value: Project) -> None:
+    ensure_test_operational_epoch(database)
     create_project(
         database,
         value,

@@ -76,6 +76,8 @@ from relay_engine.persistence import (
 )
 from relay_engine.persistence.database import write_transaction
 from relay_engine.persistence.records import ExecutionRecord
+from relay_engine.project_slice.errors import OperationalOriginNotEstablished
+from relay_engine.project_slice.service import require_slice_origin_governance_scope_from_connection
 
 _HUMAN_HOLD_CODES = frozenset({"HUMAN_BLOCK", "HUMAN_PAUSE", "HUMAN_DEFER"})
 _APPROVAL_REASONS = frozenset(
@@ -120,6 +122,17 @@ def _human_write(database: RelayDatabase) -> Generator[sqlite3.Connection]:
 def _require_human(actor: ActorRef) -> None:
     if actor.kind is not ActorKind.HUMAN:
         raise HumanActionForbidden("Human Authority commands require a server-bound HUMAN actor")
+
+
+def _require_origin_scope(
+    database: RelayDatabase,
+    connection: sqlite3.Connection,
+    slice_id: SliceId,
+) -> None:
+    try:
+        require_slice_origin_governance_scope_from_connection(database, connection, slice_id)
+    except OperationalOriginNotEstablished as error:
+        raise HumanActionNotAvailable(str(error)) from error
 
 
 def current_gates(
@@ -620,6 +633,7 @@ def grant_gate_authorization(
 
     _require_human(actor)
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle, gates, latest = validate_human_action_basis(snapshot, basis)
         gate = _find_gate(gates, gate_id)
@@ -799,6 +813,7 @@ def record_gate_approval(
     if basis.slice_id != slice_id:
         raise HumanActionBasisStale("basis Slice does not match route Slice")
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         return _record_decision(
             connection,
@@ -836,6 +851,7 @@ def record_gate_rejection(
     if basis.slice_id != slice_id:
         raise HumanActionBasisStale("basis Slice does not match route Slice")
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         return _record_decision(
             connection,
@@ -873,6 +889,7 @@ def record_gate_choice(
     if basis.slice_id != slice_id:
         raise HumanActionBasisStale("basis Slice does not match route Slice")
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle, gates, latest = validate_human_action_basis(snapshot, basis)
         choice_gates = tuple(gate for gate in gates if gate.policy is HandoverPolicy.HUMAN_CHOICE)
@@ -961,6 +978,7 @@ def _change_human_hold(
     if action not in {HumanActionKind.BLOCK, HumanActionKind.PAUSE, HumanActionKind.DEFER}:
         raise HumanActionNotAvailable("unsupported Human hold action")
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle = snapshot.lifecycle
         if lifecycle is None:
@@ -1073,6 +1091,7 @@ def clear_human_hold(
 
     _require_human(actor)
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle = snapshot.lifecycle
         if lifecycle is None:
@@ -1192,6 +1211,7 @@ def advance_green_handover(
     if basis.slice_id != slice_id:
         raise HumanActionBasisStale("basis Slice does not match route Slice")
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle, gates, latest, _gate = _validate_green_action(
             snapshot, basis, gate_id, cancellation=False
@@ -1234,6 +1254,7 @@ def cancel_slice(
 
     _require_human(actor)
     with _human_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         lifecycle = snapshot.lifecycle
         if lifecycle is None:

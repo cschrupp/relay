@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, Project, RepositoryRef
 from relay_engine.integrations.github import GitHubCheckRun, GitHubGitObjectType
 from relay_engine.persistence import (
@@ -186,6 +187,7 @@ def _execution_case(monkeypatch):
     actor = ActorRef(kind=ActorKind.HUMAN, id="act_018f47c1-7b2c-7abc-8def-123456789003")
     now = datetime(2026, 10, 1, tzinfo=UTC)
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=now)
+    ensure_test_operational_epoch(database)
     create_project(
         database,
         Project(id=project_id, name="Relay", primary_repository=repository),

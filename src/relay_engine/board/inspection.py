@@ -9,6 +9,7 @@ from relay_engine.board.models import (
     FrontierCardinality,
     LiveObservationStatus,
     ProjectGateReference,
+    ProjectionCompleteness,
     ProjectSituationProjection,
     ProjectSliceHierarchy,
     ProjectSliceIdentity,
@@ -31,6 +32,7 @@ from relay_engine.persistence import (
     load_repository_promotion_intent,
     load_repository_promotion_result,
 )
+from relay_engine.project_slice.origin import OperationalOrigin, OriginResolutionState
 from relay_engine.promotion.bindings import (
     canonical_ref_health,
     promotion_intent_authority_is_valid,
@@ -81,6 +83,9 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
     done: list[ProjectSliceIdentity] = []
     active: list[ProjectSliceIdentity] = []
     not_started: list[ProjectSliceIdentity] = []
+    pre_genesis_no_lifecycle: list[ProjectSliceIdentity] = []
+    origin_not_established: list[ProjectSliceIdentity] = []
+    lifecycle_inventory_incomplete: list[ProjectSliceIdentity] = []
     superseded: list[ProjectSliceIdentity] = []
     cancelled: list[ProjectSliceIdentity] = []
     active_ids: set[str] = set()
@@ -91,8 +96,16 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
     for card in cards:
         identity = identities[card.slice_id]
         lifecycle = card.lifecycle
+        origin_established = card.origin_resolution.state is OriginResolutionState.ESTABLISHED
+        if not origin_established:
+            origin_not_established.append(identity)
         if lifecycle is None:
-            not_started.append(identity)
+            if not origin_established:
+                lifecycle_inventory_incomplete.append(identity)
+            elif card.origin_resolution.origin is OperationalOrigin.PRE_GENESIS:
+                pre_genesis_no_lifecycle.append(identity)
+            else:
+                not_started.append(identity)
         elif lifecycle.phase is LifecyclePhase.ACCEPTED:
             done.append(identity)
         elif lifecycle.phase is LifecyclePhase.SUPERSEDED:
@@ -173,6 +186,9 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
     done.sort(key=lambda item: item.slice_id)
     active.sort(key=lambda item: item.slice_id)
     not_started.sort(key=lambda item: item.slice_id)
+    pre_genesis_no_lifecycle.sort(key=lambda item: item.slice_id)
+    origin_not_established.sort(key=lambda item: item.slice_id)
+    lifecycle_inventory_incomplete.sort(key=lambda item: item.slice_id)
     superseded.sort(key=lambda item: item.slice_id)
     cancelled.sort(key=lambda item: item.slice_id)
     frontiers = tuple(
@@ -194,6 +210,22 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
     )
     stale_states.sort(key=lambda item: (item.slice.slice_id, item.kind.value))
     next_work = tuple(item for item in current_gates if item.slice.slice_id in frontier_ids)
+    frontier_cards = tuple(card for card in cards if card.slice_id in frontier_ids)
+    next_work_incomplete = tuple(
+        identities[card.slice_id]
+        for card in frontier_cards
+        if card.origin_resolution.state is OriginResolutionState.NOT_ESTABLISHED
+        or any(
+            dependency.origin_resolution.state is OriginResolutionState.NOT_ESTABLISHED
+            for dependency in card.dependencies
+        )
+    )
+    next_work_incomplete = tuple(
+        sorted(
+            {item.slice_id: item for item in next_work_incomplete}.values(),
+            key=lambda x: x.slice_id,
+        )
+    )
 
     hierarchy = tuple(
         ProjectSliceHierarchy(
@@ -212,20 +244,33 @@ def project_project_situation(cards: tuple[SliceCard, ...]) -> ProjectSituationP
         done_slices=tuple(done),
         active_slices=tuple(active),
         not_started_slices=tuple(not_started),
+        pre_genesis_no_lifecycle_slices=tuple(pre_genesis_no_lifecycle),
+        origin_not_established_slices=tuple(origin_not_established),
+        lifecycle_inventory_completeness=(
+            ProjectionCompleteness.INCOMPLETE_NOT_ESTABLISHED
+            if lifecycle_inventory_incomplete
+            else ProjectionCompleteness.COMPLETE
+        ),
+        lifecycle_inventory_incomplete_slices=tuple(lifecycle_inventory_incomplete),
         superseded_slices=tuple(superseded),
         cancelled_slices=tuple(cancelled),
         leaf_active_frontiers=frontiers,
         frontier_cardinality=cardinality,
+        frontier_completeness=ProjectionCompleteness.COMPLETE,
+        frontier_incomplete_slices=(),
         blockers=tuple(blockers),
         stale_states=tuple(stale_states),
         current_outgoing_gates=tuple(current_gates),
         hierarchy=hierarchy,
         next_governed_work=next_work,
         next_work_state=(
-            SituationNextWorkState.CURRENT_FRONTIER_GATES
+            SituationNextWorkState.INCOMPLETE_ORIGIN
+            if next_work and next_work_incomplete
+            else SituationNextWorkState.CURRENT_FRONTIER_GATES
             if next_work
             else SituationNextWorkState.NOT_DETERMINABLE
         ),
+        next_work_incomplete_slices=next_work_incomplete,
     )
 
 

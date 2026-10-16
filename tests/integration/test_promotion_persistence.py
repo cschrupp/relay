@@ -19,7 +19,8 @@ def test_migration_v6_creates_exact_four_append_only_tables(tmp_path) -> None:
         migration_applied_at=NOW_VALUE,
     )
     try:
-        assert [migration.version for migration in DEFAULT_MIGRATIONS] == [1, 2, 3, 4, 5, 6]
+        migrations_v6 = DEFAULT_MIGRATIONS[:6]
+        assert [migration.version for migration in migrations_v6] == [1, 2, 3, 4, 5, 6]
         tables = {
             row[0]
             for row in database.connection.execute(

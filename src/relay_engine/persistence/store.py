@@ -26,7 +26,7 @@ from relay_engine.domain.ids import (
     SliceResultId,
 )
 from relay_engine.domain.models import Artifact, Baseline, Decision, Evidence, Project, Slice
-from relay_engine.domain.references import ActorRef
+from relay_engine.domain.references import ActorKind, ActorRef
 from relay_engine.governance import (
     AuthorizationGrant,
     GateEvaluation,
@@ -57,6 +57,23 @@ from relay_engine.persistence.errors import (
     PersistenceIntegrityError,
 )
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
+from relay_engine.project_slice.origin import (
+    NativeRelayOriginProofV1,
+    OperationalHistoryEpochResolution,
+    OperationalHistoryEpochV1,
+    OperationalOrigin,
+    OperationalOriginRecordV1,
+    OriginDiagnosticCode,
+    OriginRecordKind,
+    OriginResolutionState,
+    OriginSubjectType,
+    PreGenesisOriginProofV1,
+    definition_payload_digest,
+    epoch_resolution_not_established,
+    operational_history_epoch_digest,
+    operational_origin_record_digest,
+    resolve_origin_chain,
+)
 from relay_engine.promotion.models import (
     CanonicalPolicyBindingSubjectV1,
     CanonicalPromotionPolicyBindingV1,
@@ -1027,6 +1044,374 @@ def load_repository_mutation_authorization(
             },
         ),
     )
+
+
+def _parse_operational_history_epoch(row: sqlite3.Row) -> OperationalHistoryEpochV1:
+    try:
+        epoch = OperationalHistoryEpochV1.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("stored operational-history epoch is invalid") from error
+    indexed = {
+        "epoch_slot": 1,
+        "epoch_id": epoch.epoch_id,
+        "genesis_cut_at": _datetime_text(epoch.genesis_cut_at),
+        "source_commit_sha": epoch.source_commit.sha,
+        "genesis_package_artifact_id": epoch.genesis_package_artifact_id,
+        "genesis_package_path": epoch.genesis_package_path,
+        "genesis_package_digest": epoch.genesis_package_digest,
+        "package_acceptance_artifact_id": epoch.package_acceptance_artifact_id,
+        "package_acceptance_digest": epoch.package_acceptance_digest,
+        "epoch_digest": epoch.epoch_digest,
+    }
+    if any(row[column] != value for column, value in indexed.items()):
+        raise PersistenceIntegrityError(
+            "operational-history epoch columns disagree with the immutable payload"
+        )
+    if epoch.epoch_digest != operational_history_epoch_digest(epoch):
+        raise PersistenceIntegrityError("operational-history epoch digest is invalid")
+    return epoch
+
+
+def load_operational_history_epoch_resolution_from_connection(
+    connection: sqlite3.Connection,
+) -> OperationalHistoryEpochResolution:
+    """Validate the unique database-wide epoch without inferring a missing value."""
+
+    rows = connection.execute(
+        "SELECT * FROM operational_history_epochs ORDER BY epoch_id"
+    ).fetchall()
+    record_ids = tuple(str(row["epoch_id"]) for row in rows)
+    if len(rows) != 1:
+        return epoch_resolution_not_established(
+            OriginDiagnosticCode.EPOCH_NOT_ESTABLISHED,
+            record_ids,
+        )
+    try:
+        epoch = _parse_operational_history_epoch(rows[0])
+    except PersistenceIntegrityError:
+        return epoch_resolution_not_established(
+            OriginDiagnosticCode.EPOCH_NOT_ESTABLISHED,
+            record_ids,
+        )
+    return OperationalHistoryEpochResolution(
+        state=OriginResolutionState.ESTABLISHED,
+        epoch=epoch,
+        diagnostic=None,
+        record_ids=(epoch.epoch_id,),
+    )
+
+
+def load_operational_history_epoch_resolution(
+    database: RelayDatabase,
+) -> OperationalHistoryEpochResolution:
+    """Load the read-only epoch result from the caller-owned database."""
+
+    return _read(database, load_operational_history_epoch_resolution_from_connection)
+
+
+def _insert_operational_history_epoch_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalHistoryEpochV1,
+) -> None:
+    connection.execute(
+        """INSERT INTO operational_history_epochs(
+            epoch_slot, epoch_id, genesis_cut_at, source_commit_sha,
+            genesis_package_artifact_id, genesis_package_path, genesis_package_digest,
+            package_acceptance_artifact_id, package_acceptance_digest, epoch_digest, payload_json
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            value.epoch_id,
+            _datetime_text(value.genesis_cut_at),
+            value.source_commit.sha,
+            value.genesis_package_artifact_id,
+            value.genesis_package_path,
+            value.genesis_package_digest,
+            value.package_acceptance_artifact_id,
+            value.package_acceptance_digest,
+            value.epoch_digest,
+            _canonical_json(value),
+        ),
+    )
+
+
+def materialize_accepted_operational_history_epoch(
+    database: RelayDatabase,
+    value: OperationalHistoryEpochV1,
+) -> None:
+    """Materialize one exact B0-accepted epoch descriptor; never replace an anchor.
+
+    The later B0 importer must validate the package and acceptance artifacts before
+    calling this narrow persistence seam. This function only materializes the exact
+    typed descriptor and enforces the database singleton.
+    """
+
+    try:
+        value = OperationalHistoryEpochV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("accepted operational-history epoch is invalid") from error
+    with _write(database) as connection:
+        current = load_operational_history_epoch_resolution_from_connection(connection)
+        if current.state is not OriginResolutionState.NOT_ESTABLISHED:
+            raise PersistenceIntegrityError("operational-history epoch is already established")
+        if current.record_ids:
+            raise PersistenceIntegrityError("operational-history epoch history is invalid")
+        _insert_operational_history_epoch_from_connection(connection, value)
+
+
+def _parse_operational_origin_record(row: sqlite3.Row) -> OperationalOriginRecordV1:
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("stored operational-origin record is invalid") from error
+    indexed = {
+        "record_id": value.record_id,
+        "subject_type": value.subject_type.value,
+        "subject_id": value.subject_id,
+        "project_id": value.project_id,
+        "record_kind": value.record_kind.value,
+        "origin": value.origin.value,
+        "epoch_id": value.epoch_id,
+        "epoch_digest": value.epoch_digest,
+        "supersedes_record_id": value.supersedes_record_id,
+        "supersedes_record_digest": value.supersedes_record_digest,
+        "recorded_at": _datetime_text(value.recorded_at),
+        "recorded_by_json": _canonical_json(value.recorded_by),
+        "establishing_authority_id": value.establishing_authority_id,
+        "correction_authorization_id": value.correction_authorization_id,
+        "correction_authorization_digest": value.correction_authorization_digest,
+        "rationale": value.rationale,
+        "record_digest": value.record_digest,
+    }
+    if any(row[column] != expected for column, expected in indexed.items()):
+        raise PersistenceIntegrityError(
+            "operational-origin indexed columns disagree with the immutable payload"
+        )
+    if value.record_digest != operational_origin_record_digest(value):
+        raise PersistenceIntegrityError("operational-origin record digest is invalid")
+    return value
+
+
+def load_operational_origin_records_from_connection(
+    connection: sqlite3.Connection,
+    *,
+    subject_type: OriginSubjectType,
+    subject_id: str,
+) -> tuple[OperationalOriginRecordV1, ...]:
+    """Load and integrity-check all records for one exact Project/Slice subject."""
+
+    rows = connection.execute(
+        "SELECT * FROM operational_origin_records WHERE subject_type = ? AND subject_id = ? "
+        "ORDER BY record_id",
+        (subject_type.value, subject_id),
+    ).fetchall()
+    return tuple(_parse_operational_origin_record(row) for row in rows)
+
+
+def load_operational_origin_records(
+    database: RelayDatabase,
+    *,
+    subject_type: OriginSubjectType,
+    subject_id: str,
+) -> tuple[OperationalOriginRecordV1, ...]:
+    """Load exact origin history for a single subject."""
+
+    return _read(
+        database,
+        lambda connection: load_operational_origin_records_from_connection(
+            connection,
+            subject_type=subject_type,
+            subject_id=subject_id,
+        ),
+    )
+
+
+def _insert_operational_origin_record_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    connection.execute(
+        """INSERT INTO operational_origin_records(
+            record_id, subject_type, subject_id, project_id, record_kind, origin,
+            epoch_id, epoch_digest, supersedes_record_id, supersedes_record_digest,
+            recorded_at, recorded_by_json, establishing_authority_id,
+            correction_authorization_id, correction_authorization_digest, rationale,
+            record_digest, payload_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            value.record_id,
+            value.subject_type.value,
+            value.subject_id,
+            value.project_id,
+            value.record_kind.value,
+            value.origin.value,
+            value.epoch_id,
+            value.epoch_digest,
+            value.supersedes_record_id,
+            value.supersedes_record_digest,
+            _datetime_text(value.recorded_at),
+            _canonical_json(value.recorded_by),
+            value.establishing_authority_id,
+            value.correction_authorization_id,
+            value.correction_authorization_digest,
+            value.rationale,
+            value.record_digest,
+            _canonical_json(value),
+        ),
+    )
+
+
+def append_native_origin_for_creation_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append NATIVE_RELAY only beside its exact normal CREATE revision."""
+
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("NATIVE_RELAY origin record is invalid") from error
+    if (
+        value.record_kind is not OriginRecordKind.INITIAL
+        or value.origin is not OperationalOrigin.NATIVE_RELAY
+        or not isinstance(value.proof, NativeRelayOriginProofV1)
+    ):
+        raise PersistenceIntegrityError("Relay CREATE may append NATIVE_RELAY only")
+
+    epoch_resolution = load_operational_history_epoch_resolution_from_connection(connection)
+    epoch = epoch_resolution.epoch
+    if (
+        epoch_resolution.state is not OriginResolutionState.ESTABLISHED
+        or epoch is None
+        or value.epoch_id != epoch.epoch_id
+        or value.epoch_digest != epoch.epoch_digest
+        or value.proof.created_at <= epoch.genesis_cut_at
+        or value.recorded_at != value.proof.created_at
+        or value.recorded_by != value.proof.actor
+        or value.proof.actor.kind is not ActorKind.HUMAN
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY origin does not match the current epoch")
+
+    proof = value.proof
+    subject_name = "project" if value.subject_type is OriginSubjectType.PROJECT else "slice"
+    if value.establishing_authority_id != (
+        f"{subject_name}_definition_revisions/{value.subject_id}/1"
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY CREATE reference is not exact")
+    table = (
+        "project_definition_revisions"
+        if subject_name == "project"
+        else "slice_definition_revisions"
+    )
+    id_column = "project_id" if subject_name == "project" else "slice_id"
+    row = connection.execute(
+        f"SELECT operation, payload_json, actor_json, occurred_at, reason FROM {table} "
+        f"WHERE {id_column} = ? AND definition_revision = 1",
+        (value.subject_id,),
+    ).fetchone()
+    if row is None or row["operation"] != "CREATE":
+        raise PersistenceIntegrityError("NATIVE_RELAY origin has no exact CREATE revision")
+    model_type = Project if value.subject_type is OriginSubjectType.PROJECT else Slice
+    try:
+        created_value = model_type.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("CREATE revision payload is invalid") from error
+    if (
+        definition_payload_digest(created_value) != proof.creation_payload_digest
+        or row["actor_json"] != _canonical_json(proof.actor)
+        or row["occurred_at"] != _datetime_text(proof.created_at)
+        or row["reason"] != proof.reason
+        or (isinstance(created_value, Project) and value.project_id != created_value.id)
+        or (isinstance(created_value, Slice) and value.project_id != created_value.project_id)
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY proof disagrees with exact CREATE evidence")
+    prior = connection.execute(
+        "SELECT 1 FROM operational_origin_records WHERE subject_type = ? AND subject_id = ?",
+        (value.subject_type.value, value.subject_id),
+    ).fetchone()
+    if prior is not None:
+        raise PersistenceIntegrityError("NATIVE_RELAY subject already has origin history")
+    _insert_operational_origin_record_from_connection(connection, value)
+
+
+def materialize_pre_genesis_origin_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append one B0-validated PRE_GENESIS record through a narrow persistence seam.
+
+    The caller must be the later authorized B0 importer and must have validated the
+    exact accepted genesis package, snapshot, and their acceptance records.
+    """
+
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("PRE_GENESIS origin record is invalid") from error
+    if value.record_kind is not OriginRecordKind.INITIAL or not isinstance(
+        value.proof, PreGenesisOriginProofV1
+    ):
+        raise PersistenceIntegrityError("B0 materialization accepts initial PRE_GENESIS only")
+    epoch_resolution = load_operational_history_epoch_resolution_from_connection(connection)
+    epoch = epoch_resolution.epoch
+    if (
+        epoch_resolution.state is not OriginResolutionState.ESTABLISHED
+        or epoch is None
+        or value.epoch_id != epoch.epoch_id
+        or value.epoch_digest != epoch.epoch_digest
+        or value.proof.source_commit != epoch.source_commit
+        or value.proof.package_acceptance_artifact_id != epoch.package_acceptance_artifact_id
+        or value.proof.package_acceptance_digest != epoch.package_acceptance_digest
+        or value.recorded_at < epoch.genesis_cut_at
+        or value.recorded_by.kind is not ActorKind.HUMAN
+        or value.establishing_authority_id != value.proof.package_acceptance_artifact_id
+    ):
+        raise PersistenceIntegrityError("PRE_GENESIS record is not bound to the exact epoch")
+    if value.subject_type is OriginSubjectType.PROJECT:
+        if (
+            value.subject_id != value.project_id
+            or connection.execute(
+                "SELECT 1 FROM projects WHERE id = ?", (value.project_id,)
+            ).fetchone()
+            is None
+        ):
+            raise PersistenceIntegrityError("PRE_GENESIS Project subject is missing or mismatched")
+    else:
+        row = connection.execute(
+            "SELECT project_id FROM slices WHERE id = ?", (value.subject_id,)
+        ).fetchone()
+        if row is None or row["project_id"] != value.project_id:
+            raise PersistenceIntegrityError("PRE_GENESIS Slice subject is missing or mismatched")
+        project_records = load_operational_origin_records_from_connection(
+            connection,
+            subject_type=OriginSubjectType.PROJECT,
+            subject_id=value.project_id,
+        )
+        project_origin = resolve_origin_chain(
+            project_records,
+            subject_type=OriginSubjectType.PROJECT,
+            subject_id=value.project_id,
+            project_id=value.project_id,
+            epoch_resolution=epoch_resolution,
+            creation_revision=None,
+        )
+        if (
+            project_origin.state is not OriginResolutionState.ESTABLISHED
+            or project_origin.origin is not OperationalOrigin.PRE_GENESIS
+        ):
+            raise PersistenceIntegrityError(
+                "PRE_GENESIS Slice requires an independently materialized PRE_GENESIS Project"
+            )
+    _insert_operational_origin_record_from_connection(connection, value)
+
+
+def materialize_pre_genesis_origin(
+    database: RelayDatabase,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append one B0-validated initial PRE_GENESIS origin record."""
+
+    with _write(database) as connection:
+        materialize_pre_genesis_origin_from_connection(connection, value)
 
 
 def insert_canonical_promotion_policy_binding(

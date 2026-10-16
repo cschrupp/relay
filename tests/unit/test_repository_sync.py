@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, Project, RepositoryRef
 from relay_engine.governance import (
     AuthorizationGrant,
@@ -117,6 +118,7 @@ RAW = b"Relay test artifact\n"
 
 
 def _create_project(database: object, value: Project) -> None:
+    ensure_test_operational_epoch(database)
     create_project(
         database,
         value,
@@ -1498,7 +1500,7 @@ def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions[-1] == 6
+        assert versions[-1] == 7
     finally:
         restarted.close()
 

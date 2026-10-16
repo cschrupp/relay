@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 from pydantic import TypeAdapter
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain.ids import (
     ArtifactId,
     BaselineId,
@@ -106,6 +107,7 @@ def _fixture(name: str, model: type[object]) -> object:
 
 
 def _setup(database: object) -> None:
+    ensure_test_operational_epoch(database)
     metadata = MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Test setup.")
     create_project(database, cast(Project, _fixture("project", Project)), metadata)
     insert_baseline(database, cast(Baseline, _fixture("baseline", Baseline)))
@@ -400,6 +402,20 @@ def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_aud
         assert tuple(slice_seed[:2]) == (1, "SEED")
         assert Project.model_validate_json(project_seed["payload_json"]) == project
         assert Slice.model_validate_json(slice_seed["payload_json"]) == slice_value
+        assert (
+            migrated.connection.execute(
+                "SELECT count(*) FROM operational_history_epochs"
+            ).fetchone()[0]
+            == 0
+        )
+        assert (
+            migrated.connection.execute(
+                "SELECT count(*) FROM operational_origin_records"
+            ).fetchone()[0]
+            == 0
+        )
+
+        ensure_test_operational_epoch(migrated)
 
         new_project = project.model_copy(
             update={"id": "prj_018f47c1-7b2c-7abc-8def-123456789099", "name": "New"}
@@ -418,6 +434,7 @@ def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_aud
         new_slice = slice_value.model_copy(
             update={
                 "id": "slc_018f47c1-7b2c-7abc-8def-123456789098",
+                "project_id": new_project.id,
                 "title": "Created after migration v4",
                 "parent_slice_id": None,
                 "dependency_ids": (),
@@ -441,7 +458,7 @@ def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_aud
             migrated.connection.execute(
                 "SELECT version FROM relay_schema_migrations ORDER BY version DESC LIMIT 1"
             ).fetchone()[0]
-            == 6
+            == 7
         )
     finally:
         migrated.close()
@@ -450,6 +467,7 @@ def test_migration_v3_to_v4_seeds_existing_definitions_and_runtime_create_is_aud
 def test_definition_history_survives_database_restart(tmp_path: Path) -> None:
     path = tmp_path / "restart.sqlite"
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     project = cast(Project, _fixture("project", Project))
     create_project(
         database, project, MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Create.")

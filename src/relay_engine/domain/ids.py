@@ -27,6 +27,8 @@ type IdPrefix = Literal[
     "cpb_",
     "prom_",
     "recon_",
+    "ohe_",
+    "oor_",
 ]
 
 _UUID_TEXT = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -52,6 +54,8 @@ type CanonicalPromotionPolicyId = Annotated[str, Field(pattern=rf"^cpol_{_UUID_T
 type CanonicalPromotionBindingId = Annotated[str, Field(pattern=rf"^cpb_{_UUID_TEXT}$")]
 type RepositoryPromotionId = Annotated[str, Field(pattern=rf"^prom_{_UUID_TEXT}$")]
 type CanonicalPromotionReconciliationId = Annotated[str, Field(pattern=rf"^recon_{_UUID_TEXT}$")]
+type OperationalHistoryEpochId = Annotated[str, Field(pattern=rf"^ohe_{_UUID_TEXT}$")]
+type OperationalOriginRecordId = Annotated[str, Field(pattern=rf"^oor_{_UUID_TEXT}$")]
 
 
 def new_id(prefix: IdPrefix) -> str:
@@ -79,6 +83,8 @@ def new_id(prefix: IdPrefix) -> str:
         "cpb_",
         "prom_",
         "recon_",
+        "ohe_",
+        "oor_",
     ):
         raise ValueError("unsupported domain identifier prefix")
     return f"{prefix}{uuid7()}"

@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from conftest import make_test_origin_resolution
 from relay_engine.board.inspection import project_project_situation
 from relay_engine.board.models import (
     BoardLane,
@@ -27,6 +28,7 @@ from relay_engine.lifecycle.models import (
     LifecycleValidity,
     SliceLifecycle,
 )
+from relay_engine.project_slice.origin import OriginSubjectType
 
 NOW = datetime(2026, 10, 2, tzinfo=UTC)
 PROJECT_ID: ProjectId = "prj_018f47c1-7b2c-7abc-8def-123456789001"
@@ -80,6 +82,11 @@ def _ready_card() -> SliceCard:
         dependency_ids=(),
         lane=BoardLane.READY,
         lifecycle=_lifecycle(LifecyclePhase.READY),
+        origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.SLICE,
+            SLICE_ID,
+            project_id=PROJECT_ID,
+        ),
         dependencies=(),
         outgoing_gates=(gate,),
         latest_evaluation_record_id=None,
@@ -105,6 +112,10 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
     board = ProjectBoard(
         project=project,
         project_definition_revision=1,
+        project_origin_resolution=make_test_origin_resolution(
+            OriginSubjectType.PROJECT,
+            project.id,
+        ),
         situation=project_project_situation((card,)),
         canonical_governance=CanonicalGovernanceInspection(
             durable_target_established=False,
@@ -120,6 +131,10 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
         ProjectBoard(
             project=project,
             project_definition_revision=1,
+            project_origin_resolution=make_test_origin_resolution(
+                OriginSubjectType.PROJECT,
+                project.id,
+            ),
             situation=project_project_situation((card,)),
             canonical_governance=CanonicalGovernanceInspection(
                 durable_target_established=False,
@@ -134,6 +149,11 @@ def test_projection_models_are_immutable_extra_forbid_and_lane_ordered() -> None
             title=None,
             lifecycle_phase=None,
             lifecycle_validity=None,
+            origin_resolution=make_test_origin_resolution(
+                OriginSubjectType.SLICE,
+                SLICE_ID,
+                project_id=PROJECT_ID,
+            ),
             invented_blocker=True,
         )
 

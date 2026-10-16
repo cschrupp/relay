@@ -46,6 +46,17 @@ from relay_engine.project_slice import (
     list_projects,
     list_slices,
 )
+from relay_engine.project_slice.errors import OperationalOriginNotEstablished
+from relay_engine.project_slice.origin import (
+    OperationalOrigin,
+    OperationalOriginResolution,
+    OriginResolutionState,
+)
+from relay_engine.project_slice.service import (
+    require_slice_origin_governance_scope_from_connection,
+    resolve_project_origin_from_connection,
+    resolve_slice_origin_from_connection,
+)
 from relay_engine.promotion.controls import SourceControlObservationV1
 
 
@@ -253,17 +264,23 @@ def _dependency_projection(
     related_id: SliceId,
     known: dict[SliceId, SliceDefinitionSnapshot],
     lifecycles: dict[SliceId, SliceLifecycle | None],
+    origins: dict[SliceId, OperationalOriginResolution],
 ) -> DependencyProjection:
     snapshot = _verify_related_slice_project(database, project_id, related_id, known)
     lifecycle = lifecycles.get(related_id)
     if lifecycle is None and snapshot is not None:
         lifecycle = load_current_lifecycle_from_connection(connection, related_id)
         lifecycles[related_id] = lifecycle
+    origin = origins.get(related_id)
+    if origin is None:
+        origin = resolve_slice_origin_from_connection(database, connection, related_id, project_id)
+        origins[related_id] = origin
     return DependencyProjection(
         slice_id=related_id,
         title=None if snapshot is None else snapshot.value.title,
         lifecycle_phase=None if lifecycle is None else lifecycle.phase,
         lifecycle_validity=None if lifecycle is None else lifecycle.validity,
+        origin_resolution=origin,
     )
 
 
@@ -271,7 +288,12 @@ def _ordered_cards(cards: list[SliceCard]) -> tuple[SliceCard, ...]:
     lane_order = {lane: index for index, lane in enumerate(BoardLane)}
     return tuple(
         sorted(
-            cards, key=lambda card: (lane_order[card.lane], card.title.casefold(), card.slice_id)
+            cards,
+            key=lambda card: (
+                len(lane_order) if card.lane is None else lane_order[card.lane],
+                card.title.casefold(),
+                card.slice_id,
+            ),
         )
     )
 
@@ -280,13 +302,16 @@ def project_index(database: RelayDatabase) -> BoardProjection:
     """Project every current Project in one verified SQLite read snapshot."""
 
     try:
-        with read_transaction(database):
+        with read_transaction(database) as connection:
             snapshots = list_projects(database)
             projects = tuple(
                 ProjectSummary(
                     project=snapshot.value,
                     definition_revision=snapshot.definition_revision,
                     slice_count=len(list_slices(database, snapshot.value.id)),
+                    origin_resolution=resolve_project_origin_from_connection(
+                        database, connection, snapshot.value.id
+                    ),
                 )
                 for snapshot in snapshots
             )
@@ -308,6 +333,15 @@ def project_board(
             project_snapshot = get_project(database, project_id)
             slice_snapshots = list_slices(database, project_id)
             known = {snapshot.value.id: snapshot for snapshot in slice_snapshots}
+            project_origin = resolve_project_origin_from_connection(
+                database, connection, project_id
+            )
+            origins = {
+                slice_id: resolve_slice_origin_from_connection(
+                    database, connection, slice_id, project_id
+                )
+                for slice_id in known
+            }
             lifecycles = {
                 slice_id: load_current_lifecycle_from_connection(connection, slice_id)
                 for slice_id in known
@@ -333,6 +367,7 @@ def project_board(
                         value.parent_slice_id,
                         known,
                         lifecycles,
+                        origins,
                     )
                 dependencies = tuple(
                     _dependency_projection(
@@ -342,6 +377,7 @@ def project_board(
                         dependency_id,
                         known,
                         lifecycles,
+                        origins,
                     )
                     for dependency_id in value.dependency_ids
                 )
@@ -352,8 +388,17 @@ def project_board(
                         definition_revision=snapshot.definition_revision,
                         parent_slice_id=value.parent_slice_id,
                         dependency_ids=value.dependency_ids,
-                        lane=_lane_for(lifecycle),
+                        lane=(
+                            None
+                            if lifecycle is None
+                            and (
+                                origins[value.id].state is OriginResolutionState.NOT_ESTABLISHED
+                                or origins[value.id].origin is OperationalOrigin.PRE_GENESIS
+                            )
+                            else _lane_for(lifecycle)
+                        ),
                         lifecycle=lifecycle,
+                        origin_resolution=origins[value.id],
                         dependencies=dependencies,
                         outgoing_gates=_gate_projections(gates, latest, status),
                         latest_evaluation_record_id=None if latest is None else latest.id,
@@ -374,6 +419,7 @@ def project_board(
             return ProjectBoard(
                 project=project_snapshot.value,
                 project_definition_revision=project_snapshot.definition_revision,
+                project_origin_resolution=project_origin,
                 situation=situation,
                 canonical_governance=canonical_governance,
                 lanes=tuple(BoardLane),
@@ -397,6 +443,11 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
             known = {snapshot.value.id: snapshot for snapshot in all_slices}
             lifecycle = load_current_lifecycle_from_connection(connection, slice_id)
             lifecycles = {slice_id: lifecycle}
+            origins = {
+                slice_id: resolve_slice_origin_from_connection(
+                    database, connection, slice_id, project_id
+                )
+            }
             (
                 _lifecycle,
                 gates,
@@ -417,6 +468,7 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                     slice_snapshot.value.parent_slice_id,
                     known,
                     lifecycles,
+                    origins,
                 )
             )
             dependencies = tuple(
@@ -427,6 +479,7 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                     dependency_id,
                     known,
                     lifecycles,
+                    origins,
                 )
                 for dependency_id in slice_snapshot.value.dependency_ids
             )
@@ -442,6 +495,7 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                     snapshot.value.id,
                     known,
                     lifecycles,
+                    origins,
                 )
                 for snapshot in child_snapshots
             )
@@ -453,6 +507,17 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                 slice_id,
                 slice_definition_revision=slice_snapshot.definition_revision,
             )
+            origin_scope_available = True
+            try:
+                require_slice_origin_governance_scope_from_connection(
+                    database, connection, slice_id
+                )
+            except OperationalOriginNotEstablished:
+                origin_scope_available = False
+                human_actions = human_actions.model_copy(update={"basis": None, "actions": ()})
+                manual_evaluation = manual_evaluation.model_copy(
+                    update={"action_basis": None, "actions": ()}
+                )
             decision_support = project_decision_support(
                 slice_definition=slice_snapshot,
                 lifecycle=lifecycle,
@@ -468,6 +533,8 @@ def slice_detail(database: RelayDatabase, project_id: ProjectId, slice_id: Slice
                 project_definition_revision=project_snapshot.definition_revision,
                 slice_definition=slice_snapshot,
                 lifecycle=lifecycle,
+                origin_resolution=origins[slice_id],
+                origin_governance_scope_available=origin_scope_available,
                 parent=parent,
                 children=children,
                 dependencies=dependencies,
