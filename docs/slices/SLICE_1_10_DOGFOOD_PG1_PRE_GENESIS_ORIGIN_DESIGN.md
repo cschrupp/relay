@@ -1,11 +1,11 @@
 # Slice 1.10 Dogfood PG1 — Pre-Genesis Origin Representation
 ## Design Revision 1
 
-**Status:** PROPOSED FOR INDEPENDENT DESIGN REVIEW  
-**Design authority:** RLY-S110-DOGFOOD-PG1-DESIGN-AUTH-001 — AUTHORIZED  
-**Design baseline:** 0a3fb5f3adddae1974b0810e126da2fff39dfa0b  
-**B0 status:** Design accepted; bootstrap blocked pending a truthful pre-genesis representation  
-**PG1 implementation authority:** NOT GRANTED  
+**Status:** PROPOSED FOR INDEPENDENT DESIGN REVIEW
+**Design authority:** RLY-S110-DOGFOOD-PG1-DESIGN-AUTH-001 — AUTHORIZED
+**Design baseline:** 0a3fb5f3adddae1974b0810e126da2fff39dfa0b
+**B0 status:** Design accepted; bootstrap blocked pending a truthful pre-genesis representation
+**PG1 implementation authority:** NOT GRANTED
 **Scope:** Design only. No production implementation, migration, snapshot, or database creation is authorized.
 
 ## 1. Problem and proposed capability
@@ -372,4 +372,3 @@ This document is a proposed complete PG1 architecture based on frozen Q1–Q20 a
 
     Independent design review:
     PENDING
-
