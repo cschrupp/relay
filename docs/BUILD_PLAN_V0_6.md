@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B0-F discovery candidate awaiting independent review; strict B0 remains blocked; forward-looking adoption planned
+**Status:** Current living implementation plan — B0-F complete / Human accepted; B1 is next planned gate; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — B0-F Discovery Candidate
+# 0. CURRENT ROADMAP — B0-F Human Accepted
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -32,7 +32,7 @@ Bootstrap V2                    NOT CREATED
 
 B0-F Bootstrap Engine Finish:
 design                          HUMAN ACCEPTED
-implementation                 CANDIDATE / INDEPENDENT REVIEW PENDING
+implementation                 COMPLETE / HUMAN ACCEPTED
 behavior                        READ-ONLY LOCAL REPOSITORY INSPECTION
 strict importer / database      NOT IMPLEMENTED / NOT AUTHORIZED
 
@@ -52,7 +52,7 @@ See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTIN
 ## Planned execution sequence
 
 ```text
-B0-F  Bootstrap Engine Finish — IMPLEMENTATION CANDIDATE / INDEPENDENT REVIEW PENDING
+B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> B1 Project Discovery & Human Intake
   -> B2 Existing Project Adoption / T1 Genesis
   -> B3 Forward Re-baseline / First Governed Work
@@ -63,7 +63,7 @@ B0-F  Bootstrap Engine Finish — IMPLEMENTATION CANDIDATE / INDEPENDENT REVIEW 
   -> Phase 3 governed autonomous engineering loop
 ```
 
-B0-F design is Human-accepted under `RLY-S110-DOGFOOD-B0F-DESIGN-ACCEPT-001`; its read-only discovery implementation is awaiting independent evaluation under `RLY-S110-DOGFOOD-B0F-IMPL-AUTH-001`. This candidate does not implement strict B0 import, create a Relay database, or create Project/Slice state. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. Its real-world dogfood check passed with one non-blocking documentation-inventory breadth observation carried to B1. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 

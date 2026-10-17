@@ -10,8 +10,10 @@
 - [x] Record the B0 evidence-preparation result as a valid fail-closed outcome; strict bootstrap remains blocked on seven exact identity/origin/definition facts.
 - [x] Accept the bounded B0-F discovery design and authorize its implementation.
 - [x] Define the B0-F discovery report contract: local Git identity/state, manifests/ecosystem signals, CI/docs signals, Relay-contract state, diagnostics, and unresolved Human questions.
-- [x] Implement read-only local repository discovery and deterministic report output. The candidate is pending independent implementation evaluation.
-- [ ] **CURRENT — Independently evaluate the B0-F implementation candidate.**
+- [x] Implement read-only local repository discovery and deterministic report output.
+- [x] Independently evaluate and real-world dogfood the B0-F implementation candidate.
+- [x] Human-accept B0-F implementation at `65bf57f69f8de4526d080e03da9f796bc20f46ec`.
+- [ ] **CURRENT — Human decision whether to authorize B1 Project Discovery and Human Intake design.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
