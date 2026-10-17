@@ -55,6 +55,15 @@
 - [ ] Do not make the Human author machine-discoverable facts manually.
 - [ ] Do not turn “technically interesting” into “mandatory prerequisite” without showing how it blocks the next product capability.
 
+# DOCUMENTATION SYNCHRONIZATION
+
+- [ ] At every increment closeout, ask: **Did this change what someone needs to know to continue the project tomorrow?**
+- [ ] If yes, update the affected living documents in the same increment before closure.
+- [ ] Always check at minimum: `docs/CURRENT_BASELINE.md`, `docs/BUILD_PLAN_V0_6.md`, and `docs/TODO.md`.
+- [ ] Update strategy/architecture documents whenever the corresponding product or architecture direction changes.
+- [ ] Do not rewrite immutable historical records merely to make them look current.
+- [ ] Documentation freshness is a closeout responsibility, not a separate hardening phase.
+
 # CONTINUOUS SUCCESS METRICS
 
 - [ ] Product/code/test/integration work normally consumes at least two-thirds of active development effort.
