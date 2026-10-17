@@ -66,6 +66,10 @@ Governance hardening must serve delivery. As a planning target, product/code/tes
 
 The live execution checklist is [docs/TODO.md](TODO.md).
 
+## Documentation synchronization rule
+
+Every accepted increment that changes current project state, roadmap/frontier, planned slice sequence, product direction, major architecture, blockers, or the next Human action must update the corresponding living documents in the same increment. At minimum, closeout checks `docs/CURRENT_BASELINE.md`, `docs/BUILD_PLAN_V0_6.md`, and `docs/TODO.md`. Strategy/architecture documents are updated when their underlying direction changes. Immutable historical records are preserved rather than rewritten. Documentation freshness is part of increment closeout, not a separate governance phase.
+
 
 ---
 
