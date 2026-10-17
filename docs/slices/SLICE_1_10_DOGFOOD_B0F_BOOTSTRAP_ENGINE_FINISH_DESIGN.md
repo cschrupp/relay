@@ -55,7 +55,7 @@ Rules:
 - `inspect` is read-only with respect to the target repository.
 - `--repository` must resolve to a local Git working tree.
 - `--output -` writes canonical JSON to stdout.
-- A filesystem output path is created with exclusive-create semantics; an existing path is refused.
+- A filesystem output path must resolve outside the inspected repository and is created with exclusive-create semantics; an existing path is refused.
 - B0-F never creates or modifies `.relay/`, SQLite, Git refs, worktrees, branches, commits, remotes, config, index, or working-tree files.
 - The future strict-state import command is reserved as `relay-bootstrap import ...`. Accepted B0 strict-import semantics remain separate and are not implemented by B0-F.
 
@@ -242,7 +242,9 @@ VALID
 INVALID
 ```
 
-When VALID, the report may include the exact registered Relay ProjectId, RepositoryRef, artifact count, and canonical keys as mechanically established values.
+Validation first parses the registry, then invokes the existing local repository-contract validator using the identities embedded in that registry. `VALID` therefore means the checked-out Relay contract is internally self-consistent and its registered artifacts match local bytes; it is **not** independent proof that the embedded ProjectId/RepositoryRef are externally canonical.
+
+When VALID, the report may include the exact embedded Relay ProjectId, RepositoryRef, artifact count, and canonical keys as mechanically observed values.
 
 INVALID is diagnostic. It does not silently repair the contract and does not prevent reporting unrelated repository observations.
 
@@ -283,11 +285,13 @@ Discovery must remain cheap and safe.
 V1 limits:
 
 ```text
-per evidence file read: 1 MiB
-aggregate evidence bytes read: 16 MiB
+per ordinary discovery evidence file read: 1 MiB
+aggregate ordinary discovery evidence bytes read: 16 MiB
 ```
 
 Files above the per-file limit are reported but not read.
+
+If a Relay registry is present, the existing repository-contract validator is a separate exact-contract check and may read the registered artifacts required by that contract; those reads are not counted against the ordinary discovery-evidence budget.
 
 The tracked-file list may be large; classification must operate primarily on paths. B0-F does not recursively read source code.
 
@@ -346,6 +350,7 @@ NOT_GIT_REPOSITORY
 GIT_UNAVAILABLE
 HEAD_UNRESOLVABLE
 OUTPUT_EXISTS
+OUTPUT_INSIDE_REPOSITORY
 OUTPUT_UNWRITABLE
 REPORT_SERIALIZATION_FAILED
 ```
@@ -403,7 +408,7 @@ Minimum implementation test matrix:
 13. symlink evidence path is not followed;
 14. per-file and aggregate read limits;
 15. canonical JSON ordering / byte stability;
-16. output path exclusive-create refusal;
+16. output path exclusive-create refusal and refusal of any output path inside the inspected repository;
 17. stdout mode;
 18. Git command failure mapping;
 19. proof that no disallowed Git command is invoked;
