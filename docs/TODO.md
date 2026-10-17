@@ -8,8 +8,8 @@
 # NOW — restore product momentum
 
 - [ ] Record the current B0 evidence-preparation result as a valid fail-closed outcome; do not continue repository archaeology without a genuinely new qualifying source.
-- [ ] Design **B0-F Bootstrap Engine Finish**.
-- [ ] Define the B0 discovery report: repository, commit, languages, build/test commands, CI, components, docs, observable status, candidate facts, provenance, diagnostics, unresolved questions.
+- [ ] **CURRENT — Review/accept B0-F Bootstrap Engine Finish design.**
+- [x] Define the B0-F discovery report contract: local Git identity/state, manifests/ecosystem signals, CI/docs signals, Relay-contract state, diagnostics, and unresolved Human questions.
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Implement local-repository discovery first. Add GitHub enrichment only where it materially improves the adoption result.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible without consulting chat.

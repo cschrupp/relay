@@ -48,7 +48,7 @@ Execution checklist: [Development TODO](TODO.md)
 ## Current planned frontier
 
 ```text
-B0-F Bootstrap Engine Finish              PLANNED
+B0-F Bootstrap Engine Finish              DESIGN ACTIVE / IMPL NOT AUTHORIZED
 B1 Project Discovery & Human Intake       PLANNED
 B2 Existing Project Adoption / T1 Genesis PLANNED
 B3 Forward Re-baseline / First Work       PLANNED
@@ -58,7 +58,7 @@ Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
 ```
 
-Roadmap placement is not Slice opening or implementation authority.
+B0-F design authority: `RLY-S110-DOGFOOD-B0F-DESIGN-AUTH-001`. Implementation is NOT AUTHORIZED. Roadmap placement is not implementation authority.
 
 
 ---

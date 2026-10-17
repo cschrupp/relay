@@ -47,7 +47,7 @@ See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTIN
 ## Planned execution sequence
 
 ```text
-B0-F  Bootstrap Engine Finish
+B0-F  Bootstrap Engine Finish — DESIGN ACTIVE / IMPLEMENTATION NOT AUTHORIZED
   -> B1 Project Discovery & Human Intake
   -> B2 Existing Project Adoption / T1 Genesis
   -> B3 Forward Re-baseline / First Governed Work
@@ -58,7 +58,7 @@ B0-F  Bootstrap Engine Finish
   -> Phase 3 governed autonomous engineering loop
 ```
 
-All B0-F/B1/B2/B3/B4 entries are **PLANNED / NOT OPEN / NOT IMPLEMENTATION-AUTHORIZED** by roadmap placement alone.
+B0-F design is now active under `RLY-S110-DOGFOOD-B0F-DESIGN-AUTH-001`; implementation remains NOT AUTHORIZED. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 
