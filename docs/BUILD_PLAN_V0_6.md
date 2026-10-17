@@ -1,12 +1,71 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 1.8 complete / accepted / closed; Slice 1.9 COMPLETE / ACCEPTED / CLOSED under RLY-S19-CLOSE-EVAL-002 and RLY-S19-CLOSE-AUTH-001; Phase 2 open
+**Status:** Current living implementation plan — Slice 1.10 core accepted; dogfood/bootstrap active; forward-looking existing-project adoption re-baseline proposed
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
 **Parent document:** *Relay — Product and Technical Proposal v0.5*  
 **Date:** October 2026
+
+---
+
+# 0. CURRENT ROADMAP — Adoption and Product-Momentum Re-baseline
+
+**Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
+
+```text
+Phase 1 foundation:
+Slices 1.1–1.9                  COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.10 core:
+Canonical source/promotion      IMPLEMENTED / HUMAN ACCEPTED
+Dogfood V1 control surface      COMPLETE / HUMAN ACCEPTED
+PG1 pre-genesis representation COMPLETE / HUMAN ACCEPTED
+B0 Rev3 design                  HUMAN ACCEPTED
+
+B0 evidence preparation:
+independent evaluation          ACCEPT
+usable Genesis package          BLOCKED
+blocking facts                  7
+Bootstrap V2                    NOT CREATED
+B0 implementation               NOT AUTHORIZED
+
+Phase 2:
+2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
+2.2–2.4                         PLANNED / NOT OPEN
+```
+
+## Product decision
+
+Relay will not treat legacy-project onboarding as historical reconstruction.
+
+B0 remains the strict bootstrap/discovery substrate. The default onboarding path for an existing project becomes forward-looking adoption: inspect the current codebase/repository, ask the Human for the minimum semantic facts and objectives that cannot be established mechanically, establish an operational T1, and govern refactor/rework/continuation from that point forward.
+
+See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTING_PROJECT_ADOPTION_AND_FORWARD_GOVERNANCE.md).
+
+## Planned execution sequence
+
+```text
+B0-F  Bootstrap Engine Finish
+  -> B1 Project Discovery & Human Intake
+  -> B2 Existing Project Adoption / T1 Genesis
+  -> B3 Forward Re-baseline / First Governed Work
+  -> B4 Relay Dogfood Acceptance
+  -> 2.2 Role Contracts
+  -> 2.3 Context / Work-Packet Contract
+  -> 2.4 Execution Workspace Authority
+  -> Phase 3 governed autonomous engineering loop
+```
+
+All B0-F/B1/B2/B3/B4 entries are **PLANNED / NOT OPEN / NOT IMPLEMENTATION-AUTHORIZED** by roadmap placement alone.
+
+## Anti-drift guardrail
+
+Governance hardening must serve delivery. As a planning target, product/code/test/integration work should normally account for at least two-thirds of active engineering effort. New governance work must name the concrete capability it unblocks or the observed integrity/security failure it fixes. If governance/documentation dominates two consecutive increments without shipping or unblocking product capability, stop and require explicit Human roadmap review.
+
+The live execution checklist is [docs/TODO.md](TODO.md).
+
 
 ---
 

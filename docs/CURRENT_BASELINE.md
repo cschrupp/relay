@@ -1,9 +1,65 @@
 # Relay — Current Baseline
 
-**Status:** Phase 1 deterministic governance foundation / accepted baseline and hardening active — Slice 1.8 closed; Slice 1.9 COMPLETE / ACCEPTED / CLOSED; Phase 2 open; agent execution unauthorized
+**Status:** Current living baseline — core governance accepted; dogfood bootstrap blocked on legacy identity evidence; existing-project adoption re-baseline proposed
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 2026
+
+---
+
+# 0. Executive current state — Product/adoption re-baseline
+
+This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
+
+```text
+Core governance foundation:
+1.1–1.9                       COMPLETE / CLOSED
+1.10 canonical/promotion core HUMAN ACCEPTED
+2.1 Agent Runtime Contract    COMPLETE / CLOSED
+
+Dogfood/onboarding:
+V1 Human control surface      HUMAN ACCEPTED
+PG1 pre-genesis origin        HUMAN ACCEPTED
+B0 Rev3 design                HUMAN ACCEPTED
+B0 evidence preparation       INDEPENDENT ACCEPT — VALID FAIL-CLOSED STOP
+B0 usable Genesis package     BLOCKED
+Blocking evidence facts       7
+Bootstrap V2                  NOT CREATED
+B0 implementation             NOT AUTHORIZED
+
+Current product problem:
+Relay can govern state once it exists, but normal onboarding of an existing
+project must not require reconstruction of fictional Relay-native history.
+
+Current roadmap direction:
+finish B0 as bootstrap/discovery substrate, then build forward-looking
+Existing Project Adoption and dogfood that path on Relay itself.
+```
+
+## Current product principle
+
+For legacy projects, the past is context; the future is the product.
+
+Relay should inspect what exists now, ask the Human for current objectives/status/constraints that code cannot establish, create a trustworthy adoption boundary T1, and govern future continuation/refactor/rework. Historical reconstruction is required only when a current/future decision materially depends on it.
+
+Strategy: [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTING_PROJECT_ADOPTION_AND_FORWARD_GOVERNANCE.md)  
+Execution checklist: [Development TODO](TODO.md)
+
+## Current planned frontier
+
+```text
+B0-F Bootstrap Engine Finish              PLANNED
+B1 Project Discovery & Human Intake       PLANNED
+B2 Existing Project Adoption / T1 Genesis PLANNED
+B3 Forward Re-baseline / First Work       PLANNED
+B4 Relay Dogfood Acceptance               PLANNED
+
+Then:
+2.2 -> 2.3 -> 2.4 -> Phase 3
+```
+
+Roadmap placement is not Slice opening or implementation authority.
+
 
 ---
 
