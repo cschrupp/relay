@@ -7,6 +7,12 @@
   "human_resolutions": [],
   "package_id": "art_59f42a9a-917f-47bb-8712-f1541b9b6bea",
   "package_path": "docs/bootstrap/RELAY_DOGFOOD_GENESIS_V1.json",
+  "pre_t1_operational_history_policy": {
+    "pre_genesis_no_lifecycle_at_t1": "For an exact subject with independently established PRE_GENESIS origin, the initial Relay state may contain no Relay lifecycle at T1. This describes the Relay operational starting state only; it does not assert that no pre-T1 lifecycle activity occurred.",
+    "selected_record_rule": "Any pre-T1 lifecycle, governance, result, or canonical-promotion record selected for import requires exact qualifying evidence and complete causal closure.",
+    "snapshot_coverage": "Each included Slice must be represented by an exact imported lifecycle chain or by the accepted B0 Rev3 PRE_GENESIS/no-Relay-lifecycle-at-T1 framing.",
+    "unselected_history": "Pre-T1 operational history not selected for import is neither inferred nor synthesized. Its omission makes no claim that the activity or record never existed."
+  },
   "preparation_status": "BLOCKED",
   "schema_version": 1,
   "snapshot_readiness": "BLOCKED",
@@ -118,49 +124,6 @@
       "status": "UNRESOLVED",
       "target_field_or_invariant": "current definition and definition revision history",
       "target_record_identity": "UNRESOLVED each included Slice"
-    },
-    {
-      "affected_downstream": [
-        "lifecycle lanes and NOT_STARTED distinction",
-        "completed/active/not-started metrics",
-        "gates and evaluations",
-        "execution history",
-        "Bootstrap V2"
-      ],
-      "blocking": true,
-      "reason": "No qualifying operational database or contract-bound exhaustive lifecycle inventory was identified at the pinned source. The absence of a database file in the repository does not prove historical lifecycle absence. PRE_GENESIS does not prove no lifecycle, and no-lifecycle cannot be asserted without the required evidence.",
-      "required_evidence_class": "Complete exact lifecycle record chain or qualified completeness witness for the exact scope/time",
-      "status": "UNRESOLVED",
-      "target_field_or_invariant": "lifecycle presence, current state, and causal history",
-      "target_record_identity": "UNRESOLVED each included Slice"
-    },
-    {
-      "affected_downstream": [
-        "current gate/evaluation state",
-        "Human authority state",
-        "completed-work projection",
-        "result/evaluation lineage",
-        "Bootstrap V2"
-      ],
-      "blocking": true,
-      "reason": "No complete typed operational source or qualified exhaustive inventory was established for the required V1 governance record families. Individual design/acceptance prose does not substitute for persisted authority, evaluation, execution, result, or predecessor records.",
-      "required_evidence_class": "Exact typed records with full causal closure; negative claims require Q6/Q7 witness",
-      "status": "UNRESOLVED",
-      "target_field_or_invariant": "gate evaluations, Human authority/decisions, executions, results, manual evaluations, and causal predecessors",
-      "target_record_identity": "UNRESOLVED required governance records"
-    },
-    {
-      "affected_downstream": [
-        "Canonical Governance Inspection",
-        "canonical health derivation",
-        "Bootstrap V2"
-      ],
-      "blocking": true,
-      "reason": "No durable operational source or contract-bound exhaustive inventory establishes the canonical-governance record set for this Project. Design and live discovery artifacts cannot be converted into durable binding/promotion state or proof of historical absence.",
-      "required_evidence_class": "Exact causal records or qualified completeness witness for absent record families",
-      "status": "UNRESOLVED",
-      "target_field_or_invariant": "policy bindings, promotion intents/results, reconciliations, and justified absent-state claims",
-      "target_record_identity": "UNRESOLVED canonical governance state"
     }
   ]
 }
