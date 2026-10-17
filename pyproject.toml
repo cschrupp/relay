@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 relay-board = "relay_engine.board.web:main"
+relay-bootstrap = "relay_engine.bootstrap_discovery.cli:main"
 
 [dependency-groups]
 dev = [

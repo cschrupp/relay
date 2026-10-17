@@ -7,12 +7,14 @@
 
 # NOW — restore product momentum
 
-- [ ] Record the current B0 evidence-preparation result as a valid fail-closed outcome; do not continue repository archaeology without a genuinely new qualifying source.
-- [ ] **CURRENT — Review/accept B0-F Bootstrap Engine Finish design.**
+- [x] Record the B0 evidence-preparation result as a valid fail-closed outcome; strict bootstrap remains blocked on seven exact identity/origin/definition facts.
+- [x] Accept the bounded B0-F discovery design and authorize its implementation.
 - [x] Define the B0-F discovery report contract: local Git identity/state, manifests/ecosystem signals, CI/docs signals, Relay-contract state, diagnostics, and unresolved Human questions.
+- [x] Implement read-only local repository discovery and deterministic report output. The candidate is pending independent implementation evaluation.
+- [ ] **CURRENT — Independently evaluate the B0-F implementation candidate.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
-- [ ] Implement local-repository discovery first. Add GitHub enrichment only where it materially improves the adoption result.
-- [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible without consulting chat.
+- [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
+- [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
 
 # NEXT — make legacy adoption a product feature
 

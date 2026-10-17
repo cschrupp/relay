@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 1.10 core accepted; dogfood/bootstrap active; forward-looking existing-project adoption re-baseline proposed
+**Status:** Current living implementation plan — B0-F discovery candidate awaiting independent review; strict B0 remains blocked; forward-looking adoption planned
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Adoption and Product-Momentum Re-baseline
+# 0. CURRENT ROADMAP — B0-F Discovery Candidate
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -29,7 +29,12 @@ independent evaluation          ACCEPT
 usable Genesis package          BLOCKED
 blocking facts                  7
 Bootstrap V2                    NOT CREATED
-B0 implementation               NOT AUTHORIZED
+
+B0-F Bootstrap Engine Finish:
+design                          HUMAN ACCEPTED
+implementation                 CANDIDATE / INDEPENDENT REVIEW PENDING
+behavior                        READ-ONLY LOCAL REPOSITORY INSPECTION
+strict importer / database      NOT IMPLEMENTED / NOT AUTHORIZED
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
@@ -40,14 +45,14 @@ Phase 2:
 
 Relay will not treat legacy-project onboarding as historical reconstruction.
 
-B0 remains the strict bootstrap/discovery substrate. The default onboarding path for an existing project becomes forward-looking adoption: inspect the current codebase/repository, ask the Human for the minimum semantic facts and objectives that cannot be established mechanically, establish an operational T1, and govern refactor/rework/continuation from that point forward.
+B0-F supplies read-only repository discovery without requiring Relay state. Strict B0 bootstrap remains blocked until its exact historical identity, origin, and definition evidence exists. The planned B1/B2 path is forward-looking adoption: inspect the current repository, ask the Human for semantic facts and objectives that code cannot establish, establish an operational T1, and govern continuation from that point forward.
 
 See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTING_PROJECT_ADOPTION_AND_FORWARD_GOVERNANCE.md).
 
 ## Planned execution sequence
 
 ```text
-B0-F  Bootstrap Engine Finish — DESIGN ACTIVE / IMPLEMENTATION NOT AUTHORIZED
+B0-F  Bootstrap Engine Finish — IMPLEMENTATION CANDIDATE / INDEPENDENT REVIEW PENDING
   -> B1 Project Discovery & Human Intake
   -> B2 Existing Project Adoption / T1 Genesis
   -> B3 Forward Re-baseline / First Governed Work
@@ -58,7 +63,7 @@ B0-F  Bootstrap Engine Finish — DESIGN ACTIVE / IMPLEMENTATION NOT AUTHORIZED
   -> Phase 3 governed autonomous engineering loop
 ```
 
-B0-F design is now active under `RLY-S110-DOGFOOD-B0F-DESIGN-AUTH-001`; implementation remains NOT AUTHORIZED. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F design is Human-accepted under `RLY-S110-DOGFOOD-B0F-DESIGN-ACCEPT-001`; its read-only discovery implementation is awaiting independent evaluation under `RLY-S110-DOGFOOD-B0F-IMPL-AUTH-001`. This candidate does not implement strict B0 import, create a Relay database, or create Project/Slice state. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 

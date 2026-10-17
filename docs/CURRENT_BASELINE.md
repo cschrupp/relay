@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — core governance accepted; dogfood bootstrap blocked on legacy identity evidence; existing-project adoption re-baseline proposed
+**Status:** Current living baseline — B0-F discovery implementation candidate awaiting independent review; strict B0 bootstrap remains blocked on legacy identity evidence
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
-**Date:** October 2026
+**Date:** October 17, 2026
 
 ---
 
-# 0. Executive current state — Product/adoption re-baseline
+# 0. Executive current state — B0-F discovery candidate
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -25,15 +25,19 @@ B0 evidence preparation       INDEPENDENT ACCEPT — VALID FAIL-CLOSED STOP
 B0 usable Genesis package     BLOCKED
 Blocking evidence facts       7
 Bootstrap V2                  NOT CREATED
-B0 implementation             NOT AUTHORIZED
+B0-F design                    HUMAN ACCEPTED
+B0-F implementation           CANDIDATE / INDEPENDENT REVIEW PENDING
+B0-F behavior                  READ-ONLY LOCAL REPOSITORY INSPECTION
+B0 importer / database        NOT IMPLEMENTED / NOT AUTHORIZED
 
 Current product problem:
 Relay can govern state once it exists, but normal onboarding of an existing
 project must not require reconstruction of fictional Relay-native history.
 
 Current roadmap direction:
-finish B0 as bootstrap/discovery substrate, then build forward-looking
-Existing Project Adoption and dogfood that path on Relay itself.
+B0-F can inspect ordinary Git repositories without Relay state. B1 remains
+the next planned Human-intake capability; strict historical bootstrap remains
+blocked and is not part of this candidate.
 ```
 
 ## Current product principle
@@ -48,7 +52,7 @@ Execution checklist: [Development TODO](TODO.md)
 ## Current planned frontier
 
 ```text
-B0-F Bootstrap Engine Finish              DESIGN ACTIVE / IMPL NOT AUTHORIZED
+B0-F Bootstrap Engine Finish              IMPLEMENTATION CANDIDATE / INDEPENDENT REVIEW PENDING
 B1 Project Discovery & Human Intake       PLANNED
 B2 Existing Project Adoption / T1 Genesis PLANNED
 B3 Forward Re-baseline / First Work       PLANNED
@@ -58,7 +62,7 @@ Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
 ```
 
-B0-F design authority: `RLY-S110-DOGFOOD-B0F-DESIGN-AUTH-001`. Implementation is NOT AUTHORIZED. Roadmap placement is not implementation authority.
+B0-F design `RLY-S110-DOGFOOD-B0F-DESIGN-ACCEPT-001` and implementation authority `RLY-S110-DOGFOOD-B0F-IMPL-AUTH-001` are issued. The read-only implementation candidate is awaiting independent evaluation; this is not Human implementation acceptance or canonical promotion. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 
 ---
