@@ -363,11 +363,14 @@ def _select_context(
         if not selection:
             return manifest
         try:
-            index = int(selection) - 1
-            _, pointer = group.files[index]
-        except ValueError, IndexError:
+            selected_number = int(selection)
+        except ValueError:
             output.write("Enter one listed file number.\n")
             continue
+        if not 1 <= selected_number <= len(group.files):
+            output.write("Enter one listed file number.\n")
+            continue
+        _, pointer = group.files[selected_number - 1]
         try:
             manifest = add_context_reference(manifest, pointer, clock(), loaded)
         except IntakeError as error:

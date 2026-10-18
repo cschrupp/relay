@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from relay_engine.bootstrap_discovery.cli import main
+from relay_engine.bootstrap_discovery.cli import _select_context, main
 from relay_engine.bootstrap_discovery.intake_models import (
     AdoptionManifestV1,
     ConstraintAnswer,
@@ -494,8 +494,45 @@ def test_oversized_documentation_cannot_be_selected_as_read_context(tmp_path: Pa
             FIXED_TIME,
             loaded,
         )
-
     assert error.value.code == "CONTEXT_NOT_READABLE"
+
+
+@pytest.mark.parametrize("selection_kind", ["zero", "negative", "past_end"])
+def test_invalid_context_file_numbers_preserve_existing_draft(
+    tmp_path: Path, selection_kind: str
+) -> None:
+    loaded = _loaded_report(tmp_path)
+    groups = documentation_groups(loaded)
+    group = next(item for item in groups if item.key == "orientation")
+    if selection_kind == "zero":
+        invalid_number = "0"
+    elif selection_kind == "negative":
+        invalid_number = "-1"
+    else:
+        invalid_number = str(len(group.files) + 1)
+
+    manifest = initial_manifest(loaded, FIXED_TIME)
+    manifest = add_context_reference(manifest, group.files[0][1], FIXED_TIME, loaded)
+    output_path = tmp_path / "external" / "adoption.json"
+    output_path.parent.mkdir()
+    write_new_draft(output_path, manifest, loaded)
+    original_bytes = output_path.read_bytes()
+    original_references = manifest.context_references
+    responses = iter([group.key, invalid_number, ""])
+    output = StringIO()
+
+    result = _select_context(
+        manifest,
+        loaded,
+        output_path,
+        lambda prompt: next(responses),
+        output,
+        lambda: FIXED_TIME,
+    )
+
+    assert result.context_references == original_references
+    assert output_path.read_bytes() == original_bytes
+    assert "Enter one listed file number." in output.getvalue()
 
 
 def test_review_note_is_commentary_and_does_not_change_readiness(tmp_path: Path) -> None:
