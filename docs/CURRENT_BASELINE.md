@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B0-F and B1 complete / Human accepted; B2 design Human-accepted; B2 implementation AUTHORIZED / NOT STARTED; actual T1 adoption remains unauthorized; strict B0 remains blocked on legacy identity evidence
+**Status:** Current living baseline — B0-F, B1, and B2 design Human-accepted; B2 implementation candidate pending independent review; actual T1 adoption remains unauthorized; strict B0 remains blocked on legacy identity evidence
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
 
 ---
 
-# 0. Executive current state — B2 Design Accepted
+# 0. Executive current state — B2 Implementation Candidate
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -34,16 +34,16 @@ B1 accepted candidate          22fb742965ed6424a18275b4234e1399021d4aed
 B1 real-world dogfood          AUTHORIZED / NOT EXECUTED BEFORE ACCEPTANCE
 B2 design                       COMPLETE / HUMAN ACCEPTED
 B2 accepted composite           80b1f77c4d4cd1f3303b4a1072a46b0cfb605621
-B2 implementation               AUTHORIZED / NOT STARTED
+B2 implementation               CANDIDATE / INDEPENDENT REVIEW PENDING
 B2 actual adoption / T1          NOT AUTHORIZED
-B2 operational database          NOT AUTHORIZED
+B2 operational database          NOT CREATED / NOT PUBLISHED
 
 Current product problem:
 Relay can govern state once it exists, but normal onboarding of an existing
 project must not require reconstruction of fictional Relay-native history.
 
 Current roadmap direction:
-B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The B1 intake implementation is independently accepted and Human-accepted at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`. The authorized Relay/WellPlot real-world dogfood has no completed result recorded before acceptance. B2 Revision 1 plus its Revision 2 Integrity Amendment is independently accepted and Human-accepted at exact composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`. B2 implementation is authorized under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001` but has not started. No actual adoption, T1, or operational database has been created or is authorized. Strict historical bootstrap remains blocked and is separate from B2.
+B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The B1 intake implementation is independently accepted and Human-accepted at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`. The authorized Relay/WellPlot real-world dogfood has no completed result recorded before acceptance. B2 Revision 1 plus its Revision 2 Integrity Amendment is independently accepted and Human-accepted at exact composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`. B2 implementation is authorized under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`; an implementation candidate is prepared and awaits independent review. No actual adoption, T1, or operational database has been created or is authorized. Strict historical bootstrap remains blocked and is separate from B2.
 ```
 
 ## Current product principle
@@ -61,7 +61,7 @@ Execution checklist: [Development TODO](TODO.md)
 B0-F Bootstrap Engine Finish              COMPLETE / HUMAN ACCEPTED
 B1 Project Discovery & Human Intake       COMPLETE / HUMAN ACCEPTED
 B2 Existing Project Adoption / T1 Genesis DESIGN COMPLETE / HUMAN ACCEPTED
-B2 implementation AUTHORIZED / NOT STARTED
+B2 implementation CANDIDATE / INDEPENDENT REVIEW PENDING
 B2 actual adoption / T1 / real database NOT AUTHORIZED
 B3 Forward Re-baseline / First Work       PLANNED
 B4 Relay Dogfood Acceptance               PLANNED

@@ -29,6 +29,7 @@ type IdPrefix = Literal[
     "recon_",
     "ohe_",
     "oor_",
+    "adopt_",
 ]
 
 _UUID_TEXT = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -56,6 +57,7 @@ type RepositoryPromotionId = Annotated[str, Field(pattern=rf"^prom_{_UUID_TEXT}$
 type CanonicalPromotionReconciliationId = Annotated[str, Field(pattern=rf"^recon_{_UUID_TEXT}$")]
 type OperationalHistoryEpochId = Annotated[str, Field(pattern=rf"^ohe_{_UUID_TEXT}$")]
 type OperationalOriginRecordId = Annotated[str, Field(pattern=rf"^oor_{_UUID_TEXT}$")]
+type AdoptionId = Annotated[str, Field(pattern=rf"^adopt_{_UUID_TEXT}$")]
 
 
 def new_id(prefix: IdPrefix) -> str:
@@ -85,6 +87,7 @@ def new_id(prefix: IdPrefix) -> str:
         "recon_",
         "ohe_",
         "oor_",
+        "adopt_",
     ):
         raise ValueError("unsupported domain identifier prefix")
     return f"{prefix}{uuid7()}"

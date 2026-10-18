@@ -45,7 +45,7 @@ def _slice() -> Slice:
     )
 
 
-def test_migration_v7_creates_two_empty_tables_and_required_integrity_objects(tmp_path) -> None:
+def test_migrations_v7_and_v8_create_empty_origin_and_adoption_tables(tmp_path) -> None:
     database = open_database(
         tmp_path / "pg1-v7.sqlite", apply_migrations=True, migration_applied_at=NOW
     )
@@ -56,8 +56,9 @@ def test_migration_v7_creates_two_empty_tables_and_required_integrity_objects(tm
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions == (1, 2, 3, 4, 5, 6, 7)
-        assert DEFAULT_MIGRATIONS[-1].version == 7
+        assert versions == (1, 2, 3, 4, 5, 6, 7, 8)
+        assert DEFAULT_MIGRATIONS[6].version == 7
+        assert DEFAULT_MIGRATIONS[-1].version == 8
         assert (
             database.connection.execute(
                 "SELECT count(*) FROM operational_history_epochs"
@@ -70,6 +71,12 @@ def test_migration_v7_creates_two_empty_tables_and_required_integrity_objects(tm
             ).fetchone()[0]
             == 0
         )
+        for table in (
+            "project_adoptions",
+            "project_operational_epochs",
+            "project_operational_origin_records",
+        ):
+            assert database.connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == 0
         verify_schema(database.connection)
         for name in (
             "operational_history_epochs_no_update",
@@ -119,6 +126,12 @@ def test_v7_upgrade_preserves_legacy_payload_bytes_and_performs_no_backfill(tmp_
     assert after_bytes == prior_bytes
     assert connection.execute("SELECT count(*) FROM operational_history_epochs").fetchone()[0] == 0
     assert connection.execute("SELECT count(*) FROM operational_origin_records").fetchone()[0] == 0
+    for table in (
+        "project_adoptions",
+        "project_operational_epochs",
+        "project_operational_origin_records",
+    ):
+        assert connection.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == 0
     connection.close()
 
 

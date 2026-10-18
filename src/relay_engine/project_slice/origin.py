@@ -17,6 +17,7 @@ from relay_engine.domain._base import (
     require_repository_relative_path,
 )
 from relay_engine.domain.ids import (
+    AdoptionId,
     ArtifactId,
     OperationalHistoryEpochId,
     OperationalOriginRecordId,
@@ -24,7 +25,7 @@ from relay_engine.domain.ids import (
     SliceId,
 )
 from relay_engine.domain.models import ContentDigest
-from relay_engine.domain.references import ActorKind, ActorRef, CommitRef
+from relay_engine.domain.references import ActorKind, ActorRef, CommitRef, RepositoryRef
 from relay_engine.project_slice.models import (
     DefinitionOperation,
     ProjectDefinitionRevision,
@@ -139,6 +140,20 @@ def operational_history_epoch_digest(value: OperationalHistoryEpochV1) -> str:
 
 def operational_origin_record_digest(value: OperationalOriginRecordV1) -> str:
     """Return the canonical digest for an origin record, excluding its digest field."""
+
+    return _canonical_digest(value.model_dump(mode="json", exclude={"record_digest"}))
+
+
+def project_operational_epoch_digest(value: ProjectOperationalEpochV1) -> str:
+    """Return the canonical digest for a project-scoped adoption epoch."""
+
+    return _canonical_digest(value.model_dump(mode="json", exclude={"epoch_digest"}))
+
+
+def project_operational_origin_record_digest(
+    value: ProjectOperationalOriginRecordV1,
+) -> str:
+    """Return the canonical digest for a project-scoped origin record."""
 
     return _canonical_digest(value.model_dump(mode="json", exclude={"record_digest"}))
 
@@ -307,6 +322,165 @@ class NativeRelayOriginProofV1(DomainModel):
         return self
 
 
+class AdoptionPreGenesisProjectProofV1(DomainModel):
+    """B2-only Human attestation binding an adopted Project to its T1 evidence."""
+
+    proof_type: Literal["ADOPTION_PRE_GENESIS_PROJECT"]
+    project_id: ProjectId
+    repository: RepositoryRef
+    adoption_id: AdoptionId
+    adoption_record_digest: ContentDigest
+    manifest_sha256: ContentDigest
+    input_report_sha256: ContentDigest
+    fresh_report_sha256: ContentDigest
+    fresh_report_state_sha256: ContentDigest
+    fresh_repository_fingerprint_sha256: ContentDigest
+    repository_root: str = Field(min_length=1)
+    relay_contract_status: Literal["ABSENT", "VALID"]
+    fresh_head: CommitRef
+    attestation_id: Literal["B2_PRE_T1_EXISTENCE_ATTESTATION_V1"]
+    assertion: Literal["REPRESENTED_PROJECT_EXISTED_BEFORE_T1"]
+    actor: ActorRef
+    decided_at: datetime
+
+    @field_validator("repository_root")
+    @classmethod
+    def root_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
+
+    @field_validator("decided_at")
+    @classmethod
+    def decision_time_is_utc(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("adoption decision time must be timezone-aware")
+        return value.astimezone(UTC)
+
+    @model_validator(mode="after")
+    def project_binding_is_exact(self) -> AdoptionPreGenesisProjectProofV1:
+        if self.fresh_head.repository != self.repository:
+            raise ValueError("fresh HEAD and adopted RepositoryRef must match")
+        if self.actor.kind is not ActorKind.HUMAN:
+            raise ValueError("adoption PRE_GENESIS proof requires a Human actor")
+        return self
+
+
+class ProjectOperationalEpochV1(DomainModel):
+    """One immutable B2 adoption epoch scoped to an exact Project."""
+
+    schema_version: Literal[1] = 1
+    project_id: ProjectId
+    epoch_id: OperationalHistoryEpochId
+    genesis_cut_at: datetime
+    basis_kind: Literal["EXISTING_PROJECT_ADOPTION"]
+    adoption_id: AdoptionId
+    adoption_record_digest: ContentDigest
+    recorded_at: datetime
+    epoch_digest: ContentDigest
+
+    @field_validator("genesis_cut_at", "recorded_at")
+    @classmethod
+    def timestamps_are_aware_utc(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("project epoch timestamps must be timezone-aware")
+        return value.astimezone(UTC)
+
+    @model_validator(mode="after")
+    def epoch_is_internally_valid(self) -> ProjectOperationalEpochV1:
+        if self.recorded_at < self.genesis_cut_at:
+            raise ValueError("project epoch assertion cannot predate its T1")
+        if self.epoch_digest != project_operational_epoch_digest(self):
+            raise ValueError("project epoch digest does not match its canonical payload")
+        return self
+
+
+type ProjectOperationalOriginProofV1 = Annotated[
+    AdoptionPreGenesisProjectProofV1 | NativeRelayOriginProofV1,
+    Field(discriminator="proof_type"),
+]
+
+
+class ProjectOperationalOriginRecordV1(DomainModel):
+    """Append-only project-scoped origin record used only by B2 adoption mode."""
+
+    schema_version: Literal[1] = 1
+    record_id: OperationalOriginRecordId
+    subject_type: OriginSubjectType
+    subject_id: ProjectId | SliceId
+    project_id: ProjectId
+    record_kind: OriginRecordKind
+    origin: OperationalOrigin
+    epoch_id: OperationalHistoryEpochId
+    epoch_digest: ContentDigest
+    proof: ProjectOperationalOriginProofV1
+    recorded_at: datetime
+    recorded_by: ActorRef
+    establishing_authority_id: str = Field(min_length=1)
+    supersedes_record_id: OperationalOriginRecordId | None = None
+    supersedes_record_digest: ContentDigest | None = None
+    correction_authorization_id: str | None = None
+    correction_authorization_digest: ContentDigest | None = None
+    rationale: str | None = None
+    record_digest: ContentDigest
+
+    @field_validator("recorded_at")
+    @classmethod
+    def recorded_at_is_aware_utc(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("project origin timestamp must be timezone-aware")
+        return value.astimezone(UTC)
+
+    @model_validator(mode="after")
+    def record_contract_is_valid(self) -> ProjectOperationalOriginRecordV1:
+        expected_prefix = "prj_" if self.subject_type is OriginSubjectType.PROJECT else "slc_"
+        if not self.subject_id.startswith(expected_prefix):
+            raise ValueError("project origin subject ID disagrees with its discriminator")
+        expected_proof_type = (
+            "ADOPTION_PRE_GENESIS_PROJECT"
+            if self.origin is OperationalOrigin.PRE_GENESIS
+            else "NATIVE_RELAY"
+        )
+        if self.proof.proof_type != expected_proof_type:
+            raise ValueError("project origin value and proof discriminator disagree")
+        proof_subject_type = (
+            self.proof.subject_type
+            if isinstance(self.proof, NativeRelayOriginProofV1)
+            else OriginSubjectType.PROJECT
+        )
+        proof_subject_id = (
+            self.proof.subject_id
+            if isinstance(self.proof, NativeRelayOriginProofV1)
+            else self.proof.project_id
+        )
+        if proof_subject_type is not self.subject_type or proof_subject_id != self.subject_id:
+            raise ValueError("project origin proof is bound to a different subject")
+        if self.record_kind is OriginRecordKind.INITIAL:
+            if any(
+                value is not None
+                for value in (
+                    self.supersedes_record_id,
+                    self.supersedes_record_digest,
+                    self.correction_authorization_id,
+                    self.correction_authorization_digest,
+                    self.rationale,
+                )
+            ):
+                raise ValueError("initial project origin cannot carry correction fields")
+        elif any(
+            value is None
+            for value in (
+                self.supersedes_record_id,
+                self.supersedes_record_digest,
+                self.correction_authorization_id,
+                self.correction_authorization_digest,
+                self.rationale,
+            )
+        ):
+            raise ValueError("project origin correction requires predecessor and authority")
+        if self.record_digest != project_operational_origin_record_digest(self):
+            raise ValueError("project origin record digest is invalid")
+        return self
+
+
 type OperationalOriginProofV1 = Annotated[
     PreGenesisOriginProofV1 | NativeRelayOriginProofV1,
     Field(discriminator="proof_type"),
@@ -327,6 +501,26 @@ class OperationalHistoryEpochResolution(DomainModel):
             self.epoch is not None and self.diagnostic is None
         ):
             raise ValueError("epoch resolution state and payload disagree")
+        return self
+
+
+class ProjectOperationalEpochResolution(DomainModel):
+    """Read-only result for a Project's optional B2 adoption epoch."""
+
+    state: OriginResolutionState
+    epoch: ProjectOperationalEpochV1 | None
+    diagnostic: OriginDiagnosticCode | None
+    record_ids: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def state_matches_payload(self) -> ProjectOperationalEpochResolution:
+        if self.state is OriginResolutionState.ESTABLISHED:
+            if self.epoch is None or self.diagnostic is not None:
+                raise ValueError("established project epoch requires one valid payload")
+        elif self.epoch is not None:
+            raise ValueError("unestablished project epoch cannot expose a valid payload")
+        if not self.record_ids and self.diagnostic is not None:
+            raise ValueError("absent project epoch cannot carry an integrity diagnostic")
         return self
 
 
@@ -423,8 +617,8 @@ class OperationalOriginResolution(DomainModel):
     subject_id: ProjectId | SliceId
     state: OriginResolutionState
     origin: OperationalOrigin | None
-    record: OperationalOriginRecordV1 | None
-    epoch: OperationalHistoryEpochV1 | None
+    record: OperationalOriginRecordV1 | ProjectOperationalOriginRecordV1 | None
+    epoch: OperationalHistoryEpochV1 | ProjectOperationalEpochV1 | None
     diagnostic: OperationalOriginDiagnostic | None
 
     @model_validator(mode="after")
@@ -462,6 +656,32 @@ def build_operational_origin_record(**values: object) -> OperationalOriginRecord
     return OperationalOriginRecordV1.model_validate(payload)
 
 
+def build_project_operational_epoch(**values: object) -> ProjectOperationalEpochV1:
+    """Build a project adoption epoch with its canonical digest."""
+
+    payload = {"schema_version": 1, **values}
+    payload["epoch_digest"] = _canonical_digest(payload)
+    return ProjectOperationalEpochV1.model_validate(payload)
+
+
+def build_project_operational_origin_record(
+    **values: object,
+) -> ProjectOperationalOriginRecordV1:
+    """Build a project-scoped initial origin record with its canonical digest."""
+
+    payload = {
+        "schema_version": 1,
+        "supersedes_record_id": None,
+        "supersedes_record_digest": None,
+        "correction_authorization_id": None,
+        "correction_authorization_digest": None,
+        "rationale": None,
+        **values,
+    }
+    payload["record_digest"] = _canonical_digest(payload)
+    return ProjectOperationalOriginRecordV1.model_validate(payload)
+
+
 def epoch_resolution_not_established(
     code: OriginDiagnosticCode,
     record_ids: tuple[str, ...] = (),
@@ -479,7 +699,7 @@ def epoch_resolution_not_established(
 def origin_resolution_not_established(
     subject_type: OriginSubjectType,
     subject_id: ProjectId | SliceId,
-    epoch: OperationalHistoryEpochV1 | None,
+    epoch: OperationalHistoryEpochV1 | ProjectOperationalEpochV1 | None,
     code: OriginDiagnosticCode,
     message: str,
     record_ids: tuple[OperationalOriginRecordId, ...] = (),
@@ -707,6 +927,7 @@ def _native_proof_matches_revision(
 
 
 __all__ = [
+    "AdoptionPreGenesisProjectProofV1",
     "DocumentBlockSourceLocatorV1",
     "JsonPointerSourceLocatorV1",
     "OperationalHistoryEpochResolution",
@@ -716,6 +937,9 @@ __all__ = [
     "OperationalOriginProofV1",
     "OperationalOriginRecordV1",
     "OperationalOriginResolution",
+    "ProjectOperationalEpochResolution",
+    "ProjectOperationalEpochV1",
+    "ProjectOperationalOriginRecordV1",
     "OriginDiagnosticCode",
     "OriginRecordKind",
     "OriginResolutionState",
@@ -724,10 +948,14 @@ __all__ = [
     "NativeRelayOriginProofV1",
     "build_operational_history_epoch",
     "build_operational_origin_record",
+    "build_project_operational_epoch",
+    "build_project_operational_origin_record",
     "definition_payload_digest",
     "epoch_resolution_not_established",
     "operational_history_epoch_digest",
     "operational_origin_record_digest",
+    "project_operational_epoch_digest",
+    "project_operational_origin_record_digest",
     "origin_resolution_not_established",
     "resolve_origin_chain",
 ]

@@ -4,6 +4,7 @@ import json
 from html import escape
 from urllib.parse import quote, urlencode
 
+from relay_engine.adoption.models import ProjectAdoptionRecordV1
 from relay_engine.board.models import (
     BoardProjection,
     CanonicalGovernanceInspection,
@@ -708,11 +709,55 @@ def render_project_index(projection: BoardProjection) -> str:
         f"<p>Project ID: <code>{_e(item.project.id)}</code></p>"
         f"<p>Primary repository: {_e(item.project.primary_repository.path)}</p>"
         f"<p>Current Slices: {_e(item.slice_count)}</p>"
-        f"{_origin_status_html(item.origin_resolution, 'Project operational origin')}</li>"
+        + (
+            ""
+            if item.adoption_record is None
+            else f"<p>Adopted at T1 {_e(item.adoption_record.t1)}; current status: "
+            f"{_e(item.adoption_record.current_status)}</p>"
+        )
+        + f"{_origin_status_html(item.origin_resolution, 'Project operational origin')}</li>"
         for item in projection.projects
     )
 
     return _page("Relay board", f"<ul>{items}</ul>")
+
+
+def _adoption_orientation(record: ProjectAdoptionRecordV1 | None) -> str:
+    if record is None:
+        return ""
+    constraint_text = (
+        "None recorded at T1."
+        if not record.constraints.items
+        else "; ".join(record.constraints.items)
+    )
+    contexts = (
+        "<p>No legacy context selected.</p>"
+        if not record.context_references
+        else "<ul>"
+        + "".join(
+            f"<li>{_e(item.relative_path)} — {_e(item.sha256)} "
+            f"({_e(item.inspection_state.value)})</li>"
+            for item in record.context_references
+        )
+        + "</ul>"
+    )
+    return (
+        '<section class="adoption-orientation"><h2>Project adoption at T1</h2>'
+        f"<p><strong>CURRENT</strong>: {_e(record.current_status)}</p>"
+        f"<p>Adopted clean commit: <code>{_e(record.fresh_repository_fingerprint.head_sha)}</code> "
+        f"at {_e(record.t1)}</p>"
+        f"<p>Project objective: {_e(record.project_objective)}</p>"
+        f"<p><strong>NEXT</strong>: {_e(record.work_focus)} "
+        f"(<code>{_e(record.initial_slice_id)}</code>); "
+        "B3 refinement required before lifecycle.</p>"
+        f"<p><strong>LATER</strong>: {_e(record.human_objective)}</p>"
+        f"<p><strong>BLOCKED</strong>: none established at T1. This does not assert that the "
+        "legacy project historically had no blockers.</p>"
+        f"<p>Work focus kind: {_e(record.work_focus_kind.value)}; "
+        f"constraints recorded at T1: {_e(constraint_text)}</p>"
+        "<h3>Selected legacy context</h3>"
+        f"{contexts}</section>"
+    )
 
 
 def render_project_board(board: ProjectBoard, query: str = "") -> str:
@@ -724,6 +769,7 @@ def render_project_board(board: ProjectBoard, query: str = "") -> str:
         f'<nav aria-label="Primary"><a href="/">All Projects</a></nav>'
         f"<p>Project ID: <code>{_e(board.project.id)}</code></p>"
         f"<p>Primary repository: {_e(board.project.primary_repository.path)}</p>"
+        f"{_adoption_orientation(board.adoption_record)}"
         f"{_project_situation(board)}"
         f"{_canonical_governance(board.canonical_governance)}"
         '<form method="get"><label for="q">Search Slice title or exact ID</label> '

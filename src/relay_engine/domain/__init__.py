@@ -2,6 +2,7 @@
 
 from relay_engine.domain.ids import (
     ActorId,
+    AdoptionId,
     ArtifactId,
     AuthorizationId,
     BaselineId,
@@ -13,6 +14,8 @@ from relay_engine.domain.ids import (
     HandoverGateId,
     HumanDecisionId,
     IdPrefix,
+    OperationalHistoryEpochId,
+    OperationalOriginRecordId,
     ProjectId,
     RepositoryId,
     RepositoryMutationAuthorizationId,
@@ -36,6 +39,7 @@ from relay_engine.domain.references import ActorKind, ActorRef, CommitRef, Repos
 __all__ = [
     "AcceptanceCriterion",
     "ActorId",
+    "AdoptionId",
     "AuthorizationId",
     "ActorKind",
     "ActorRef",
@@ -56,6 +60,8 @@ __all__ = [
     "GateEvaluationRecordId",
     "HandoverGateId",
     "HumanDecisionId",
+    "OperationalHistoryEpochId",
+    "OperationalOriginRecordId",
     "Project",
     "ProjectId",
     "RepositoryId",

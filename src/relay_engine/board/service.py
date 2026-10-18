@@ -4,6 +4,7 @@ from sqlite3 import Connection
 
 from pydantic import ValidationError
 
+from relay_engine.adoption.persistence import load_project_adoption_from_connection
 from relay_engine.board.inspection import (
     project_canonical_governance,
     project_project_situation,
@@ -312,6 +313,9 @@ def project_index(database: RelayDatabase) -> BoardProjection:
                     origin_resolution=resolve_project_origin_from_connection(
                         database, connection, snapshot.value.id
                     ),
+                    adoption_record=load_project_adoption_from_connection(
+                        connection, snapshot.value.id
+                    ),
                 )
                 for snapshot in snapshots
             )
@@ -336,6 +340,7 @@ def project_board(
             project_origin = resolve_project_origin_from_connection(
                 database, connection, project_id
             )
+            adoption_record = load_project_adoption_from_connection(connection, project_id)
             origins = {
                 slice_id: resolve_slice_origin_from_connection(
                     database, connection, slice_id, project_id
@@ -420,6 +425,7 @@ def project_board(
                 project=project_snapshot.value,
                 project_definition_revision=project_snapshot.definition_revision,
                 project_origin_resolution=project_origin,
+                adoption_record=adoption_record,
                 situation=situation,
                 canonical_governance=canonical_governance,
                 lanes=tuple(BoardLane),

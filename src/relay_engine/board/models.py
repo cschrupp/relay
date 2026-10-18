@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from pydantic import Field, field_validator, model_validator
 
+from relay_engine.adoption.models import ProjectAdoptionRecordV1
 from relay_engine.decision_support.models import DecisionSupportProjection
 from relay_engine.domain._base import DomainModel
 from relay_engine.domain.ids import (
@@ -71,6 +72,7 @@ class ProjectSummary(DomainModel):
     definition_revision: int = Field(ge=1)
     slice_count: int = Field(ge=0)
     origin_resolution: OperationalOriginResolution
+    adoption_record: ProjectAdoptionRecordV1 | None = None
 
 
 class ProjectSliceIdentity(DomainModel):
@@ -288,6 +290,7 @@ class ProjectBoard(DomainModel):
     project: Project
     project_definition_revision: int = Field(ge=1)
     project_origin_resolution: OperationalOriginResolution
+    adoption_record: ProjectAdoptionRecordV1 | None = None
     situation: ProjectSituationProjection
     canonical_governance: CanonicalGovernanceInspection
     lanes: tuple[BoardLane, ...]

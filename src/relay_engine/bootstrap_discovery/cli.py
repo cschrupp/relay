@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TextIO
 
+from relay_engine.adoption.service import AdoptionError, adopt_project
 from relay_engine.bootstrap_discovery.intake_models import (
     AdoptionManifestV1,
     ConstraintAnswer,
@@ -114,7 +115,26 @@ def main(
                     Path(report.observation.repository_path),
                 )
             return 0
+        if args.command == "adopt":
+            adoption = adopt_project(
+                repository=Path(args.repository),
+                report_path=Path(args.report),
+                manifest_path=Path(args.manifest),
+                database_path=Path(args.database),
+                input_fn=stdin,
+                output=stdout,
+                clock=now,
+                allow_test_injected_input=input_fn is not None,
+            )
+            stdout.write(
+                f"\nAdoption database published: {Path(args.database).expanduser().absolute()}\n"
+                f"Project: {adoption.project_id}\nT1: {adoption.t1.isoformat()}\n"
+            )
+            return 0
         return _run_intake(args, stdin, stdout, now)
+    except AdoptionError as error:
+        stderr.write(f"relay-bootstrap: {error.code}: {error}\n")
+        return 2
     except IntakeError as error:
         stderr.write(f"relay-bootstrap: {error.code}: {error}\n")
         return 2
@@ -141,6 +161,15 @@ def _argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="resume an existing draft bound to the exact supplied report",
     )
+    adopt_parser = subparsers.add_parser(
+        "adopt", help="adopt a complete B1 manifest into a new external Relay database"
+    )
+    adopt_parser.add_argument("--repository", required=True)
+    adopt_parser.add_argument("--report", required=True, help="exact B0-F report bound by B1")
+    adopt_parser.add_argument(
+        "--manifest", required=True, help="exact READY_FOR_B2_REVIEW manifest"
+    )
+    adopt_parser.add_argument("--database", required=True, help="new external SQLite database path")
     return parser
 
 

@@ -1500,7 +1500,7 @@ def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions[-1] == 7
+        assert versions[-1] == 8
     finally:
         restarted.close()
 

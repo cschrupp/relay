@@ -353,6 +353,12 @@ def resolve_project_origin_from_connection(
 ) -> OperationalOriginResolution:
     """Resolve one Project origin against the unique epoch and exact CREATE record."""
 
+    from relay_engine.adoption.persistence import resolve_project_adoption_origin_from_connection
+
+    adoption_resolution = resolve_project_adoption_origin_from_connection(connection, project_id)
+    if adoption_resolution is not None:
+        return adoption_resolution
+
     from relay_engine.persistence.store import (
         load_operational_history_epoch_resolution_from_connection,
         load_operational_origin_records_from_connection,
@@ -413,6 +419,20 @@ def resolve_slice_origin_from_connection(
     project_id: ProjectId,
 ) -> OperationalOriginResolution:
     """Resolve one Slice origin and enforce the one-way Project/Slice rule."""
+
+    from relay_engine.adoption.persistence import (
+        project_adoption_mode_present_from_connection,
+        resolve_slice_adoption_origin_from_connection,
+    )
+
+    if project_adoption_mode_present_from_connection(connection, project_id):
+        project_origin = resolve_project_origin_from_connection(database, connection, project_id)
+        return resolve_slice_adoption_origin_from_connection(
+            connection,
+            slice_id,
+            project_id,
+            project_origin,
+        )
 
     from relay_engine.persistence.store import (
         load_operational_history_epoch_resolution_from_connection,
@@ -753,9 +773,17 @@ def create_slice(
     database: RelayDatabase, value: Slice, mutation: MutationMetadata
 ) -> SliceMutationResult:
     metadata = _mutation(mutation)
+    from relay_engine.adoption.persistence import (
+        append_project_native_origin_from_connection,
+        load_project_operational_epoch_resolution_from_connection,
+    )
     from relay_engine.persistence.store import (
         append_native_origin_for_creation_from_connection,
         load_operational_history_epoch_resolution_from_connection,
+    )
+    from relay_engine.project_slice.origin import (
+        ProjectOperationalOriginRecordV1,
+        build_project_operational_origin_record,
     )
 
     with _transaction(database) as connection:
@@ -781,22 +809,64 @@ def create_slice(
             raise OperationalOriginNotEstablished(
                 "owning Project operational origin is not established"
             )
-        epoch = load_operational_history_epoch_resolution_from_connection(connection)
-        origin = _native_origin_record(
-            subject_type=OriginSubjectType.SLICE,
-            subject_id=value.id,
-            project_id=value.project_id,
-            payload=value,
-            mutation=metadata,
-            epoch=epoch,
+        project_epoch = load_project_operational_epoch_resolution_from_connection(
+            connection, value.project_id
         )
+        if project_epoch.record_ids:
+            epoch_value = project_epoch.epoch
+            if project_epoch.state is not OriginResolutionState.ESTABLISHED or epoch_value is None:
+                raise OperationalOriginNotEstablished(
+                    "Project adoption epoch is invalid or ambiguous"
+                )
+            if metadata.occurred_at <= epoch_value.genesis_cut_at:
+                raise OperationalOriginNotEstablished(
+                    "Slice CREATE timestamp does not occur after Project T1"
+                )
+            proof = NativeRelayOriginProofV1(
+                proof_type="NATIVE_RELAY",
+                subject_type=OriginSubjectType.SLICE,
+                subject_id=value.id,
+                definition_revision=1,
+                operation="CREATE",
+                creation_payload_digest=definition_payload_digest(value),
+                actor=metadata.actor,
+                created_at=metadata.occurred_at,
+                reason=metadata.reason,
+            )
+            origin = build_project_operational_origin_record(
+                record_id=new_id("oor_"),
+                subject_type=OriginSubjectType.SLICE,
+                subject_id=value.id,
+                project_id=value.project_id,
+                record_kind=OriginRecordKind.INITIAL,
+                origin=OperationalOrigin.NATIVE_RELAY,
+                epoch_id=epoch_value.epoch_id,
+                epoch_digest=epoch_value.epoch_digest,
+                proof=proof,
+                recorded_at=metadata.occurred_at,
+                recorded_by=metadata.actor,
+                establishing_authority_id=f"slice_definition_revisions/{value.id}/1",
+            )
+        else:
+            epoch = load_operational_history_epoch_resolution_from_connection(connection)
+            origin = _native_origin_record(
+                subject_type=OriginSubjectType.SLICE,
+                subject_id=value.id,
+                project_id=value.project_id,
+                payload=value,
+                mutation=metadata,
+                epoch=epoch,
+            )
         connection.execute(
             "INSERT INTO slices(id, project_id, payload_json, definition_revision) "
             "VALUES (?, ?, ?, 1)",
             (value.id, value.project_id, _json(value)),
         )
         _append_slice_revision(connection, value, 1, DefinitionOperation.CREATE, metadata)
-        append_native_origin_for_creation_from_connection(connection, origin)
+        if isinstance(origin, ProjectOperationalOriginRecordV1):
+            append_project_native_origin_from_connection(connection, origin)
+        else:
+            append_native_origin_for_creation_from_connection(connection, origin)
     return SliceMutationResult(
         snapshot=SliceDefinitionSnapshot(value=value, definition_revision=1), changed=True
     )
