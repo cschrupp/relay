@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B0-F complete / Human accepted; B1 is next planned gate; strict B0 remains blocked
+**Status:** Current living implementation plan — B0-F complete / Human accepted; B1 design open; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — B0-F Human Accepted
+# 0. CURRENT ROADMAP — B1 Design Open
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -53,7 +53,7 @@ See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTIN
 
 ```text
 B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
-  -> B1 Project Discovery & Human Intake
+  -> B1 Project Discovery & Human Intake — DESIGN OPEN / IMPLEMENTATION NOT AUTHORIZED
   -> B2 Existing Project Adoption / T1 Genesis
   -> B3 Forward Re-baseline / First Governed Work
   -> B4 Relay Dogfood Acceptance
@@ -63,7 +63,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> Phase 3 governed autonomous engineering loop
 ```
 
-B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. Its real-world dogfood check passed with one non-blocking documentation-inventory breadth observation carried to B1. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design is OPEN under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001`; implementation remains NOT AUTHORIZED. B0-F real-world observation `RW-O001` on broad raw documentation inventory is a B1 usability input, not a B0-F blocker. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 

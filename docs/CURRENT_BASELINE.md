@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B0-F complete / Human accepted; B1 is next planned gate; strict B0 remains blocked on legacy identity evidence
+**Status:** Current living baseline — B0-F complete / Human accepted; B1 design open; strict B0 remains blocked on legacy identity evidence
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 17, 2026
 
 ---
 
-# 0. Executive current state — B0-F Human Accepted
+# 0. Executive current state — B1 Design Open
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -53,7 +53,7 @@ Execution checklist: [Development TODO](TODO.md)
 
 ```text
 B0-F Bootstrap Engine Finish              COMPLETE / HUMAN ACCEPTED
-B1 Project Discovery & Human Intake       PLANNED
+B1 Project Discovery & Human Intake       DESIGN OPEN / IMPL NOT AUTHORIZED
 B2 Existing Project Adoption / T1 Genesis PLANNED
 B3 Forward Re-baseline / First Work       PLANNED
 B4 Relay Dogfood Acceptance               PLANNED
@@ -62,7 +62,7 @@ Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
 ```
 
-B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. Independent implementation review and real-world dogfood both ACCEPTED the candidate. This is not canonical/main promotion. B1/B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design is authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from acceptance baseline `ac9d6e3b53458d3a5e721f0ac5c699d922b3bb3c`. B1 implementation is NOT AUTHORIZED. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 
 ---

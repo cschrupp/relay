@@ -13,14 +13,15 @@
 - [x] Implement read-only local repository discovery and deterministic report output.
 - [x] Independently evaluate and real-world dogfood the B0-F implementation candidate.
 - [x] Human-accept B0-F implementation at `65bf57f69f8de4526d080e03da9f796bc20f46ec`.
-- [ ] **CURRENT — Human decision whether to authorize B1 Project Discovery and Human Intake design.**
+- [x] Authorize **B1 Project Discovery and Human Intake design** under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001`.
+- [ ] **CURRENT — Produce and independently review the B1 design.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
 
 # NEXT — make legacy adoption a product feature
 
-- [ ] Design **B1 Project Discovery and Human Intake**.
+- [ ] Design **B1 Project Discovery and Human Intake** — ACTIVE.
 - [ ] Freeze the minimum adoption contract: project objective, current status, Human objective, constraints, current frontier, canonical repository, T1.
 - [ ] Build OBSERVED / HUMAN_CONFIRMED / UNRESOLVED provenance handling.
 - [ ] Keep LLM-generated interpretations as proposals until mechanically established or Human-confirmed.
