@@ -20,8 +20,10 @@
 - [x] Human-accept exact composite B1 design `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`.
 - [x] Authorize B1 implementation under `RLY-S110-DOGFOOD-B1-IMPL-AUTH-001`.
 - [x] Implement B1 Project Discovery and Human Intake as a local, resumable manifest candidate with strict report provenance and safe external checkpointing.
-- [ ] **CURRENT — Independently review the B1 implementation candidate.**
-- [ ] After independent acceptance, real-world dogfood B1 on Relay and WellPlot; Human implementation acceptance follows that test.
+- [x] Independently review B1 implementation: `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK`, then `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`.
+- [x] Human-accept B1 implementation at `22fb742965ed6424a18275b4234e1399021d4aed` under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001`.
+- [ ] B1 real-world dogfood remains AUTHORIZED but has no completed result recorded before Human acceptance.
+- [ ] **CURRENT — Human decision whether to authorize B2 Existing Project Adoption / T1 Genesis design.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
