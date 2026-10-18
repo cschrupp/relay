@@ -27,7 +27,7 @@
 - [x] Produce B2 Existing Project Adoption / T1 Genesis Design Revision 1 and Revision 2 Integrity Amendment.
 - [x] Independently accept the composite B2 design under `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002`.
 - [x] Human-accept exact composite B2 design `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`.
-- [ ] **CURRENT — Issue the separate bounded B2 implementation authority; actual adoption/T1 remains unauthorized.**
+- [x] Issue the bounded B2 implementation authority under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`; actual adoption/T1 remains unauthorized.
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
@@ -43,10 +43,11 @@
 - [x] Produce a resumable, Human-reviewable Adoption Manifest candidate.
 
 - [x] Design **B2 Existing Project Adoption and T1 Genesis** — Revision 1 + Revision 2 Integrity Amendment accepted by independent review and Human Authority.
-- [ ] Authorize B2 implementation separately; do not execute adoption or create T1 under implementation authority.
-- [ ] Create Relay-native Project/Slice IDs at adoption where no historic Relay identity exists.
+- [x] Authorize B2 implementation under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`.
+- [ ] **CURRENT — Implement and test B2 adoption capability and migration-v8 code only; do not adopt a real project or create T1/database state.**
+- [ ] Keep actual Relay/target adoption, T1 creation, and database publication behind a later explicit execution authority.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
-- [ ] Populate the board with objective, status, constraints, frontier, blockers, and next action.
+- [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
 - [ ] Design **B3 Forward Re-baseline and First Governed Work**.
 - [ ] Turn Human objectives + current codebase state into a prioritized continuation/refactor/rework plan.
