@@ -24,7 +24,8 @@
 - [x] Human-accept B1 implementation at `22fb742965ed6424a18275b4234e1399021d4aed` under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001`.
 - [ ] B1 real-world dogfood remains AUTHORIZED but has no completed result recorded before Human acceptance.
 - [x] Authorize **B2 Existing Project Adoption / T1 Genesis design** under `RLY-S110-DOGFOOD-B2-DESIGN-AUTH-001`.
-- [ ] **CURRENT — Produce and independently review the B2 design.**
+- [x] Produce B2 Existing Project Adoption / T1 Genesis Design Revision 1.
+- [ ] **CURRENT — Independently review the B2 design candidate; Human acceptance remains a separate gate.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
@@ -39,7 +40,7 @@
 - [x] Keep B1 model-free; no LLM-generated interpretation becomes project state.
 - [x] Produce a resumable, Human-reviewable Adoption Manifest candidate.
 
-- [ ] Design **B2 Existing Project Adoption and T1 Genesis** — ACTIVE.
+- [x] Design **B2 Existing Project Adoption and T1 Genesis** — Revision 1 candidate produced.
 - [ ] Create Relay-native Project/Slice IDs at adoption where no historic Relay identity exists.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Populate the board with objective, status, constraints, frontier, blockers, and next action.
