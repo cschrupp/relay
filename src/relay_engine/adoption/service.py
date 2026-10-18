@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import stat
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -95,43 +96,67 @@ def normalize_repository_ref(locator: str, repository_id: str) -> RepositoryRef:
     """Resolve the accepted credential-free B1 repository locator exactly."""
 
     candidate = locator.strip()
+    invalid_locator = "ADOPTION_CANONICAL_REPOSITORY_INVALID"
     if not candidate or candidate.startswith("git@"):
         raise AdoptionError(
-            "ADOPTION_CANONICAL_REPOSITORY_INVALID",
+            invalid_locator,
             "canonical repository must be a credential-free HTTPS or host/path locator",
         )
     if any(character.isspace() for character in candidate):
-        raise AdoptionError(
-            "ADOPTION_CANONICAL_REPOSITORY_INVALID", "canonical repository contains whitespace"
-        )
-    if "://" in candidate:
-        parsed = urlsplit(candidate)
+        raise AdoptionError(invalid_locator, "canonical repository contains whitespace")
+    if "\\" in candidate:
+        raise AdoptionError(invalid_locator, "canonical repository contains a backslash")
+
+    scheme_separator = candidate.find(":")
+    has_scheme_prefix = (
+        scheme_separator > 0
+        and re.fullmatch(r"[A-Za-z][A-Za-z0-9+.-]*", candidate[:scheme_separator]) is not None
+    )
+    if has_scheme_prefix:
+        scheme = candidate[:scheme_separator].lower()
+        if scheme != "https" or not candidate[scheme_separator + 1 :].startswith("//"):
+            raise AdoptionError(
+                invalid_locator,
+                "canonical repository must use HTTPS or the host/path form",
+            )
+        try:
+            parsed = urlsplit(candidate)
+            parsed_host = parsed.hostname
+            parsed_port = parsed.port
+        except ValueError as error:
+            raise AdoptionError(
+                invalid_locator, "canonical repository HTTPS authority is malformed"
+            ) from error
         if (
             parsed.scheme.lower() != "https"
-            or not parsed.hostname
+            or not parsed_host
             or parsed.username is not None
             or parsed.password is not None
             or parsed.query
             or parsed.fragment
-            or parsed.port is not None
+            or parsed_port is not None
+            or parsed.netloc.endswith(":")
         ):
             raise AdoptionError(
-                "ADOPTION_CANONICAL_REPOSITORY_INVALID",
+                invalid_locator,
                 "canonical repository URI must use HTTPS without credentials, "
                 "port, query, or fragment",
             )
-        host = parsed.hostname.lower()
+        host = parsed_host.lower()
         path = parsed.path.lstrip("/")
     else:
-        if any(character in candidate for character in ("?", "#", "@", "://")):
+        if any(character in candidate for character in ("?", "#", "@")):
             raise AdoptionError(
-                "ADOPTION_CANONICAL_REPOSITORY_INVALID",
+                invalid_locator,
                 "canonical repository locator is unsupported",
             )
         host, separator, path = candidate.partition("/")
         if not separator:
+            raise AdoptionError(invalid_locator, "canonical repository path is missing")
+        if any(character in host for character in (":", "[", "]")):
             raise AdoptionError(
-                "ADOPTION_CANONICAL_REPOSITORY_INVALID", "canonical repository path is missing"
+                invalid_locator,
+                "bare canonical repository authority must be a host name without a port",
             )
         host = host.lower()
     path = path.removesuffix(".git")
@@ -143,7 +168,7 @@ def normalize_repository_ref(locator: str, repository_id: str) -> RepositoryRef:
         or any("/" in segment or "\\" in segment for segment in decoded_segments)
     ):
         raise AdoptionError(
-            "ADOPTION_CANONICAL_REPOSITORY_INVALID",
+            invalid_locator,
             "canonical repository host/path is incomplete or unsafe",
         )
     try:
@@ -151,7 +176,7 @@ def normalize_repository_ref(locator: str, repository_id: str) -> RepositoryRef:
         return RepositoryRef(id=repository_id, host=host, path=safe_path)
     except (ValidationError, ValueError) as error:
         raise AdoptionError(
-            "ADOPTION_CANONICAL_REPOSITORY_INVALID",
+            invalid_locator,
             "canonical repository cannot be represented as a RepositoryRef",
         ) from error
 

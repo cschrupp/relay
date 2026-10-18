@@ -413,6 +413,9 @@ def test_repository_ref_normalization_is_deterministic_and_rejects_unsafe_forms(
         "https://user:secret@example.test/owner/fixture",
         "https://example.test/owner/../fixture",
         "https://example.test/owner/fixture?ref=main",
+        "https://example.test:/owner/fixture",
+        "https://[2001:db8::1/owner/fixture",
+        "example.test:8443/owner/fixture",
         "git@example.test:owner/fixture.git",
     ):
         with pytest.raises(adoption_service.AdoptionError) as error:
@@ -421,6 +424,52 @@ def test_repository_ref_normalization_is_deterministic_and_rejects_unsafe_forms(
                 "repo_018f47c1-7b2c-7abc-8def-123456789002",
             )
         assert error.value.code == "ADOPTION_CANONICAL_REPOSITORY_INVALID"
+
+
+@pytest.mark.parametrize(
+    ("locator", "expected_code"),
+    (
+        ("https:/example.test/owner/fixture", "ADOPTION_CANONICAL_REPOSITORY_INVALID"),
+        ("https://example.test:not-a-port/owner/fixture", "ADOPTION_CANONICAL_REPOSITORY_INVALID"),
+        ("https://example.test:/owner/fixture", "ADOPTION_CANONICAL_REPOSITORY_INVALID"),
+        ("https://[2001:db8::1/owner/fixture", "ADOPTION_MANIFEST_INVALID"),
+        ("example.test:8443/owner/fixture", "ADOPTION_CANONICAL_REPOSITORY_INVALID"),
+    ),
+)
+def test_malformed_repository_locator_fails_before_human_adoption_or_publication(
+    tmp_path: Path, locator: str, expected_code: str
+) -> None:
+    repository = _repository(tmp_path / "checkout")
+    report_path, manifest_path = _inputs(tmp_path, repository)
+    manifest_payload = json.loads(manifest_path.read_bytes())
+    manifest_payload["human_facts"]["canonical_repository"]["value"] = locator
+    manifest_path.write_text(
+        json.dumps(manifest_payload, ensure_ascii=True, sort_keys=True, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    database_path = tmp_path / "relay.sqlite"
+    prompts: list[str] = []
+
+    def unexpected_human_input(prompt: str) -> str:
+        prompts.append(prompt)
+        raise AssertionError("invalid repository locator reached Human adoption")
+
+    with pytest.raises(adoption_service.AdoptionError) as error:
+        adoption_service.adopt_project(
+            repository=repository,
+            report_path=report_path,
+            manifest_path=manifest_path,
+            database_path=database_path,
+            input_fn=unexpected_human_input,
+            output=StringIO(),
+            clock=_clock(),
+            allow_test_injected_input=True,
+        )
+
+    assert error.value.code == expected_code
+    assert prompts == []
+    assert not database_path.exists()
+    assert not tuple(tmp_path.glob(".relay.sqlite.adoption-*"))
 
 
 def test_valid_relay_contract_conflict_is_rejected(tmp_path: Path) -> None:
