@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B0-F complete / Human accepted; B1 design open; strict B0 remains blocked on legacy identity evidence
+**Status:** Current living baseline — B0-F complete / Human accepted; B1 design candidate pending independent review; strict B0 remains blocked on legacy identity evidence
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 17, 2026
 
 ---
 
-# 0. Executive current state — B1 Design Open
+# 0. Executive current state — B1 Design Candidate Pending Review
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -35,9 +35,7 @@ Relay can govern state once it exists, but normal onboarding of an existing
 project must not require reconstruction of fictional Relay-native history.
 
 Current roadmap direction:
-B0-F can inspect ordinary Git repositories without Relay state. B1 remains
-the next planned Human-intake capability; strict historical bootstrap remains
-blocked and is not part of this candidate.
+B0-F can inspect ordinary Git repositories without Relay state. The B1 design candidate defines a local, resumable intake that binds Human answers to an exact B0-F report and reduces large documentation catalogs through deterministic path grouping. Independent design evaluation is pending; B1 implementation remains unauthorized. Strict historical bootstrap remains blocked and is not part of this candidate.
 ```
 
 ## Current product principle
@@ -53,7 +51,7 @@ Execution checklist: [Development TODO](TODO.md)
 
 ```text
 B0-F Bootstrap Engine Finish              COMPLETE / HUMAN ACCEPTED
-B1 Project Discovery & Human Intake       DESIGN OPEN / IMPL NOT AUTHORIZED
+B1 Project Discovery & Human Intake       DESIGN CANDIDATE / REVIEW PENDING / IMPL NOT AUTHORIZED
 B2 Existing Project Adoption / T1 Genesis PLANNED
 B3 Forward Re-baseline / First Work       PLANNED
 B4 Relay Dogfood Acceptance               PLANNED
@@ -62,7 +60,7 @@ Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
 ```
 
-B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design is authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from acceptance baseline `ac9d6e3b53458d3a5e721f0ac5c699d922b3bb3c`. B1 implementation is NOT AUTHORIZED. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. The design candidate is `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN.md`; independent evaluation is pending and implementation is NOT AUTHORIZED. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 
 ---

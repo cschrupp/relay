@@ -14,14 +14,17 @@
 - [x] Independently evaluate and real-world dogfood the B0-F implementation candidate.
 - [x] Human-accept B0-F implementation at `65bf57f69f8de4526d080e03da9f796bc20f46ec`.
 - [x] Authorize **B1 Project Discovery and Human Intake design** under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001`.
-- [ ] **CURRENT — Produce and independently review the B1 design.**
+- [x] Produce the B1 Project Discovery and Human Intake design candidate under the authorized design-only boundary.
+- [ ] **CURRENT — Obtain independent evaluation of the B1 design candidate; Human acceptance is a separate gate.**
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
 
 # NEXT — make legacy adoption a product feature
 
-- [ ] Design **B1 Project Discovery and Human Intake** — ACTIVE.
+- [x] Draft the bounded B1 intake flow, provenance model, Adoption Manifest candidate, documentation-catalog navigation, safety rules, and implementation boundary.
+- [ ] Independently evaluate and, if accepted, Human-accept the B1 design.
+- [ ] Keep B1 implementation unauthorized until a separate implementation authority is issued.
 - [ ] Freeze the minimum adoption contract: project objective, current status, Human objective, constraints, current frontier, canonical repository, T1.
 - [ ] Build OBSERVED / HUMAN_CONFIRMED / UNRESOLVED provenance handling.
 - [ ] Keep LLM-generated interpretations as proposals until mechanically established or Human-confirmed.
