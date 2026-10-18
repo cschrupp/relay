@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B0-F complete / Human accepted; B1 Design Revision 2 amendment pending independent re-review; strict B0 remains blocked
+**Status:** Current living implementation plan — B0-F complete / Human accepted; B1 design Human-accepted and implementation authorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — B1 Design Revision 2 Rework Pending Review
+# 0. CURRENT ROADMAP — B1 Implementation Authorized
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -53,7 +53,7 @@ See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTIN
 
 ```text
 B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
-  -> B1 Project Discovery & Human Intake — REVISION 2 REWORK / INDEPENDENT RE-REVIEW PENDING / IMPLEMENTATION NOT AUTHORIZED
+  -> B1 Project Discovery & Human Intake — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
   -> B2 Existing Project Adoption / T1 Genesis
   -> B3 Forward Re-baseline / First Governed Work
   -> B4 Relay Dogfood Acceptance
@@ -63,7 +63,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> Phase 3 governed autonomous engineering loop
 ```
 
-B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK` for missing pointer/value revalidation on resumed drafts and underspecified correction of machine observations. The Revision 2 amendment at `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` requires exact report-value and context-reference matching at every draft boundary and removes Human correction of observations. Independent re-review is pending; implementation remains NOT AUTHORIZED. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is authorized under `RLY-S110-DOGFOOD-B1-IMPL-AUTH-001`. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 
