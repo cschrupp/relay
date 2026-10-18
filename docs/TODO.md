@@ -73,6 +73,18 @@
 - [ ] Do not make the Human author machine-discoverable facts manually.
 - [ ] Do not turn “technically interesting” into “mandatory prerequisite” without showing how it blocks the next product capability.
 
+# ARCHITECTURE BACKLOG — proportionate agentic governance
+
+- [ ] Define governance intensity as consequence/risk-adaptive rather than terminal-grade by default; **reversibility is a first-class policy variable, not the only one**.
+- [ ] Formalize an **autonomous preparation envelope** for bounded reversible engineering: inspect → diagnose → patch → throw-off test → regress → repeat without Human round-trips while scope/contracts/protected assets remain unchanged.
+- [ ] Formalize a **governed commit boundary / deterministic terminal window** for irreversible, externally consequential, authority-changing, or evidence-critical actions.
+- [ ] Distinguish three action classes: reversible/local; persistent-but-recoverable/project-affecting; irreversible/consequential.
+- [ ] Make “fail closed” mean **do not cross an unauthorized consequence boundary**, not “stop engineering on every preparatory failure.”
+- [ ] Extend future GovernanceProfile / Role Contract / Work Packet / Execution Workspace designs with: preparation mutation allowlists, protected assets, escalation conditions, readiness predicates, exact terminal preconditions, and consumable one-shot budgets where required.
+- [ ] Require terminal transitions to bind exact source/environment/input/harness identity and to make budget-consumption vs canonical invocation recoverably unambiguous.
+- [ ] Carry the design maxim forward: **Govern boundaries, not keystrokes.**
+- [ ] Revisit this backlog item when designing Slices 2.2–2.4 and Phase 3 autonomous execution; do not interrupt B2/B3 adoption work for it.
+
 # DOCUMENTATION SYNCHRONIZATION
 
 - [ ] At every increment closeout, ask: **Did this change what someone needs to know to continue the project tomorrow?**
