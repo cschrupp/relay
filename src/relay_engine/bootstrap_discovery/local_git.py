@@ -73,24 +73,8 @@ class _ReadResult:
 def inspect_local_git(repository: Path) -> LocalGitState:
     """Read the local repository state using only the fixed Git operation set."""
 
-    try:
-        requested_path = repository.expanduser().resolve(strict=True)
-    except (OSError, RuntimeError) as error:
-        raise LocalGitError("NOT_GIT_REPOSITORY", "repository path is unavailable") from error
-    if not requested_path.is_dir():
-        raise LocalGitError("NOT_GIT_REPOSITORY", "repository path is not a directory")
+    repository_root = resolve_repository_root(repository)
 
-    try:
-        root_output = _run_git(requested_path, GitOperation.TOP_LEVEL)
-    except LocalGitError as error:
-        if error.code == "GIT_UNAVAILABLE":
-            raise
-        raise LocalGitError("NOT_GIT_REPOSITORY", "path is not inside a Git work tree") from error
-    except _GitCommandFailure as error:
-        raise LocalGitError("NOT_GIT_REPOSITORY", "path is not inside a Git work tree") from error
-
-    root_text = os.fsdecode(root_output.stdout.rstrip(b"\n"))
-    repository_root = Path(root_text).resolve(strict=True)
     try:
         head_output = _run_git(repository_root, GitOperation.HEAD)
     except (_GitCommandFailure, LocalGitError) as error:
@@ -125,6 +109,37 @@ def inspect_local_git(repository: Path) -> LocalGitState:
         tracked_paths=tracked_paths,
         remotes=remotes,
     )
+
+
+def resolve_repository_root(repository: Path) -> Path:
+    """Resolve and return the real root of a local Git working tree."""
+
+    try:
+        requested_path = repository.expanduser().resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        raise LocalGitError("NOT_GIT_REPOSITORY", "repository path is unavailable") from error
+    if not requested_path.is_dir():
+        raise LocalGitError("NOT_GIT_REPOSITORY", "repository path is not a directory")
+
+    try:
+        root_output = _run_git(requested_path, GitOperation.TOP_LEVEL)
+    except LocalGitError as error:
+        if error.code == "GIT_UNAVAILABLE":
+            raise
+        raise LocalGitError("NOT_GIT_REPOSITORY", "path is not inside a Git work tree") from error
+    except _GitCommandFailure as error:
+        raise LocalGitError("NOT_GIT_REPOSITORY", "path is not inside a Git work tree") from error
+
+    root_text = os.fsdecode(root_output.stdout.rstrip(b"\n"))
+    try:
+        repository_root = Path(root_text).resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        raise LocalGitError(
+            "NOT_GIT_REPOSITORY", "Git returned an unavailable work-tree root"
+        ) from error
+    if not repository_root.is_dir():
+        raise LocalGitError("NOT_GIT_REPOSITORY", "Git work-tree root is not a directory")
+    return repository_root
 
 
 class _GitCommandFailure(Exception):

@@ -19,7 +19,9 @@
 - [x] Independently accept the composite B1 design under `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002`.
 - [x] Human-accept exact composite B1 design `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`.
 - [x] Authorize B1 implementation under `RLY-S110-DOGFOOD-B1-IMPL-AUTH-001`.
-- [ ] **CURRENT — Implement B1 Project Discovery and Human Intake, then stop for independent review and real-world dogfood.**
+- [x] Implement B1 Project Discovery and Human Intake as a local, resumable manifest candidate with strict report provenance and safe external checkpointing.
+- [ ] **CURRENT — Independently review the B1 implementation candidate.**
+- [ ] After independent acceptance, real-world dogfood B1 on Relay and WellPlot; Human implementation acceptance follows that test.
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
@@ -29,10 +31,10 @@
 - [x] Draft the bounded B1 intake flow, provenance model, Adoption Manifest candidate, documentation-catalog navigation, safety rules, and implementation boundary.
 - [x] Independently re-evaluate and Human-accept the composite B1 design.
 - [x] Issue the separate B1 implementation authority.
-- [ ] Freeze the minimum adoption contract: project objective, current status, Human objective, constraints, current frontier, canonical repository, T1.
-- [ ] Build OBSERVED / HUMAN_CONFIRMED / UNRESOLVED provenance handling.
-- [ ] Keep LLM-generated interpretations as proposals until mechanically established or Human-confirmed.
-- [ ] Produce a fast Human-reviewable Adoption Manifest.
+- [x] Freeze the B1 intake fields: project name, canonical repository, project objective, current status, Human objective, constraints, and first governed focus. T1 remains B2 scope.
+- [x] Build OBSERVED / HUMAN_CONFIRMED / UNRESOLVED provenance handling with exact B0-F report binding.
+- [x] Keep B1 model-free; no LLM-generated interpretation becomes project state.
+- [x] Produce a resumable, Human-reviewable Adoption Manifest candidate.
 
 - [ ] Design **B2 Existing Project Adoption and T1 Genesis**.
 - [ ] Create Relay-native Project/Slice IDs at adoption where no historic Relay identity exists.

@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B0-F complete / Human accepted; B1 design Human-accepted and implementation authorized; strict B0 remains blocked on legacy identity evidence
+**Status:** Current living baseline — B0-F complete / Human accepted; B1 implementation candidate pending independent review; strict B0 remains blocked on legacy identity evidence
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
 
 ---
 
-# 0. Executive current state — B1 Implementation Authorized
+# 0. Executive current state — B1 Implementation Candidate
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -29,13 +29,16 @@ B0-F design                    HUMAN ACCEPTED
 B0-F implementation           COMPLETE / HUMAN ACCEPTED
 B0-F behavior                  READ-ONLY LOCAL REPOSITORY INSPECTION
 B0 importer / database        NOT IMPLEMENTED / NOT AUTHORIZED
+B1 implementation             CANDIDATE / INDEPENDENT REVIEW PENDING
+B1 real-world dogfood          NEXT AFTER INDEPENDENT ACCEPTANCE
+B1 Human implementation acceptance PENDING DOGFOOD
 
 Current product problem:
 Relay can govern state once it exists, but normal onboarding of an existing
 project must not require reconstruction of fictional Relay-native history.
 
 Current roadmap direction:
-B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. B1 implementation is now authorized; B2/T1 remains unopened. Strict historical bootstrap remains blocked and is not part of this candidate.
+B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The authorized B1 intake implementation now has a candidate awaiting independent review. If accepted, real-world dogfood on Relay and WellPlot precedes Human implementation acceptance. B2/T1 remains unopened. Strict historical bootstrap remains blocked and is not part of this candidate.
 ```
 
 ## Current product principle
@@ -51,7 +54,7 @@ Execution checklist: [Development TODO](TODO.md)
 
 ```text
 B0-F Bootstrap Engine Finish              COMPLETE / HUMAN ACCEPTED
-B1 Project Discovery & Human Intake       DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
+B1 Project Discovery & Human Intake       IMPLEMENTATION CANDIDATE / REVIEW PENDING
 B2 Existing Project Adoption / T1 Genesis PLANNED
 B3 Forward Re-baseline / First Work       PLANNED
 B4 Relay Dogfood Acceptance               PLANNED
@@ -60,7 +63,7 @@ Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
 ```
 
-B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is authorized under `RLY-S110-DOGFOOD-B1-IMPL-AUTH-001`; B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is authorized under `RLY-S110-DOGFOOD-B1-IMPL-AUTH-001` and has a candidate pending independent review. After independent acceptance, real-world dogfood on Relay and WellPlot precedes Human implementation acceptance. B2/B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 
 ---
