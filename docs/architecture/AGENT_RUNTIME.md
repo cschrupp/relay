@@ -330,6 +330,66 @@ This direction does not authorize or require:
 
 ---
 
+## 12.1 Authorized-work exhaustion and terminal semantics
+
+Relay must distinguish **authority to execute work** from **authority to create new work**.
+
+An implementation/runtime session may autonomously decompose its current authorized work into whatever bounded internal steps are needed to satisfy that work: inspect, diagnose, edit, test, repair, retry, and use runtime-local subagents. Those internal steps do not become durable backlog items and do not survive the authority that justified them.
+
+The runtime must not infer that completing an authorized item grants authority to invent its successor. Successor selection belongs to Relay's control plane.
+
+The required execution shape is:
+
+```text
+authorized work item
+        ↓
+autonomous bounded execution
+        ↓
+item completion
+        ↓
+Relay resolves next authorized item
+        │
+        ├─ successor exists ──► next governed execution
+        │
+        └─ none exists ───────► BACKLOG_EXHAUSTED
+                                  ↓
+                                 STOP
+```
+
+`BACKLOG_EXHAUSTED` is a successful semantic terminal state. It means all currently authorized work is complete and no authorized successor exists. It is not an invitation for the runtime to search for a plausible next improvement.
+
+The control plane must not ask the runtime to generate another execution turn merely because the current turn completed. In particular, an empty authorized queue must never be translated into prompts such as "find the next useful task", "continue improving the project", or equivalent open-ended continuation.
+
+Agent-discovered future work may be retained only as non-authoritative proposal material, conceptually:
+
+```text
+PROPOSED_WORK
+```
+
+A proposal may describe a useful refactor, defect, investigation, or future Slice, but it has zero execution authority until an authorized planning or Human decision promotes it into the governed backlog.
+
+Planning authority is therefore separate from execution authority. A role explicitly authorized to propose a roadmap may create proposed work. It still may not execute those proposals merely because it created them.
+
+Semantic completion must also remain distinct from resource termination:
+
+```text
+BACKLOG_EXHAUSTED
+    successful completion: no authorized work remains
+
+BUDGET / STEP / TOKEN / TIME LIMIT
+    execution safeguard: work may remain incomplete
+```
+
+A max-step, max-token, timeout, or cost limit is a watchdog. It must never substitute for the semantic completion predicate.
+
+This boundary preserves strong agent autonomy **inside** authorized work while preventing recursive self-employment after scope is consumed.
+
+> **An executor may decompose authorized work, but it may not extend the authoritative backlog.**
+
+> **When no authorized successor exists, Relay stops.**
+
+---
+
 ## 13. Core invariants
 
 ### AR-1
