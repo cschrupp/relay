@@ -66,6 +66,8 @@
 
 # THEN — resume autonomous-execution roadmap
 
+- [ ] Formalize and implement **authorized-work exhaustion** across Role Contracts / Work Packets / Execution Workspace / Phase 3: executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly promoted.
+
 - [ ] Slice 2.2 — Role Contracts.
 - [ ] Slice 2.3 — Context and Work-Packet Contract.
 - [ ] Slice 2.4 — Execution Workspace Authority.
