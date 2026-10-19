@@ -426,6 +426,32 @@ OpenCode-specific features stay behind the Relay-owned runtime adapter unless a 
 
 ---
 
+### AR-9
+
+Every executable Relay action must trace to an existing authoritative work reference. Absence of such a reference means no execution authority exists.
+
+### AR-10
+
+Runtime-local decomposition is permitted only to satisfy the current authorized item. Internal subtasks do not become durable successor backlog.
+
+### AR-11
+
+Completion or closure of an authorized item consumes that item's execution scope; adjacent or follow-on work requires an independent authority basis.
+
+### AR-12
+
+If Relay resolves no authorized successor after item completion, the scheduler enters `BACKLOG_EXHAUSTED` and terminates successfully without another agent execution turn.
+
+### AR-13
+
+Agent-discovered future work is non-authoritative `PROPOSED_WORK` until explicitly promoted by an authorized planning/Human decision.
+
+### AR-14
+
+Semantic completion and resource exhaustion are distinct. Step, token, time, and cost limits are safety watchdogs and cannot define successful backlog completion.
+
+---
+
 ## 14. Current conclusion
 
 Relay should not compete with coding-agent harnesses.
