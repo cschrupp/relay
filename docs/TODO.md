@@ -22,14 +22,17 @@
 - [x] Implement B1 Project Discovery and Human Intake as a local, resumable manifest candidate with strict report provenance and safe external checkpointing.
 - [x] Independently review B1 implementation: `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK`, then `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`.
 - [x] Human-accept B1 implementation at `22fb742965ed6424a18275b4234e1399021d4aed` under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001`.
-- [ ] B1 real-world dogfood remains AUTHORIZED but has no completed result recorded before Human acceptance.
+- [ ] **CURRENT — Complete the outstanding B1 Relay dogfood:** create a fresh B0-F report and Human-review the B1 Adoption Manifest. No completed Relay dogfood result is recorded yet.
 - [x] Authorize **B2 Existing Project Adoption / T1 Genesis design** under `RLY-S110-DOGFOOD-B2-DESIGN-AUTH-001`.
 - [x] Produce B2 Existing Project Adoption / T1 Genesis Design Revision 1 and Revision 2 Integrity Amendment.
 - [x] Independently accept the composite B2 design under `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002`.
 - [x] Human-accept exact composite B2 design `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`.
 - [x] Issue the bounded B2 implementation authority under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`; actual adoption/T1 remains unauthorized.
 - [x] Implement and test the bounded B2 adoption capability and migration-v8 code using disposable repositories and databases only.
-- [ ] Submit the B2 implementation candidate for independent review; actual adoption/T1/database publication remain unauthorized.
+- [x] Independently review B2 implementation: `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK`, followed by `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`.
+- [x] Human-accept B2 implementation candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097` under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001`.
+- [ ] After B1 Relay dogfood, issue a separate B2 execution authority scoped to Relay adoption, actual T1, and external database publication.
+- [ ] Do not perform Relay adoption, create T1, or publish an operational database before that separate execution authority.
 - [ ] Keep strict snapshot import as a separate exact-state mode; do not weaken it to make legacy adoption easier.
 - [ ] Do not resume B0 evidence archaeology without a new qualifying source. B0-F does not create Relay identity, a Genesis package, a Bootstrap V2 snapshot, or a database.
 - [ ] Keep CURRENT / NEXT / LATER / BLOCKED visible in the living project records.
@@ -47,8 +50,11 @@
 - [x] Design **B2 Existing Project Adoption and T1 Genesis** — Revision 1 + Revision 2 Integrity Amendment accepted by independent review and Human Authority.
 - [x] Authorize B2 implementation under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`.
 - [x] Implement and test B2 adoption capability and migration-v8 code only; no real project adoption or T1/database state was created.
-- [ ] **CURRENT — Obtain independent implementation review of the B2 candidate.**
-- [ ] Keep actual Relay/target adoption, T1 creation, and database publication behind a later explicit execution authority.
+- [x] Independently accept the corrected B2 implementation candidate after closing F001.
+- [x] Record Human implementation acceptance at `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`.
+- [ ] **CURRENT — Complete outstanding B1 Relay dogfood and Human-review its Adoption Manifest.**
+- [ ] Then issue a separate B2 execution authority for Relay adoption, actual T1, and external database publication.
+- [ ] Keep B3/B4 closed until adoption succeeds and their own gates are authorized.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
