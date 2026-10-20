@@ -58,8 +58,10 @@
 - [x] Independently review Stage A tooling under `RLY-S110-DOGFOOD-B3-STAGEA-IMPL-EVAL-001 — ACCEPT`.
 - [x] Human-accept Stage A tooling under `RLY-S110-DOGFOOD-B3-STAGEA-IMPL-ACCEPT-001`.
 - [x] Authorize one exact B3 Stage B materialization attempt under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-AUTH-001`.
-- [ ] **CURRENT — Execute the authorized Stage B attempt after fresh read-only preflight, collect terminal evidence, and STOP for independent review.**
-- [ ] Keep B4 and Slice 2.2 design/implementation closed until Stage B result review and separate authorities.
+- [x] Review Stage B attempt 001 under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-EVAL-001 — FAIL_CLOSED / NO MATERIALIZATION`.
+- [ ] **CURRENT — Qualify a writable Stage B execution venue without changing the real operational DB.**
+- [ ] After successful qualification, obtain a new one-shot Stage B materialization authority; no retry is currently authorized.
+- [ ] Keep B4 and Slice 2.2 design/implementation closed until successful Stage B materialization and separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
