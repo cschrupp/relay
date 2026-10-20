@@ -64,7 +64,8 @@
 - [x] Execute and independently review Stage B attempt 002 under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-EVAL-002 — ACCEPT`.
 - [x] Human-accept the independently accepted B3 materialization under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-ACCEPT-001`.
 - [x] Open B4 Relay Dogfood Acceptance design under `RLY-S110-DOGFOOD-B4-DESIGN-AUTH-001`.
-- [ ] **CURRENT — Produce and independently review the B4 cold-start dogfood/evaluation protocol.**
+- [x] Independently accept the B4 cold-start dogfood/evaluation protocol under `RLY-S110-DOGFOOD-B4-DESIGN-EVAL-001 — ACCEPT`.
+- [ ] **CURRENT — Obtain explicit Human acceptance of the independently accepted B4 design.**
 - [ ] Keep B4 execution and Slice 2.2 design/implementation closed until separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
