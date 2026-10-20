@@ -52,10 +52,9 @@
 - [x] Complete and independently review the real B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT`.
 - [x] Human-accept the independently accepted B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`.
 - [x] Open B3 design under `RLY-S110-DOGFOOD-B3-DESIGN-AUTH-001`.
-- [ ] **CURRENT — Close B3 design findings F001/F002 from `RLY-S110-DOGFOOD-B3-DESIGN-EVAL-001 — REWORK`.**
-- [ ] F001: freeze the exact canonical `Slice` payload mapping; keep governance prerequisites out of `dependency_ids` unless they are actual Slice dependencies.
-- [ ] F002: separate reviewed materialization-tooling preparation from the later consequential live-DB materialization authority.
-- [ ] Keep operational DB mutation and Slice 2.2 implementation closed until separate authority.
+- [x] Close B3 design findings F001/F002 under `RLY-S110-DOGFOOD-B3-DESIGN-EVAL-002 — ACCEPT`.
+- [ ] **CURRENT — Obtain explicit Human acceptance of the independently accepted B3 design.**
+- [ ] Keep Stage A tooling, operational DB mutation, B4, and Slice 2.2 design/implementation closed until their separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
