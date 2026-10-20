@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B3 is COMPLETE / HUMAN ACCEPTED; B4 Relay Dogfood Acceptance is eligible to open; Slice 2.2 design remains not open; strict B0 remains blocked
+**Status:** Current living implementation plan — B3 is COMPLETE / HUMAN ACCEPTED; B4 Relay Dogfood Acceptance design is OPEN / AUTHORIZED; B4 execution and Slice 2.2 design remain unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -49,7 +49,8 @@ actual adoption / T1            COMPLETE / HUMAN ACCEPTED
 B3 design                       COMPLETE / HUMAN ACCEPTED
 B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
 B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
-next gate                       Open B4 Relay Dogfood Acceptance design/evaluation protocol
+B4 design                       OPEN / AUTHORIZED
+next gate                       Produce and independently review the B4 cold-start dogfood protocol
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
