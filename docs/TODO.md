@@ -22,7 +22,7 @@
 - [x] Implement B1 Project Discovery and Human Intake as a local, resumable manifest candidate with strict report provenance and safe external checkpointing.
 - [x] Independently review B1 implementation: `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK`, then `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`.
 - [x] Human-accept B1 implementation at `22fb742965ed6424a18275b4234e1399021d4aed` under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001`.
-- [ ] B1 real-world dogfood remains AUTHORIZED; use it now to produce the exact Relay B0-F report and B1 Adoption Manifest required by the real B2 adoption gate.
+- [x] Complete real B1 dogfood input with the clean B0-F report and B1 Adoption Manifest used by the B2 adoption.
 - [x] Authorize **B2 Existing Project Adoption / T1 Genesis design** under `RLY-S110-DOGFOOD-B2-DESIGN-AUTH-001`.
 - [x] Produce B2 Existing Project Adoption / T1 Genesis Design Revision 1 and Revision 2 Integrity Amendment.
 - [x] Independently accept the composite B2 design under `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002`.
@@ -49,8 +49,9 @@
 - [x] Authorize B2 implementation under `RLY-S110-DOGFOOD-B2-IMPL-AUTH-001`.
 - [x] Implement and test B2 adoption capability and migration-v8 code only; no real project adoption or T1/database state was created.
 - [x] Independently review and Human-accept the B2 implementation at `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`.
-- [ ] **CURRENT — Execute the already-authorized real B1 dogfood input for Relay: produce a fresh B0-F report and Human-reviewed B1 Adoption Manifest for the actual checkout.**
-- [ ] Bind that exact report/manifest, observed Relay subject, Human actor, and external database destination into `RLY-S110-DOGFOOD-B2-ADOPTION-AUTH-001`; until then real adoption/T1/database publication remain NOT AUTHORIZED.
+- [x] Complete and independently review the real B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT`.
+- [ ] **CURRENT — Obtain explicit Human result acceptance for the independently accepted B2 adoption result.**
+- [ ] Keep B3 closed until that Human acceptance is recorded.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
