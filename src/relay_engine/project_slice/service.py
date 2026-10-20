@@ -12,7 +12,7 @@ from pydantic import BaseModel, ValidationError
 from relay_engine.domain.ids import ProjectId, SliceId, new_id
 from relay_engine.domain.models import Project, Slice
 from relay_engine.persistence.database import RelayDatabase, read_transaction, write_transaction
-from relay_engine.persistence.errors import PersistenceIntegrityError
+from relay_engine.persistence.errors import PersistenceError, PersistenceIntegrityError
 from relay_engine.project_slice.errors import (
     CrossProjectSliceReference,
     DefinitionRevisionConflict,
@@ -927,6 +927,26 @@ def update_slice(
 ) -> SliceMutationResult:
     metadata = _mutation(mutation)
     with _transaction(database) as connection:
+        return update_slice_from_connection(
+            connection,
+            expected_definition_revision,
+            target,
+            metadata,
+        )
+
+
+def update_slice_from_connection(
+    connection: sqlite3.Connection,
+    expected_definition_revision: int,
+    target: Slice,
+    mutation: MutationMetadata,
+) -> SliceMutationResult:
+    """Update one Slice inside a caller-owned SQLite transaction."""
+
+    if not connection.in_transaction:
+        raise PersistenceError("Slice update requires an active caller-owned transaction")
+    metadata = _mutation(mutation)
+    try:
         current = _load_slice(connection, target.id)
         if current is None:
             raise SliceNotFound(target.id)
@@ -972,6 +992,8 @@ def update_slice(
         )
         if cursor.rowcount != 1:
             raise DefinitionRevisionConflict(f"Slice {target.id} changed during update")
+    except sqlite3.IntegrityError as error:
+        raise PersistenceIntegrityError("durable definition constraint failed") from error
     return SliceMutationResult(
         snapshot=SliceDefinitionSnapshot(value=target, definition_revision=next_revision),
         changed=True,

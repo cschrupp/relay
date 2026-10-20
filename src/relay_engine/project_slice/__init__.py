@@ -65,6 +65,7 @@ from relay_engine.project_slice.service import (
     resolve_slice_origin_from_connection,
     update_project,
     update_slice,
+    update_slice_from_connection,
 )
 
 __all__ = [
@@ -126,4 +127,5 @@ __all__ = [
     "resolve_slice_origin_from_connection",
     "update_project",
     "update_slice",
+    "update_slice_from_connection",
 ]

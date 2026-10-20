@@ -37,6 +37,7 @@ from relay_engine.persistence import (
     load_handover_gates_for_slice_from_connection,
     read_transaction,
 )
+from relay_engine.persistence.errors import PersistenceError
 from relay_engine.persistence.records import GateEvaluationRecord
 from relay_engine.project_slice import (
     ProjectDefinitionSnapshot,
@@ -332,105 +333,122 @@ def project_board(
 ) -> ProjectBoard:
     """Project all current Slices and required evidence from one read snapshot."""
 
+    with read_transaction(database) as connection:
+        return project_board_from_connection(
+            database,
+            connection,
+            project_id,
+            live_source_control_observations=live_source_control_observations,
+        )
+
+
+def project_board_from_connection(
+    database: RelayDatabase,
+    connection: Connection,
+    project_id: ProjectId,
+    *,
+    live_source_control_observations: tuple[SourceControlObservationV1, ...] = (),
+) -> ProjectBoard:
+    """Project one board using the caller's active SQLite transaction snapshot."""
+
+    if connection is not database.connection:
+        raise ValueError("board projection connection must belong to the supplied database")
+    if not connection.in_transaction:
+        raise PersistenceError("caller-owned board projection requires an active transaction")
     try:
-        with read_transaction(database) as connection:
-            project_snapshot = get_project(database, project_id)
-            slice_snapshots = list_slices(database, project_id)
-            known = {snapshot.value.id: snapshot for snapshot in slice_snapshots}
-            project_origin = resolve_project_origin_from_connection(
-                database, connection, project_id
+        project_snapshot = get_project(database, project_id)
+        slice_snapshots = list_slices(database, project_id)
+        known = {snapshot.value.id: snapshot for snapshot in slice_snapshots}
+        project_origin = resolve_project_origin_from_connection(database, connection, project_id)
+        adoption_record = load_project_adoption_from_connection(connection, project_id)
+        origins = {
+            slice_id: resolve_slice_origin_from_connection(
+                database, connection, slice_id, project_id
             )
-            adoption_record = load_project_adoption_from_connection(connection, project_id)
-            origins = {
-                slice_id: resolve_slice_origin_from_connection(
-                    database, connection, slice_id, project_id
+            for slice_id in known
+        }
+        lifecycles = {
+            slice_id: load_current_lifecycle_from_connection(connection, slice_id)
+            for slice_id in known
+        }
+        cards: list[SliceCard] = []
+        for snapshot in slice_snapshots:
+            value = snapshot.value
+            (
+                lifecycle,
+                gates,
+                _records,
+                latest,
+                status,
+                _current_baseline,
+                _evaluation_baseline,
+            ) = _load_slice_basis(connection, project_id, value)
+            lifecycles[value.id] = lifecycle
+            if value.parent_slice_id is not None:
+                _dependency_projection(
+                    database,
+                    connection,
+                    project_id,
+                    value.parent_slice_id,
+                    known,
+                    lifecycles,
+                    origins,
                 )
-                for slice_id in known
-            }
-            lifecycles = {
-                slice_id: load_current_lifecycle_from_connection(connection, slice_id)
-                for slice_id in known
-            }
-            cards: list[SliceCard] = []
-            for snapshot in slice_snapshots:
-                value = snapshot.value
-                (
-                    lifecycle,
-                    gates,
-                    _records,
-                    latest,
-                    status,
-                    _current_baseline,
-                    _evaluation_baseline,
-                ) = _load_slice_basis(connection, project_id, value)
-                lifecycles[value.id] = lifecycle
-                if value.parent_slice_id is not None:
-                    _dependency_projection(
-                        database,
-                        connection,
-                        project_id,
-                        value.parent_slice_id,
-                        known,
-                        lifecycles,
-                        origins,
-                    )
-                dependencies = tuple(
-                    _dependency_projection(
-                        database,
-                        connection,
-                        project_id,
-                        dependency_id,
-                        known,
-                        lifecycles,
-                        origins,
-                    )
-                    for dependency_id in value.dependency_ids
+            dependencies = tuple(
+                _dependency_projection(
+                    database,
+                    connection,
+                    project_id,
+                    dependency_id,
+                    known,
+                    lifecycles,
+                    origins,
                 )
-                cards.append(
-                    SliceCard(
-                        slice_id=value.id,
-                        title=value.title,
-                        definition_revision=snapshot.definition_revision,
-                        parent_slice_id=value.parent_slice_id,
-                        dependency_ids=value.dependency_ids,
-                        lane=(
-                            None
-                            if lifecycle is None
-                            and (
-                                origins[value.id].state is OriginResolutionState.NOT_ESTABLISHED
-                                or origins[value.id].origin is OperationalOrigin.PRE_GENESIS
-                            )
-                            else _lane_for(lifecycle)
-                        ),
-                        lifecycle=lifecycle,
-                        origin_resolution=origins[value.id],
-                        dependencies=dependencies,
-                        outgoing_gates=_gate_projections(gates, latest, status),
-                        latest_evaluation_record_id=None if latest is None else latest.id,
-                        latest_evaluation_recorded_at=None
-                        if latest is None
-                        else latest.recorded_at,
-                        evaluation_basis_status=status,
-                    )
-                )
-            ordered_cards = _ordered_cards(cards)
-            situation = project_project_situation(ordered_cards)
-            canonical_governance = project_canonical_governance(
-                database,
-                connection,
-                project_snapshot.value,
-                live_source_control_observations=live_source_control_observations,
+                for dependency_id in value.dependency_ids
             )
-            return ProjectBoard(
-                project=project_snapshot.value,
-                project_definition_revision=project_snapshot.definition_revision,
-                project_origin_resolution=project_origin,
-                adoption_record=adoption_record,
-                situation=situation,
-                canonical_governance=canonical_governance,
-                lanes=tuple(BoardLane),
-                cards=ordered_cards,
+            cards.append(
+                SliceCard(
+                    slice_id=value.id,
+                    title=value.title,
+                    definition_revision=snapshot.definition_revision,
+                    parent_slice_id=value.parent_slice_id,
+                    dependency_ids=value.dependency_ids,
+                    lane=(
+                        None
+                        if lifecycle is None
+                        and (
+                            origins[value.id].state is OriginResolutionState.NOT_ESTABLISHED
+                            or origins[value.id].origin is OperationalOrigin.PRE_GENESIS
+                        )
+                        else _lane_for(lifecycle)
+                    ),
+                    lifecycle=lifecycle,
+                    origin_resolution=origins[value.id],
+                    dependencies=dependencies,
+                    outgoing_gates=_gate_projections(gates, latest, status),
+                    latest_evaluation_record_id=None if latest is None else latest.id,
+                    latest_evaluation_recorded_at=None if latest is None else latest.recorded_at,
+                    evaluation_basis_status=status,
+                )
             )
+        ordered_cards = _ordered_cards(cards)
+        situation = project_project_situation(ordered_cards)
+        canonical_governance = project_canonical_governance(
+            database,
+            connection,
+            project_snapshot.value,
+            live_source_control_observations=live_source_control_observations,
+        )
+        return ProjectBoard(
+            project=project_snapshot.value,
+            project_definition_revision=project_snapshot.definition_revision,
+            project_origin_resolution=project_origin,
+            adoption_record=adoption_record,
+            situation=situation,
+            canonical_governance=canonical_governance,
+            lanes=tuple(BoardLane),
+            cards=ordered_cards,
+        )
     except ValidationError as error:
         raise PersistenceIntegrityError("Project board projection is invalid") from error
 

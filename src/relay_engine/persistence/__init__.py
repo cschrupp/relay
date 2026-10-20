@@ -86,6 +86,7 @@ from relay_engine.persistence.store import (
     persist_lifecycle_change,
     persist_lifecycle_change_from_connection,
     persist_lifecycle_initialization,
+    persist_lifecycle_initialization_from_connection,
     verify_slice_history,
 )
 
@@ -173,6 +174,7 @@ __all__ = [
     "persist_lifecycle_change",
     "persist_lifecycle_change_from_connection",
     "persist_lifecycle_initialization",
+    "persist_lifecycle_initialization_from_connection",
     "verify_schema",
     "verify_slice_history",
 ]

@@ -718,26 +718,41 @@ def persist_lifecycle_initialization(
     """Atomically establish the absent lifecycle projection and revision-zero event."""
 
     with _write(database) as connection:
-        current, events = _load_current_and_history(connection, initial_lifecycle.slice_id)
-        if current is not None or events:
-            if current is not None and events:
-                raise ConcurrencyConflict("lifecycle is already initialized")
-            raise PersistenceIntegrityError("lifecycle initialization is only partially durable")
-        if initial_lifecycle.revision != 0:
-            raise PersistenceIntegrityError("lifecycle initialization must start at revision zero")
-        if (
-            initialized_event.slice_id != initial_lifecycle.slice_id
-            or initialized_event.resulting_revision != 0
-        ):
-            raise PersistenceIntegrityError("initialization event does not identify revision zero")
-        try:
-            replayed = replay_lifecycle((initialized_event,))
-        except LifecycleReplayError as error:
-            raise PersistenceIntegrityError("initialization event is not replayable") from error
-        if replayed != initial_lifecycle:
-            raise PersistenceIntegrityError(
-                "initialization event does not produce supplied snapshot"
-            )
+        persist_lifecycle_initialization_from_connection(
+            connection,
+            initial_lifecycle,
+            initialized_event,
+        )
+
+
+def persist_lifecycle_initialization_from_connection(
+    connection: sqlite3.Connection,
+    initial_lifecycle: SliceLifecycle,
+    initialized_event: LifecycleInitialized,
+) -> None:
+    """Persist revision-zero lifecycle state inside a caller-owned transaction."""
+
+    if not connection.in_transaction:
+        raise PersistenceError("lifecycle initialization requires an active transaction")
+    current, events = _load_current_and_history(connection, initial_lifecycle.slice_id)
+    if current is not None or events:
+        if current is not None and events:
+            raise ConcurrencyConflict("lifecycle is already initialized")
+        raise PersistenceIntegrityError("lifecycle initialization is only partially durable")
+    if initial_lifecycle.revision != 0:
+        raise PersistenceIntegrityError("lifecycle initialization must start at revision zero")
+    if (
+        initialized_event.slice_id != initial_lifecycle.slice_id
+        or initialized_event.resulting_revision != 0
+    ):
+        raise PersistenceIntegrityError("initialization event does not identify revision zero")
+    try:
+        replayed = replay_lifecycle((initialized_event,))
+    except LifecycleReplayError as error:
+        raise PersistenceIntegrityError("initialization event is not replayable") from error
+    if replayed != initial_lifecycle:
+        raise PersistenceIntegrityError("initialization event does not produce supplied snapshot")
+    try:
         _insert_event(connection, initialized_event)
         connection.execute(
             "INSERT INTO lifecycle_current(slice_id, revision, payload_json) VALUES (?, ?, ?)",
@@ -747,6 +762,10 @@ def persist_lifecycle_initialization(
                 _canonical_json(initial_lifecycle),
             ),
         )
+    except sqlite3.IntegrityError as error:
+        raise PersistenceIntegrityError(
+            "durable uniqueness or reference constraint failed"
+        ) from error
 
 
 def persist_lifecycle_change(
