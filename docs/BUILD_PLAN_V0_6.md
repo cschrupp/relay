@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B3 Stage B attempt 001 is consumed and independently classified FAIL_CLOSED / NO MATERIALIZATION; durable DB state is unchanged; execution-environment qualification is required before any new Stage B authority; strict B0 remains blocked
+**Status:** Current living implementation plan — Stage B attempt 001 is FAIL_CLOSED / NO MATERIALIZATION; execution-environment qualification is ACCEPTED; Stage B attempt 002 is eligible for a new one-shot Human authority but remains unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -48,8 +48,8 @@ implementation                 COMPLETE / HUMAN ACCEPTED
 actual adoption / T1            COMPLETE / HUMAN ACCEPTED
 B3 design                       COMPLETE / HUMAN ACCEPTED
 B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
-B3 Stage B materialization      ATTEMPT 001 FAIL_CLOSED / NO MATERIALIZATION
-next gate                       Qualify an actually writable execution venue, then consider a new Stage B authority
+B3 Stage B materialization      ATTEMPT 002 ELIGIBLE / NOT AUTHORIZED
+next gate                       Explicit Human authority for one new Stage B attempt pinned to the accepted environment qualification
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
