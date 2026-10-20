@@ -51,7 +51,9 @@
 - [x] Independently review and Human-accept the B2 implementation at `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`.
 - [x] Complete and independently review the real B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT`.
 - [x] Human-accept the independently accepted B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`.
-- [ ] **CURRENT — Open and design B3 Forward Re-baseline / First Governed Work.**
+- [x] Open B3 design under `RLY-S110-DOGFOOD-B3-DESIGN-AUTH-001`.
+- [ ] **CURRENT — Produce and independently review the B3 Forward Re-baseline / First Governed Work design.**
+- [ ] Keep operational DB mutation and Slice 2.2 implementation closed until separate authority.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
