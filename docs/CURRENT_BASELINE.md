@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Stage B attempt 001 is FAIL_CLOSED / NO MATERIALIZATION; execution-environment qualification is ACCEPTED under RLY-S110-DOGFOOD-B3-STAGEB-ENV-EVAL-001; durable operational state is unchanged; Stage B attempt 002 is eligible for new Human authority but remains unauthorized
+**Status:** Current living baseline — Stage B attempt 001 is FAIL_CLOSED / NO MATERIALIZATION; execution-environment qualification is ACCEPTED; one exact Stage B attempt 002 is AUTHORIZED under RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-AUTH-002; execution pending
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
@@ -64,7 +64,7 @@ B1 Project Discovery & Human Intake       COMPLETE / HUMAN ACCEPTED
 B2 Existing Project Adoption / T1 Genesis DESIGN COMPLETE / HUMAN ACCEPTED
 B2 implementation COMPLETE / HUMAN ACCEPTED
 B2 real Relay adoption / T1 COMPLETE / HUMAN ACCEPTED
-B3 Forward Re-baseline / First Work       STAGE B ATTEMPT 002 ELIGIBLE / NOT AUTHORIZED
+B3 Forward Re-baseline / First Work       STAGE B ATTEMPT 002 AUTHORIZED / EXECUTION PENDING
 B4 Relay Dogfood Acceptance               PLANNED
 
 Then:
