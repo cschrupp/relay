@@ -62,8 +62,9 @@
 - [x] Qualify the Stage B execution venue under `RLY-S110-DOGFOOD-B3-STAGEB-ENV-EVAL-001 — ACCEPT`.
 - [x] Authorize one exact Stage B attempt 002 under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-AUTH-002`.
 - [x] Execute and independently review Stage B attempt 002 under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-EVAL-002 — ACCEPT`.
-- [ ] **CURRENT — Obtain explicit Human acceptance of the independently accepted B3 materialization result.**
-- [ ] Keep B4 and Slice 2.2 design/implementation closed until Human acceptance and their separate authorities.
+- [x] Human-accept the independently accepted B3 materialization under `RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-ACCEPT-001`.
+- [ ] **CURRENT — Open B4 Relay Dogfood Acceptance design/evaluation protocol.**
+- [ ] Keep B4 execution and Slice 2.2 design/implementation closed until separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
@@ -74,6 +75,7 @@
 
 # DOGFOOD CHECKPOINT
 
+- [ ] When consequential SQLite execution tooling is next standardized or reused, replace the naive physical sidecar-absence check with a WAL-content-aware terminal verifier; do not reopen accepted B3 materialization for this hygiene fix.
 - [ ] Execute **B4 Relay Dogfood Acceptance** on Relay itself.
 - [ ] From a fresh checkout, run adoption without reconstructing project history in chat.
 - [ ] Confirm the Human can identify CURRENT / NEXT / LATER / BLOCKED from Relay.
