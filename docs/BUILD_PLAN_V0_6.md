@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B2 real adoption is COMPLETE / HUMAN ACCEPTED; B3 design is independently accepted under RLY-S110-DOGFOOD-B3-DESIGN-EVAL-002; Human design acceptance pending; Stage A tooling and operational materialization remain unauthorized; strict B0 remains blocked
+**Status:** Current living implementation plan — B3 design is COMPLETE / HUMAN ACCEPTED; Stage A materialization tooling/preparation is eligible for separate authority; Stage B real materialization remains unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -46,8 +46,8 @@ B2 Existing Project Adoption / T1 Genesis:
 design                          COMPLETE / HUMAN ACCEPTED
 implementation                 COMPLETE / HUMAN ACCEPTED
 actual adoption / T1            COMPLETE / HUMAN ACCEPTED
-B3 design                       INDEPENDENT ACCEPT / HUMAN ACCEPTANCE PENDING
-next gate                       Explicit Human acceptance of B3 design
+B3 design                       COMPLETE / HUMAN ACCEPTED
+next gate                       Authorize Stage A tooling/preparation only
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
