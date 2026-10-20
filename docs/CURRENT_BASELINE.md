@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B3 is COMPLETE / INDEPENDENTLY ACCEPTED / HUMAN ACCEPTED under RLY-S110-DOGFOOD-B3-STAGEB-MATERIALIZATION-ACCEPT-001; B4 Relay Dogfood Acceptance is eligible to open; Slice 2.2 design remains closed
+**Status:** Current living baseline — B3 is COMPLETE / HUMAN ACCEPTED; B4 Relay Dogfood Acceptance design is OPEN / AUTHORIZED under RLY-S110-DOGFOOD-B4-DESIGN-AUTH-001; B4 execution and Slice 2.2 design remain unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
@@ -65,7 +65,7 @@ B2 Existing Project Adoption / T1 Genesis DESIGN COMPLETE / HUMAN ACCEPTED
 B2 implementation COMPLETE / HUMAN ACCEPTED
 B2 real Relay adoption / T1 COMPLETE / HUMAN ACCEPTED
 B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
-B4 Relay Dogfood Acceptance               PLANNED
+B4 Relay Dogfood Acceptance               DESIGN OPEN / AUTHORIZED
 
 Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
