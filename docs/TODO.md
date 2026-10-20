@@ -55,7 +55,8 @@
 - [x] Close B3 design findings F001/F002 under `RLY-S110-DOGFOOD-B3-DESIGN-EVAL-002 — ACCEPT`.
 - [x] Human-accept the independently accepted B3 design under `RLY-S110-DOGFOOD-B3-DESIGN-ACCEPT-001`.
 - [x] Authorize B3 Stage A tooling/preparation under `RLY-S110-DOGFOOD-B3-STAGEA-IMPL-AUTH-001`.
-- [ ] **CURRENT — Implement and independently review Stage A materialization tooling using disposable databases only.**
+- [x] Independently review Stage A tooling under `RLY-S110-DOGFOOD-B3-STAGEA-IMPL-EVAL-001 — ACCEPT`.
+- [ ] **CURRENT — Obtain explicit Human acceptance of the independently accepted Stage A tooling candidate `042a4a54df7eecadfefa30f1e5c487da52c38b61`.**
 - [ ] Keep Stage B real operational DB materialization, B4, and Slice 2.2 design/implementation closed until separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
