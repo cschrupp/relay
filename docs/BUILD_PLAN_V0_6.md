@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B3 is COMPLETE / HUMAN ACCEPTED; B4 Relay Dogfood Acceptance design is COMPLETE / HUMAN ACCEPTED; read-only harness preparation is eligible for separate authority; B4 execution and Slice 2.2 design remain unauthorized; strict B0 remains blocked
+**Status:** Current living implementation plan — B4 design is COMPLETE / HUMAN ACCEPTED; B4 read-only harness preparation is OPEN / AUTHORIZED; B4 execution and Slice 2.2 design remain unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -50,7 +50,8 @@ B3 design                       COMPLETE / HUMAN ACCEPTED
 B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
 B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
 B4 design                       COMPLETE / HUMAN ACCEPTED
-next gate                       Authorize bounded read-only harness preparation/review
+B4 read-only harness            OPEN / AUTHORIZED
+next gate                       Implement and independently review the minimal read-only harness
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
