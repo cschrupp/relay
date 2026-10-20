@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B0-F, B1, B2 design, and B2 implementation Human-accepted; one exact real Relay adoption/T1 attempt is authorized and execution-pending; strict B0 remains blocked
+**Status:** Current living implementation plan — real Relay B2 adoption executed and independently accepted; Human result acceptance pending; B3 remains unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -45,8 +45,8 @@ real-world dogfood              AUTHORIZED / NOT EXECUTED BEFORE ACCEPTANCE
 B2 Existing Project Adoption / T1 Genesis:
 design                          COMPLETE / HUMAN ACCEPTED
 implementation                 COMPLETE / HUMAN ACCEPTED
-actual adoption / T1            AUTHORIZED / NOT EXECUTED
-next gate                       Execute one exact interactive B2 adoption attempt; then independent review
+actual adoption / T1            EXECUTED / INDEPENDENT ACCEPT
+next gate                       Explicit Human acceptance of the independently accepted B2 adoption result
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
@@ -76,7 +76,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> Phase 3 governed autonomous engineering loop
 ```
 
-B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, after `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK` and `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed dogfood result is recorded before acceptance. B2 Revision 1 plus the Revision 2 Integrity Amendment is independently accepted and Human-accepted at composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`, following `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. One exact real Relay adoption/T1 attempt is authorized under `RLY-S110-DOGFOOD-B2-ADOPTION-AUTH-001`, pinned to clean execution HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637` and the accepted clean B0-F/B1 evidence. The governance authority record is on a descendant commit; execution must remain on the pinned clean subject until the adoption attempt completes. ADOPT has not occurred and no T1 or operational database exists. After execution, stop for independent review. B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
+B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, after `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK` and `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed dogfood result is recorded before acceptance. B2 Revision 1 plus the Revision 2 Integrity Amendment is independently accepted and Human-accepted at composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`, following `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637` and is independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the external operational database is published and verified. Human result acceptance remains required before B3 may open. B3/B4 remain PLANNED / NOT OPEN / NOT AUTHORIZED.
 
 ## Anti-drift guardrail
 
