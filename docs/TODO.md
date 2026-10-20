@@ -50,8 +50,8 @@
 - [x] Implement and test B2 adoption capability and migration-v8 code only; no real project adoption or T1/database state was created.
 - [x] Independently review and Human-accept the B2 implementation at `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`.
 - [x] Complete and independently review the real B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT`.
-- [ ] **CURRENT — Obtain explicit Human result acceptance for the independently accepted B2 adoption result.**
-- [ ] Keep B3 closed until that Human acceptance is recorded.
+- [x] Human-accept the independently accepted B2 adoption result under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`.
+- [ ] **CURRENT — Open and design B3 Forward Re-baseline / First Governed Work.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
