@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B4 design is COMPLETE / HUMAN ACCEPTED; B4 read-only harness is IMPLEMENTED / INDEPENDENTLY ACCEPTED; Human technical acceptance is pending; B4 execution and Slice 2.2 design remain unauthorized; strict B0 remains blocked
+**Status:** Current living implementation plan — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; B4 cold-start execution is eligible for separate authority; B4 execution and Slice 2.2 design remain unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -50,8 +50,8 @@ B3 design                       COMPLETE / HUMAN ACCEPTED
 B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
 B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
 B4 design                       COMPLETE / HUMAN ACCEPTED
-B4 read-only harness            IMPLEMENTED / INDEPENDENT ACCEPT / HUMAN ACCEPTANCE PENDING
-next gate                       Explicit Human technical acceptance of the B4 read-only harness
+B4 read-only harness            COMPLETE / HUMAN ACCEPTED
+next gate                       Authorize one exact B4 cold-start dogfood execution
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
