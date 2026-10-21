@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; one exact B4 cold-start execution is AUTHORIZED under RLY-S110-DOGFOOD-B4-EXEC-AUTH-001; B4 result evaluation is pending execution; Slice 2.2 design remains unauthorized
+**Status:** Current living baseline — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; B4 execution attempt 001 is CONSUMED / FAIL_CLOSED before answer phase under RLY-S110-DOGFOOD-B4-EXEC-EVAL-001; B4 acceptance remains not established; a second attempt requires separate Human authority; Slice 2.2 design remains unauthorized
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
@@ -65,7 +65,7 @@ B2 Existing Project Adoption / T1 Genesis DESIGN COMPLETE / HUMAN ACCEPTED
 B2 implementation COMPLETE / HUMAN ACCEPTED
 B2 real Relay adoption / T1 COMPLETE / HUMAN ACCEPTED
 B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
-B4 Relay Dogfood Acceptance               COLD-START EXECUTION AUTHORIZED / NOT YET RUN
+B4 Relay Dogfood Acceptance               ATTEMPT 001 FAIL_CLOSED / NO ANSWER PHASE
 
 Then:
 2.2 -> 2.3 -> 2.4 -> Phase 3
