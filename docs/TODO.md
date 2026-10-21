@@ -67,7 +67,8 @@
 - [x] Independently accept the B4 cold-start dogfood/evaluation protocol under `RLY-S110-DOGFOOD-B4-DESIGN-EVAL-001 — ACCEPT`.
 - [x] Human-accept the independently accepted B4 design under `RLY-S110-DOGFOOD-B4-DESIGN-ACCEPT-001`.
 - [x] Authorize bounded B4 read-only harness preparation under `RLY-S110-DOGFOOD-B4-HARNESS-IMPL-AUTH-001`.
-- [ ] **CURRENT — Implement and independently review the minimal read-only B4 harness.**
+- [x] Implement and independently accept the minimal read-only B4 harness under `RLY-S110-DOGFOOD-B4-HARNESS-IMPL-EVAL-001 — ACCEPT`.
+- [ ] **CURRENT — Obtain explicit Human technical acceptance of the independently accepted B4 read-only harness.**
 - [ ] Keep B4 execution and Slice 2.2 design/implementation closed until separate authorities.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
