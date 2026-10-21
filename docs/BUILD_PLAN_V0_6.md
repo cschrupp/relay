@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; one exact B4 cold-start execution is AUTHORIZED; result evaluation is pending execution; Slice 2.2 design remains unauthorized; strict B0 remains blocked
+**Status:** Current living implementation plan — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; B4 execution attempt 001 failed closed before answer collection because the checkout did not match the pinned execution SHA; no design/harness rework is indicated; a second attempt requires separate Human authority; Slice 2.2 design remains unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -51,8 +51,8 @@ B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
 B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
 B4 design                       COMPLETE / HUMAN ACCEPTED
 B4 read-only harness            COMPLETE / HUMAN ACCEPTED
-B4 cold-start execution         AUTHORIZED / NOT YET RUN
-next gate                       Execute one fresh-operator B4 attempt and seal Q1–Q10 answers
+B4 cold-start execution         ATTEMPT 001 CONSUMED / FAIL_CLOSED
+next gate                       Human decision on authorizing corrected B4 execution attempt 002
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
