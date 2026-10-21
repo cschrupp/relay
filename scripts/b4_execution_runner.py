@@ -18,6 +18,7 @@ QUESTION_CONTRACT_RELATIVE_PATH = Path("scripts/b4_question_contract_v1.json")
 REGISTRY_RELATIVE_PATH = Path(".relay/registry.json")
 HARNESS_RELATIVE_PATH = Path("scripts/b4_readonly_harness.py")
 HARNESS_TEST_RELATIVE_PATH = Path("tests/integration/test_b4_readonly_harness.py")
+CHILD_REAP_TIMEOUT_SECONDS = 5
 PREPARE_OUTCOMES = {
     "PREPARED",
     "INVALID_PRECHECK",
@@ -665,6 +666,30 @@ def _close_capture_pair(stdout_handle: Any, stderr_handle: Any) -> bool:
     return successful
 
 
+def _terminate_and_reap(child: Any) -> tuple[bool, int | None]:
+    """Stop and reap a child using one bounded wait after its first wait fails."""
+    try:
+        return_code = child.poll()
+    except OSError:
+        return_code = None
+    if return_code is not None:
+        return True, return_code
+
+    with suppress(OSError):
+        child.kill()
+
+    try:
+        return True, child.wait(timeout=CHILD_REAP_TIMEOUT_SECONDS)
+    except OSError, subprocess.TimeoutExpired:
+        try:
+            return_code = child.poll()
+        except OSError:
+            return False, None
+        if return_code is None:
+            return False, None
+        return True, return_code
+
+
 def _contract_questions(contract: dict[str, Any]) -> list[dict[str, Any]]:
     return contract["questions"]
 
@@ -785,6 +810,30 @@ def prepare(args: argparse.Namespace) -> int:
         result["harness_exit_code"] = child.wait()
     except OSError:
         wait_error = True
+        child_terminated, return_code = _terminate_and_reap(child)
+        if child_terminated:
+            result["harness_exit_code"] = return_code
+        else:
+            _close_capture_pair(stdout_handle, stderr_handle)
+            result["stdout"] = {
+                "path": str(outputs["stdout_path"]),
+                "exists": True,
+                "size": None,
+                "sha256": None,
+            }
+            result["stderr"] = {
+                "path": str(outputs["stderr_path"]),
+                "exists": True,
+                "size": None,
+                "sha256": None,
+            }
+            return _fail_prepare(
+                args,
+                result,
+                "INVALID_PREPARE_EVIDENCE",
+                "wait",
+                "CHILD_TERMINATION_UNCONFIRMED",
+            )
     captures_durable = _close_capture_pair(stdout_handle, stderr_handle)
     try:
         result["stdout"] = _file_record(outputs["stdout_path"])
@@ -806,21 +855,17 @@ def prepare(args: argparse.Namespace) -> int:
     except RunnerFailure:
         result["validation"]["stdout_json_valid"] = "FAIL"
 
-    query_only_ok = (
-        isinstance(decoded, dict)
-        and type(decoded.get("query_only")) is int
-        and decoded.get("query_only") == 1
-    )
-    schema_ok = (
-        isinstance(decoded, dict)
-        and type(decoded.get("schema_version")) is int
-        and decoded.get("schema_version") == 8
-    )
+    query_only_ok = False
+    schema_ok = False
     if isinstance(decoded, dict):
         result["observed_query_only"] = decoded.get("query_only")
         result["observed_relay_schema_version"] = decoded.get("schema_version")
-    result["validation"]["query_only_valid"] = "PASS" if query_only_ok else "FAIL"
-    result["validation"]["relay_schema_version_valid"] = "PASS" if schema_ok else "FAIL"
+        query_only_ok = type(decoded.get("query_only")) is int and decoded.get("query_only") == 1
+        schema_ok = (
+            type(decoded.get("schema_version")) is int and decoded.get("schema_version") == 8
+        )
+        result["validation"]["query_only_valid"] = "PASS" if query_only_ok else "FAIL"
+        result["validation"]["relay_schema_version_valid"] = "PASS" if schema_ok else "FAIL"
 
     exit_code = result["harness_exit_code"]
     if wait_error:

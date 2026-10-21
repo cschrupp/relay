@@ -657,8 +657,130 @@ def test_child_failures_are_classified_once_and_captures_are_hashed(
     assert result["harness_invocation_count"] == 1
     assert result["stdout"]["sha256"] == _digest(stdout)
     assert result["stderr"]["sha256"] == _digest(stderr)
+    if stdout == b"":
+        assert result["validation"] == {
+            "stdout_nonempty": "FAIL",
+            "stdout_json_valid": "FAIL",
+            "query_only_valid": "NOT_PERFORMED",
+            "relay_schema_version_valid": "NOT_PERFORMED",
+        }
+    elif stdout == b"not json":
+        assert result["validation"] == {
+            "stdout_nonempty": "PASS",
+            "stdout_json_valid": "FAIL",
+            "query_only_valid": "NOT_PERFORMED",
+            "relay_schema_version_valid": "NOT_PERFORMED",
+        }
     assert not Path(fixture["args"].prepare_manifest_path).exists()
     assert not Path(fixture["args"].operator_input_path).exists()
+
+
+def test_wait_failure_terminates_and_reaps_before_capture_hashing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _fixture(tmp_path)
+    _mock_git(monkeypatch, fixture)
+    invocations: list[list[str]] = []
+
+    class Child:
+        wait_calls = 0
+        terminated = False
+        reaped = False
+
+        def wait(self, timeout: float | None = None) -> int:
+            self.wait_calls += 1
+            if self.wait_calls == 1:
+                assert timeout is None
+                raise OSError("forced first wait failure")
+            assert timeout == runner.CHILD_REAP_TIMEOUT_SECONDS
+            assert self.terminated
+            self.reaped = True
+            return -9
+
+        def poll(self) -> int | None:
+            return -9 if self.reaped else None
+
+        def kill(self) -> None:
+            self.terminated = True
+
+    child = Child()
+
+    def fake_popen(command: list[str], **kwargs: Any) -> Child:
+        invocations.append(command)
+        kwargs["stdout"].write(_VALID_STDOUT)
+        kwargs["stderr"].write(_VALID_STDERR)
+        return child
+
+    monkeypatch.setattr(runner.subprocess, "Popen", fake_popen)
+    original_file_record = runner._file_record
+
+    def require_reaped_before_hash(path: Path) -> dict[str, Any]:
+        assert child.reaped
+        return original_file_record(path)
+
+    monkeypatch.setattr(runner, "_file_record", require_reaped_before_hash)
+    assert runner.prepare(fixture["args"]) == 2
+    assert len(invocations) == 1
+    assert child.wait_calls == 2
+    result = json.loads(Path(fixture["args"].prepare_result_path).read_bytes())
+    assert result["prepare_outcome"] == "INVALID_HARNESS_EXIT"
+    assert result["failure_stage"] == "wait"
+    assert result["failure_code"] == "HARNESS_WAIT_FAILED"
+    assert result["harness_exit_code"] == -9
+    assert result["stdout"]["sha256"] == _digest(_VALID_STDOUT)
+    assert result["stderr"]["sha256"] == _digest(_VALID_STDERR)
+
+
+def test_unconfirmed_child_termination_does_not_claim_capture_hashes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = _fixture(tmp_path)
+    _mock_git(monkeypatch, fixture)
+    invocations: list[list[str]] = []
+
+    class UnreapableChild:
+        wait_calls = 0
+
+        def wait(self, timeout: float | None = None) -> int:
+            self.wait_calls += 1
+            if self.wait_calls == 1:
+                assert timeout is None
+            else:
+                assert timeout == runner.CHILD_REAP_TIMEOUT_SECONDS
+            raise OSError("forced persistent wait failure")
+
+        def poll(self) -> None:
+            return None
+
+        def kill(self) -> None:
+            pass
+
+    child = UnreapableChild()
+
+    def fake_popen(command: list[str], **kwargs: Any) -> UnreapableChild:
+        invocations.append(command)
+        kwargs["stdout"].write(_VALID_STDOUT)
+        kwargs["stderr"].write(_VALID_STDERR)
+        return child
+
+    monkeypatch.setattr(runner.subprocess, "Popen", fake_popen)
+
+    def reject_capture_hash(_path: Path) -> dict[str, Any]:
+        raise AssertionError("capture bytes cannot be hashed before child termination")
+
+    monkeypatch.setattr(runner, "_file_record", reject_capture_hash)
+    assert runner.prepare(fixture["args"]) == 2
+    assert len(invocations) == 1
+    assert child.wait_calls == 2
+    result = json.loads(Path(fixture["args"].prepare_result_path).read_bytes())
+    assert result["prepare_outcome"] == "INVALID_PREPARE_EVIDENCE"
+    assert result["failure_stage"] == "wait"
+    assert result["failure_code"] == "CHILD_TERMINATION_UNCONFIRMED"
+    assert result["harness_exit_code"] is None
+    for name in ("stdout", "stderr"):
+        assert result[name]["exists"] is True
+        assert result[name]["size"] is None
+        assert result[name]["sha256"] is None
 
 
 def test_prepare_success_is_exact_once_durable_and_binds_contract(
