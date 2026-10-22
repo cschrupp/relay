@@ -51,7 +51,7 @@ B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
 B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
 B4 design                       COMPLETE / HUMAN ACCEPTED
 B4 read-only harness            COMPLETE / HUMAN ACCEPTED
-B4 Attempt 006                  VALID / SEALED / AWAITING SEMANTIC EVALUATION
+B4 Attempt 006                  VALID / ALL TEN QUESTIONS PASS / HUMAN ACCEPTED
 Slice 2.2 Role Contracts        COMPLETE / ACCEPTED / CLOSED
 independent closure evaluation  RLY-S22-CLOSE-EVAL-001 — ACCEPT
 
@@ -121,10 +121,10 @@ Slice 1.9 — Human Decision Support & Governance Review Surface:
   RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
   Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement:
-  PLANNED / NOT OPEN / NOT AUTHORIZED
+  OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
-  2.2 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY;
+  2.2 COMPLETE / ACCEPTED / CLOSED;
   2.3–2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
 Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening
@@ -269,7 +269,7 @@ Slice 1.9 — Human Decision Support and Governance Review Surface:
 COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 
 Slice 1.10 — Canonical Source and Promotion Enforcement:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 
 Phase 2:
 OPEN — RLY-P2-OPEN-001
@@ -286,13 +286,13 @@ Finalization / closure authority: RLY-S21-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 
 Slice 2.2 — Role Contracts:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 4400bd1da0db04e41077c3a6ed1c16d258104ba5
 Effective quality-repaired subject: 07bda21295d87602e2a2234622478551920c5014
 Independent implementation evaluation: RLY-S22-IMPL-EVAL-003 — ACCEPT
 Human technical acceptance: RLY-S22-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Independent closure evaluation: RLY-S22-CLOSE-EVAL-001 — ACCEPT
 
 Slice 2.3 — Context and Work-Packet Contract:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -322,7 +322,7 @@ ACCEPTED BASELINE / HARDENING ACTIVE
         +-- Slices 1.1-1.7: CLOSED
         +-- 1.8 Governance Assurance Reference Model      COMPLETE / ACCEPTED / CLOSED
         +-- 1.9 Human Decision Support                   COMPLETE / ACCEPTED / CLOSED
-        +-- 1.10 Canonical Source / Promotion Enforcement PLANNED
+        +-- 1.10 Canonical Source / Promotion Enforcement OPEN / B4 COMPLETE
                  |
                  +-------------------------------+
                                                  |
@@ -331,7 +331,7 @@ Phase 2 — provider and agent foundation
 OPEN
         |
         +-- 2.1 Agent Runtime Contract            CLOSED
-        +-- 2.2 Role Contracts                    OPEN / CLOSURE-READY
+        +-- 2.2 Role Contracts                    COMPLETE / ACCEPTED / CLOSED
         +-- 2.3 Context / Work-Packet Contract    PLANNED
         +-- 2.4 Execution Workspace Authority     PLANNED
                                                  |
@@ -340,7 +340,7 @@ Phase 3 — first governed autonomous engineering loop
 NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is closure-ready; independent closure evaluation is pending before any later slice proceeds.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slices 2.3–2.4 remain NOT OPEN / NOT AUTHORIZED.
 
 Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 
@@ -421,7 +421,7 @@ Authority: `RLY-S18-IMPL-AUTH-001`; implementation start `a7cd87fea89e3b0273da1d
 
 The consolidated [reference model](architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md) contains all 17 native properties, exact subject/policy contracts, cross-cutting Decision Support, prospective GovernanceProfile rules, protected-asset mutation-authority separation, workflow neutrality, external mapping/freshness, and downstream ownership. Supporting documents provide [20 worked examples and 30 negative cases](architecture/GOVERNANCE_ASSURANCE_EXAMPLES.md) and [mapping/source traceability](references/GOVERNANCE_ASSURANCE_MAPPING_MATRIX.md). See the [implementation handoff](reviews/SLICE_1_8_IMPLEMENTATION_HANDOFF_REV2.md) for design coverage and quality evidence.
 
-No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation, Human technical acceptance, and independent closure evaluation are accepted. Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is COMPLETE / ACCEPTED / CLOSED after `RLY-S19-CLOSE-EVAL-001 — REWORK` and corrective `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 remains PLANNED / NOT OPEN / NOT AUTHORIZED. Phase 3 and agent execution remain unauthorized.
+No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation, Human technical acceptance, and independent closure evaluation are accepted. Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is COMPLETE / ACCEPTED / CLOSED after `RLY-S19-CLOSE-EVAL-001 — REWORK` and corrective `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN under `RLY-S110-DESIGN-ACCEPT-001 — ACCEPTED` and `RLY-S110-IMPL-AUTH-001 — AUTHORIZED`; B4 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED, while no top-level Slice 1.10 closure record is established. Phase 3 and agent execution remain unauthorized.
 
 # 1C. Slice 2.1 historical opening boundary
 
@@ -800,7 +800,7 @@ Independent closure evaluation:
 RLY-S21-CLOSE-EVAL-002 — ACCEPT
 
 Slice 2.2:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Phase 3:
 NOT AUTHORIZED
@@ -1069,7 +1069,7 @@ Slice 1.9 — Human Decision Support and Governance Review Surface:
 COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 
 Slice 1.10 — Canonical Source and Promotion Enforcement:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 
 Phase 2:
 OPEN — RLY-P2-OPEN-001
@@ -1078,7 +1078,7 @@ Slice 2.1:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.2:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.3:
 PLANNED / NOT OPEN / NOT AUTHORIZED
