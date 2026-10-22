@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`
+**Status:** Current living baseline — Slice 2.3 is OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
-**Date:** October 18, 2026
+**Date:** October 22, 2026
 
 ---
 
-# 0. Executive current state — Slice 2.2 Closed
+# 0. Executive current state — Slice 2.3 Closure-Ready
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -49,7 +49,18 @@ Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S22-CLOSE-EVAL-001 — ACCEPT
 Evaluated closure-ready candidate: 358e499ffd571e01d43343449f4bb4a0f50efd6b
 Production Role Contract wiring: NOT AUTHORIZED
-Slice 2.3: NOT OPEN / NOT AUTHORIZED
+Slice 2.3 — Context / Work-Packet Contract:
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Accepted implementation: 861ccb6bda528a98e1f570a32dcddc61358732e7
+Independent implementation evaluation: RLY-S23-IMPL-EVAL-002 — ACCEPT
+Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
+Finalization / closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+Production WorkPacket / ContextManifest wiring: NOT AUTHORIZED
+Context material resolver/storage: NOT AUTHORIZED
+Operational DB / lifecycle mutation: NOT AUTHORIZED
+Runtime/provider/model execution: NOT AUTHORIZED
+Workspace enforcement: NOT AUTHORIZED
 Slice 2.4: NOT OPEN / NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
@@ -83,7 +94,7 @@ B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
 B4 Relay Dogfood Acceptance               COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 
 Then:
-2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 and 2.4 remain NOT OPEN / NOT AUTHORIZED
+2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 is CLOSURE-READY; 2.4 remains NOT OPEN / NOT AUTHORIZED
 ```
 
 B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is Human-accepted under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, following `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed result is recorded before acceptance. B2 design is Human-accepted under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001` at exact composite `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`, comprising Revision 1 `189bb329e8d131c758a2a4d578f6ca2e701687b6` plus the Revision 2 Integrity Amendment. F001 and F002 from `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-001 — REWORK` are closed by `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`, following `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK` and corrective `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`. Real Relay B2 adoption executed successfully from the pinned clean checkout and was independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the published external operational database passed integrity, foreign-key, provenance, report-state, fingerprint, and minimal-history checks. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is COMPLETE. B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED. The Human-directed first governed work target was Slice 2.2 Role Contracts with authorized-work exhaustion integrated into the work boundary. B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
@@ -115,8 +126,9 @@ Slice 1.9 — Human Decision Support & Governance Review Surface:
 Slice 1.10 — Canonical Source and Promotion Enforcement:
   OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
-  2.2 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY;
-  2.3–2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
+  2.2 COMPLETE / ACCEPTED / CLOSED;
+  2.3 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY;
+  2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
@@ -182,7 +194,7 @@ Slice 1.8 — Governance Assurance Reference Model: COMPLETE / ACCEPTED / CLOSED
 Slice 1.9 — Human Decision Support and Governance Review Surface: COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement: OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 Slice 2.2 — Role Contracts: COMPLETE / ACCEPTED / CLOSED
-Slice 2.3 — Context and Work-Packet Contract: PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.3 — Context and Work-Packet Contract: OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 Slice 2.4 — Execution Workspace Authority: PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
@@ -653,7 +665,7 @@ Slice 2.2:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.3:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 
 Slice 2.4:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -1039,7 +1051,7 @@ Slice 2.2:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.3:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
 
 Slice 2.4:
 PLANNED / NOT OPEN / NOT AUTHORIZED

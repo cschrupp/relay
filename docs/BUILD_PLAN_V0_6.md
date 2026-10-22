@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.3 is OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.2 Closed
+# 0. CURRENT ROADMAP — Slice 2.3 Closure-Ready
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -57,7 +57,22 @@ independent closure evaluation  RLY-S22-CLOSE-EVAL-001 — ACCEPT
 
 Phase 2:
 2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
-2.3–2.4                         PLANNED / NOT OPEN / NOT AUTHORIZED
+2.2 Role Contracts              COMPLETE / ACCEPTED / CLOSED
+2.3 Context / Work-Packet Contract:
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Accepted implementation: 861ccb6bda528a98e1f570a32dcddc61358732e7
+Independent implementation evaluation: RLY-S23-IMPL-EVAL-002 — ACCEPT
+Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
+Finalization / closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+Production WorkPacket / ContextManifest wiring: NOT AUTHORIZED
+Context material resolver/storage: NOT AUTHORIZED
+Operational DB / lifecycle mutation: NOT AUTHORIZED
+Runtime/provider/model execution: NOT AUTHORIZED
+Workspace enforcement: NOT AUTHORIZED
+2.4 Execution Workspace Authority: PLANNED / NOT OPEN / NOT AUTHORIZED
+Phase 3: NOT OPEN / NOT AUTHORIZED
+Real-project agent execution: NOT AUTHORIZED
 ```
 
 ## Product decision
@@ -78,7 +93,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> B3 Forward Re-baseline / First Governed Work
   -> B4 Relay Dogfood Acceptance
   -> 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED
-  -> 2.3 Context / Work-Packet Contract
+  -> 2.3 Context / Work-Packet Contract — OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
   -> 2.4 Execution Workspace Authority
   -> Phase 3 governed autonomous engineering loop
 ```
@@ -125,7 +140,8 @@ Slice 1.10 — Canonical Source and Promotion Enforcement:
 
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
-  2.3–2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
+  2.3 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+  2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
 Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening
 Real-project agent execution: NOT AUTHORIZED
@@ -332,7 +348,7 @@ OPEN
         |
         +-- 2.1 Agent Runtime Contract            CLOSED
         +-- 2.2 Role Contracts                    COMPLETE / ACCEPTED / CLOSED
-        +-- 2.3 Context / Work-Packet Contract    PLANNED
+        +-- 2.3 Context / Work-Packet Contract    OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
         +-- 2.4 Execution Workspace Authority     PLANNED
                                                  |
                                                  v
@@ -340,7 +356,7 @@ Phase 3 — first governed autonomous engineering loop
 NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slices 2.3–2.4 remain NOT OPEN / NOT AUTHORIZED.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY with independent closure evaluation pending; Slice 2.4 remains NOT OPEN / NOT AUTHORIZED.
 
 Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 

@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slice 2.2 COMPLETE / ACCEPTED / CLOSED under RLY-S22-CLOSE-EVAL-001 — ACCEPT; Phase 2 open
+**Status:** Current living product and architecture proposal — Slice 2.3 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -139,7 +139,14 @@ Evaluated closure-ready candidate: 358e499ffd571e01d43343449f4bb4a0f50efd6b
 Production Role Contract wiring: NOT AUTHORIZED
 
 Slice 2.3 - Context and Work-Packet Contract:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Accepted implementation: 861ccb6bda528a98e1f570a32dcddc61358732e7
+Independent implementation evaluation: RLY-S23-IMPL-EVAL-002 — ACCEPT
+Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
+Closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+Production wiring, material resolver/storage, DB/lifecycle mutation, runtime execution,
+workspace enforcement: NOT AUTHORIZED
 
 Slice 2.4 - Execution Workspace Authority:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -208,7 +215,7 @@ Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the 
 Roadmap re-baseline authority:
 `RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED`
 
-Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slices 2.3–2.4 remain planned, unopened, and unauthorized.
+Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY with independent closure evaluation pending; Slice 2.4 remains planned, unopened, and unauthorized.
 
 # 5. Implementation and closure governance
 
@@ -220,6 +227,6 @@ Slice 1.6 implementation is complete and technically accepted at `a62493c733f67a
 
 Slice 1.7 delivers exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Agent execution remains unauthorized.
 
-Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 viability is accepted and Human-accepted under `RLY-P1-M0-ACCEPT-001`; Phase 1 remains an accepted baseline under active hardening. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is complete, accepted, and closed after `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. The assurance / decision-support re-baseline and its strategic amendment are now canonically promoted; the combined Slice 1.8 design incorporating workflow interoperability, GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement is Human-accepted; implementation candidate `35046bb378808a1325ecb84eace5aacd3040ca98` is technically accepted, and Slice 1.8 is closed under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` at closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT`; Slice 1.10 Source/Promotion Enforcement is OPEN with accepted design and implementation authority, and its B4 dogfood gate is COMPLETE / HUMAN ACCEPTED; Slices 2.3–2.4 remain planned / NOT OPEN / NOT AUTHORIZED; Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`. Phase 3 and real-project agent execution remain unauthorized.
+Slice 1.7 is closed after independent closure evaluation `RLY-S17-CLOSE-EVAL-001 — ACCEPT` verified closure-ready candidate `d7c3876754804ea0f889ec09133b99f569398f1e`. The accepted implementation `2fc1a762e17f45fb1a3d866d8100f2c0c284b435` provides exact result attachment, immutable authored evaluations and evidence, explicit Human technical acceptance, GREEN-gate accepted-result promotion, and causal accepted-Baseline/development-memory projections. Canonical closure commit `5d6773bd5f634246c026b2964ca21e7083a966a1` was promoted to `main`. It uses only authorized migration v5 (`slice_results` and `manual_evaluations`), with no runtime dependency or lifecycle transition-matrix change. Phase 1 M0 viability is accepted and Human-accepted under `RLY-P1-M0-ACCEPT-001`; Phase 1 remains an accepted baseline under active hardening. Phase 2 is open under `RLY-P2-OPEN-001`; Slice 2.1 is complete, accepted, and closed after `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. The assurance / decision-support re-baseline and its strategic amendment are now canonically promoted; the combined Slice 1.8 design incorporating workflow interoperability, GovernanceProfile semantics, Protected Verification Assets, and non-authoritative governance-effectiveness measurement is Human-accepted; implementation candidate `35046bb378808a1325ecb84eace5aacd3040ca98` is technically accepted, and Slice 1.8 is closed under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` at closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT`; Slice 1.10 Source/Promotion Enforcement is OPEN with accepted design and implementation authority, and its B4 dogfood gate is COMPLETE / HUMAN ACCEPTED; Slice 2.3 is OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY with independent closure evaluation pending; Slice 2.4 remains planned / NOT OPEN / NOT AUTHORIZED; Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`. Phase 3 and real-project agent execution remain unauthorized.
 
 **Unblocked ≠ authorized.**
