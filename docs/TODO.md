@@ -92,7 +92,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [ ] **CURRENT — Decide whether to open Slice 2.3 — Context / Work-Packet Contract.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
-- [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
+- [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
 - [x] Design **B3 Forward Re-baseline and First Governed Work** and Human-accept the design.
 - [x] Turn Human objectives + current codebase state into the accepted B3 forward-governance plan.
@@ -105,7 +105,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Execute and Human-accept **B4 Relay Dogfood Acceptance** on Relay itself.
 - [x] From a fresh checkout, complete B4 cold-start recovery without reconstructing project history in chat.
 - [ ] Confirm the Human can identify CURRENT / NEXT / LATER / BLOCKED from Relay.
-- [ ] Confirm Relay—not conversation context—is sufficient to continue normal development.
+- [x] Confirm through B4 cold-start dogfood that Relay—not prior conversation context—is sufficient to recover governed continuation state.
 
 # THEN — resume autonomous-execution roadmap
 
