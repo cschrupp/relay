@@ -11,7 +11,7 @@ Current roadmap state:
 - Slice 1.9 — Human Decision Support and Governance Review Surface — OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
 - Slice 1.10 — Canonical Source and Promotion Enforcement — PLANNED / NOT OPEN / NOT AUTHORIZED
 - Slice 2.1 — Agent Runtime Contract — COMPLETE / ACCEPTED / CLOSED
-- Slice 2.2 — OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING
+- Slice 2.2 — COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`
 - Slices 2.3–2.4 — PLANNED / NOT OPEN / NOT AUTHORIZED
 - Phase 3 and agent execution — NOT OPEN / NOT AUTHORIZED
 

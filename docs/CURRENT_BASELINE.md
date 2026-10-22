@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.2 implementation is COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY under `RLY-S22-CLOSE-AUTH-001`; independent closure evaluation is PENDING
+**Status:** Current living baseline — Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 18, 2026
 
 ---
 
-# 0. Executive current state — Slice 2.2 Closure-Ready
+# 0. Executive current state — Slice 2.2 Closed
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -40,13 +40,14 @@ B2 operational database          PUBLISHED / VERIFIED
 B2 real-adoption authority         RLY-S110-DOGFOOD-B2-ADOPTION-AUTH-001 — AUTHORIZED
 
 Slice 2.2 — Role Contracts:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 Accepted Role Contracts implementation: 4400bd1da0db04e41077c3a6ed1c16d258104ba5
 Accepted quality-repaired effective subject: 07bda21295d87602e2a2234622478551920c5014
 Independent implementation evaluation: RLY-S22-IMPL-EVAL-003 — ACCEPT
 Human technical acceptance: RLY-S22-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Independent closure evaluation: RLY-S22-CLOSE-EVAL-001 — ACCEPT
+Evaluated closure-ready candidate: 358e499ffd571e01d43343449f4bb4a0f50efd6b
 Production Role Contract wiring: NOT AUTHORIZED
 Slice 2.3: NOT OPEN / NOT AUTHORIZED
 Slice 2.4: NOT OPEN / NOT AUTHORIZED
@@ -82,10 +83,10 @@ B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
 B4 Relay Dogfood Acceptance               ATTEMPT 001 FAIL_CLOSED / NO ANSWER PHASE
 
 Then:
-2.2 Role Contracts — CLOSURE-READY -> 2.3 -> 2.4 -> Phase 3
+2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 and 2.4 remain NOT OPEN / NOT AUTHORIZED
 ```
 
-B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is Human-accepted under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, following `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed result is recorded before acceptance. B2 design is Human-accepted under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001` at exact composite `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`, comprising Revision 1 `189bb329e8d131c758a2a4d578f6ca2e701687b6` plus the Revision 2 Integrity Amendment. F001 and F002 from `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-001 — REWORK` are closed by `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`, following `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK` and corrective `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`. Real Relay B2 adoption executed successfully from the pinned clean checkout and was independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the published external operational database passed integrity, foreign-key, provenance, report-state, fingerprint, and minimal-history checks. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is COMPLETE. B3 design is OPEN / AUTHORIZED under `RLY-S110-DOGFOOD-B3-DESIGN-AUTH-001`, using the existing adoption-frontier Slice as the preferred first-work identity. The Human-directed first governed work target was Slice 2.2 Role Contracts with authorized-work exhaustion integrated into the work boundary. B3 operational materialization and B4 remain separately governed. Slice 2.2 implementation is accepted at `4400bd1da0db04e41077c3a6ed1c16d258104ba5`; closure evaluation is pending.
+B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is Human-accepted under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, following `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed result is recorded before acceptance. B2 design is Human-accepted under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001` at exact composite `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`, comprising Revision 1 `189bb329e8d131c758a2a4d578f6ca2e701687b6` plus the Revision 2 Integrity Amendment. F001 and F002 from `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-001 — REWORK` are closed by `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`, following `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK` and corrective `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`. Real Relay B2 adoption executed successfully from the pinned clean checkout and was independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the published external operational database passed integrity, foreign-key, provenance, report-state, fingerprint, and minimal-history checks. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is COMPLETE. B3 design is OPEN / AUTHORIZED under `RLY-S110-DOGFOOD-B3-DESIGN-AUTH-001`, using the existing adoption-frontier Slice as the preferred first-work identity. The Human-directed first governed work target was Slice 2.2 Role Contracts with authorized-work exhaustion integrated into the work boundary. B3 operational materialization and B4 remain separately governed. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
 
 
 ---

@@ -6,13 +6,13 @@
 ## Current Slice 2.2 state
 
 ```text
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 Accepted Role Contracts implementation: 4400bd1da0db04e41077c3a6ed1c16d258104ba5
 Accepted quality-repaired effective subject: 07bda21295d87602e2a2234622478551920c5014
 Independent implementation evaluation: RLY-S22-IMPL-EVAL-003 — ACCEPT
 Human technical acceptance: RLY-S22-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Independent closure evaluation: RLY-S22-CLOSE-EVAL-001 — ACCEPT
 Production Role Contract wiring: NOT AUTHORIZED
 Slice 2.3: NOT OPEN / NOT AUTHORIZED
 Slice 2.4: NOT OPEN / NOT AUTHORIZED
@@ -110,7 +110,7 @@ Real-project agent execution: NOT AUTHORIZED
 
 - [ ] Formalize and implement **authorized-work exhaustion** across Role Contracts / Work Packets / Execution Workspace / Phase 3: executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly promoted.
 
-- [x] Slice 2.2 — Role Contracts implementation COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING.
+- [x] Slice 2.2 — Role Contracts COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [ ] Slice 2.3 — Context and Work-Packet Contract.
 - [ ] Slice 2.4 — Execution Workspace Authority.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable.
