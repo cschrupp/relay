@@ -76,7 +76,8 @@ def test_human_root_authority_is_external_and_not_bootstrapped_by_contract() -> 
     evaluation_source = (PACKAGE_ROOT / "evaluation.py").read_text(encoding="utf-8")
     assert "Human root authority" in model_source
     assert "already-established facts" in model_source
-    assert "never evaluates work authority" in evaluation_source
+    assert "role_contract_ref(contract)" in evaluation_source
+    assert "applicability.status is not RoleContractApplicability.APPLICABLE" in evaluation_source
 
 
 def test_package_has_no_role_catalog_latest_resolver_or_role_uuid_prefix() -> None:

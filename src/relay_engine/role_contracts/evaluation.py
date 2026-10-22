@@ -11,6 +11,7 @@ from relay_engine.role_contracts.models import (
     ContractSelection,
     RequirementStatus,
     RoleAction,
+    RoleApplicabilityEvaluation,
     RoleContract,
     RoleContractApplicability,
     RoleContractIdentityConflict,
@@ -89,9 +90,16 @@ def evaluate_role_action(
     contract: RoleContract,
     actor: ActorRef,
     action: RoleAction | str,
+    *,
+    applicability: RoleApplicabilityEvaluation,
 ) -> RoleEligibility:
-    """Evaluate semantic role eligibility only; this never evaluates work authority."""
+    """Evaluate action eligibility only after exact-ref applicability is established."""
 
+    if (
+        applicability.role_contract_ref != role_contract_ref(contract)
+        or applicability.status is not RoleContractApplicability.APPLICABLE
+    ):
+        return RoleEligibility.INDETERMINATE
     if actor.kind not in contract.allowed_actor_kinds:
         return RoleEligibility.PROHIBITED_BY_ROLE
     if not isinstance(action, RoleAction):
@@ -162,8 +170,11 @@ def evaluate_required_outputs(
 
 def evaluate_role_contract_applicability(
     facts: ApplicableRoleContractFacts,
-) -> RoleContractApplicability:
-    """Evaluate prospective applicability from already-established governance facts."""
+) -> RoleApplicabilityEvaluation:
+    """Evaluate and bind prospective applicability to one exact RoleContractRef."""
+
+    result = RoleContractApplicability.INDETERMINATE
+    reason: RoleReason | None = RoleReason.ROLE_CONTRACT_APPLICABILITY_UNKNOWN
 
     established = (
         facts.contract_identity_valid,
@@ -174,17 +185,34 @@ def evaluate_role_contract_applicability(
         facts.supersession_clear,
     )
     if any(status is RequirementStatus.INDETERMINATE for status in established):
-        return RoleContractApplicability.INDETERMINATE
-    if any(status is RequirementStatus.UNSATISFIED for status in established):
-        return RoleContractApplicability.NOT_APPLICABLE
-    if facts.selection_source is None or facts.selection in {
-        ContractSelection.UNKNOWN,
-        ContractSelection.CONFLICTING,
-    }:
-        return RoleContractApplicability.INDETERMINATE
-    if facts.selection is ContractSelection.SELECTS_ANOTHER_CONTRACT:
-        return RoleContractApplicability.NOT_APPLICABLE
-    return RoleContractApplicability.APPLICABLE
+        pass
+    elif any(status is RequirementStatus.UNSATISFIED for status in established):
+        result = RoleContractApplicability.NOT_APPLICABLE
+        reason = RoleReason.ROLE_CONTRACT_NOT_APPLICABLE
+    elif (
+        facts.selection_source is None
+        or facts.selection
+        in {
+            ContractSelection.UNKNOWN,
+            ContractSelection.CONFLICTING,
+        }
+        or len(facts.selected_role_contract_refs) != 1
+    ):
+        pass
+    elif facts.selected_role_contract_refs[0] != facts.evaluated_role_contract_ref:
+        result = RoleContractApplicability.NOT_APPLICABLE
+        reason = RoleReason.ROLE_CONTRACT_NOT_APPLICABLE
+    elif facts.selection is ContractSelection.SELECTS_ANOTHER_CONTRACT:
+        # The label conflicts with the exact matching ref, so the external facts disagree.
+        pass
+    else:
+        result = RoleContractApplicability.APPLICABLE
+        reason = None
+    return RoleApplicabilityEvaluation(
+        role_contract_ref=facts.evaluated_role_contract_ref,
+        status=result,
+        reason=reason,
+    )
 
 
 def evaluate_role_separation(
@@ -228,14 +256,22 @@ def evaluate_verification_asset_permission(
     required: VerificationAssetPermission,
     *,
     classification_known: bool,
+    separate_authority_status: RequirementStatus | None = None,
 ) -> RequirementStatus:
-    """Check one semantic protected-asset permission without path enforcement."""
+    """Check role permission plus external authority for protected mutation operations."""
 
     if not classification_known:
         return RequirementStatus.INDETERMINATE
-    if required in granted:
-        return RequirementStatus.SATISFIED
-    return RequirementStatus.UNSATISFIED
+    if required not in granted:
+        return RequirementStatus.UNSATISFIED
+    if required in {
+        VerificationAssetPermission.MODIFY,
+        VerificationAssetPermission.APPROVE_MUTATION,
+    }:
+        if separate_authority_status is None:
+            return RequirementStatus.INDETERMINATE
+        return separate_authority_status
+    return RequirementStatus.SATISFIED
 
 
 def evaluate_runtime_provenance(

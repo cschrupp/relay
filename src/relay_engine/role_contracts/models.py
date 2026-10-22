@@ -239,6 +239,8 @@ class RoleRequirementEvaluation(DomainModel):
 class ApplicableRoleContractFacts(DomainModel):
     """Consume already-established facts; Human root authority is independent of RoleContract."""
 
+    evaluated_role_contract_ref: RoleContractRef
+    selected_role_contract_refs: tuple[RoleContractRef, ...]
     contract_identity_valid: RequirementStatus
     governed_subject_bound: RequirementStatus
     policy_basis_current: RequirementStatus
@@ -247,6 +249,15 @@ class ApplicableRoleContractFacts(DomainModel):
     selection: ContractSelection
     authority_basis_current: RequirementStatus
     supersession_clear: RequirementStatus
+
+    @field_validator("selected_role_contract_refs")
+    @classmethod
+    def selected_references_are_unique(
+        cls, value: tuple[RoleContractRef, ...]
+    ) -> tuple[RoleContractRef, ...]:
+        if len(value) != len(set(value)):
+            raise ValueError("selected RoleContractRefs must be unique")
+        return value
 
 
 class RoleContractIdentityConflict(DomainModel):
@@ -284,6 +295,7 @@ class RoleSeparationEvaluation(DomainModel):
 
 
 class RoleApplicabilityEvaluation(DomainModel):
+    role_contract_ref: RoleContractRef
     status: RoleContractApplicability
     reason: RoleReason | None = None
 

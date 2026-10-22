@@ -14,9 +14,11 @@ from relay_engine.role_contracts import (
     ContractSelection,
     RequirementStatus,
     RoleAction,
+    RoleApplicabilityEvaluation,
     RoleClass,
     RoleContract,
     RoleContractApplicability,
+    RoleEligibility,
     RoleInputRequirement,
     RoleOutputRequirement,
     RoleRequirementFact,
@@ -70,6 +72,8 @@ def contract(**updates: object) -> RoleContract:
 
 def applicability_facts(**updates: object) -> ApplicableRoleContractFacts:
     values: dict[str, object] = {
+        "evaluated_role_contract_ref": role_contract_ref(contract()),
+        "selected_role_contract_refs": (role_contract_ref(contract()),),
         "contract_identity_valid": RequirementStatus.SATISFIED,
         "governed_subject_bound": RequirementStatus.SATISFIED,
         "policy_basis_current": RequirementStatus.SATISFIED,
@@ -83,19 +87,51 @@ def applicability_facts(**updates: object) -> ApplicableRoleContractFacts:
     return ApplicableRoleContractFacts(**values)  # type: ignore[arg-type]
 
 
+def applicable_for(value: RoleContract) -> RoleApplicabilityEvaluation:
+    reference = role_contract_ref(value)
+    return evaluate_role_contract_applicability(
+        applicability_facts(
+            evaluated_role_contract_ref=reference,
+            selected_role_contract_refs=(reference,),
+        )
+    )
+
+
 def test_role_action_is_eligibility_not_authority() -> None:
     value = contract()
+    applicability = applicable_for(value)
     assert (
-        evaluate_role_action(value, AGENT_A, RoleAction.CONTEXT_READ).value == "PERMITTED_BY_ROLE"
+        evaluate_role_action(
+            value,
+            AGENT_A,
+            RoleAction.CONTEXT_READ,
+            applicability=applicability,
+        ).value
+        == "PERMITTED_BY_ROLE"
     )
     assert (
-        evaluate_role_action(value, AGENT_A, RoleAction.AUTHORIZE_WORK).value
+        evaluate_role_action(
+            value, AGENT_A, RoleAction.AUTHORIZE_WORK, applicability=applicability
+        ).value
         == "PROHIBITED_BY_ROLE"
     )
-    assert evaluate_role_action(value, HUMAN, RoleAction.CONTEXT_READ).value == "PROHIBITED_BY_ROLE"
-    assert evaluate_role_action(value, AGENT_A, "FUTURE_ACTION").value == "INDETERMINATE"
+    assert (
+        evaluate_role_action(
+            value, HUMAN, RoleAction.CONTEXT_READ, applicability=applicability
+        ).value
+        == "PROHIBITED_BY_ROLE"
+    )
+    assert (
+        evaluate_role_action(value, AGENT_A, "FUTURE_ACTION", applicability=applicability).value
+        == "INDETERMINATE"
+    )
     assert "AUTHORIZED" not in {
-        item.value for item in type(evaluate_role_action(value, AGENT_A, RoleAction.CONTEXT_READ))
+        item.value
+        for item in type(
+            evaluate_role_action(
+                value, AGENT_A, RoleAction.CONTEXT_READ, applicability=applicability
+            )
+        )
     }
 
 
@@ -154,8 +190,12 @@ def test_requirement_evaluator_rejects_duplicates_and_unrequested_facts() -> Non
 def test_digest_or_executor_self_selection_cannot_establish_applicability() -> None:
     assert (
         evaluate_role_contract_applicability(
-            applicability_facts(selection=ContractSelection.UNKNOWN, selection_source=None)
-        )
+            applicability_facts(
+                selection=ContractSelection.UNKNOWN,
+                selection_source=None,
+                selected_role_contract_refs=(),
+            )
+        ).status
         is RoleContractApplicability.INDETERMINATE
     )
     with pytest.raises(ValueError):
@@ -163,7 +203,7 @@ def test_digest_or_executor_self_selection_cannot_establish_applicability() -> N
     assert (
         evaluate_role_contract_applicability(
             applicability_facts(selection_source=SelectionSource.HUMAN_AUTHORITY)
-        )
+        ).status
         is RoleContractApplicability.APPLICABLE
     )
 
@@ -171,39 +211,96 @@ def test_digest_or_executor_self_selection_cannot_establish_applicability() -> N
 @pytest.mark.parametrize("selection", [ContractSelection.UNKNOWN, ContractSelection.CONFLICTING])
 def test_stale_or_conflicting_selection_fails_closed(selection: ContractSelection) -> None:
     assert (
-        evaluate_role_contract_applicability(applicability_facts(selection=selection))
+        evaluate_role_contract_applicability(applicability_facts(selection=selection)).status
         is RoleContractApplicability.INDETERMINATE
     )
     assert (
         evaluate_role_contract_applicability(
             applicability_facts(policy_basis_current=RequirementStatus.INDETERMINATE)
-        )
+        ).status
         is RoleContractApplicability.INDETERMINATE
     )
 
 
 def test_policy_selecting_another_contract_is_not_applicable() -> None:
+    other_ref = role_contract_ref(contract(role_key="evaluator"))
     assert (
         evaluate_role_contract_applicability(
-            applicability_facts(selection=ContractSelection.SELECTS_ANOTHER_CONTRACT)
-        )
+            applicability_facts(
+                selection=ContractSelection.SELECTS_ANOTHER_CONTRACT,
+                selected_role_contract_refs=(other_ref,),
+            )
+        ).status
         is RoleContractApplicability.NOT_APPLICABLE
     )
     assert (
         evaluate_role_contract_applicability(
             applicability_facts(contract_identity_valid=RequirementStatus.UNSATISFIED)
-        )
+        ).status
         is RoleContractApplicability.NOT_APPLICABLE
     )
     assert (
         evaluate_role_contract_applicability(
             applicability_facts(
                 selection=ContractSelection.SELECTS_ANOTHER_CONTRACT,
+                selected_role_contract_refs=(),
                 selection_source=None,
             )
-        )
+        ).status
         is RoleContractApplicability.INDETERMINATE
     )
+
+
+def test_applicability_binds_selection_to_one_exact_role_contract_ref() -> None:
+    contract_a = contract(role_key="implementer")
+    contract_b = contract(role_key="evaluator")
+    ref_a = role_contract_ref(contract_a)
+    ref_b = role_contract_ref(contract_b)
+
+    applicable_a = evaluate_role_contract_applicability(
+        applicability_facts(
+            evaluated_role_contract_ref=ref_a,
+            selected_role_contract_refs=(ref_a,),
+        )
+    )
+    assert applicable_a.role_contract_ref == ref_a
+    assert applicable_a.status is RoleContractApplicability.APPLICABLE
+    assert (
+        evaluate_role_action(
+            contract_b,
+            AGENT_A,
+            RoleAction.CONTEXT_READ,
+            applicability=applicable_a,
+        )
+        is RoleEligibility.INDETERMINATE
+    )
+
+    mismatched = evaluate_role_contract_applicability(
+        applicability_facts(
+            evaluated_role_contract_ref=ref_b,
+            selected_role_contract_refs=(ref_a,),
+        )
+    )
+    assert mismatched.role_contract_ref == ref_b
+    assert mismatched.status is RoleContractApplicability.NOT_APPLICABLE
+    assert (
+        evaluate_role_action(
+            contract_b,
+            AGENT_A,
+            RoleAction.CONTEXT_READ,
+            applicability=mismatched,
+        )
+        is RoleEligibility.INDETERMINATE
+    )
+
+    unresolved = evaluate_role_contract_applicability(
+        applicability_facts(selected_role_contract_refs=())
+    )
+    assert unresolved.status is RoleContractApplicability.INDETERMINATE
+    conflicting = evaluate_role_contract_applicability(
+        applicability_facts(selected_role_contract_refs=(ref_a, ref_b))
+    )
+    assert conflicting.status is RoleContractApplicability.INDETERMINATE
 
 
 def test_role_key_revision_digest_conflicts_are_fail_closed() -> None:
@@ -296,6 +393,58 @@ def test_protected_asset_permissions_do_not_imply_each_other() -> None:
             (), VerificationAssetPermission.MODIFY, classification_known=False
         )
         is RequirementStatus.INDETERMINATE
+    )
+
+
+@pytest.mark.parametrize(
+    "permission",
+    [VerificationAssetPermission.MODIFY, VerificationAssetPermission.APPROVE_MUTATION],
+)
+def test_mutation_and_approval_require_external_authority_status(
+    permission: VerificationAssetPermission,
+) -> None:
+    granted = (permission,)
+    assert (
+        evaluate_verification_asset_permission(granted, permission, classification_known=True)
+        is RequirementStatus.INDETERMINATE
+    )
+    assert (
+        evaluate_verification_asset_permission(
+            granted,
+            permission,
+            classification_known=True,
+            separate_authority_status=RequirementStatus.UNSATISFIED,
+        )
+        is RequirementStatus.UNSATISFIED
+    )
+    assert (
+        evaluate_verification_asset_permission(
+            granted,
+            permission,
+            classification_known=True,
+            separate_authority_status=RequirementStatus.INDETERMINATE,
+        )
+        is RequirementStatus.INDETERMINATE
+    )
+    assert (
+        evaluate_verification_asset_permission(
+            granted,
+            permission,
+            classification_known=True,
+            separate_authority_status=RequirementStatus.SATISFIED,
+        )
+        is RequirementStatus.SATISFIED
+    )
+
+
+def test_non_mutating_asset_permission_needs_no_separate_authority_fact() -> None:
+    assert (
+        evaluate_verification_asset_permission(
+            (VerificationAssetPermission.READ,),
+            VerificationAssetPermission.READ,
+            classification_known=True,
+        )
+        is RequirementStatus.SATISFIED
     )
 
 
