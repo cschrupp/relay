@@ -88,21 +88,22 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Human-accept the independently accepted B4 read-only harness under `RLY-S110-DOGFOOD-B4-HARNESS-IMPL-ACCEPT-001`.
 - [x] Authorize one exact B4 cold-start dogfood execution under `RLY-S110-DOGFOOD-B4-EXEC-AUTH-001`.
 - [x] Execute B4 attempt 001; record `RLY-S110-DOGFOOD-B4-EXEC-EVAL-001 — FAIL_CLOSED / NO ANSWER PHASE` after exact-checkout preflight mismatch.
-- [ ] **CURRENT — Complete independent semantic evaluation of sealed B4 Attempt 006 answers when the exact terminal-evidence packet is available.**
-- [x] Complete and accept Slice 2.2 design and implementation; prepare the accepted implementation for independent closure evaluation under `RLY-S22-CLOSE-AUTH-001`.
+- [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
+- [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
+- [ ] **CURRENT — Decide whether to open Slice 2.3 — Context / Work-Packet Contract.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
-- [ ] Design **B3 Forward Re-baseline and First Governed Work**.
-- [ ] Turn Human objectives + current codebase state into a prioritized continuation/refactor/rework plan.
-- [ ] Create acceptance criteria and dependencies only for future work that matters.
-- [ ] Open the first normal post-adoption Relay Slice.
+- [x] Design **B3 Forward Re-baseline and First Governed Work** and Human-accept the design.
+- [x] Turn Human objectives + current codebase state into the accepted B3 forward-governance plan.
+- [x] Create bounded acceptance criteria/dependencies through B3 and B4 without extending authoritative future work.
+- [x] Open and complete the first normal post-adoption Relay Slice: Slice 2.2 — Role Contracts.
 
 # DOGFOOD CHECKPOINT
 
 - [ ] When consequential SQLite execution tooling is next standardized or reused, replace the naive physical sidecar-absence check with a WAL-content-aware terminal verifier; do not reopen accepted B3 materialization for this hygiene fix.
-- [ ] Execute **B4 Relay Dogfood Acceptance** on Relay itself.
-- [ ] From a fresh checkout, run adoption without reconstructing project history in chat.
+- [x] Execute and Human-accept **B4 Relay Dogfood Acceptance** on Relay itself.
+- [x] From a fresh checkout, complete B4 cold-start recovery without reconstructing project history in chat.
 - [ ] Confirm the Human can identify CURRENT / NEXT / LATER / BLOCKED from Relay.
 - [ ] Confirm Relay—not conversation context—is sufficient to continue normal development.
 
