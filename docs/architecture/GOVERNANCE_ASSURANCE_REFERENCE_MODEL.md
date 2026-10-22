@@ -188,7 +188,7 @@ Pre-design opening with no implementation evaluation requirement is `NOT_APPLICA
 
 A Human should be able to understand, question, inspect, compare, defer, and decide. Optional `DecisionClarityFeedback` may be self-reported, for example a labelled five-point scale; it is not authority, evaluation, or objective evidence of understanding. Low clarity may improve explanation or invite questions/deferral without automatically invalidating or manufacturing authority [SRC-LITT-UNDERSTANDING-2026] [SRC-GOOGLE-NEW-SDLC-2026].
 
-Future Slice 1.9 Decision Cards/Q&A explain the selected profile/version, why it applies, risk/impact basis, Human decisions, evidence, separation, protected assets, mutation permissions, promotion predicates, and unknowns. They may explain permitted escalation/downgrade but cannot select or relax the profile. [Human Decision Support](HUMAN_DECISION_SUPPORT.md) describes that future interface; none is implemented here.
+Slice 1.9 Decision Cards/Q&A provide the accepted Human Decision Support surface for explaining the selected profile/version, why it applies, risk/impact basis, Human decisions, evidence, separation, protected assets, mutation permissions, promotion predicates, and unknowns. They may explain permitted escalation/downgrade but cannot select or relax the profile. [Human Decision Support](HUMAN_DECISION_SUPPORT.md) documents that implemented Slice 1.9 interface; this Governance Assurance reference model itself does not implement or grant that authority.
 
 ## 8. GovernanceProfile and prospective authority — D53–D56, RW1-D04
 
