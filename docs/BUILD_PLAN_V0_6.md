@@ -19,7 +19,7 @@ Phase 1 foundation:
 Slices 1.1–1.9                  COMPLETE / ACCEPTED / CLOSED
 
 Slice 1.10 core:
-Canonical source/promotion      IMPLEMENTED / HUMAN ACCEPTED
+Canonical source/promotion      OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Dogfood V1 control surface      COMPLETE / HUMAN ACCEPTED
 PG1 pre-genesis representation COMPLETE / HUMAN ACCEPTED
 B0 Rev3 design                  HUMAN ACCEPTED
@@ -353,11 +353,11 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 1.9  Human Decision Support and Governance Review Surface — COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
      -> future legibility and decision-scoped review design
 
-1.10 Canonical Source and Promotion Enforcement — PLANNED / NOT AUTHORIZED
-     -> make SCM/promotion enforcement match declared governance
+1.10 Canonical Source and Promotion Enforcement — OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE
+     -> canonical/promotion implementation exists; top-level Slice 1.10 closure is not established
 
-2.2  Role Contracts
-     -> define who may do what, with explicit non-authority
+2.2  Role Contracts — COMPLETE / ACCEPTED / CLOSED
+     -> accepted role-contract semantics; production Role Contract wiring remains unauthorized
 
 2.3  Context and Work-Packet Contract
      -> define exact authorized execution input
