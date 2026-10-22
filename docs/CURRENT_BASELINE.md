@@ -14,7 +14,7 @@ This is the controlling current-state summary. Older detailed records below rema
 ```text
 Core governance foundation:
 1.1–1.9                       COMPLETE / CLOSED
-1.10 canonical/promotion core HUMAN ACCEPTED
+1.10 canonical/promotion core OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
 2.1 Agent Runtime Contract    COMPLETE / CLOSED
 
 Dogfood/onboarding:
