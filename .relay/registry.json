@@ -2,67 +2,67 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0002-7000-8000-000000000138",
+      "artifact_id": "art_019a05b0-0002-7000-8000-000000000139",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:1fcc97893065e85dd2b609db51fbd99df5a75f8672ca2c7cbe7f334bfe144bf3",
+      "content_digest": "sha256:8baff7f9a201b0ef82cfcc0f2ad53d73da626f7584b6f6c0682b34b0a2654413",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 138,
+      "revision": 139,
       "schema_version": 1,
       "scope": "Current canonical build plan document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-22T18:44:48Z"
+      "updated_at": "2026-10-22T19:21:42Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0001-7000-8000-000000000147",
+      "artifact_id": "art_019a05b0-0001-7000-8000-000000000148",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:5305581b0446a594a5497a0d45e78a6056eb160b34eb1d21cb73fe08f17794e5",
+      "content_digest": "sha256:7980a585fac020188605a51860dde747ec432e1d3d6431b7701fc0ac1e133483",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 147,
+      "revision": 148,
       "schema_version": 1,
       "scope": "Current canonical current baseline document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-22T18:44:48Z"
+      "updated_at": "2026-10-22T19:21:42Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0004-7000-8000-000000000054",
+      "artifact_id": "art_019a05b0-0004-7000-8000-000000000055",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:1c21ed8893eb676b1ba19ec29f699171d8d4566627b129809a1eb99e0c975bc7",
+      "content_digest": "sha256:0f2301e5af5d6f1c8bc435c6c63889ce1beb1634313e3939edbe627e025aa585",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 54,
+      "revision": 55,
       "schema_version": 1,
       "scope": "Current canonical product and technical proposal.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product and Technical Proposal",
-      "updated_at": "2026-10-22T18:44:48Z"
+      "updated_at": "2026-10-22T19:21:42Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0003-7000-8000-000000000045",
+      "artifact_id": "art_019a05b0-0003-7000-8000-000000000046",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:157536bb5ae60492631a1a03d64ab7ba015883adec9bbbf514b951060453005b",
+      "content_digest": "sha256:fdd9d720f4f1fbf50a55cdca793f998dfb6b303cbc3c2e33e556abc1938649bb",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 45,
+      "revision": 46,
       "schema_version": 1,
       "scope": "Current human-readable Relay development execution checklist with NOW/NEXT/DOGFOOD/THEN and anti-drift controls.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-22T18:44:48Z"
+      "updated_at": "2026-10-22T19:21:42Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5030,8 +5030,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0002-7000-8000-000000000138",
-        "revision": 138,
+        "artifact_id": "art_019a05b0-0002-7000-8000-000000000139",
+        "revision": 139,
         "schema_version": 1
       }
     },
@@ -5039,8 +5039,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0001-7000-8000-000000000147",
-        "revision": 147,
+        "artifact_id": "art_019a05b0-0001-7000-8000-000000000148",
+        "revision": 148,
         "schema_version": 1
       }
     },
@@ -5066,8 +5066,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0004-7000-8000-000000000054",
-        "revision": 54,
+        "artifact_id": "art_019a05b0-0004-7000-8000-000000000055",
+        "revision": 55,
         "schema_version": 1
       }
     }

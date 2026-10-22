@@ -3,15 +3,15 @@
 **Purpose:** Human-readable execution checklist. Keep this file short.  
 **Rule:** if this list and the actual repository state disagree, update this list as part of the same governed increment.
 
-## Current Slice 2.3 closure-ready state
+## Current Slice 2.3 closed state
 
 ```text
-OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 Accepted Work-Packet implementation: 861ccb6bda528a98e1f570a32dcddc61358732e7
 Independent implementation evaluation: RLY-S23-IMPL-EVAL-002 — ACCEPT
 Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
 Closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Independent closure evaluation: RLY-S23-CLOSE-EVAL-001 — ACCEPT
 Production wiring, material resolver/storage, DB/lifecycle mutation, runtime execution, workspace enforcement: NOT AUTHORIZED
 Slice 2.4: NOT OPEN / NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
@@ -88,7 +88,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Execute B4 attempt 001; record `RLY-S110-DOGFOOD-B4-EXEC-EVAL-001 — FAIL_CLOSED / NO ANSWER PHASE` after exact-checkout preflight mismatch.
 - [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
-- [ ] **CURRENT — Obtain independent closure evaluation of the Slice 2.3 closure-ready candidate.**
+- [ ] **CURRENT — Human decision whether to open Slice 2.4 — Execution Workspace Authority.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
@@ -110,7 +110,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [ ] Formalize and implement **authorized-work exhaustion** across Role Contracts / Work Packets / Execution Workspace / Phase 3: executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly promoted.
 
 - [x] Slice 2.2 — Role Contracts COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
-- [x] Slice 2.3 implementation — Context and Work-Packet Contract is technically accepted and closure-ready; independent closure evaluation is pending.
+- [x] Slice 2.3 — Context and Work-Packet Contract COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`.
 - [ ] Slice 2.4 — Execution Workspace Authority.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable.
 
