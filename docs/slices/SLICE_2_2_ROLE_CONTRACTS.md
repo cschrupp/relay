@@ -8,7 +8,8 @@
 **Document revision:** 1  
 **Opening authority:** `RLY-S22-OPEN-001 — OPEN`  
 **Design authority:** `RLY-S22-DESIGN-AUTH-001 — AUTHORIZED`  
-**Exact design-authority baseline:** `e7d3ab657f72f551fd046daa668bc646c6e2b389`  
+**Exact design subject baseline:** `00214852ba7d603ce06121707f3e79606345b07f`  
+**Design-authority commit:** `e7d3ab657f72f551fd046daa668bc646c6e2b389`  
 **Design branch:** `design/2.2-role-contracts`  
 **Implementation authorization:** NOT GRANTED
 
