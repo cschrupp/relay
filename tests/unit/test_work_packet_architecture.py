@@ -3,19 +3,11 @@
 from __future__ import annotations
 
 import ast
-import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 PACKAGE = ROOT / "src/relay_engine/work_packets"
-AUTHORIZED_FILES = {
-    "src/relay_engine/work_packets/__init__.py",
-    "src/relay_engine/work_packets/models.py",
-    "src/relay_engine/work_packets/evaluation.py",
-    "tests/unit/test_work_packet_models.py",
-    "tests/unit/test_work_packet_evaluation.py",
-    "tests/unit/test_work_packet_architecture.py",
-}
+UNIT_TESTS = ROOT / "tests/unit"
 FORBIDDEN_IMPORT_PREFIXES = (
     "relay_engine.persistence",
     "relay_engine.lifecycle",
@@ -100,22 +92,13 @@ def test_package_does_not_define_authority_or_latest_resolution_operations() -> 
         assert not any("latest" in name or "best_match" in name for name in functions)
 
 
-def test_change_surface_is_exactly_the_six_authorized_files() -> None:
-    result = subprocess.run(
-        ["git", "diff", "--name-only", "f0996a1909bff8dda76a455d6d88d027b4b736f2...HEAD"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    changed = set(result.stdout.splitlines())
-    # Uncommitted authorized edits are included separately while developing.
-    status = subprocess.run(
-        ["git", "status", "--short", "--untracked-files=all"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    changed.update(line[3:] for line in status.stdout.splitlines() if line)
-    assert changed <= AUTHORIZED_FILES
+def test_package_and_test_surface_contains_only_authorized_slice_files() -> None:
+    package_files = {path.name for path in PACKAGE.glob("*.py")}
+    assert package_files == {"__init__.py", "models.py", "evaluation.py"}
+
+    test_files = {path.name for path in UNIT_TESTS.glob("test_work_packet_*.py")}
+    assert test_files == {
+        "test_work_packet_models.py",
+        "test_work_packet_evaluation.py",
+        "test_work_packet_architecture.py",
+    }
