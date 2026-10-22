@@ -18,10 +18,12 @@ Phase 1:                  ACCEPTED BASELINE / HARDENING ACTIVE
 Slices 1.1-1.7:           COMPLETE / ACCEPTED / CLOSED
 Phase 1 M0 viability:     ACCEPTED / HUMAN-ACCEPTED
 Slice 1.8:                COMPLETE / ACCEPTED / CLOSED
-Slice 1.9:                OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Slice 1.9:                COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT
                           RLY-S19-EVAL-003 — ACCEPT; RLY-S19-ACCEPT-001 — ACCEPTED
-                          RLY-S19-CLOSE-AUTH-001 — AUTHORIZED; closure evaluation PENDING
-Slice 1.10:               Canonical Source / Promotion — PLANNED / NOT OPEN / NOT AUTHORIZED
+                          RLY-S19-CLOSE-AUTH-001 — AUTHORIZED; RLY-S19-CLOSE-EVAL-002 — ACCEPT
+Slice 1.10:               Canonical Source / Promotion — OPEN
+                          RLY-S110-DESIGN-ACCEPT-001 — ACCEPTED; RLY-S110-IMPL-AUTH-001 — AUTHORIZED
+                          Dogfood B4 COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 Phase 2:                  OPEN
 Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
 Slice 2.2:                COMPLETE / ACCEPTED / CLOSED — RLY-S22-CLOSE-EVAL-001 — ACCEPT
@@ -89,8 +91,8 @@ See `docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md` and `docs/refere
 ```text
 Phase 1 — Deterministic Governance Foundation
   1.8 Governance Assurance Reference Model        COMPLETE / ACCEPTED / CLOSED
-  1.9 Human Decision Support & Governance Review  CLOSURE-READY; independent closure evaluation PENDING
-  1.10 Canonical Source and Promotion Enforcement PLANNED / NOT AUTHORIZED
+  1.9 Human Decision Support & Governance Review  COMPLETE / ACCEPTED / CLOSED
+  1.10 Canonical Source and Promotion Enforcement OPEN; design accepted / implementation authorized; B4 complete
 
 Phase 2 - provider and agent foundation
   2.1 Agent Runtime Contract                      CLOSED
@@ -131,7 +133,7 @@ main protected = false
 repository rulesets = []
 ```
 
-Those facts remain historical design input for planned Slice 1.10. They do not authorize repository-settings changes.
+Those facts remain historical design input for Slice 1.10. Slice 1.10 is now open under separate accepted-design and implementation authority; those historical facts do not themselves authorize repository-settings changes.
 
 ## Canonical documentation
 
