@@ -26,7 +26,7 @@ from relay_engine.domain.ids import (
     SliceResultId,
 )
 from relay_engine.domain.models import Artifact, Baseline, Decision, Evidence, Project, Slice
-from relay_engine.domain.references import ActorRef
+from relay_engine.domain.references import ActorKind, ActorRef
 from relay_engine.governance import (
     AuthorizationGrant,
     GateEvaluation,
@@ -57,6 +57,32 @@ from relay_engine.persistence.errors import (
     PersistenceIntegrityError,
 )
 from relay_engine.persistence.records import ExecutionRecord, GateEvaluationRecord
+from relay_engine.project_slice.origin import (
+    NativeRelayOriginProofV1,
+    OperationalHistoryEpochResolution,
+    OperationalHistoryEpochV1,
+    OperationalOrigin,
+    OperationalOriginRecordV1,
+    OriginDiagnosticCode,
+    OriginRecordKind,
+    OriginResolutionState,
+    OriginSubjectType,
+    PreGenesisOriginProofV1,
+    definition_payload_digest,
+    epoch_resolution_not_established,
+    operational_history_epoch_digest,
+    operational_origin_record_digest,
+    resolve_origin_chain,
+)
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionPolicyBindingV1,
+    CanonicalPromotionReconciliationV1,
+    RepositoryPromotionIntentV1,
+    RepositoryPromotionResultV1,
+    binding_digest,
+    canonical_policy_binding_subject_digest,
+)
 from relay_engine.repository_sync.models import RepositoryMutationAuthorization
 
 _EVENT_ADAPTER: TypeAdapter[LifecycleEvent] = TypeAdapter(LifecycleEvent)
@@ -692,26 +718,41 @@ def persist_lifecycle_initialization(
     """Atomically establish the absent lifecycle projection and revision-zero event."""
 
     with _write(database) as connection:
-        current, events = _load_current_and_history(connection, initial_lifecycle.slice_id)
-        if current is not None or events:
-            if current is not None and events:
-                raise ConcurrencyConflict("lifecycle is already initialized")
-            raise PersistenceIntegrityError("lifecycle initialization is only partially durable")
-        if initial_lifecycle.revision != 0:
-            raise PersistenceIntegrityError("lifecycle initialization must start at revision zero")
-        if (
-            initialized_event.slice_id != initial_lifecycle.slice_id
-            or initialized_event.resulting_revision != 0
-        ):
-            raise PersistenceIntegrityError("initialization event does not identify revision zero")
-        try:
-            replayed = replay_lifecycle((initialized_event,))
-        except LifecycleReplayError as error:
-            raise PersistenceIntegrityError("initialization event is not replayable") from error
-        if replayed != initial_lifecycle:
-            raise PersistenceIntegrityError(
-                "initialization event does not produce supplied snapshot"
-            )
+        persist_lifecycle_initialization_from_connection(
+            connection,
+            initial_lifecycle,
+            initialized_event,
+        )
+
+
+def persist_lifecycle_initialization_from_connection(
+    connection: sqlite3.Connection,
+    initial_lifecycle: SliceLifecycle,
+    initialized_event: LifecycleInitialized,
+) -> None:
+    """Persist revision-zero lifecycle state inside a caller-owned transaction."""
+
+    if not connection.in_transaction:
+        raise PersistenceError("lifecycle initialization requires an active transaction")
+    current, events = _load_current_and_history(connection, initial_lifecycle.slice_id)
+    if current is not None or events:
+        if current is not None and events:
+            raise ConcurrencyConflict("lifecycle is already initialized")
+        raise PersistenceIntegrityError("lifecycle initialization is only partially durable")
+    if initial_lifecycle.revision != 0:
+        raise PersistenceIntegrityError("lifecycle initialization must start at revision zero")
+    if (
+        initialized_event.slice_id != initial_lifecycle.slice_id
+        or initialized_event.resulting_revision != 0
+    ):
+        raise PersistenceIntegrityError("initialization event does not identify revision zero")
+    try:
+        replayed = replay_lifecycle((initialized_event,))
+    except LifecycleReplayError as error:
+        raise PersistenceIntegrityError("initialization event is not replayable") from error
+    if replayed != initial_lifecycle:
+        raise PersistenceIntegrityError("initialization event does not produce supplied snapshot")
+    try:
         _insert_event(connection, initialized_event)
         connection.execute(
             "INSERT INTO lifecycle_current(slice_id, revision, payload_json) VALUES (?, ?, ?)",
@@ -721,6 +762,10 @@ def persist_lifecycle_initialization(
                 _canonical_json(initial_lifecycle),
             ),
         )
+    except sqlite3.IntegrityError as error:
+        raise PersistenceIntegrityError(
+            "durable uniqueness or reference constraint failed"
+        ) from error
 
 
 def persist_lifecycle_change(
@@ -1018,6 +1063,759 @@ def load_repository_mutation_authorization(
             },
         ),
     )
+
+
+def _parse_operational_history_epoch(row: sqlite3.Row) -> OperationalHistoryEpochV1:
+    try:
+        epoch = OperationalHistoryEpochV1.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("stored operational-history epoch is invalid") from error
+    indexed = {
+        "epoch_slot": 1,
+        "epoch_id": epoch.epoch_id,
+        "genesis_cut_at": _datetime_text(epoch.genesis_cut_at),
+        "source_commit_sha": epoch.source_commit.sha,
+        "genesis_package_artifact_id": epoch.genesis_package_artifact_id,
+        "genesis_package_path": epoch.genesis_package_path,
+        "genesis_package_digest": epoch.genesis_package_digest,
+        "package_acceptance_artifact_id": epoch.package_acceptance_artifact_id,
+        "package_acceptance_digest": epoch.package_acceptance_digest,
+        "epoch_digest": epoch.epoch_digest,
+    }
+    if any(row[column] != value for column, value in indexed.items()):
+        raise PersistenceIntegrityError(
+            "operational-history epoch columns disagree with the immutable payload"
+        )
+    if epoch.epoch_digest != operational_history_epoch_digest(epoch):
+        raise PersistenceIntegrityError("operational-history epoch digest is invalid")
+    return epoch
+
+
+def load_operational_history_epoch_resolution_from_connection(
+    connection: sqlite3.Connection,
+) -> OperationalHistoryEpochResolution:
+    """Validate the unique database-wide epoch without inferring a missing value."""
+
+    rows = connection.execute(
+        "SELECT * FROM operational_history_epochs ORDER BY epoch_id"
+    ).fetchall()
+    record_ids = tuple(str(row["epoch_id"]) for row in rows)
+    if len(rows) != 1:
+        return epoch_resolution_not_established(
+            OriginDiagnosticCode.EPOCH_NOT_ESTABLISHED,
+            record_ids,
+        )
+    try:
+        epoch = _parse_operational_history_epoch(rows[0])
+    except PersistenceIntegrityError:
+        return epoch_resolution_not_established(
+            OriginDiagnosticCode.EPOCH_NOT_ESTABLISHED,
+            record_ids,
+        )
+    return OperationalHistoryEpochResolution(
+        state=OriginResolutionState.ESTABLISHED,
+        epoch=epoch,
+        diagnostic=None,
+        record_ids=(epoch.epoch_id,),
+    )
+
+
+def load_operational_history_epoch_resolution(
+    database: RelayDatabase,
+) -> OperationalHistoryEpochResolution:
+    """Load the read-only epoch result from the caller-owned database."""
+
+    return _read(database, load_operational_history_epoch_resolution_from_connection)
+
+
+def _insert_operational_history_epoch_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalHistoryEpochV1,
+) -> None:
+    connection.execute(
+        """INSERT INTO operational_history_epochs(
+            epoch_slot, epoch_id, genesis_cut_at, source_commit_sha,
+            genesis_package_artifact_id, genesis_package_path, genesis_package_digest,
+            package_acceptance_artifact_id, package_acceptance_digest, epoch_digest, payload_json
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            value.epoch_id,
+            _datetime_text(value.genesis_cut_at),
+            value.source_commit.sha,
+            value.genesis_package_artifact_id,
+            value.genesis_package_path,
+            value.genesis_package_digest,
+            value.package_acceptance_artifact_id,
+            value.package_acceptance_digest,
+            value.epoch_digest,
+            _canonical_json(value),
+        ),
+    )
+
+
+def materialize_accepted_operational_history_epoch(
+    database: RelayDatabase,
+    value: OperationalHistoryEpochV1,
+) -> None:
+    """Materialize one exact B0-accepted epoch descriptor; never replace an anchor.
+
+    The later B0 importer must validate the package and acceptance artifacts before
+    calling this narrow persistence seam. This function only materializes the exact
+    typed descriptor and enforces the database singleton.
+    """
+
+    try:
+        value = OperationalHistoryEpochV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("accepted operational-history epoch is invalid") from error
+    with _write(database) as connection:
+        current = load_operational_history_epoch_resolution_from_connection(connection)
+        if current.state is not OriginResolutionState.NOT_ESTABLISHED:
+            raise PersistenceIntegrityError("operational-history epoch is already established")
+        if current.record_ids:
+            raise PersistenceIntegrityError("operational-history epoch history is invalid")
+        _insert_operational_history_epoch_from_connection(connection, value)
+
+
+def _parse_operational_origin_record(row: sqlite3.Row) -> OperationalOriginRecordV1:
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("stored operational-origin record is invalid") from error
+    indexed = {
+        "record_id": value.record_id,
+        "subject_type": value.subject_type.value,
+        "subject_id": value.subject_id,
+        "project_id": value.project_id,
+        "record_kind": value.record_kind.value,
+        "origin": value.origin.value,
+        "epoch_id": value.epoch_id,
+        "epoch_digest": value.epoch_digest,
+        "supersedes_record_id": value.supersedes_record_id,
+        "supersedes_record_digest": value.supersedes_record_digest,
+        "recorded_at": _datetime_text(value.recorded_at),
+        "recorded_by_json": _canonical_json(value.recorded_by),
+        "establishing_authority_id": value.establishing_authority_id,
+        "correction_authorization_id": value.correction_authorization_id,
+        "correction_authorization_digest": value.correction_authorization_digest,
+        "rationale": value.rationale,
+        "record_digest": value.record_digest,
+    }
+    if any(row[column] != expected for column, expected in indexed.items()):
+        raise PersistenceIntegrityError(
+            "operational-origin indexed columns disagree with the immutable payload"
+        )
+    if value.record_digest != operational_origin_record_digest(value):
+        raise PersistenceIntegrityError("operational-origin record digest is invalid")
+    return value
+
+
+def load_operational_origin_records_from_connection(
+    connection: sqlite3.Connection,
+    *,
+    subject_type: OriginSubjectType,
+    subject_id: str,
+) -> tuple[OperationalOriginRecordV1, ...]:
+    """Load and integrity-check all records for one exact Project/Slice subject."""
+
+    rows = connection.execute(
+        "SELECT * FROM operational_origin_records WHERE subject_type = ? AND subject_id = ? "
+        "ORDER BY record_id",
+        (subject_type.value, subject_id),
+    ).fetchall()
+    return tuple(_parse_operational_origin_record(row) for row in rows)
+
+
+def load_operational_origin_records(
+    database: RelayDatabase,
+    *,
+    subject_type: OriginSubjectType,
+    subject_id: str,
+) -> tuple[OperationalOriginRecordV1, ...]:
+    """Load exact origin history for a single subject."""
+
+    return _read(
+        database,
+        lambda connection: load_operational_origin_records_from_connection(
+            connection,
+            subject_type=subject_type,
+            subject_id=subject_id,
+        ),
+    )
+
+
+def _insert_operational_origin_record_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    connection.execute(
+        """INSERT INTO operational_origin_records(
+            record_id, subject_type, subject_id, project_id, record_kind, origin,
+            epoch_id, epoch_digest, supersedes_record_id, supersedes_record_digest,
+            recorded_at, recorded_by_json, establishing_authority_id,
+            correction_authorization_id, correction_authorization_digest, rationale,
+            record_digest, payload_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            value.record_id,
+            value.subject_type.value,
+            value.subject_id,
+            value.project_id,
+            value.record_kind.value,
+            value.origin.value,
+            value.epoch_id,
+            value.epoch_digest,
+            value.supersedes_record_id,
+            value.supersedes_record_digest,
+            _datetime_text(value.recorded_at),
+            _canonical_json(value.recorded_by),
+            value.establishing_authority_id,
+            value.correction_authorization_id,
+            value.correction_authorization_digest,
+            value.rationale,
+            value.record_digest,
+            _canonical_json(value),
+        ),
+    )
+
+
+def append_native_origin_for_creation_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append NATIVE_RELAY only beside its exact normal CREATE revision."""
+
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("NATIVE_RELAY origin record is invalid") from error
+    if (
+        value.record_kind is not OriginRecordKind.INITIAL
+        or value.origin is not OperationalOrigin.NATIVE_RELAY
+        or not isinstance(value.proof, NativeRelayOriginProofV1)
+    ):
+        raise PersistenceIntegrityError("Relay CREATE may append NATIVE_RELAY only")
+
+    epoch_resolution = load_operational_history_epoch_resolution_from_connection(connection)
+    epoch = epoch_resolution.epoch
+    if (
+        epoch_resolution.state is not OriginResolutionState.ESTABLISHED
+        or epoch is None
+        or value.epoch_id != epoch.epoch_id
+        or value.epoch_digest != epoch.epoch_digest
+        or value.proof.created_at <= epoch.genesis_cut_at
+        or value.recorded_at != value.proof.created_at
+        or value.recorded_by != value.proof.actor
+        or value.proof.actor.kind is not ActorKind.HUMAN
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY origin does not match the current epoch")
+
+    proof = value.proof
+    subject_name = "project" if value.subject_type is OriginSubjectType.PROJECT else "slice"
+    if value.establishing_authority_id != (
+        f"{subject_name}_definition_revisions/{value.subject_id}/1"
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY CREATE reference is not exact")
+    table = (
+        "project_definition_revisions"
+        if subject_name == "project"
+        else "slice_definition_revisions"
+    )
+    id_column = "project_id" if subject_name == "project" else "slice_id"
+    row = connection.execute(
+        f"SELECT operation, payload_json, actor_json, occurred_at, reason FROM {table} "
+        f"WHERE {id_column} = ? AND definition_revision = 1",
+        (value.subject_id,),
+    ).fetchone()
+    if row is None or row["operation"] != "CREATE":
+        raise PersistenceIntegrityError("NATIVE_RELAY origin has no exact CREATE revision")
+    model_type = Project if value.subject_type is OriginSubjectType.PROJECT else Slice
+    try:
+        created_value = model_type.model_validate_json(cast(str, row["payload_json"]))
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("CREATE revision payload is invalid") from error
+    if (
+        definition_payload_digest(created_value) != proof.creation_payload_digest
+        or row["actor_json"] != _canonical_json(proof.actor)
+        or row["occurred_at"] != _datetime_text(proof.created_at)
+        or row["reason"] != proof.reason
+        or (isinstance(created_value, Project) and value.project_id != created_value.id)
+        or (isinstance(created_value, Slice) and value.project_id != created_value.project_id)
+    ):
+        raise PersistenceIntegrityError("NATIVE_RELAY proof disagrees with exact CREATE evidence")
+    prior = connection.execute(
+        "SELECT 1 FROM operational_origin_records WHERE subject_type = ? AND subject_id = ?",
+        (value.subject_type.value, value.subject_id),
+    ).fetchone()
+    if prior is not None:
+        raise PersistenceIntegrityError("NATIVE_RELAY subject already has origin history")
+    _insert_operational_origin_record_from_connection(connection, value)
+
+
+def materialize_pre_genesis_origin_from_connection(
+    connection: sqlite3.Connection,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append one B0-validated PRE_GENESIS record through a narrow persistence seam.
+
+    The caller must be the later authorized B0 importer and must have validated the
+    exact accepted genesis package, snapshot, and their acceptance records.
+    """
+
+    try:
+        value = OperationalOriginRecordV1.model_validate_json(value.model_dump_json())
+    except (ValidationError, ValueError, TypeError) as error:
+        raise PersistenceIntegrityError("PRE_GENESIS origin record is invalid") from error
+    if value.record_kind is not OriginRecordKind.INITIAL or not isinstance(
+        value.proof, PreGenesisOriginProofV1
+    ):
+        raise PersistenceIntegrityError("B0 materialization accepts initial PRE_GENESIS only")
+    epoch_resolution = load_operational_history_epoch_resolution_from_connection(connection)
+    epoch = epoch_resolution.epoch
+    if (
+        epoch_resolution.state is not OriginResolutionState.ESTABLISHED
+        or epoch is None
+        or value.epoch_id != epoch.epoch_id
+        or value.epoch_digest != epoch.epoch_digest
+        or value.proof.source_commit != epoch.source_commit
+        or value.proof.package_acceptance_artifact_id != epoch.package_acceptance_artifact_id
+        or value.proof.package_acceptance_digest != epoch.package_acceptance_digest
+        or value.recorded_at < epoch.genesis_cut_at
+        or value.recorded_by.kind is not ActorKind.HUMAN
+        or value.establishing_authority_id != value.proof.package_acceptance_artifact_id
+    ):
+        raise PersistenceIntegrityError("PRE_GENESIS record is not bound to the exact epoch")
+    if value.subject_type is OriginSubjectType.PROJECT:
+        if (
+            value.subject_id != value.project_id
+            or connection.execute(
+                "SELECT 1 FROM projects WHERE id = ?", (value.project_id,)
+            ).fetchone()
+            is None
+        ):
+            raise PersistenceIntegrityError("PRE_GENESIS Project subject is missing or mismatched")
+    else:
+        row = connection.execute(
+            "SELECT project_id FROM slices WHERE id = ?", (value.subject_id,)
+        ).fetchone()
+        if row is None or row["project_id"] != value.project_id:
+            raise PersistenceIntegrityError("PRE_GENESIS Slice subject is missing or mismatched")
+        project_records = load_operational_origin_records_from_connection(
+            connection,
+            subject_type=OriginSubjectType.PROJECT,
+            subject_id=value.project_id,
+        )
+        project_origin = resolve_origin_chain(
+            project_records,
+            subject_type=OriginSubjectType.PROJECT,
+            subject_id=value.project_id,
+            project_id=value.project_id,
+            epoch_resolution=epoch_resolution,
+            creation_revision=None,
+        )
+        if (
+            project_origin.state is not OriginResolutionState.ESTABLISHED
+            or project_origin.origin is not OperationalOrigin.PRE_GENESIS
+        ):
+            raise PersistenceIntegrityError(
+                "PRE_GENESIS Slice requires an independently materialized PRE_GENESIS Project"
+            )
+    _insert_operational_origin_record_from_connection(connection, value)
+
+
+def materialize_pre_genesis_origin(
+    database: RelayDatabase,
+    value: OperationalOriginRecordV1,
+) -> None:
+    """Append one B0-validated initial PRE_GENESIS origin record."""
+
+    with _write(database) as connection:
+        materialize_pre_genesis_origin_from_connection(connection, value)
+
+
+def insert_canonical_promotion_policy_binding(
+    database: RelayDatabase, value: CanonicalPromotionPolicyBindingV1
+) -> None:
+    """Append one immutable exact canonical-ref policy-binding revision."""
+
+    with _write(database) as connection:
+        insert_canonical_promotion_policy_binding_from_connection(connection, value)
+
+
+def insert_canonical_promotion_policy_binding_from_connection(
+    connection: sqlite3.Connection,
+    value: CanonicalPromotionPolicyBindingV1,
+) -> None:
+    """Append one immutable binding row inside a caller-owned transaction."""
+
+    _insert_payload(
+        connection,
+        "canonical_promotion_policy_bindings",
+        "binding_id",
+        value.binding_id,
+        value,
+        {
+            "project_id": value.project_id,
+            "repository_id": value.repository.id,
+            "canonical_ref": value.canonical_ref,
+            "revision": value.revision,
+            "state": value.state.value,
+            "policy_digest": value.policy_digest,
+            "authorization_id": value.authorization_id,
+            "supersedes_binding_id": value.supersedes_binding_id,
+            "bound_at": _datetime_text(value.bound_at),
+        },
+    )
+
+
+def load_canonical_promotion_policy_bindings(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[CanonicalPromotionPolicyBindingV1, ...]:
+    """Load and validate the unique linear binding history for one exact ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionPolicyBindingV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM canonical_promotion_policy_bindings "
+            "WHERE project_id = ? AND repository_id = ? AND canonical_ref = ? "
+            "ORDER BY revision, binding_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        values = tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionPolicyBindingV1,
+                {
+                    "binding_id": "binding_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "revision": "revision",
+                    "state": "state",
+                    "policy_digest": "policy_digest",
+                    "authorization_id": "authorization_id",
+                    "supersedes_binding_id": "supersedes_binding_id",
+                },
+            )
+            for row in rows
+        )
+        for expected_revision, value in enumerate(values, start=1):
+            expected_parent = (
+                None if expected_revision == 1 else values[expected_revision - 2].binding_id
+            )
+            if (
+                value.revision != expected_revision
+                or value.supersedes_binding_id != expected_parent
+            ):
+                raise PersistenceIntegrityError("canonical policy binding history is not linear")
+            if value.repository.id != repository_id:
+                raise PersistenceIntegrityError("canonical policy binding identity is invalid")
+            prior = None if expected_revision == 1 else values[expected_revision - 2]
+            transition_subject = CanonicalPolicyBindingSubjectV1(
+                project_id=value.project_id,
+                repository=value.repository,
+                canonical_ref=value.canonical_ref,
+                expected_current_binding_id=None if prior is None else prior.binding_id,
+                expected_current_revision=0 if prior is None else prior.revision,
+                expected_current_binding_digest=None if prior is None else binding_digest(prior),
+                target_revision=value.revision,
+                target_state=value.state,
+                target_policy=value.policy,
+                target_policy_digest=value.policy_digest,
+            )
+            authorization = load_repository_mutation_authorization(database, value.authorization_id)
+            if (
+                authorization is None
+                or authorization.actor.kind.value != "HUMAN"
+                or authorization.project_id != value.project_id
+                or authorization.subject != transition_subject
+                or authorization.subject_digest
+                != canonical_policy_binding_subject_digest(transition_subject)
+            ):
+                raise PersistenceIntegrityError(
+                    "binding transition lacks its exact durable Human authorization"
+                )
+        return values
+
+    return _read(database, read)
+
+
+def insert_repository_promotion_intent(
+    database: RelayDatabase, value: RepositoryPromotionIntentV1
+) -> None:
+    """Commit immutable pre-write evidence for one exact promotion attempt."""
+
+    with _write(database) as connection:
+        unresolved = connection.execute(
+            "SELECT 1 FROM repository_promotion_intents intent "
+            "LEFT JOIN repository_promotion_results result "
+            "ON result.promotion_id = intent.promotion_id "
+            "WHERE intent.project_id = ? AND intent.canonical_ref = ? "
+            "AND intent.subject_digest = ? AND result.promotion_id IS NULL LIMIT 1",
+            (value.project_id, value.canonical_ref, value.subject_digest),
+        ).fetchone()
+        if unresolved is not None:
+            raise PersistenceIntegrityError(
+                "an unresolved intent already exists for the exact promotion subject"
+            )
+        _insert_payload(
+            connection,
+            "repository_promotion_intents",
+            "promotion_id",
+            value.promotion_id,
+            value,
+            {
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "subject_digest": value.subject_digest,
+                "expected_parent_sha": value.expected_parent.sha,
+                "target_sha": value.target_commit.sha,
+                "created_at": _datetime_text(value.created_at),
+            },
+        )
+
+
+def load_repository_promotion_intent(
+    database: RelayDatabase, promotion_id: str
+) -> RepositoryPromotionIntentV1 | None:
+    return _read(
+        database,
+        lambda connection: _read_one(
+            connection,
+            "repository_promotion_intents",
+            "promotion_id",
+            promotion_id,
+            RepositoryPromotionIntentV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "subject_digest": "subject_digest",
+                "expected_parent_sha": "expected_parent.sha",
+                "target_sha": "target_commit.sha",
+                "created_at": "created_at",
+            },
+        ),
+    )
+
+
+def load_unresolved_repository_promotion_intent_for_subject(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    canonical_ref: str,
+    subject_digest: str,
+) -> RepositoryPromotionIntentV1 | None:
+    """Find the unique unresolved intent for an exact promotion subject."""
+
+    def read(connection: sqlite3.Connection) -> RepositoryPromotionIntentV1 | None:
+        rows = connection.execute(
+            "SELECT intent.* FROM repository_promotion_intents intent "
+            "LEFT JOIN repository_promotion_results result "
+            "ON result.promotion_id = intent.promotion_id "
+            "WHERE intent.project_id = ? AND intent.canonical_ref = ? "
+            "AND intent.subject_digest = ? AND result.promotion_id IS NULL "
+            "ORDER BY intent.promotion_id LIMIT 2",
+            (project_id, canonical_ref, subject_digest),
+        ).fetchall()
+        if len(rows) > 1:
+            raise PersistenceIntegrityError(
+                "multiple unresolved intents exist for the exact promotion subject"
+            )
+        if not rows:
+            return None
+        return _parse_payload(
+            rows[0],
+            RepositoryPromotionIntentV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "subject_digest": "subject_digest",
+                "expected_parent_sha": "expected_parent.sha",
+                "target_sha": "target_commit.sha",
+                "created_at": "created_at",
+            },
+        )
+
+    return _read(database, read)
+
+
+def insert_repository_promotion_result(
+    database: RelayDatabase, value: RepositoryPromotionResultV1
+) -> None:
+    """Append the one terminal observed result for an exact promotion intent."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_promotion_results",
+            "promotion_id",
+            value.promotion_id,
+            value,
+            {
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "target_sha": value.target_commit.sha,
+                "outcome": value.outcome.value,
+                "observed_at": _datetime_text(value.observed_at),
+            },
+        )
+
+
+def load_repository_promotion_result(
+    database: RelayDatabase, promotion_id: str
+) -> RepositoryPromotionResultV1 | None:
+    return _read(
+        database,
+        lambda connection: _read_one(
+            connection,
+            "repository_promotion_results",
+            "promotion_id",
+            promotion_id,
+            RepositoryPromotionResultV1,
+            {
+                "promotion_id": "promotion_id",
+                "project_id": "project_id",
+                "repository_id": "repository.id",
+                "canonical_ref": "canonical_ref",
+                "target_sha": "target_commit.sha",
+                "outcome": "outcome",
+                "observed_at": "observed_at",
+            },
+        ),
+    )
+
+
+def load_repository_promotion_results_for_ref(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[RepositoryPromotionResultV1, ...]:
+    """Load terminal promotion evidence for one exact canonical ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[RepositoryPromotionResultV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_results WHERE project_id = ? "
+            "AND repository_id = ? AND canonical_ref = ? ORDER BY promotion_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                RepositoryPromotionResultV1,
+                {
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
+                    "outcome": "outcome",
+                    "observed_at": "observed_at",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
+
+
+def insert_canonical_promotion_reconciliation(
+    database: RelayDatabase, value: CanonicalPromotionReconciliationV1
+) -> None:
+    """Append an exact Human-authorized reconciliation without provider writes."""
+
+    with _write(database) as connection:
+        _insert_payload(
+            connection,
+            "repository_promotion_reconciliations",
+            "reconciliation_id",
+            value.reconciliation_id,
+            value,
+            {
+                "promotion_id": value.promotion_id,
+                "project_id": value.project_id,
+                "repository_id": value.repository.id,
+                "canonical_ref": value.canonical_ref,
+                "target_sha": value.target_commit.sha,
+                "authorization_id": value.authorization_id,
+                "reconciled_at": _datetime_text(value.reconciled_at),
+            },
+        )
+
+
+def load_canonical_promotion_reconciliations(
+    database: RelayDatabase, promotion_id: str
+) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_reconciliations "
+            "WHERE promotion_id = ? ORDER BY reconciliation_id",
+            (promotion_id,),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionReconciliationV1,
+                {
+                    "reconciliation_id": "reconciliation_id",
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
+                    "authorization_id": "authorization_id",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
+
+
+def load_canonical_promotion_reconciliations_for_ref(
+    database: RelayDatabase,
+    *,
+    project_id: ProjectId,
+    repository_id: str,
+    canonical_ref: str,
+) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+    """Load exact reconciliation evidence for one canonical ref."""
+
+    def read(connection: sqlite3.Connection) -> tuple[CanonicalPromotionReconciliationV1, ...]:
+        rows = connection.execute(
+            "SELECT * FROM repository_promotion_reconciliations WHERE project_id = ? "
+            "AND repository_id = ? AND canonical_ref = ? ORDER BY promotion_id",
+            (project_id, repository_id, canonical_ref),
+        ).fetchall()
+        return tuple(
+            _parse_payload(
+                row,
+                CanonicalPromotionReconciliationV1,
+                {
+                    "reconciliation_id": "reconciliation_id",
+                    "promotion_id": "promotion_id",
+                    "project_id": "project_id",
+                    "repository_id": "repository.id",
+                    "canonical_ref": "canonical_ref",
+                    "target_sha": "target_commit.sha",
+                    "authorization_id": "authorization_id",
+                    "reconciled_at": "reconciled_at",
+                },
+            )
+            for row in rows
+        )
+
+    return _read(database, read)
 
 
 def insert_human_decision(database: RelayDatabase, value: HumanGateDecision) -> None:

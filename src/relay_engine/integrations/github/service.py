@@ -41,10 +41,12 @@ from relay_engine.integrations.github.webhooks import (
 
 _READ_PERMISSIONS = {
     "contents": GitHubPermissionLevel.READ,
+    "checks": GitHubPermissionLevel.READ,
     "metadata": GitHubPermissionLevel.READ,
 }
 _WRITE_PERMISSIONS = {
     "contents": GitHubPermissionLevel.WRITE,
+    "checks": GitHubPermissionLevel.READ,
     "metadata": GitHubPermissionLevel.READ,
 }
 

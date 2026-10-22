@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 relay-board = "relay_engine.board.web:main"
+relay-bootstrap = "relay_engine.bootstrap_discovery.cli:main"
 
 [dependency-groups]
 dev = [
@@ -39,6 +40,9 @@ testpaths = ["tests"]
 target-version = "py314"
 line-length = 100
 src = ["src", "tests"]
+
+[tool.ruff.format]
+exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

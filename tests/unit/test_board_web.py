@@ -13,6 +13,7 @@ from threading import Lock, get_ident
 import httpx
 import pytest
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.board.web import create_app
 from relay_engine.decision_support.models import (
     DecisionBasisCompleteness,
@@ -91,6 +92,7 @@ def _slice(slice_id: SliceId = SLICE_A, title: str = "Board slice") -> Slice:
 
 def _create_database(path: Path) -> None:
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     metadata = MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Web fixture setup.")
     create_project(database, _project(), metadata)
     insert_baseline(
@@ -317,7 +319,9 @@ def test_search_is_display_only_and_cannot_hide_integrity_failure(database_path:
     response = _request(app, "GET", f"/projects/{PROJECT_ID}?q=Board")
     assert response.status_code == 200
     assert "Board slice" in response.text
-    assert "Other slice" not in response.text
+    assert "Other slice" in response.text
+    lane_content = response.text.split('<div class="lanes">', maxsplit=1)[1]
+    assert "Other slice" not in lane_content
 
     corrupted = open_database(database_path, apply_migrations=False)
     payload = json.loads(

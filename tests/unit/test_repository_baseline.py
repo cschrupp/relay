@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, Artifact, CommitRef, Project, RepositoryRef
 from relay_engine.integrations.github import (
     GitHubAccessReadiness,
@@ -70,6 +71,7 @@ REPOSITORY = RepositoryRef(id=REPOSITORY_ID, host="github.com", path="cschrupp/r
 
 
 def _create_project(database: object, value: Project) -> None:
+    ensure_test_operational_epoch(database)
     create_project(
         database,
         value,
@@ -158,6 +160,7 @@ def _installation(state_revision: int = 1) -> GitHubInstallationState:
             repository_selection=GitHubRepositorySelectionMode.SELECTED,
             status=GitHubInstallationStatus.ACTIVE,
             permissions=(
+                GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
                 GitHubPermissionGrant(name="contents", level=GitHubPermissionLevel.READ),
                 GitHubPermissionGrant(name="metadata", level=GitHubPermissionLevel.READ),
             ),

@@ -1,5 +1,19 @@
 """Secure repository-scoped GitHub App integration for Relay Phase 1."""
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from relay_engine.integrations.github.service import (
+        GitHubIntegrationService,
+        GitHubWebhookProjectOutcome,
+        permission_policy_allows,
+        permission_profile,
+    )
+    from relay_engine.integrations.github.store import (
+        GitHubIntegrationStore,
+        GitHubMutationResult,
+    )
+
 from relay_engine.integrations.github.auth import create_app_jwt
 from relay_engine.integrations.github.client import (
     GitHubClient,
@@ -31,6 +45,8 @@ from relay_engine.integrations.github.models import (
     GitHubAccountType,
     GitHubAppConfig,
     GitHubBlob,
+    GitHubCheckRun,
+    GitHubCommitComparison,
     GitHubCommitObject,
     GitHubCommitResolution,
     GitHubCreatedObject,
@@ -53,16 +69,6 @@ from relay_engine.integrations.github.models import (
     GitHubWebhookEnvelope,
     repository_ref_from_github,
 )
-from relay_engine.integrations.github.service import (
-    GitHubIntegrationService,
-    GitHubWebhookProjectOutcome,
-    permission_policy_allows,
-    permission_profile,
-)
-from relay_engine.integrations.github.store import (
-    GitHubIntegrationStore,
-    GitHubMutationResult,
-)
 from relay_engine.integrations.github.webhooks import (
     parse_supported_webhook,
     verify_webhook_signature,
@@ -75,8 +81,10 @@ __all__ = [
     "GitHubAppConfig",
     "GitHubAuthenticationError",
     "GitHubBlob",
+    "GitHubCheckRun",
     "GitHubClient",
     "GitHubCommitObject",
+    "GitHubCommitComparison",
     "GitHubCommitResolution",
     "GitHubCreatedObject",
     "GitHubGitObjectType",
@@ -127,3 +135,22 @@ __all__ = [
     "verify_webhook_signature",
     "webhook_delivery_digest",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Load persistence-backed services only when their public API is used."""
+
+    if name in {
+        "GitHubIntegrationService",
+        "GitHubWebhookProjectOutcome",
+        "permission_policy_allows",
+        "permission_profile",
+    }:
+        from relay_engine.integrations.github import service
+
+        return getattr(service, name)
+    if name in {"GitHubIntegrationStore", "GitHubMutationResult"}:
+        from relay_engine.integrations.github import store
+
+        return getattr(store, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

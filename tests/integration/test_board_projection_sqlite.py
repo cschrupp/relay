@@ -8,6 +8,8 @@ from typing import cast
 import pytest
 
 import relay_engine.board.service as board_service
+from conftest import ensure_test_operational_epoch
+from relay_engine.board.render import render_project_board
 from relay_engine.board.service import project_board, project_index, slice_detail
 from relay_engine.domain.ids import (
     BaselineId,
@@ -137,6 +139,7 @@ def _context(lifecycle: SliceLifecycle, baseline_id: BaselineId = BASELINE_A) ->
 
 def _setup(path: Path):
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     metadata = MutationMetadata(actor=ACTOR, occurred_at=NOW, reason="Create integration fixture.")
     create_project(database, _project(), metadata)
     insert_baseline(database, _baseline(BASELINE_A, "a" * 40))
@@ -197,6 +200,34 @@ def test_projection_owns_one_read_transaction_and_does_not_mutate(tmp_path: Path
         assert len(entries) == 3
         assert all(not database.connection.in_transaction for _ in entries)
         assert _table_snapshot(database) == before
+    finally:
+        database.close()
+
+
+def test_unclassified_subject_remains_visible_and_makes_lifecycle_inventory_incomplete(
+    tmp_path: Path,
+) -> None:
+    database = _setup(tmp_path / "unclassified-board.sqlite")
+    try:
+        database.connection.execute("DROP TRIGGER operational_origin_records_no_delete")
+        database.connection.execute("DELETE FROM operational_origin_records")
+
+        board = project_board(database, PROJECT_ID)
+        html = render_project_board(board)
+
+        assert len(board.cards) == 1
+        assert board.cards[0].lane is None
+        assert board.cards[0].lifecycle is None
+        assert board.cards[0].origin_resolution.state.value == "NOT_ESTABLISHED"
+        assert board.situation.lifecycle_inventory_completeness.value == (
+            "INCOMPLETE_NOT_ESTABLISHED"
+        )
+        assert tuple(item.slice_id for item in board.situation.origin_not_established_slices) == (
+            SLICE_ID,
+        )
+        assert "ORIGIN NOT ESTABLISHED" in html
+        assert "INCOMPLETE / NOT ESTABLISHED" in html
+        assert f"{SLICE_ID}" in html
     finally:
         database.close()
 

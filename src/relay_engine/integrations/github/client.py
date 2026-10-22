@@ -3,6 +3,7 @@
 import base64
 import binascii
 import json
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -31,6 +32,8 @@ from relay_engine.integrations.github.models import (
     GitHubAccountType,
     GitHubAppConfig,
     GitHubBlob,
+    GitHubCheckRun,
+    GitHubCommitComparison,
     GitHubCommitObject,
     GitHubCommitResolution,
     GitHubCreatedObject,
@@ -610,6 +613,109 @@ class GitHubClient:
             raise GitHubRefUpdateIndeterminate(
                 "GitHub ref update may have applied but its response was not verifiable"
             ) from error
+
+    def get_latest_check_runs(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        commit_sha: str,
+        check_name: str,
+        app_id: int,
+    ) -> tuple[GitHubCheckRun, ...]:
+        """Read exact-target latest check runs for one name and GitHub App."""
+
+        if re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit_sha) is None:
+            raise ValueError("check target must be a full canonical commit SHA")
+        if not check_name.strip() or app_id <= 0:
+            raise ValueError("check name and App identity must be exact")
+        query = urllib.parse.urlencode(
+            {"check_name": check_name, "app_id": app_id, "filter": "latest"}
+        )
+        raw_payload, _ = self._request(
+            method="GET",
+            path=(
+                f"{_repository_path(repository_path)}/commits/"
+                f"{urllib.parse.quote(commit_sha, safe='')}/check-runs?{query}"
+            ),
+            credential=token.token,
+        )
+        payload = _required_mapping(raw_payload, "check-runs response")
+        raw_runs = _required_list(payload.get("check_runs"), "check_runs")
+        runs: list[GitHubCheckRun] = []
+        try:
+            for raw_run in raw_runs:
+                item = _required_mapping(raw_run, "check run")
+                app_raw = item.get("app")
+                app_id_value: int | None = None
+                if app_raw is not None:
+                    app_id_value = _required_int(
+                        _required_mapping(app_raw, "check run app").get("id"),
+                        "check run app id",
+                    )
+                completed_raw = item.get("completed_at")
+                completed_at = (
+                    None
+                    if completed_raw is None
+                    else datetime.fromisoformat(
+                        _required_str(completed_raw, "check run completed_at").replace(
+                            "Z", "+00:00"
+                        )
+                    )
+                )
+                runs.append(
+                    GitHubCheckRun(
+                        id=_required_int(item.get("id"), "check run id"),
+                        name=_required_str(item.get("name"), "check run name"),
+                        head_sha=_required_str(item.get("head_sha"), "check run head SHA"),
+                        status=_required_str(item.get("status"), "check run status"),
+                        conclusion=(
+                            None
+                            if item.get("conclusion") is None
+                            else _required_str(item.get("conclusion"), "check run conclusion")
+                        ),
+                        app_id=app_id_value,
+                        completed_at=completed_at,
+                    )
+                )
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub check-run payload failed validation") from error
+        return tuple(runs)
+
+    def compare_commits(
+        self,
+        *,
+        token: GitHubInstallationToken,
+        repository_path: str,
+        base_sha: str,
+        head_sha: str,
+    ) -> GitHubCommitComparison:
+        """Read GitHub's exact base-to-head ancestry comparison."""
+
+        if any(
+            re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", sha) is None
+            for sha in (base_sha, head_sha)
+        ):
+            raise ValueError("compare commits must be full canonical SHAs")
+        path = (
+            f"{_repository_path(repository_path)}/compare/"
+            f"{urllib.parse.quote(base_sha, safe='')}...{urllib.parse.quote(head_sha, safe='')}"
+        )
+        raw_payload, _ = self._request(method="GET", path=path, credential=token.token)
+        payload = _required_mapping(raw_payload, "commit comparison payload")
+        base = _required_mapping(payload.get("base_commit"), "comparison base commit")
+        head = _required_mapping(payload.get("head_commit"), "comparison head commit")
+        merge_base = _required_mapping(payload.get("merge_base_commit"), "comparison merge base")
+        try:
+            return GitHubCommitComparison(
+                base_sha=_required_str(base.get("sha"), "comparison base SHA"),
+                head_sha=_required_str(head.get("sha"), "comparison head SHA"),
+                merge_base_sha=_required_str(merge_base.get("sha"), "comparison merge-base SHA"),
+                status=_required_str(payload.get("status"), "comparison status"),
+                ahead_by=_required_nonnegative_int(payload.get("ahead_by"), "ahead_by"),
+            )
+        except (TypeError, ValueError, ValidationError) as error:
+            raise GitHubRemoteError("GitHub comparison payload failed validation") from error
 
     def _parse_git_commit(self, payload: Mapping[str, object]) -> GitHubCommitObject:
         tree = _required_mapping(payload.get("tree"), "Git commit tree")

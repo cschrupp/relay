@@ -97,6 +97,8 @@ from relay_engine.persistence import (
 from relay_engine.persistence.database import write_transaction
 from relay_engine.persistence.records import ExecutionRecord
 from relay_engine.project_slice import get_slice, list_slices
+from relay_engine.project_slice.errors import OperationalOriginNotEstablished
+from relay_engine.project_slice.service import require_slice_origin_governance_scope_from_connection
 from relay_engine.repository_baseline.models import (
     RepositoryRevisionKind,
     RepositoryRevisionSelector,
@@ -116,6 +118,17 @@ def _manual_write(database: RelayDatabase):
         raise PersistenceIntegrityError(
             "Slice 1.7 mutation violated durable uniqueness or reference integrity"
         ) from error
+
+
+def _require_origin_scope(
+    database: RelayDatabase,
+    connection: sqlite3.Connection,
+    slice_id: SliceId,
+) -> None:
+    try:
+        require_slice_origin_governance_scope_from_connection(database, connection, slice_id)
+    except OperationalOriginNotEstablished as error:
+        raise ManualEvaluationNotAvailable(str(error)) from error
 
 
 def _require_human(actor: ActorRef, role: str) -> None:
@@ -349,6 +362,7 @@ def attach_result(
         raise PersistenceIntegrityError("verified result Baseline identity differs from selection")
 
     with _manual_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = get_slice(database, slice_id)
         lifecycle = _check_evaluating(
             load_current_lifecycle_from_connection(connection, slice_id),
@@ -502,6 +516,7 @@ def record_manual_evaluation(
     successor_gate_evaluation_recorded_at = successor_gate_evaluation_recorded_at.astimezone(UTC)
 
     with _manual_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = get_slice(database, slice_id)
         lifecycle = _check_evaluating(
             load_current_lifecycle_from_connection(connection, slice_id),
@@ -825,6 +840,7 @@ def _record_technical_decision(
     )
 
     with _manual_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         snapshot = load_human_control_snapshot(connection, slice_id)
         existing_identity = next(
             (item for item in snapshot.decisions if item.decision_id == decision_id), None
@@ -1344,6 +1360,7 @@ def promote_accepted_result(
     if basis.slice_id != slice_id:
         raise ManualEvaluationStale("Human Action Basis identifies another Slice")
     with _manual_write(database) as connection:
+        _require_origin_scope(database, connection, slice_id)
         lifecycle = load_current_lifecycle_from_connection(connection, slice_id)
         if lifecycle is not None and lifecycle.phase is LifecyclePhase.ACCEPTED:
             if (

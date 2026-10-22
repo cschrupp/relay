@@ -11,7 +11,12 @@ from relay_engine.board.models import (
     SliceCard,
     SliceDetail,
 )
-from relay_engine.board.service import project_board, project_index, slice_detail
+from relay_engine.board.service import (
+    project_board,
+    project_board_from_connection,
+    project_index,
+    slice_detail,
+)
 
 __all__ = [
     "BoardLane",
@@ -24,6 +29,7 @@ __all__ = [
     "SliceCard",
     "SliceDetail",
     "project_board",
+    "project_board_from_connection",
     "project_index",
     "slice_detail",
 ]

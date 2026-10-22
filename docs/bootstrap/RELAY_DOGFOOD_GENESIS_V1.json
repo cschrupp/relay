@@ -1,0 +1,129 @@
+{
+  "allowed_sources": [],
+  "facts": [],
+  "format": "relay-dogfood-genesis",
+  "genesis_cut_at": "2026-10-16T23:21:01Z",
+  "genesis_cut_status": "CANDIDATE_NOT_ACCEPTED",
+  "human_resolutions": [],
+  "package_id": "art_59f42a9a-917f-47bb-8712-f1541b9b6bea",
+  "package_path": "docs/bootstrap/RELAY_DOGFOOD_GENESIS_V1.json",
+  "pre_t1_operational_history_policy": {
+    "pre_genesis_no_lifecycle_at_t1": "For an exact subject with independently established PRE_GENESIS origin, the initial Relay state may contain no Relay lifecycle at T1. This describes the Relay operational starting state only; it does not assert that no pre-T1 lifecycle activity occurred.",
+    "selected_record_rule": "Any pre-T1 lifecycle, governance, result, or canonical-promotion record selected for import requires exact qualifying evidence and complete causal closure.",
+    "snapshot_coverage": "Each included Slice must be represented by an exact imported lifecycle chain or by the accepted B0 Rev3 PRE_GENESIS/no-Relay-lifecycle-at-T1 framing.",
+    "unselected_history": "Pre-T1 operational history not selected for import is neither inferred nor synthesized. Its omission makes no claim that the activity or record never existed."
+  },
+  "preparation_status": "BLOCKED",
+  "schema_version": 1,
+  "snapshot_readiness": "BLOCKED",
+  "source_commit": "84271c822c620eec54f074bb4013d976c1d18038",
+  "source_registry_sha256": "sha256:2b8adaa93702da3d75e17292733202e1a00d281d4f734b33b59f4f44e6746af2",
+  "source_repository": {
+    "host": "github.com",
+    "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+    "path": "cschrupp/relay",
+    "schema_version": 1
+  },
+  "unresolved_facts": [
+    {
+      "affected_downstream": [
+        "Project definition",
+        "Project PRE_GENESIS origin",
+        "Slice ownership and hierarchy",
+        "Bootstrap V2",
+        "Project Situation"
+      ],
+      "blocking": true,
+      "reason": "The pinned registry root contains a project_id, but it is not a registered ArtifactId/path source and the frozen field-provenance rule does not expressly admit registry-root metadata as an allowed source. No registered source was identified that locates the exact domain ProjectId.",
+      "required_evidence_class": "TRANSCRIBED exact ProjectId with an allowed source locator",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "Project.id",
+      "target_record_identity": "UNRESOLVED Project"
+    },
+    {
+      "affected_downstream": [
+        "Project definition",
+        "Project/Slice ownership",
+        "Bootstrap V2 identity validation"
+      ],
+      "blocking": true,
+      "reason": "The repository root carries a RepositoryRef, but no registered allowed source was identified that field-locates that value for the Project record. The source checkout identity alone does not establish the Project field under the frozen provenance contract.",
+      "required_evidence_class": "TRANSCRIBED exact RepositoryRef with an allowed source locator",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "Project.primary_repository",
+      "target_record_identity": "UNRESOLVED Project"
+    },
+    {
+      "affected_downstream": [
+        "OperationalHistoryEpoch materialization",
+        "Project origin resolution",
+        "Slice origin hierarchy",
+        "Bootstrap V2"
+      ],
+      "blocking": true,
+      "reason": "No qualifying field-locatable source was established that binds the exact domain Project subject to explicit existence before the proposed T1. The B0/PG1 design documents describe requirements, not proof for an exact operational ProjectId.",
+      "required_evidence_class": "PG1 Q3/Q8 exact PRE_GENESIS proof",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "Project.operational_origin",
+      "target_record_identity": "UNRESOLVED Project"
+    },
+    {
+      "affected_downstream": [
+        "Included Slice definitions",
+        "Project/Slice hierarchy",
+        "dependencies",
+        "PRE_GENESIS origins",
+        "frontier and lifecycle aggregates",
+        "Bootstrap V2"
+      ],
+      "blocking": true,
+      "reason": "The pinned registered corpus does not provide an established exhaustive inventory of Relay domain Slice records. Registered roadmap/design documents identify work by prose labels, not exact operational slc_ identities. The repository artifact registry is not a Slice inventory.",
+      "required_evidence_class": "TRANSCRIBED exact SliceIds plus an authoritative exhaustive inventory for the exact Project scope",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "complete current Slice inventory and exact SliceId values",
+      "target_record_identity": "UNRESOLVED Project Slice set"
+    },
+    {
+      "affected_downstream": [
+        "Slice origin records",
+        "Project/Slice hierarchy validation",
+        "Pre-genesis board inventory",
+        "Bootstrap V2"
+      ],
+      "blocking": true,
+      "reason": "Without exact operational SliceIds, no source locator can establish pre-T1 existence for each exact Slice subject as required by PG1 Q3/Q8. A roadmap label or title cannot be mapped to a SliceId by inference.",
+      "required_evidence_class": "Independent exact PRE_GENESIS proof for each SliceId",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "Slice.operational_origin proof",
+      "target_record_identity": "UNRESOLVED each included Slice"
+    },
+    {
+      "affected_downstream": [
+        "Slice definitions",
+        "origin hierarchy validation",
+        "dependency governance",
+        "Project Situation frontier/next-work",
+        "Bootstrap V2"
+      ],
+      "blocking": true,
+      "reason": "No field-locatable source was established for exact operational parent/dependency edges among domain SliceIds. Prose ordering and design relationships do not prove the persisted edges; absence cannot be asserted without a qualified completeness witness.",
+      "required_evidence_class": "TRANSCRIBED exact relationship fields and identities",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "parent_slice_id and dependency_ids",
+      "target_record_identity": "UNRESOLVED Project/Slice records"
+    },
+    {
+      "affected_downstream": [
+        "Slice Situation",
+        "hierarchy/dependency integrity",
+        "Bootstrap V2"
+      ],
+      "blocking": true,
+      "reason": "No exact domain SliceId-to-definition mapping or complete definition revision history was established. HUMAN_RESOLUTION cannot create SliceIds, relationships, or rewrite historical definition revisions.",
+      "required_evidence_class": "TRANSCRIBED identities and revision history; bounded resolution only for Q4 fields",
+      "status": "UNRESOLVED",
+      "target_field_or_invariant": "current definition and definition revision history",
+      "target_record_identity": "UNRESOLVED each included Slice"
+    }
+  ]
+}

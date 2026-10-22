@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from conftest import ensure_test_operational_epoch
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, Project, RepositoryRef
 from relay_engine.governance import (
     AuthorizationGrant,
@@ -55,11 +56,23 @@ from relay_engine.lifecycle import (
 )
 from relay_engine.persistence import (
     PersistenceIntegrityError,
+    insert_canonical_promotion_policy_binding,
     insert_repository_mutation_authorization,
+    load_canonical_promotion_policy_bindings,
     load_repository_mutation_authorization,
     open_database,
 )
 from relay_engine.project_slice import MutationMetadata, create_project
+from relay_engine.promotion.models import (
+    CanonicalPolicyBindingSubjectV1,
+    CanonicalPromotionPolicyBindingState,
+    CanonicalPromotionPolicyBindingV1,
+    CanonicalPromotionPolicyV1,
+    GitHubRequiredCheckV1,
+    binding_digest,
+    canonical_policy_binding_subject_digest,
+    policy_digest,
+)
 from relay_engine.repository_contract import (
     RepositoryArtifactClass,
     RepositoryArtifactRevision,
@@ -105,6 +118,7 @@ RAW = b"Relay test artifact\n"
 
 
 def _create_project(database: object, value: Project) -> None:
+    ensure_test_operational_epoch(database)
     create_project(
         database,
         value,
@@ -172,6 +186,7 @@ def _event(
 
 def _permissions(*, write: bool) -> tuple[GitHubPermissionGrant, ...]:
     return (
+        GitHubPermissionGrant(name="checks", level=GitHubPermissionLevel.READ),
         GitHubPermissionGrant(
             name="contents",
             level=GitHubPermissionLevel.WRITE if write else GitHubPermissionLevel.READ,
@@ -383,6 +398,46 @@ class _FakeGitHub:
 def fixture_env():
     database = open_database(":memory:", apply_migrations=True, migration_applied_at=NOW)
     _create_project(database, Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY))
+    binding_subject = CanonicalPolicyBindingSubjectV1(
+        project_id=PROJECT_ID,
+        repository=REPOSITORY,
+        canonical_ref="refs/heads/main",
+        expected_current_binding_id=None,
+        expected_current_revision=0,
+        expected_current_binding_digest=None,
+        target_revision=1,
+        target_state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+        target_policy=None,
+        target_policy_digest=None,
+    )
+    insert_repository_mutation_authorization(
+        database,
+        RepositoryMutationAuthorization(
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789011",
+            project_id=PROJECT_ID,
+            subject=binding_subject,
+            subject_digest=canonical_policy_binding_subject_digest(binding_subject),
+            actor=ACTOR,
+            granted_at=NOW,
+            reason="Test fixture binds the non-managed canonical ref.",
+        ),
+    )
+    insert_canonical_promotion_policy_binding(
+        database,
+        CanonicalPromotionPolicyBindingV1(
+            binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789010",
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            canonical_ref="refs/heads/main",
+            revision=1,
+            state=CanonicalPromotionPolicyBindingState.UNMANAGED,
+            policy=None,
+            policy_digest=None,
+            authorization_id="rma_018f47c1-7b2c-7abc-8def-123456789011",
+            supersedes_binding_id=None,
+            bound_at=NOW,
+        ),
+    )
     github_store = GitHubIntegrationStore(database)
     state = _make_state(write=True)
     github_store.apply_mutation(
@@ -969,6 +1024,89 @@ def test_local_permission_and_membership_races_block_visibility(fixture_env, rac
     assert github.ref_updates == 0
 
 
+def test_late_managed_binding_transition_blocks_repository_sync_visibility(fixture_env) -> None:
+    database, service, _, github, request = fixture_env
+    _authorize_exact_subject(service, request)
+    transitioned = False
+
+    def reserve_managed_ref() -> None:
+        nonlocal transitioned
+        if transitioned:
+            return
+        transitioned = True
+        current = load_canonical_promotion_policy_bindings(
+            database,
+            project_id=PROJECT_ID,
+            repository_id=REPOSITORY_ID,
+            canonical_ref="refs/heads/main",
+        )[-1]
+        policy = CanonicalPromotionPolicyV1(
+            policy_id="cpol_018f47c1-7b2c-7abc-8def-123456789020",
+            canonical_branch="main",
+            promotion_app_id=77,
+            control_verifier_app_id=78,
+            integrity_ruleset_id=5,
+            writer_ruleset_id=6,
+            required_checks=(GitHubRequiredCheckV1(name="quality", expected_app_id=77),),
+            allowed_update_actor_app_id=77,
+            human_acceptance_must_bind_target=False,
+            independent_evaluation_must_bind_target=False,
+            promotion_property_requirements=(),
+        )
+        subject = CanonicalPolicyBindingSubjectV1(
+            project_id=PROJECT_ID,
+            repository=REPOSITORY,
+            canonical_ref="refs/heads/main",
+            expected_current_binding_id=current.binding_id,
+            expected_current_revision=current.revision,
+            expected_current_binding_digest=binding_digest(current),
+            target_revision=current.revision + 1,
+            target_state=CanonicalPromotionPolicyBindingState.MANAGED,
+            target_policy=policy,
+            target_policy_digest=policy_digest(policy),
+        )
+        authorization_id = "rma_018f47c1-7b2c-7abc-8def-123456789021"
+        insert_repository_mutation_authorization(
+            database,
+            RepositoryMutationAuthorization(
+                authorization_id=authorization_id,
+                project_id=PROJECT_ID,
+                subject=subject,
+                subject_digest=canonical_policy_binding_subject_digest(subject),
+                actor=ACTOR,
+                granted_at=NOW,
+                reason="Reserve canonical writer ownership during the race test.",
+            ),
+        )
+        insert_canonical_promotion_policy_binding(
+            database,
+            CanonicalPromotionPolicyBindingV1(
+                binding_id="cpb_018f47c1-7b2c-7abc-8def-123456789022",
+                project_id=PROJECT_ID,
+                repository=REPOSITORY,
+                canonical_ref="refs/heads/main",
+                revision=current.revision + 1,
+                state=CanonicalPromotionPolicyBindingState.MANAGED,
+                policy=policy,
+                policy_digest=policy_digest(policy),
+                authorization_id=authorization_id,
+                supersedes_binding_id=current.binding_id,
+                bound_at=NOW,
+            ),
+        )
+
+    github.before_ref_check = reserve_managed_ref
+    from relay_engine.repository_sync.errors import RepositorySyncCanonicalRefReserved
+
+    authorized_request = request.model_copy(update={"authorization_id": AUTHORIZATION_ID})
+    with pytest.raises(RepositorySyncCanonicalRefReserved):
+        service.execute_repository_sync(authorized_request, observed_at=NOW)
+
+    assert transitioned is True
+    assert github.commit_creations == 1
+    assert github.ref_updates == 0
+
+
 def test_read_profile_cannot_mint_write_token_or_create_git_objects(fixture_env) -> None:
     database, service, integration, github, request = fixture_env
     _set_local_state(database, write=False)
@@ -1362,7 +1500,7 @@ def test_mutation_authorization_survives_sqlite_close_reopen(tmp_path) -> None:
                 "SELECT version FROM relay_schema_migrations ORDER BY version"
             )
         )
-        assert versions[-1] == 5
+        assert versions[-1] == 8
     finally:
         restarted.close()
 

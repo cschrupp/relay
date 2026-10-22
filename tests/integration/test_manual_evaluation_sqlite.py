@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 import relay_engine.manual_evaluation.service as manual_evaluation_service
+from conftest import ensure_test_operational_epoch
 from relay_engine.board.service import slice_detail
 from relay_engine.board.web import create_app
 from relay_engine.domain.ids import (
@@ -233,6 +234,7 @@ def _seed(
     additional_gates: tuple[HandoverGate, ...] = (),
 ):
     database = open_database(path, apply_migrations=True, migration_applied_at=NOW)
+    ensure_test_operational_epoch(database)
     project = Project(id=PROJECT_ID, name="Relay", primary_repository=REPOSITORY)
     slice_value = Slice(
         id=SLICE_ID,
@@ -428,9 +430,9 @@ def test_v4_upgrade_and_fresh_schema_install_only_v5_slice_tables(tmp_path: Path
         )
     )
     assert after[:4] == before
-    assert after[-1][0] == 5
+    assert after[-1][0] == 8
     assert MANUAL_EVALUATION_MIGRATION.version == 5
-    assert MANUAL_EVALUATION_MIGRATION.checksum == DEFAULT_MIGRATIONS[-1].checksum
+    assert MANUAL_EVALUATION_MIGRATION.checksum == DEFAULT_MIGRATIONS[4].checksum
     assert tuple(item.checksum for item in DEFAULT_MIGRATIONS[:4]) == (
         "sha256:00d78d5794e1196b7435a95679cab94cda4e2ea31742a0e6a2e63d4b58eae38e",
         "sha256:735dc501d65e5f3430bacd77503cca9ec6ca726986c786108b9319a9c1e52cb1",
@@ -454,7 +456,7 @@ def test_v4_upgrade_and_fresh_schema_install_only_v5_slice_tables(tmp_path: Path
             fresh.connection.execute("SELECT max(version) FROM relay_schema_migrations").fetchone()[
                 0
             ]
-            == 5
+            == 8
         )
         for name in (
             "slice_results_by_slice_sequence",

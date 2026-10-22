@@ -258,6 +258,15 @@ class RepositorySyncService:
         if preparation.state is not RepositoryContractState.SYNCHRONIZABLE:
             raise RepositorySyncConflict("repository target is not synchronizable")
 
+        from relay_engine.promotion.bindings import require_repository_sync_unmanaged_healthy
+
+        require_repository_sync_unmanaged_healthy(
+            self._database,
+            project_id=request.selection.project_id,
+            repository=request.selection.repository,
+            canonical_ref=f"refs/heads/{request.expected_default_branch}",
+        )
+
         if preparation.subject is None:
             raise RepositorySyncAuthorizationRequired(
                 "synchronizable preparation lost its exact subject"
@@ -340,6 +349,15 @@ class RepositorySyncService:
         )
         if current_head.sha != preparation.prior_commit.sha:
             raise RepositorySyncConflict("default-branch head advanced after preparation")
+
+        # The durable canonical reservation can change while remote objects are built.
+        # Recheck it at the final visibility boundary, after all existing late CAS checks.
+        require_repository_sync_unmanaged_healthy(
+            self._database,
+            project_id=request.selection.project_id,
+            repository=request.selection.repository,
+            canonical_ref=f"refs/heads/{provider.default_branch}",
+        )
 
         visible_commit = commit.sha
         try:
@@ -792,6 +810,7 @@ class RepositorySyncService:
             )
         if (
             authorization.project_id != request.selection.project_id
+            or not isinstance(authorization.subject, RepositorySyncSubjectV1)
             or authorization.subject != preparation.subject
             or authorization.subject_digest != preparation.subject_digest
             or authorization.actor.kind is not ActorKind.HUMAN

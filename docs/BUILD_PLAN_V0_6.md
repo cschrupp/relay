@@ -1,12 +1,99 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 1.8 complete / accepted / closed; Slice 1.9 COMPLETE / ACCEPTED / CLOSED under RLY-S19-CLOSE-EVAL-002 and RLY-S19-CLOSE-AUTH-001; Phase 2 open
+**Status:** Current living implementation plan — B4 design and read-only harness are COMPLETE / HUMAN ACCEPTED; B4 execution attempt 001 failed closed before answer collection because the checkout did not match the pinned execution SHA; no design/harness rework is indicated; a second attempt requires separate Human authority; Slice 2.2 design remains unauthorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
 **Parent document:** *Relay — Product and Technical Proposal v0.5*  
 **Date:** October 2026
+
+---
+
+# 0. CURRENT ROADMAP — B2 Implementation Human Accepted
+
+**Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
+
+```text
+Phase 1 foundation:
+Slices 1.1–1.9                  COMPLETE / ACCEPTED / CLOSED
+
+Slice 1.10 core:
+Canonical source/promotion      IMPLEMENTED / HUMAN ACCEPTED
+Dogfood V1 control surface      COMPLETE / HUMAN ACCEPTED
+PG1 pre-genesis representation COMPLETE / HUMAN ACCEPTED
+B0 Rev3 design                  HUMAN ACCEPTED
+
+B0 evidence preparation:
+independent evaluation          ACCEPT
+usable Genesis package          BLOCKED
+blocking facts                  7
+Bootstrap V2                    NOT CREATED
+
+B0-F Bootstrap Engine Finish:
+design                          HUMAN ACCEPTED
+implementation                 COMPLETE / HUMAN ACCEPTED
+behavior                        READ-ONLY LOCAL REPOSITORY INSPECTION
+strict importer / database      NOT IMPLEMENTED / NOT AUTHORIZED
+
+B1 Project Discovery & Human Intake:
+design                          HUMAN ACCEPTED
+implementation                 COMPLETE / HUMAN ACCEPTED
+accepted candidate              22fb742965ed6424a18275b4234e1399021d4aed
+real-world dogfood              AUTHORIZED / NOT EXECUTED BEFORE ACCEPTANCE
+
+B2 Existing Project Adoption / T1 Genesis:
+design                          COMPLETE / HUMAN ACCEPTED
+implementation                 COMPLETE / HUMAN ACCEPTED
+actual adoption / T1            COMPLETE / HUMAN ACCEPTED
+B3 design                       COMPLETE / HUMAN ACCEPTED
+B3 Stage A tooling              COMPLETE / HUMAN ACCEPTED
+B3 Stage B materialization      COMPLETE / HUMAN ACCEPTED
+B4 design                       COMPLETE / HUMAN ACCEPTED
+B4 read-only harness            COMPLETE / HUMAN ACCEPTED
+B4 cold-start execution         ATTEMPT 001 CONSUMED / FAIL_CLOSED
+next gate                       Human decision on authorizing corrected B4 execution attempt 002
+
+Phase 2:
+2.1 Agent Runtime Contract      COMPLETE / ACCEPTED / CLOSED
+2.2–2.4                         PLANNED / NOT OPEN
+```
+
+## Product decision
+
+Relay will not treat legacy-project onboarding as historical reconstruction.
+
+B0-F supplies read-only repository discovery without requiring Relay state. Strict B0 bootstrap remains blocked until its exact historical identity, origin, and definition evidence exists. The planned B1/B2 path is forward-looking adoption: inspect the current repository, ask the Human for semantic facts and objectives that code cannot establish, establish an operational T1, and govern continuation from that point forward.
+
+See [Existing Project Adoption and Forward-Governance Strategy](strategy/EXISTING_PROJECT_ADOPTION_AND_FORWARD_GOVERNANCE.md).
+
+## Planned execution sequence
+
+```text
+B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
+  -> B1 Project Discovery & Human Intake — COMPLETE / HUMAN ACCEPTED
+  -> B2 Existing Project Adoption / T1 Genesis — IMPLEMENTATION COMPLETE / HUMAN ACCEPTED
+       real Relay adoption/T1 remains behind a separate exact execution gate
+  -> B3 Forward Re-baseline / First Governed Work
+  -> B4 Relay Dogfood Acceptance
+  -> 2.2 Role Contracts
+  -> 2.3 Context / Work-Packet Contract
+  -> 2.4 Execution Workspace Authority
+  -> Phase 3 governed autonomous engineering loop
+```
+
+B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, after `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK` and `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed dogfood result is recorded before acceptance. B2 Revision 1 plus the Revision 2 Integrity Amendment is independently accepted and Human-accepted at composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`, following `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637` and is independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the external operational database is published and verified. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is complete. B3 design is OPEN / AUTHORIZED under `RLY-S110-DOGFOOD-B3-DESIGN-AUTH-001`. The Human-directed first governed work target is Slice 2.2 Role Contracts with authorized-work exhaustion integrated. B3 operational materialization, B4, and Slice 2.2 implementation remain NOT AUTHORIZED.
+
+## Anti-drift guardrail
+
+Governance hardening must serve delivery. As a planning target, product/code/test/integration work should normally account for at least two-thirds of active engineering effort. New governance work must name the concrete capability it unblocks or the observed integrity/security failure it fixes. If governance/documentation dominates two consecutive increments without shipping or unblocking product capability, stop and require explicit Human roadmap review.
+
+The live execution checklist is [docs/TODO.md](TODO.md).
+
+## Documentation synchronization rule
+
+Every accepted increment that changes current project state, roadmap/frontier, planned slice sequence, product direction, major architecture, blockers, or the next Human action must update the corresponding living documents in the same increment. At minimum, closeout checks `docs/CURRENT_BASELINE.md`, `docs/BUILD_PLAN_V0_6.md`, and `docs/TODO.md`. Strategy/architecture documents are updated when their underlying direction changes. Immutable historical records are preserved rather than rewritten. Documentation freshness is part of increment closeout, not a separate governance phase.
+
 
 ---
 

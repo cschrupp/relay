@@ -304,12 +304,336 @@ MANUAL_EVALUATION_MIGRATION = Migration(
     ),
 )
 
+CANONICAL_PROMOTION_MIGRATION = Migration(
+    version=6,
+    name="repository canonical promotion evidence",
+    statements=(
+        """CREATE TABLE canonical_promotion_policy_bindings (
+            binding_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            revision INTEGER NOT NULL CHECK (revision >= 1),
+            state TEXT NOT NULL CHECK (state IN ('UNMANAGED', 'MANAGED')),
+            policy_digest TEXT,
+            authorization_id TEXT NOT NULL,
+            supersedes_binding_id TEXT,
+            bound_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            UNIQUE(project_id, repository_id, canonical_ref, revision),
+            UNIQUE(supersedes_binding_id),
+            CHECK ((state = 'UNMANAGED' AND policy_digest IS NULL)
+                OR (state = 'MANAGED' AND policy_digest IS NOT NULL))
+        )""",
+        """CREATE INDEX canonical_promotion_bindings_by_ref_revision
+        ON canonical_promotion_policy_bindings(
+            project_id, repository_id, canonical_ref, revision, binding_id
+        )""",
+        """CREATE TABLE repository_promotion_intents (
+            promotion_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            subject_digest TEXT NOT NULL,
+            expected_parent_sha TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_intents_by_project_ref_subject
+        ON repository_promotion_intents(project_id, canonical_ref, subject_digest)""",
+        """CREATE INDEX repository_promotion_intents_by_parent_target
+        ON repository_promotion_intents(project_id, canonical_ref,
+            expected_parent_sha, target_sha)""",
+        """CREATE TABLE repository_promotion_results (
+            promotion_id TEXT PRIMARY KEY REFERENCES repository_promotion_intents(promotion_id),
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
+            outcome TEXT NOT NULL CHECK (outcome IN
+                ('SUCCEEDED', 'NOT_APPLIED', 'CONFLICT', 'VISIBLE_UNVERIFIED')),
+            observed_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_results_by_project_ref_outcome
+        ON repository_promotion_results(project_id, repository_id, canonical_ref,
+            outcome, promotion_id)""",
+        """CREATE UNIQUE INDEX repository_promotion_results_unique_successful_target
+        ON repository_promotion_results(project_id, canonical_ref, target_sha)
+        WHERE outcome = 'SUCCEEDED'""",
+        """CREATE TABLE repository_promotion_reconciliations (
+            reconciliation_id TEXT PRIMARY KEY,
+            promotion_id TEXT NOT NULL UNIQUE
+                REFERENCES repository_promotion_intents(promotion_id),
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            canonical_ref TEXT NOT NULL,
+            target_sha TEXT NOT NULL,
+            authorization_id TEXT NOT NULL,
+            reconciled_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX repository_promotion_reconciliations_by_project_ref
+        ON repository_promotion_reconciliations(project_id, repository_id, canonical_ref,
+            promotion_id)""",
+        """CREATE TRIGGER canonical_promotion_policy_bindings_no_update
+        BEFORE UPDATE ON canonical_promotion_policy_bindings BEGIN
+            SELECT RAISE(ABORT, 'Canonical promotion policy bindings are append-only');
+        END""",
+        """CREATE TRIGGER canonical_promotion_policy_bindings_no_delete
+        BEFORE DELETE ON canonical_promotion_policy_bindings BEGIN
+            SELECT RAISE(ABORT, 'Canonical promotion policy bindings are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_intents_no_update
+        BEFORE UPDATE ON repository_promotion_intents BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion intents are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_intents_no_delete
+        BEFORE DELETE ON repository_promotion_intents BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion intents are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_results_no_update
+        BEFORE UPDATE ON repository_promotion_results BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion results are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_results_no_delete
+        BEFORE DELETE ON repository_promotion_results BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion results are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_reconciliations_no_update
+        BEFORE UPDATE ON repository_promotion_reconciliations BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion reconciliations are append-only');
+        END""",
+        """CREATE TRIGGER repository_promotion_reconciliations_no_delete
+        BEFORE DELETE ON repository_promotion_reconciliations BEGIN
+            SELECT RAISE(ABORT, 'Repository promotion reconciliations are append-only');
+        END""",
+    ),
+)
+
+OPERATIONAL_ORIGIN_MIGRATION = Migration(
+    version=7,
+    name="operational history epoch and origin provenance",
+    statements=(
+        """CREATE TABLE operational_history_epochs (
+            epoch_slot INTEGER PRIMARY KEY CHECK (epoch_slot = 1),
+            epoch_id TEXT NOT NULL UNIQUE,
+            genesis_cut_at TEXT NOT NULL,
+            source_commit_sha TEXT NOT NULL,
+            genesis_package_artifact_id TEXT NOT NULL,
+            genesis_package_path TEXT NOT NULL,
+            genesis_package_digest TEXT NOT NULL,
+            package_acceptance_artifact_id TEXT NOT NULL,
+            package_acceptance_digest TEXT NOT NULL,
+            epoch_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX operational_history_epochs_by_digest
+        ON operational_history_epochs(epoch_id, epoch_digest)""",
+        """CREATE TABLE operational_origin_records (
+            record_id TEXT PRIMARY KEY,
+            subject_type TEXT NOT NULL CHECK (subject_type IN ('PROJECT', 'SLICE')),
+            subject_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            record_kind TEXT NOT NULL CHECK (record_kind IN ('INITIAL', 'CORRECTION')),
+            origin TEXT NOT NULL CHECK (origin IN ('PRE_GENESIS', 'NATIVE_RELAY')),
+            epoch_id TEXT NOT NULL REFERENCES operational_history_epochs(epoch_id),
+            epoch_digest TEXT NOT NULL,
+            supersedes_record_id TEXT,
+            supersedes_record_digest TEXT,
+            recorded_at TEXT NOT NULL,
+            recorded_by_json TEXT NOT NULL,
+            establishing_authority_id TEXT NOT NULL,
+            correction_authorization_id TEXT,
+            correction_authorization_digest TEXT,
+            rationale TEXT,
+            record_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            UNIQUE(subject_type, subject_id, record_id),
+            FOREIGN KEY(subject_type, subject_id, supersedes_record_id)
+                REFERENCES operational_origin_records(subject_type, subject_id, record_id),
+            CHECK ((record_kind = 'INITIAL' AND supersedes_record_id IS NULL
+                    AND supersedes_record_digest IS NULL
+                    AND correction_authorization_id IS NULL
+                    AND correction_authorization_digest IS NULL
+                    AND rationale IS NULL)
+                OR (record_kind = 'CORRECTION' AND supersedes_record_id IS NOT NULL
+                    AND supersedes_record_digest IS NOT NULL
+                    AND correction_authorization_id IS NOT NULL
+                    AND correction_authorization_digest IS NOT NULL
+                    AND rationale IS NOT NULL))
+        )""",
+        """CREATE INDEX operational_origin_records_by_subject
+        ON operational_origin_records(subject_type, subject_id, project_id)""",
+        """CREATE INDEX operational_origin_records_by_epoch
+        ON operational_origin_records(epoch_id, epoch_digest)""",
+        """CREATE UNIQUE INDEX operational_origin_records_unique_initial
+        ON operational_origin_records(subject_type, subject_id)
+        WHERE record_kind = 'INITIAL'""",
+        """CREATE UNIQUE INDEX operational_origin_records_unique_successor
+        ON operational_origin_records(supersedes_record_id)
+        WHERE supersedes_record_id IS NOT NULL""",
+        """CREATE TRIGGER operational_origin_records_subject_matches_insert
+        BEFORE INSERT ON operational_origin_records
+        WHEN (NEW.subject_type = 'PROJECT' AND (
+              NEW.subject_id != NEW.project_id
+              OR NOT EXISTS (SELECT 1 FROM projects WHERE id = NEW.project_id)
+          ))
+          OR (NEW.subject_type = 'SLICE' AND NOT EXISTS (
+              SELECT 1 FROM slices
+              WHERE slices.id = NEW.subject_id AND slices.project_id = NEW.project_id
+          ))
+        BEGIN
+            SELECT RAISE(ABORT, 'Operational origin subject/project mismatch');
+        END""",
+        """CREATE TRIGGER operational_history_epochs_no_update
+        BEFORE UPDATE ON operational_history_epochs BEGIN
+            SELECT RAISE(ABORT, 'Operational history epochs are append-only');
+        END""",
+        """CREATE TRIGGER operational_history_epochs_no_delete
+        BEFORE DELETE ON operational_history_epochs BEGIN
+            SELECT RAISE(ABORT, 'Operational history epochs are append-only');
+        END""",
+        """CREATE TRIGGER operational_origin_records_no_update
+        BEFORE UPDATE ON operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Operational origin records are append-only');
+        END""",
+        """CREATE TRIGGER operational_origin_records_no_delete
+        BEFORE DELETE ON operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Operational origin records are append-only');
+        END""",
+    ),
+)
+
+PROJECT_ADOPTION_MIGRATION = Migration(
+    version=8,
+    name="project adoption and scoped operational provenance",
+    statements=(
+        """CREATE TABLE project_adoptions (
+            adoption_id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL UNIQUE REFERENCES projects(id),
+            repository_id TEXT NOT NULL,
+            t1 TEXT NOT NULL,
+            manifest_sha256 TEXT NOT NULL,
+            fresh_report_sha256 TEXT NOT NULL,
+            fresh_report_state_sha256 TEXT NOT NULL,
+            fresh_head_sha TEXT NOT NULL,
+            initial_slice_id TEXT NOT NULL REFERENCES slices(id),
+            baseline_id TEXT NOT NULL REFERENCES baselines(id),
+            record_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL
+        )""",
+        """CREATE INDEX project_adoptions_by_t1
+        ON project_adoptions(project_id, t1, adoption_id)""",
+        """CREATE TABLE project_operational_epochs (
+            project_id TEXT PRIMARY KEY REFERENCES projects(id),
+            epoch_id TEXT NOT NULL UNIQUE,
+            genesis_cut_at TEXT NOT NULL,
+            basis_kind TEXT NOT NULL CHECK (basis_kind = 'EXISTING_PROJECT_ADOPTION'),
+            adoption_id TEXT NOT NULL UNIQUE REFERENCES project_adoptions(adoption_id),
+            adoption_record_digest TEXT NOT NULL,
+            recorded_at TEXT NOT NULL,
+            epoch_digest TEXT NOT NULL UNIQUE,
+            payload_json TEXT NOT NULL,
+            UNIQUE(project_id, epoch_id, epoch_digest)
+        )""",
+        """CREATE INDEX project_operational_epochs_by_digest
+        ON project_operational_epochs(project_id, epoch_id, epoch_digest)""",
+        """CREATE TABLE project_operational_origin_records (
+            record_id TEXT PRIMARY KEY,
+            subject_type TEXT NOT NULL CHECK (subject_type IN ('PROJECT', 'SLICE')),
+            subject_id TEXT NOT NULL,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            record_kind TEXT NOT NULL CHECK (record_kind IN ('INITIAL', 'CORRECTION')),
+            origin TEXT NOT NULL CHECK (origin IN ('PRE_GENESIS', 'NATIVE_RELAY')),
+            epoch_id TEXT NOT NULL,
+            epoch_digest TEXT NOT NULL,
+            supersedes_record_id TEXT,
+            supersedes_record_digest TEXT,
+            recorded_at TEXT NOT NULL,
+            recorded_by_json TEXT NOT NULL,
+            establishing_authority_id TEXT NOT NULL,
+            correction_authorization_id TEXT,
+            correction_authorization_digest TEXT,
+            rationale TEXT,
+            record_digest TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            UNIQUE(subject_type, subject_id, record_id),
+            FOREIGN KEY(project_id, epoch_id, epoch_digest)
+                REFERENCES project_operational_epochs(project_id, epoch_id, epoch_digest),
+            FOREIGN KEY(subject_type, subject_id, supersedes_record_id)
+                REFERENCES project_operational_origin_records(subject_type, subject_id, record_id),
+            CHECK ((record_kind = 'INITIAL' AND supersedes_record_id IS NULL
+                    AND supersedes_record_digest IS NULL
+                    AND correction_authorization_id IS NULL
+                    AND correction_authorization_digest IS NULL
+                    AND rationale IS NULL)
+                OR (record_kind = 'CORRECTION' AND supersedes_record_id IS NOT NULL
+                    AND supersedes_record_digest IS NOT NULL
+                    AND correction_authorization_id IS NOT NULL
+                    AND correction_authorization_digest IS NOT NULL
+                    AND rationale IS NOT NULL))
+        )""",
+        """CREATE INDEX project_operational_origin_records_by_subject
+        ON project_operational_origin_records(subject_type, subject_id, project_id)""",
+        """CREATE INDEX project_operational_origin_records_by_epoch
+        ON project_operational_origin_records(project_id, epoch_id, epoch_digest)""",
+        """CREATE UNIQUE INDEX project_operational_origin_records_unique_initial
+        ON project_operational_origin_records(subject_type, subject_id)
+        WHERE record_kind = 'INITIAL'""",
+        """CREATE UNIQUE INDEX project_operational_origin_records_unique_successor
+        ON project_operational_origin_records(subject_type, subject_id, supersedes_record_id)
+        WHERE supersedes_record_id IS NOT NULL""",
+        """CREATE TRIGGER project_operational_origin_records_subject_matches_insert
+        BEFORE INSERT ON project_operational_origin_records
+        WHEN (NEW.subject_type = 'PROJECT' AND (
+              NEW.subject_id != NEW.project_id
+              OR NOT EXISTS (SELECT 1 FROM projects WHERE id = NEW.project_id)
+          ))
+          OR (NEW.subject_type = 'SLICE' AND NOT EXISTS (
+              SELECT 1 FROM slices
+              WHERE slices.id = NEW.subject_id AND slices.project_id = NEW.project_id
+          ))
+        BEGIN
+            SELECT RAISE(ABORT, 'Project-scoped origin subject/project mismatch');
+        END""",
+        """CREATE TRIGGER project_adoptions_no_update
+        BEFORE UPDATE ON project_adoptions BEGIN
+            SELECT RAISE(ABORT, 'Project adoptions are append-only');
+        END""",
+        """CREATE TRIGGER project_adoptions_no_delete
+        BEFORE DELETE ON project_adoptions BEGIN
+            SELECT RAISE(ABORT, 'Project adoptions are append-only');
+        END""",
+        """CREATE TRIGGER project_operational_epochs_no_update
+        BEFORE UPDATE ON project_operational_epochs BEGIN
+            SELECT RAISE(ABORT, 'Project operational epochs are append-only');
+        END""",
+        """CREATE TRIGGER project_operational_epochs_no_delete
+        BEFORE DELETE ON project_operational_epochs BEGIN
+            SELECT RAISE(ABORT, 'Project operational epochs are append-only');
+        END""",
+        """CREATE TRIGGER project_operational_origin_records_no_update
+        BEFORE UPDATE ON project_operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Project operational origins are append-only');
+        END""",
+        """CREATE TRIGGER project_operational_origin_records_no_delete
+        BEFORE DELETE ON project_operational_origin_records BEGIN
+            SELECT RAISE(ABORT, 'Project operational origins are append-only');
+        END""",
+    ),
+)
+
 DEFAULT_MIGRATIONS: tuple[Migration, ...] = (
     INITIAL_MIGRATION,
     GITHUB_INTEGRATION_MIGRATION,
     REPOSITORY_MUTATION_AUTHORITY_MIGRATION,
     PROJECT_SLICE_DEFINITION_HISTORY_MIGRATION,
     MANUAL_EVALUATION_MIGRATION,
+    CANONICAL_PROMOTION_MIGRATION,
+    OPERATIONAL_ORIGIN_MIGRATION,
+    PROJECT_ADOPTION_MIGRATION,
 )
 
 _MIGRATION_TABLE = """CREATE TABLE IF NOT EXISTS relay_schema_migrations (
@@ -343,6 +667,15 @@ REQUIRED_TABLES = frozenset(
         "slice_definition_revisions",
         "slice_results",
         "manual_evaluations",
+        "canonical_promotion_policy_bindings",
+        "repository_promotion_intents",
+        "repository_promotion_results",
+        "repository_promotion_reconciliations",
+        "operational_history_epochs",
+        "operational_origin_records",
+        "project_adoptions",
+        "project_operational_epochs",
+        "project_operational_origin_records",
     }
 )
 REQUIRED_INDEXES = frozenset(
@@ -357,6 +690,23 @@ REQUIRED_INDEXES = frozenset(
         "slice_definition_revisions_by_project_revision",
         "slice_results_by_slice_sequence",
         "manual_evaluations_by_slice_result_sequence",
+        "canonical_promotion_bindings_by_ref_revision",
+        "repository_promotion_intents_by_project_ref_subject",
+        "repository_promotion_intents_by_parent_target",
+        "repository_promotion_results_by_project_ref_outcome",
+        "repository_promotion_results_unique_successful_target",
+        "repository_promotion_reconciliations_by_project_ref",
+        "operational_history_epochs_by_digest",
+        "operational_origin_records_by_subject",
+        "operational_origin_records_by_epoch",
+        "operational_origin_records_unique_initial",
+        "operational_origin_records_unique_successor",
+        "project_adoptions_by_t1",
+        "project_operational_epochs_by_digest",
+        "project_operational_origin_records_by_subject",
+        "project_operational_origin_records_by_epoch",
+        "project_operational_origin_records_unique_initial",
+        "project_operational_origin_records_unique_successor",
     }
 )
 REQUIRED_TRIGGERS = frozenset(
@@ -369,6 +719,26 @@ REQUIRED_TRIGGERS = frozenset(
         "slice_results_no_delete",
         "manual_evaluations_no_update",
         "manual_evaluations_no_delete",
+        "canonical_promotion_policy_bindings_no_update",
+        "canonical_promotion_policy_bindings_no_delete",
+        "repository_promotion_intents_no_update",
+        "repository_promotion_intents_no_delete",
+        "repository_promotion_results_no_update",
+        "repository_promotion_results_no_delete",
+        "repository_promotion_reconciliations_no_update",
+        "repository_promotion_reconciliations_no_delete",
+        "operational_history_epochs_no_update",
+        "operational_history_epochs_no_delete",
+        "operational_origin_records_no_update",
+        "operational_origin_records_no_delete",
+        "operational_origin_records_subject_matches_insert",
+        "project_adoptions_no_update",
+        "project_adoptions_no_delete",
+        "project_operational_epochs_no_update",
+        "project_operational_epochs_no_delete",
+        "project_operational_origin_records_no_update",
+        "project_operational_origin_records_no_delete",
+        "project_operational_origin_records_subject_matches_insert",
     }
 )
 

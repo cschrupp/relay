@@ -330,6 +330,66 @@ This direction does not authorize or require:
 
 ---
 
+## 12.1 Authorized-work exhaustion and terminal semantics
+
+Relay must distinguish **authority to execute work** from **authority to create new work**.
+
+An implementation/runtime session may autonomously decompose its current authorized work into whatever bounded internal steps are needed to satisfy that work: inspect, diagnose, edit, test, repair, retry, and use runtime-local subagents. Those internal steps do not become durable backlog items and do not survive the authority that justified them.
+
+The runtime must not infer that completing an authorized item grants authority to invent its successor. Successor selection belongs to Relay's control plane.
+
+The required execution shape is:
+
+```text
+authorized work item
+        ↓
+autonomous bounded execution
+        ↓
+item completion
+        ↓
+Relay resolves next authorized item
+        │
+        ├─ successor exists ──► next governed execution
+        │
+        └─ none exists ───────► BACKLOG_EXHAUSTED
+                                  ↓
+                                 STOP
+```
+
+`BACKLOG_EXHAUSTED` is a successful semantic terminal state. It means all currently authorized work is complete and no authorized successor exists. It is not an invitation for the runtime to search for a plausible next improvement.
+
+The control plane must not ask the runtime to generate another execution turn merely because the current turn completed. In particular, an empty authorized queue must never be translated into prompts such as "find the next useful task", "continue improving the project", or equivalent open-ended continuation.
+
+Agent-discovered future work may be retained only as non-authoritative proposal material, conceptually:
+
+```text
+PROPOSED_WORK
+```
+
+A proposal may describe a useful refactor, defect, investigation, or future Slice, but it has zero execution authority until an authorized planning or Human decision promotes it into the governed backlog.
+
+Planning authority is therefore separate from execution authority. A role explicitly authorized to propose a roadmap may create proposed work. It still may not execute those proposals merely because it created them.
+
+Semantic completion must also remain distinct from resource termination:
+
+```text
+BACKLOG_EXHAUSTED
+    successful completion: no authorized work remains
+
+BUDGET / STEP / TOKEN / TIME LIMIT
+    execution safeguard: work may remain incomplete
+```
+
+A max-step, max-token, timeout, or cost limit is a watchdog. It must never substitute for the semantic completion predicate.
+
+This boundary preserves strong agent autonomy **inside** authorized work while preventing recursive self-employment after scope is consumed.
+
+> **An executor may decompose authorized work, but it may not extend the authoritative backlog.**
+
+> **When no authorized successor exists, Relay stops.**
+
+---
+
 ## 13. Core invariants
 
 ### AR-1
@@ -363,6 +423,32 @@ Workspace isolation policy remains independent from the agent runtime.
 ### AR-8
 
 OpenCode-specific features stay behind the Relay-owned runtime adapter unless a future accepted requirement explicitly promotes one into Relay semantics.
+
+---
+
+### AR-9
+
+Every executable Relay action must trace to an existing authoritative work reference. Absence of such a reference means no execution authority exists.
+
+### AR-10
+
+Runtime-local decomposition is permitted only to satisfy the current authorized item. Internal subtasks do not become durable successor backlog.
+
+### AR-11
+
+Completion or closure of an authorized item consumes that item's execution scope; adjacent or follow-on work requires an independent authority basis.
+
+### AR-12
+
+If Relay resolves no authorized successor after item completion, the scheduler enters `BACKLOG_EXHAUSTED` and terminates successfully without another agent execution turn.
+
+### AR-13
+
+Agent-discovered future work is non-authoritative `PROPOSED_WORK` until explicitly promoted by an authorized planning/Human decision.
+
+### AR-14
+
+Semantic completion and resource exhaustion are distinct. Step, token, time, and cost limits are safety watchdogs and cannot define successful backlog completion.
 
 ---
 
