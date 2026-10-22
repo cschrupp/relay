@@ -3,6 +3,23 @@
 **Purpose:** Human-readable execution checklist. Keep this file short.  
 **Rule:** if this list and the actual repository state disagree, update this list as part of the same governed increment.
 
+## Current Slice 2.2 state
+
+```text
+OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Accepted Role Contracts implementation: 4400bd1da0db04e41077c3a6ed1c16d258104ba5
+Accepted quality-repaired effective subject: 07bda21295d87602e2a2234622478551920c5014
+Independent implementation evaluation: RLY-S22-IMPL-EVAL-003 — ACCEPT
+Human technical acceptance: RLY-S22-ACCEPT-001 — ACCEPTED
+Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+Production Role Contract wiring: NOT AUTHORIZED
+Slice 2.3: NOT OPEN / NOT AUTHORIZED
+Slice 2.4: NOT OPEN / NOT AUTHORIZED
+Phase 3: NOT OPEN / NOT AUTHORIZED
+Real-project agent execution: NOT AUTHORIZED
+```
+
 ---
 
 # NOW — restore product momentum
@@ -71,8 +88,8 @@
 - [x] Human-accept the independently accepted B4 read-only harness under `RLY-S110-DOGFOOD-B4-HARNESS-IMPL-ACCEPT-001`.
 - [x] Authorize one exact B4 cold-start dogfood execution under `RLY-S110-DOGFOOD-B4-EXEC-AUTH-001`.
 - [x] Execute B4 attempt 001; record `RLY-S110-DOGFOOD-B4-EXEC-EVAL-001 — FAIL_CLOSED / NO ANSWER PHASE` after exact-checkout preflight mismatch.
-- [ ] **CURRENT — Decide whether to authorize corrected B4 cold-start execution attempt 002 with exact checkout custody fixed.**
-- [ ] Keep Slice 2.2 design/implementation closed until B4 result acceptance and separate authority.
+- [ ] **CURRENT — Complete independent semantic evaluation of sealed B4 Attempt 006 answers when the exact terminal-evidence packet is available.**
+- [x] Complete and accept Slice 2.2 design and implementation; prepare the accepted implementation for independent closure evaluation under `RLY-S22-CLOSE-AUTH-001`.
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [ ] Verify the Project adoption orientation is available for later B3 forward re-baseline.
 
@@ -93,7 +110,7 @@
 
 - [ ] Formalize and implement **authorized-work exhaustion** across Role Contracts / Work Packets / Execution Workspace / Phase 3: executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly promoted.
 
-- [ ] Slice 2.2 — Role Contracts.
+- [x] Slice 2.2 — Role Contracts implementation COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY; independent closure evaluation PENDING.
 - [ ] Slice 2.3 — Context and Work-Packet Contract.
 - [ ] Slice 2.4 — Execution Workspace Authority.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable.

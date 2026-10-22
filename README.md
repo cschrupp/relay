@@ -24,7 +24,9 @@ Slice 1.9:                OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTE
 Slice 1.10:               Canonical Source / Promotion — PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 2:                  OPEN
 Slice 2.1:                COMPLETE / ACCEPTED / CLOSED
-Slice 2.2:                PLANNED / NOT OPEN / NOT AUTHORIZED
+Slice 2.2:                OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+                          RLY-S22-IMPL-EVAL-003 — ACCEPT; RLY-S22-ACCEPT-001 — ACCEPTED
+                          RLY-S22-CLOSE-AUTH-001 — AUTHORIZED; closure evaluation PENDING
 Slice 2.3:                PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.4:                PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3:                  NOT OPEN / NOT AUTHORIZED
@@ -92,7 +94,7 @@ Phase 1 — Deterministic Governance Foundation
 
 Phase 2 - provider and agent foundation
   2.1 Agent Runtime Contract                      CLOSED
-  2.2 Role Contracts                             PLANNED
+  2.2 Role Contracts                             CLOSURE-READY; independent closure evaluation PENDING
   2.3 Context and Work-Packet Contract           PLANNED
   2.4 Execution Workspace Authority              PLANNED
 
