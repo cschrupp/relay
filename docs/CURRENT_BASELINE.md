@@ -59,7 +59,7 @@ Relay can govern state once it exists, but normal onboarding of an existing
 project must not require reconstruction of fictional Relay-native history.
 
 Current roadmap direction:
-B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The B1 intake implementation is independently accepted and Human-accepted at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`. The authorized Relay/WellPlot real-world dogfood has no completed result recorded before acceptance. B2 Revision 1 plus its Revision 2 Integrity Amendment is independently accepted and Human-accepted at exact composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637`. The Human entered exact `ADOPT`; T1 is `2026-10-20T03:27:54.511113Z`; the operational database was atomically published at `/home/user/projects/relay-local-state/relay-operational.sqlite3`. Terminal evidence SHA-256 is `89928fdfadbca85fafe549e8b496c7cb97192740dd2b28b6ea583d87c08bbe5c`. Independent review `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT` found no blocking discrepancy. Human acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is closed; B3 is eligible to open but remains not yet authorized. Strict historical bootstrap remains blocked and is separate from B2.
+B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The B1 intake implementation is independently accepted and Human-accepted at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`. The authorized Relay/WellPlot real-world dogfood has no completed result recorded before acceptance. B2 Revision 1 plus its Revision 2 Integrity Amendment is independently accepted and Human-accepted at exact composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637`. The Human entered exact `ADOPT`; T1 is `2026-10-20T03:27:54.511113Z`; the operational database was atomically published at `/home/user/projects/relay-local-state/relay-operational.sqlite3`. Terminal evidence SHA-256 is `89928fdfadbca85fafe549e8b496c7cb97192740dd2b28b6ea583d87c08bbe5c`. Independent review `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT` found no blocking discrepancy. Human acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is closed; B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED; B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED; Slice 2.2 is COMPLETE / ACCEPTED / CLOSED. Strict historical bootstrap remains blocked and is separate from B2.
 ```
 
 ## Current product principle
@@ -80,7 +80,7 @@ B2 Existing Project Adoption / T1 Genesis DESIGN COMPLETE / HUMAN ACCEPTED
 B2 implementation COMPLETE / HUMAN ACCEPTED
 B2 real Relay adoption / T1 COMPLETE / HUMAN ACCEPTED
 B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
-B4 Relay Dogfood Acceptance               ATTEMPT 001 FAIL_CLOSED / NO ANSWER PHASE
+B4 Relay Dogfood Acceptance               COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 
 Then:
 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 and 2.4 remain NOT OPEN / NOT AUTHORIZED
@@ -113,7 +113,7 @@ Slice 1.9 — Human Decision Support & Governance Review Surface:
   RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
   Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement:
-  PLANNED / NOT OPEN / NOT AUTHORIZED
+  OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 OPEN / IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY;
   2.3–2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -180,8 +180,8 @@ Independent closure evaluation: RLY-S21-CLOSE-EVAL-002 — ACCEPT
 Roadmap re-baseline: RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED
 Slice 1.8 — Governance Assurance Reference Model: COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 Slice 1.9 — Human Decision Support and Governance Review Surface: COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
-Slice 1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
-Slice 2.2 — Role Contracts: OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+Slice 1.10 — Canonical Source and Promotion Enforcement: OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
+Slice 2.2 — Role Contracts: COMPLETE / ACCEPTED / CLOSED
 Slice 2.3 — Context and Work-Packet Contract: PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.4 — Execution Workspace Authority: PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
@@ -205,10 +205,10 @@ Phase 2 may proceed on that accepted baseline. A Phase 1 defect that threatens a
 Current Phase 1 roadmap:
 1.8 — Governance Assurance Reference Model: COMPLETE / ACCEPTED / CLOSED — RLY-S18-EVAL-002 — ACCEPT / RLY-S18-ACCEPT-001 — ACCEPTED / RLY-S18-CLOSE-EVAL-001 — ACCEPT / RLY-S18-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE 0946d083b1bc1ccd7773f709efacb04a0c00aacc
 1.9 — Human Decision Support and Governance Review Surface: COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / RLY-S19-CLOSE-AUTH-001 — AUTHORIZED / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
-1.10 — Canonical Source and Promotion Enforcement: PLANNED / NOT OPEN / NOT AUTHORIZED
+1.10 — Canonical Source and Promotion Enforcement: OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
 
 Then Phase 2 continues:
-2.2 — Role Contracts: CLOSURE-READY; independent closure evaluation PENDING
+2.2 — Role Contracts: COMPLETE / ACCEPTED / CLOSED — RLY-S22-CLOSE-EVAL-001 — ACCEPT
 2.3 — Context and Work-Packet Contract
 2.4 — Execution Workspace Authority
 
@@ -252,7 +252,7 @@ The consolidated [reference model](architecture/GOVERNANCE_ASSURANCE_REFERENCE_M
 
 Product Proposal revision 50 records Slice 1.8 and Slice 1.9 closure. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Historical Slice 2.1 roadmap references to Slice 1.9 source/promotion enforcement are superseded by accepted RW1-D01: Slice 1.9 owns Decision Support and Slice 1.10 owns enforcement.
 
-No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation and Human technical acceptance were followed by `RLY-S18-CLOSE-EVAL-001 — ACCEPT`; Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is COMPLETE / ACCEPTED / CLOSED after `RLY-S19-CLOSE-EVAL-001 — REWORK` and corrective `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 remains PLANNED / NOT OPEN / NOT AUTHORIZED. Phase 3 and agent execution remain unauthorized.
+No runtime, production/test source, schema, dependency, workflow, or repository-setting change is included. Profiles remain non-executable; protected assets are not enforced; adapters and ContextManifest remain future; telemetry is not collected; the competitive experiment is not executed. Independent implementation evaluation and Human technical acceptance were followed by `RLY-S18-CLOSE-EVAL-001 — ACCEPT`; Slice 1.8 is closed under the existing finalization authority. At the time of this Slice 1.8 record, Slices 1.9 and 1.10 had not opened. Current status: Slice 1.9 is COMPLETE / ACCEPTED / CLOSED after `RLY-S19-CLOSE-EVAL-001 — REWORK` and corrective `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN under `RLY-S110-DESIGN-ACCEPT-001 — ACCEPTED` and `RLY-S110-IMPL-AUTH-001 — AUTHORIZED`; B4 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED, while no top-level Slice 1.10 closure record is established. Phase 3 and agent execution remain unauthorized.
 
 # 1C. Slice 2.1 historical opening
 
@@ -650,7 +650,7 @@ Slice 1.10 — Canonical Source and Promotion Enforcement:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Slice 2.2:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.3:
 PLANNED / NOT OPEN / NOT AUTHORIZED
@@ -1036,7 +1036,7 @@ Slice 2.1:
 COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.2:
-OPEN — IMPLEMENTATION COMPLETE / TECHNICALLY ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 
 Slice 2.3:
 PLANNED / NOT OPEN / NOT AUTHORIZED
