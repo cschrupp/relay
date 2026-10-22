@@ -120,6 +120,59 @@ def conforming_facts(
     )
 
 
+def packet_with_three_plural_subjects() -> tuple[WorkPacket, ContextManifest]:
+    base = packet()
+    current_manifest = manifest(all_materials=True)
+
+    authorities = tuple(
+        base.authority_refs[0].model_copy(
+            update={
+                "authority_key": f"slice-authorization-{letter}",
+                "record_digest": digest,
+            }
+        )
+        for letter, digest in (("a", D1), ("b", D2), ("c", D3))
+    )
+    artifacts = tuple(
+        artifact().model_copy(
+            update={
+                "id": f"art_00000000-0000-4000-8000-00000000000{number}",
+                "path": f"docs/design-{letter}.md",
+                "content_digest": digest,
+            }
+        )
+        for letter, number, digest in (("a", 6, D1), ("b", 7, D2), ("c", 8, D3))
+    )
+    protected_requirements = tuple(
+        base.protected_verification_requirements[0].model_copy(
+            update={
+                "artifact": artifact_item,
+                "required_operation": VerificationAssetPermission.MODIFY,
+                "separate_authority_ref": AuthorityBasisRef(
+                    authority_type=AuthorityReferenceType.REPOSITORY_MUTATION_AUTHORIZATION,
+                    authority_key=f"mutation-{letter}",
+                    record_digest=digest,
+                    subject_digest=D1,
+                ),
+            }
+        )
+        for letter, artifact_item, digest in zip(
+            ("a", "b", "c"), artifacts, (D1, D2, D3), strict=True
+        )
+    )
+    current_packet = type(base).model_validate(
+        {
+            **base.model_dump(),
+            "authority_refs": authorities,
+            "accepted_design_artifacts": artifacts,
+            "protected_verification_requirements": protected_requirements,
+            "context_manifest_ref": context_manifest_ref(current_manifest),
+            "required_context_keys": ("entry-1", "entry-2", "entry-3"),
+        }
+    )
+    return current_packet, current_manifest
+
+
 def test_exact_fact_set_satisfies_without_authority_semantics() -> None:
     current_packet = packet()
     current_manifest = manifest()
@@ -239,6 +292,30 @@ def test_missing_authority_fact_is_indeterminate_and_wrong_or_extra_is_unsatisfi
     )
 
 
+@pytest.mark.parametrize("fact_family", ("authority", "accepted", "protected", "material"))
+@pytest.mark.parametrize("missing_position", (0, 1, 2))
+def test_missing_first_middle_or_last_plural_fact_is_indeterminate(
+    fact_family: str, missing_position: int
+) -> None:
+    current_packet, current_manifest = packet_with_three_plural_subjects()
+    facts = conforming_facts(current_packet, current_manifest)
+    field_by_family = {
+        "authority": "authority_facts",
+        "accepted": "accepted_design_facts",
+        "protected": "protected_verification_authority_facts",
+        "material": "materialization_facts",
+    }
+    field_name = field_by_family[fact_family]
+    complete_facts = getattr(facts, field_name)
+    assert len(complete_facts) == 3
+    incomplete_facts = (*complete_facts[:missing_position], *complete_facts[missing_position + 1 :])
+    missing = facts.model_copy(update={field_name: incomplete_facts})
+
+    result = evaluate_work_packet_conformance(current_packet, current_manifest, missing)
+
+    assert result.status is RequirementStatus.INDETERMINATE
+
+
 def test_role_applicability_is_bound_to_exact_role_contract_ref() -> None:
     current_packet = packet()
     current_manifest = manifest()
@@ -328,6 +405,32 @@ def test_missing_profile_not_required_fact_is_indeterminate() -> None:
     )
     assert mismatch_result.status is RequirementStatus.UNSATISFIED
     assert WorkPacketReason.GOVERNANCE_PROFILE_FACT_SUBJECT_MISMATCH in mismatch_result.reasons
+
+
+@pytest.mark.parametrize(
+    "profile_status",
+    (RequirementStatus.UNSATISFIED, RequirementStatus.INDETERMINATE),
+)
+def test_absent_profile_ignores_status_for_nonexistent_profile(
+    profile_status: RequirementStatus,
+) -> None:
+    current_packet = packet()
+    current_manifest = manifest()
+    facts = conforming_facts(current_packet, current_manifest)
+    no_profile_fact = GovernanceProfileFact(
+        evaluated_policy_basis_ref=current_packet.policy_basis_ref,
+        evaluated_profile_ref=None,
+        profile_requirement_status=RequirementStatus.SATISFIED,
+        profile_status=profile_status,
+    )
+
+    result = evaluate_work_packet_conformance(
+        current_packet,
+        current_manifest,
+        facts.model_copy(update={"governance_profile_fact": no_profile_fact}),
+    )
+
+    assert result.status is RequirementStatus.SATISFIED
 
 
 def test_fact_tuple_order_is_noncanonical_and_cannot_be_adopted() -> None:
@@ -520,6 +623,38 @@ def test_exact_material_is_satisfied_and_content_or_provenance_mismatch_fails() 
     )
     assert provenance_result.status is RequirementStatus.UNSATISFIED
     assert WorkPacketReason.CONTEXT_MATERIAL_PROVENANCE_MISMATCH in provenance_result.reasons
+
+
+def test_two_required_context_keys_may_share_exact_material_ref() -> None:
+    current_packet = packet()
+    original_manifest = manifest()
+    first_entry = original_manifest.entries[0]
+    second_entry = first_entry.model_copy(update={"entry_key": "entry-2"})
+    current_manifest = type(original_manifest).model_validate(
+        {
+            **original_manifest.model_dump(),
+            "entries": (first_entry.model_dump(), second_entry.model_dump()),
+        }
+    )
+    current_packet = type(current_packet).model_validate(
+        {
+            **current_packet.model_dump(),
+            "context_manifest_ref": context_manifest_ref(current_manifest),
+            "required_context_keys": ("entry-1", "entry-2"),
+        }
+    )
+    duplicate_facts = materialization_facts_for(current_packet, current_manifest)
+
+    result = evaluate_context_conformance(current_packet, current_manifest, duplicate_facts)
+
+    assert len(duplicate_facts) == 2
+    assert duplicate_facts[0].evaluated_material_ref == duplicate_facts[1].evaluated_material_ref
+    assert result.status is RequirementStatus.SATISFIED
+
+    missing_second_position = evaluate_context_conformance(
+        current_packet, current_manifest, duplicate_facts[:1]
+    )
+    assert missing_second_position.status is RequirementStatus.INDETERMINATE
 
 
 def test_context_fact_for_different_material_cannot_satisfy_required_entry() -> None:

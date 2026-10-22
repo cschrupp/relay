@@ -35,16 +35,6 @@ from relay_engine.work_packets.models import (
 )
 
 
-def _canonical_json(value: DomainModel) -> str:
-    return json.dumps(
-        value.model_dump(mode="json"),
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    )
-
-
 def _subject_digest(kind: ControlMirrorKind, subject: DomainModel) -> ContentDigest:
     payload = {"control_kind": kind.value, "subject": subject.model_dump(mode="json")}
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -123,6 +113,22 @@ def _result(reasons: Iterable[WorkPacketReason], *, failed: bool = False) -> Req
     return RequirementStatus.SATISFIED
 
 
+def _ordered_subsequence_indices(
+    actual: tuple[object, ...], expected: tuple[object, ...]
+) -> tuple[int, ...] | None:
+    """Locate actual subjects in expected order, allowing omitted evidence."""
+    positions: list[int] = []
+    expected_position = 0
+    for subject in actual:
+        while expected_position < len(expected) and expected[expected_position] != subject:
+            expected_position += 1
+        if expected_position == len(expected):
+            return None
+        positions.append(expected_position)
+        expected_position += 1
+    return tuple(positions)
+
+
 def _material_matches_source_baseline(material: ContextMaterialRef, packet: WorkPacket) -> bool:
     if not isinstance(material, RepositoryContentMaterialRef):
         return True
@@ -191,21 +197,29 @@ def evaluate_context_conformance(
         failed = True
 
     entries = {entry.entry_key: entry for entry in manifest.entries}
-    facts_by_material: dict[str, list[ContextMaterializationFact]] = {}
-    for fact in materialization_facts:
-        key = _canonical_json(fact.evaluated_material_ref)
-        facts_by_material.setdefault(key, []).append(fact)
-
-    expected_fact_keys: list[str] = []
+    required_entries: list[ContextEntryRef] = []
     for context_key in packet.required_context_keys:
         entry = entries.get(context_key)
         if entry is None:
             missing_keys.append(context_key)
             reasons.append(WorkPacketReason.REQUIRED_CONTEXT_MISSING)
             continue
+        required_entries.append(entry)
+
+    required_material_refs = tuple(entry.source.material_ref for entry in required_entries)
+    actual_material_refs = tuple(fact.evaluated_material_ref for fact in materialization_facts)
+    material_positions = _ordered_subsequence_indices(actual_material_refs, required_material_refs)
+    if material_positions is None:
+        reasons.append(WorkPacketReason.MATERIALIZATION_FACT_SET_MISMATCH)
+        failed = True
+        material_facts_by_position: dict[int, ContextMaterializationFact] = {}
+    else:
+        material_facts_by_position = dict(
+            zip(material_positions, materialization_facts, strict=True)
+        )
+
+    for required_position, entry in enumerate(required_entries):
         material = entry.source.material_ref
-        fact_key = _canonical_json(material)
-        expected_fact_keys.append(fact_key)
         if not _material_matches_source_baseline(material, packet):
             reasons.append(WorkPacketReason.CONTEXT_MATERIAL_CONTENT_MISMATCH)
             failed = True
@@ -213,18 +227,13 @@ def evaluate_context_conformance(
         reasons.extend(mirror_reasons)
         if mirror_reasons:
             failed = True
-        matches = facts_by_material.get(fact_key, [])
-        if len(matches) > 1:
-            reasons.append(WorkPacketReason.MATERIALIZATION_FACT_SET_MISMATCH)
-            failed = True
-            continue
-        if not matches:
+        fact = material_facts_by_position.get(required_position)
+        if fact is None:
             if material.material_kind == MaterialKind.CAPTURED_MATERIAL.value:
                 reasons.append(WorkPacketReason.CONTEXT_MATERIAL_RESOLVER_UNSUPPORTED)
             else:
                 reasons.append(WorkPacketReason.CONTEXT_MATERIAL_UNAVAILABLE)
             continue
-        fact = matches[0]
         if fact.evaluated_material_ref != material:
             reasons.append(WorkPacketReason.MATERIALIZATION_FACT_SET_MISMATCH)
             failed = True
@@ -255,21 +264,6 @@ def evaluate_context_conformance(
             expected_provenance,
         ):
             reasons.append(WorkPacketReason.CONTEXT_MATERIAL_UNAVAILABLE)
-
-    fact_material_refs = tuple(fact.evaluated_material_ref for fact in materialization_facts)
-    required_material_refs = tuple(
-        entries[key].source.material_ref for key in packet.required_context_keys if key in entries
-    )
-    if fact_material_refs != required_material_refs:
-        # Extra, missing, or reordered facts cannot be silently adopted as subject evidence.
-        if (
-            len(fact_material_refs) < len(required_material_refs)
-            and fact_material_refs == required_material_refs[: len(fact_material_refs)]
-        ):
-            reasons.append(WorkPacketReason.CONTEXT_MATERIAL_UNAVAILABLE)
-        else:
-            reasons.append(WorkPacketReason.MATERIALIZATION_FACT_SET_MISMATCH)
-            failed = True
 
     status = _result(reasons, failed=failed)
     return ContextConformance(
@@ -337,19 +331,21 @@ def evaluate_work_packet_conformance(
         failed = True
 
     authority_refs = tuple(fact.evaluated_ref for fact in facts.authority_facts)
-    if authority_refs != packet.authority_refs:
-        if authority_refs == packet.authority_refs[: len(authority_refs)]:
-            reasons.append(WorkPacketReason.AUTHORITY_BASIS_MISSING)
-        else:
-            reasons.append(WorkPacketReason.AUTHORITY_FACT_SET_MISMATCH)
-            failed = True
+    authority_positions = _ordered_subsequence_indices(authority_refs, packet.authority_refs)
+    if authority_positions is None:
+        reasons.append(WorkPacketReason.AUTHORITY_FACT_SET_MISMATCH)
+        failed = True
+    elif len(authority_refs) < len(packet.authority_refs):
+        reasons.append(WorkPacketReason.AUTHORITY_BASIS_MISSING)
     accepted_artifacts = tuple(fact.evaluated_artifact for fact in facts.accepted_design_facts)
-    if accepted_artifacts != packet.accepted_design_artifacts:
-        if accepted_artifacts == packet.accepted_design_artifacts[: len(accepted_artifacts)]:
-            reasons.append(WorkPacketReason.ACCEPTED_DESIGN_BASIS_MISSING)
-        else:
-            reasons.append(WorkPacketReason.ACCEPTED_DESIGN_FACT_SET_MISMATCH)
-            failed = True
+    accepted_positions = _ordered_subsequence_indices(
+        accepted_artifacts, packet.accepted_design_artifacts
+    )
+    if accepted_positions is None:
+        reasons.append(WorkPacketReason.ACCEPTED_DESIGN_FACT_SET_MISMATCH)
+        failed = True
+    elif len(accepted_artifacts) < len(packet.accepted_design_artifacts):
+        reasons.append(WorkPacketReason.ACCEPTED_DESIGN_BASIS_MISSING)
     if facts.context_manifest_fact.evaluated_ref != packet.context_manifest_ref:
         reasons.append(WorkPacketReason.CONTEXT_MANIFEST_FACT_SUBJECT_MISMATCH)
         failed = True
@@ -364,12 +360,12 @@ def evaluate_work_packet_conformance(
     expected_protected_refs = tuple(
         _protected_fact_ref(requirement) for requirement in requirements_requiring_authority
     )
-    if protected_refs != expected_protected_refs:
-        if protected_refs == expected_protected_refs[: len(protected_refs)]:
-            reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_INDETERMINATE)
-        else:
-            reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_FACT_SET_MISMATCH)
-            failed = True
+    protected_positions = _ordered_subsequence_indices(protected_refs, expected_protected_refs)
+    if protected_positions is None:
+        reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_FACT_SET_MISMATCH)
+        failed = True
+    elif len(protected_refs) < len(expected_protected_refs):
+        reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_INDETERMINATE)
 
     status_checks = (
         _status_reasons(
@@ -397,7 +393,7 @@ def evaluate_work_packet_conformance(
         reasons.extend(additions)
         failed = failed or is_failure
 
-    if authority_refs == packet.authority_refs[: len(authority_refs)]:
+    if authority_positions is not None:
         for fact in facts.authority_facts:
             additions, is_failure = _status_reasons(
                 fact.status,
@@ -415,11 +411,12 @@ def evaluate_work_packet_conformance(
         failed = True
     elif profile_fact.profile_requirement_status is RequirementStatus.INDETERMINATE:
         reasons.append(WorkPacketReason.GOVERNANCE_PROFILE_STALE)
-    if profile_fact.profile_status is RequirementStatus.UNSATISFIED:
-        reasons.append(WorkPacketReason.GOVERNANCE_PROFILE_CONFLICT)
-        failed = True
-    elif profile_fact.profile_status is RequirementStatus.INDETERMINATE:
-        reasons.append(WorkPacketReason.GOVERNANCE_PROFILE_STALE)
+    if packet.governance_profile_ref is not None:
+        if profile_fact.profile_status is RequirementStatus.UNSATISFIED:
+            reasons.append(WorkPacketReason.GOVERNANCE_PROFILE_CONFLICT)
+            failed = True
+        elif profile_fact.profile_status is RequirementStatus.INDETERMINATE:
+            reasons.append(WorkPacketReason.GOVERNANCE_PROFILE_STALE)
 
     if facts.role_contract_applicability.status is RoleContractApplicability.NOT_APPLICABLE:
         reasons.append(WorkPacketReason.ROLE_CONTRACT_NOT_APPLICABLE)
@@ -427,31 +424,29 @@ def evaluate_work_packet_conformance(
     elif facts.role_contract_applicability.status is RoleContractApplicability.INDETERMINATE:
         reasons.append(WorkPacketReason.ROLE_CONTRACT_APPLICABILITY_UNKNOWN)
 
-    if accepted_artifacts == packet.accepted_design_artifacts[: len(accepted_artifacts)]:
-        accepted_facts_to_evaluate = facts.accepted_design_facts
-    else:
-        accepted_facts_to_evaluate = ()
-    for fact in accepted_facts_to_evaluate:
+    for fact in facts.accepted_design_facts if accepted_positions is not None else ():
         if fact.status is RequirementStatus.UNSATISFIED:
             reasons.append(WorkPacketReason.ACCEPTED_DESIGN_BASIS_MISSING)
             failed = True
         elif fact.status is RequirementStatus.INDETERMINATE:
             reasons.append(WorkPacketReason.ACCEPTED_DESIGN_BASIS_STALE)
 
-    for fact, requirement in zip(
-        facts.protected_verification_authority_facts,
-        requirements_requiring_authority,
-        strict=False,
-    ):
-        if fact.evaluated_authority_ref != requirement.separate_authority_ref:
-            reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_FACT_SET_MISMATCH)
-            failed = True
-        if requirement.separate_authority_ref is not None:
-            if fact.status is RequirementStatus.UNSATISFIED:
-                reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_REQUIRED)
+    if protected_positions is not None:
+        for fact, requirement_position in zip(
+            facts.protected_verification_authority_facts,
+            protected_positions,
+            strict=True,
+        ):
+            requirement = requirements_requiring_authority[requirement_position]
+            if fact.evaluated_authority_ref != requirement.separate_authority_ref:
+                reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_FACT_SET_MISMATCH)
                 failed = True
-            elif fact.status is RequirementStatus.INDETERMINATE:
-                reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_INDETERMINATE)
+            if requirement.separate_authority_ref is not None:
+                if fact.status is RequirementStatus.UNSATISFIED:
+                    reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_REQUIRED)
+                    failed = True
+                elif fact.status is RequirementStatus.INDETERMINATE:
+                    reasons.append(WorkPacketReason.PROTECTED_VERIFICATION_AUTHORITY_INDETERMINATE)
 
     context = evaluate_context_conformance(packet, manifest, facts.materialization_facts)
     reasons.extend(context.reasons)
