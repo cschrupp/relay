@@ -9,8 +9,9 @@ Before making substantive changes, read:
 1. `docs/CURRENT_BASELINE.md`
 2. the currently authorized slice under `docs/slices/`, if one exists
 3. `docs/policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md`
-4. `docs/policies/DOCUMENTATION_GOVERNANCE.md`
-5. relevant ADRs under `docs/decisions/`
+4. `docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+5. `docs/policies/DOCUMENTATION_GOVERNANCE_V0_3.md`
+6. relevant ADRs under `docs/decisions/`
 
 Read `docs/PRODUCT_PROPOSAL.md` and `docs/BUILD_PLAN.md` when broader product context is needed, but resolve current canonical document identity through `.relay/registry.json`.
 
@@ -20,7 +21,7 @@ Read `docs/PRODUCT_PROPOSAL.md` and `docs/BUILD_PLAN.md` when broader product co
 
 The authoritative current boundary is `docs/CURRENT_BASELINE.md` plus the exact Human Authority records governing the active slice.
 
-As of the current repository baseline, Slices 1.1–1.6 are complete / accepted / closed; Slice 1.7 — Manual Evaluation and Acceptance — is open with its design accepted, but implementation is not authorized; and agent execution is not authorized. The accepted `slice_results` and `manual_evaluations` migration is not authorized to apply. If these statements ever disagree with `docs/CURRENT_BASELINE.md`, the canonical current baseline governs.
+Current status changes frequently. Resolve it from `docs/CURRENT_BASELINE.md` and exact Human Authority records rather than this file. As of the October 23, 2026 documentation re-baseline, Slice 2.2 and 2.3 are closed; Slice 2.4 is open with Human-accepted design and bounded implementation authority; Phase 3 and real-project agent execution remain not open / not authorized. If this sentence ever disagrees with the canonical current baseline, the baseline governs.
 
 Future slice documents may be present for review. Presence does not constitute authorization.
 
@@ -55,6 +56,42 @@ See `docs/architecture/AGENT_RUNTIME.md` for the proposed boundary.
 - Passing tests is evidence, not acceptance.
 - Do not edit locked/accepted historical records in place; use amendments or superseding records.
 - Never commit secrets.
+
+## Authorized-work decomposition
+
+The WorkPacket is the authoritative external work unit.
+
+Do not turn routine internal implementation steps into separate authority gates.
+
+When acting as an IMPLEMENTER under exact current authority:
+
+- own the internal plan;
+- inspect authorized context;
+- sequence implementation work;
+- run relevant validation after meaningful milestones;
+- repair in-scope failures;
+- self-review;
+- continue without asking for approval after routine internal milestones.
+
+An internal task, checklist item, file boundary, or milestone is not a WorkPacket.
+
+Stop and report only when a real terminal/hard-stop condition is reached, including:
+
+```text
+DONE
+BLOCKED_BY_AUTHORITY
+BLOCKED_BY_CONTRACT
+BLOCKED_BY_ENVIRONMENT
+BUDGET_EXHAUSTED
+BACKLOG_EXHAUSTED
+or another exact WorkPacket hard stop
+```
+
+If correct completion requires work outside exact authority, record/report `PROPOSED_WORK` and STOP. Do not silently widen scope.
+
+Surgical externally governed tasks are the exception. Prefer them only when narrowness itself reduces material risk, such as migrations, protected assets, irreversible operations, exact identity/digest contracts, delicate scientific/numerical certificates, or narrow independent-review corrections.
+
+Runtime-local plans/subagents do not create Relay authority and do not replace independently governed evaluation or Human acceptance.
 
 ## Required quality checks
 
