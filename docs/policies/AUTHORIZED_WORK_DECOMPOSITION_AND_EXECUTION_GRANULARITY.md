@@ -2,8 +2,7 @@
 
 **Policy version:** 0.1  
 **Status:** HUMAN-APPROVED CROSS-CUTTING POLICY DIRECTION  
-**Document class:** Living canonical policy  
-**Canonical key:** `authorized-work-granularity`  
+**Document class:** Detailed living policy companion — registered; canonical entry point is `engineering-simplicity-quality`  
 **Applies to:** Relay planning, WorkPacket construction, RoleContract execution semantics, AgentRuntime use, implementation handoffs, independent evaluation, rework, future Phase 3 orchestration, and execution telemetry  
 **Authority:** `RLY-GOV-AUTHWORK-GRANULARITY-001 — AUTHORIZED`  
 **Date:** October 23, 2026
