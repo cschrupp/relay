@@ -4401,6 +4401,38 @@
       "updated_at": "2026-10-22T18:39:49Z"
     },
     {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31f570f2-7d35-4cb9-b8f0-0e9afdfde0e1",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:cee33cfb019c3b399806095e3d9b83358011a192f69472243032de81cdaaabfe",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_2_4_IMPLEMENTATION_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.4 — Independent Implementation Evaluation 001",
+      "updated_at": "2026-10-23T22:10:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_48f9f3b1-1cb3-4af4-b8ce-2da7018ca8c5",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:132c8adf7162e24d7f3428f905159e8f40aa310bc03aef9716fb3aa90b7b2e6a",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_2_4_IMPLEMENTATION_REWORK_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Relay — Slice 2.4 Implementation Rework Authorization 001",
+      "updated_at": "2026-10-23T22:10:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_1a10e001-6c3d-4e30-8f30-3300ccddee03",
       "artifact_state": "LOCKED",
@@ -5055,38 +5087,6 @@
       "supersedes": null,
       "title": "Existing Project Adoption and Forward-Governance Strategy",
       "updated_at": "2026-10-17T03:51:00Z"
-    },
-    {
-      "artifact_class": "IMMUTABLE_RECORD",
-      "artifact_id": "art_31f570f2-7d35-4cb9-b8f0-0e9afdfde0e1",
-      "artifact_state": "IMMUTABLE",
-      "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:cee33cfb019c3b399806095e3d9b83358011a192f69472243032de81cdaaabfe",
-      "human_version": null,
-      "path": "docs/reviews/SLICE_2_4_IMPLEMENTATION_EVALUATION_001.md",
-      "revision": 1,
-      "schema_version": 1,
-      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
-      "superseded_by": null,
-      "supersedes": null,
-      "title": "Slice 2.4 — Independent Implementation Evaluation 001",
-      "updated_at": "2026-10-23T22:10:00Z"
-    },
-    {
-      "artifact_class": "IMMUTABLE_RECORD",
-      "artifact_id": "art_48f9f3b1-1cb3-4af4-b8ce-2da7018ca8c5",
-      "artifact_state": "IMMUTABLE",
-      "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:132c8adf7162e24d7f3428f905159e8f40aa310bc03aef9716fb3aa90b7b2e6a",
-      "human_version": null,
-      "path": "docs/reviews/SLICE_2_4_IMPLEMENTATION_REWORK_AUTHORIZATION_001.md",
-      "revision": 1,
-      "schema_version": 1,
-      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
-      "superseded_by": null,
-      "supersedes": null,
-      "title": "Relay — Slice 2.4 Implementation Rework Authorization 001",
-      "updated_at": "2026-10-23T22:10:00Z"
     }
   ],
   "canonical": [
