@@ -1,11 +1,11 @@
 # Relay — Engineering Simplicity, Scope, and Quality Governance
 
-**Policy version:** 0.1  
+**Policy version:** 0.2  
 **Status:** ACCEPTED CROSS-CUTTING DESIGN PRINCIPLE  
 **Document class:** Living canonical policy  
 **Canonical key:** `engineering-simplicity-quality`  
 **Implementation:** Distributed across future governance, execution, evaluation, and UI slices  
-**Date:** September 2026
+**Date:** October 2026
 
 ---
 
@@ -975,3 +975,63 @@ Independent Evaluation
 The target is:
 
 > **the clearest implementation with the least architecture required by the current accepted problem, verified by tools the project itself has chosen.**
+
+
+---
+
+# Authorized Work Granularity and Agent Autonomy
+
+Relay's engineering-simplicity policy now includes an explicit anti-fragmentation rule:
+
+> **Use the largest cohesive authorized work unit that can be independently verified without crossing a distinct authority, risk, rollback, or acceptance boundary. Let the Implementer own internal decomposition.**
+
+The detailed policy is:
+
+`docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+
+The controlling distinctions are:
+
+```text
+WorkPacket
+    = externally governed engineering outcome
+
+internal execution task / milestone
+    = non-authoritative execution strategy
+
+DECOMPOSE_AUTHORIZED_WORK
+    = permission to plan and sequence inside exact current authority
+
+PROPOSED_WORK
+    = discovered future work with no current authority
+```
+
+Implementation agents should not be externally micro-managed one file, function, test, or routine milestone at a time when those steps are part of one already-authorized coherent result.
+
+Routine in-scope execution should continue through planning, implementation, verification, repair, and self-review until a terminal condition is reached.
+
+The Implementer must still stop for:
+
+```text
+DONE
+BLOCKED_BY_AUTHORITY
+BLOCKED_BY_CONTRACT
+BLOCKED_BY_ENVIRONMENT
+BUDGET_EXHAUSTED
+BACKLOG_EXHAUSTED
+or another exact WorkPacket hard stop
+```
+
+Task granularity must never be used to bypass:
+
+- Human authority;
+- RoleContract limits;
+- exact WorkPacket scope;
+- protected verification controls;
+- WorkspacePolicy;
+- independent evaluation;
+- Human acceptance;
+- promotion authority.
+
+Surgical externally governed tasks are appropriate when narrowness itself reduces material risk, including exact identity/digest contracts, migrations, protected verification assets, irreversible effects, delicate scientific/numerical certificates, and narrow independent-review findings.
+
+The initial task-size bands in the detailed policy are **calibration guidance, not authorization semantics or new schema enums**. Relay should eventually tune them using its own execution/evaluation telemetry rather than freezing assumptions around one model generation.
