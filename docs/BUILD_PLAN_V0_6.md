@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.3 COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED under RLY-S24-IMPL-AUTH-001; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.3 Closed
+# 0. CURRENT ROADMAP — Slice 2.4 implementation authorized
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -70,7 +70,7 @@ Context material resolver/storage: NOT AUTHORIZED
 Operational DB / lifecycle mutation: NOT AUTHORIZED
 Runtime/provider/model execution: NOT AUTHORIZED
 Workspace enforcement: NOT AUTHORIZED
-2.4 Execution Workspace Authority: PLANNED / NOT OPEN / NOT AUTHORIZED
+2.4 Execution Workspace Authority: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
@@ -105,6 +105,44 @@ B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, 
 Governance hardening must serve delivery. As a planning target, product/code/test/integration work should normally account for at least two-thirds of active engineering effort. New governance work must name the concrete capability it unblocks or the observed integrity/security failure it fixes. If governance/documentation dominates two consecutive increments without shipping or unblocking product capability, stop and require explicit Human roadmap review.
 
 The live execution checklist is [docs/TODO.md](TODO.md).
+
+## Authorized-work granularity and autonomous internal decomposition
+
+Relay adopts the Human-approved cross-cutting policy:
+
+`docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+
+The policy does not add another orchestration architecture. It refines how existing RoleContract and WorkPacket semantics should be used:
+
+```text
+one cohesive authorized WorkPacket
+        ↓
+IMPLEMENTER / DECOMPOSE_AUTHORIZED_WORK
+        ↓
+agent-owned internal plan / milestones / retries
+        ↓
+terminal candidate
+        ↓
+INDEPENDENT_EVALUATOR
+        ↓
+ACCEPT / REWORK / ESCALATE
+```
+
+The default external work unit is one cohesive, independently verifiable engineering outcome. File/function/milestone boundaries are not automatic WorkPacket boundaries.
+
+Initial planning calibration:
+
+```text
+SURGICAL  < ~1 human-expert hour   — exception/risk-driven
+STANDARD  ~1–4 hours               — normal
+EXTENDED  ~4–8 hours               — normal for strong harnesses
+CAMPAIGN  > ~8 hours               — only while one coherent outcome remains
+preferred initial target ~2–6 hours
+```
+
+These are provisional sizing heuristics, not schema enums, lifecycle states, or authority limits.
+
+Phase 3 must operationalize this policy through the existing Relay architecture rather than introducing a private authoritative task graph. Runtime-local plans/subagents may be observed as execution provenance, but they do not become WorkPackets or Relay authority.
 
 ## Documentation synchronization rule
 
@@ -141,7 +179,7 @@ Slice 1.10 — Canonical Source and Promotion Enforcement:
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
   2.3 COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
-  2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
+  2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
 Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening
 Real-project agent execution: NOT AUTHORIZED
