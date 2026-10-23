@@ -50,19 +50,19 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_a73adfd4-3b35-40ea-843c-abc83d1e7697",
+      "artifact_id": "art_72aa5635-a102-4f29-8a8c-39d4d02bb605",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:48353269067fa51ddcdcf4df30d6e59f0997286843ef1bc40fd80cd8d3efc7ad",
+      "content_digest": "sha256:410cb0ce5b61af1a86fd69a826aa3e8b88bacf44f5686a9f9c0f6e11077f4f4c",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 47,
+      "revision": 48,
       "schema_version": 1,
       "scope": "Current human-readable Relay development execution checklist with NOW/NEXT/DOGFOOD/THEN and anti-drift controls.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-23T17:30:00Z"
+      "updated_at": "2026-10-23T18:15:00Z"
     },
     {
       "artifact_class": "WORKING",
