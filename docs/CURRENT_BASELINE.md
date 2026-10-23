@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT
+**Status:** Current living baseline — Slice 2.4 is OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED under RLY-S24-IMPL-AUTH-001
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
-**Date:** October 22, 2026
+**Date:** October 23, 2026
 
 ---
 
-# 0. Executive current state — Slice 2.3 Closed
+# 0. Executive current state — Slice 2.4 implementation authorized
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -61,7 +61,7 @@ Context material resolver/storage: NOT AUTHORIZED
 Operational DB / lifecycle mutation: NOT AUTHORIZED
 Runtime/provider/model execution: NOT AUTHORIZED
 Workspace enforcement: NOT AUTHORIZED
-Slice 2.4: NOT OPEN / NOT AUTHORIZED
+Slice 2.4: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 
@@ -72,6 +72,41 @@ project must not require reconstruction of fictional Relay-native history.
 Current roadmap direction:
 B0-F can inspect ordinary Git repositories without Relay state. B1 Design Revision 1 received REWORK for observed-value revalidation and observation-correction semantics. Revision 2 closed those findings and the composite design was independently accepted and Human-accepted. The B1 intake implementation is independently accepted and Human-accepted at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`. The authorized Relay/WellPlot real-world dogfood has no completed result recorded before acceptance. B2 Revision 1 plus its Revision 2 Integrity Amendment is independently accepted and Human-accepted at exact composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637`. The Human entered exact `ADOPT`; T1 is `2026-10-20T03:27:54.511113Z`; the operational database was atomically published at `/home/user/projects/relay-local-state/relay-operational.sqlite3`. Terminal evidence SHA-256 is `89928fdfadbca85fafe549e8b496c7cb97192740dd2b28b6ea583d87c08bbe5c`. Independent review `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001 — ACCEPT` found no blocking discrepancy. Human acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is closed; B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED; B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED; Slice 2.2 is COMPLETE / ACCEPTED / CLOSED. Strict historical bootstrap remains blocked and is separate from B2.
 ```
+
+## Authorized-work decomposition and execution granularity
+
+Human-approved cross-cutting direction:
+
+`RLY-GOV-AUTHWORK-GRANULARITY-001 — AUTHORIZED`
+
+Detailed policy:
+
+`docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+
+Current controlling interpretation:
+
+```text
+WorkPacket
+    = authoritative external work unit
+
+DECOMPOSE_AUTHORIZED_WORK
+    = bounded internal execution decomposition
+
+internal task / milestone
+    != WorkPacket
+    != Human approval gate
+
+out-of-scope required work
+    -> PROPOSED_WORK
+    -> STOP
+    -> separate Relay authority
+```
+
+Relay will not create a parallel planner/worker/reviewer state machine. Planning personas, runtime-local plans, and runtime-local subagents remain non-authoritative inputs/execution mechanics inside the existing RoleContract → WorkPacket → Workspace → AgentRuntime → independent-evaluation → Human-acceptance architecture.
+
+Initial operational target: prefer cohesive STANDARD/EXTENDED implementation outcomes (roughly 2–6 human-expert hours as a provisional calibration band) and use SURGICAL external granularity only when risk, authority, independent acceptance, rollback, or measured reliability justifies it.
+
+The active Slice 2.4 implementation was authorized before this documentation re-baseline and remains governed by its exact existing scope. This policy does not retroactively alter `RLY-S24-CODEX-SCOPE-001`.
 
 ## Current product principle
 
@@ -128,7 +163,7 @@ Slice 1.10 — Canonical Source and Promotion Enforcement:
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
   2.3 COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT;
-  2.4 PLANNED / NOT OPEN / NOT AUTHORIZED
+  2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
