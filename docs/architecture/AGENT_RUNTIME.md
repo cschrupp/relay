@@ -19,7 +19,7 @@ Relay therefore owns a stable `AgentRuntime` contract and delegates runtime-loca
 
 The first planned runtime implementation is **OpenCode**.
 
-Slice 2.1 has implemented and closed the AgentRuntime boundary at accepted candidate `4f785f08576e465cd0aa278f927fa4b7253e3f49`, with closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. This document remains reference architecture, not new execution authority. The next prerequisites are Phase 1 assurance/promotion hardening, then Role Contracts, deterministic Context/Work Packets, and Execution Workspace Authority.
+Slice 2.1 has implemented and closed the AgentRuntime boundary at accepted candidate `4f785f08576e465cd0aa278f927fa4b7253e3f49`, with closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT`. This document remains reference architecture, not new execution authority. Role Contracts and Context/Work Packets are closed; Execution Workspace Authority is open with Human-accepted design and bounded implementation authority. Phase 3 remains not open / not authorized.
 
 ---
 
@@ -123,7 +123,43 @@ The runtime may own implementation details such as:
 - runtime event production;
 - provider/model invocation.
 
-### 4.3 Runtime permissions are not Relay authority
+### 4.3 Runtime-local decomposition is not Relay work authority
+
+The runtime may internally plan, create checklists, use runtime-local subagents, retry failed steps, compact context, or maintain milestone status.
+
+Those mechanics are intentionally **not** a second Relay task architecture.
+
+```text
+Relay WorkPacket
+    = authoritative external work
+
+runtime plan / milestone / subagent task
+    = non-authoritative execution strategy
+```
+
+An Implementer acting under `DECOMPOSE_AUTHORIZED_WORK` may autonomously plan and execute internal steps that remain inside the exact WorkPacket, RoleContract, WorkspacePolicy, runtime limits, and hard stops.
+
+Routine internal milestone completion does not require another Human approval.
+
+If execution discovers that correct completion requires work outside current authority:
+
+```text
+discover outside-scope requirement
+    ↓
+PROPOSED_WORK
+    ↓
+STOP
+    ↓
+separate Relay authority
+```
+
+The runtime must never convert its own internal task graph into Relay authority.
+
+See:
+
+`docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+
+### 4.4 Runtime permissions are not Relay authority
 
 OpenCode permission rules are defense in depth. They may enforce or narrow Relay policy, but they do not create authorization.
 
