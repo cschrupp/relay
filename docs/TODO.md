@@ -108,24 +108,49 @@ Real-project agent execution: NOT AUTHORIZED
 
 # THEN — resume autonomous-execution roadmap
 
-- [ ] Formalize and implement **authorized-work exhaustion** across Role Contracts / Work Packets / Execution Workspace / Phase 3: executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly promoted.
+- [ ] **Phase 3 operationalization — authorized-work exhaustion and execution granularity:** implement the already-accepted semantics through the existing RoleContract / WorkPacket / Execution Workspace / AgentRuntime chain. Executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly authorized.
+- [ ] Do **not** reopen Slices 2.2, 2.3, or 2.4 merely to implement the granularity policy. Reopen an accepted contract only if Phase 3 exposes a concrete, evidenced contract gap that cannot be implemented through the accepted interfaces.
 
 - [x] Slice 2.2 — Role Contracts COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Slice 2.3 — Context and Work-Packet Contract COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`.
 - [ ] Slice 2.4 — Execution Workspace Authority — implementation authorized; technical candidate/evaluation/acceptance/closure still pending.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable.
 
-# AUTHORIZED WORK GRANULARITY
+# AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
+
+The items below are the durable implementation commitments from the October 2026 granularity/autonomy exercise. They are not optional research notes.
+
+## Already incorporated
 
 - [x] Adopt the Human-approved **Authorized Work Decomposition and Execution Granularity** policy under `RLY-GOV-AUTHWORK-GRANULARITY-001`.
 - [x] Freeze the architectural rule that WorkPacket is the authoritative external work unit and runtime/internal milestones are non-authoritative execution decomposition.
 - [x] Preserve existing specialized roles: IMPLEMENTER / INDEPENDENT_EVALUATOR / HUMAN_AUTHORITY / PROMOTION_EXECUTOR; do not create a parallel planner-task authority system.
 - [x] Freeze `PROPOSED_WORK / STOP` as the response when correct completion requires work outside exact current authority.
-- [ ] Apply the new handoff rule to future implementation prompts: Implementer owns planning/implementation/validation/repair/self-review inside scope and must not stop after routine internal milestones.
-- [ ] In Phase 3 design, operationalize this policy through existing WorkPacket/RoleContract/Workspace/AgentRuntime contracts only.
-- [ ] Once governed agent execution exists, collect granularity telemetry and calibrate Relay-H50 / Relay-H80 rather than treating the provisional 2–6 human-hour default as permanent.
-- [ ] Watch for pathological microtasking: repeated Human "proceed" turns, one-file-per-WorkPacket behavior without risk justification, and inseparable sequential WorkPackets.
-- [ ] Watch for overload: scope drift, repeated forgotten constraints, independent rollback units bundled together, and multi-cycle rework approaching original task size.
+- [x] Update agent/handoff guidance so Implementers own internal planning, implementation, milestone validation, in-scope repair, and self-review rather than stopping after routine internal milestones.
+- [x] Freeze provisional planning calibration: prefer cohesive STANDARD/EXTENDED work, initially around **2–6 human-expert hours** when semantic cohesion and risk permit; SURGICAL work is exception/risk-driven.
+
+## Must be implemented in Phase 3
+
+- [ ] Make `DECOMPOSE_AUTHORIZED_WORK` operational in the governed execution loop: one authorized WorkPacket may contain many non-authoritative internal execution steps without additional Human approval.
+- [ ] Implement terminal continuation semantics so routine milestones do **not** stop execution. Normal terminal reasons must include `DONE`, `BLOCKED_BY_AUTHORITY`, `BLOCKED_BY_CONTRACT`, `BLOCKED_BY_ENVIRONMENT`, `BUDGET_EXHAUSTED`, `BACKLOG_EXHAUSTED`, plus exact WorkPacket hard stops.
+- [ ] Enforce out-of-scope discovery behavior: emit/record non-authoritative `PROPOSED_WORK`, stop the current execution, and require separate Relay authority before successor work starts.
+- [ ] Preserve the existing specialized-agent chain: terminal candidate -> independent evaluator -> `ACCEPT / REWORK / ESCALATE` -> Human acceptance where required. Internal milestones must not become evaluator gates.
+- [ ] Keep runtime-local plans, checklists, subagents, retries, and milestone state non-authoritative. Do not introduce a second authoritative planner-task database/state machine.
+- [ ] Support durable execution-progress/provenance for long-running CAMPAIGN work without converting internal milestones into WorkPackets or lifecycle authority.
+- [ ] Ensure Phase 3 UI/projections distinguish **runtime progress** from **Relay authority state** so an internal milestone cannot look like an accepted governed work item.
+- [ ] Make independent review assess granularity quality: unnecessary micro-stops, silent authority expansion, overload/context-loss signals, and whether corrective rework should be narrower than the original task.
+
+## Telemetry and adaptive calibration
+
+- [ ] Once governed execution exists, collect granularity telemetry sufficient to measure: estimated human-expert effort, files/subsystems touched, agent actions/tool calls, tokens, wall time, Human interventions, internal milestones, first independent-review outcome, rework cycles, rework size, escaped defects, and rollback/rejection events.
+- [ ] Derive Relay-specific task-horizon calibration (`Relay-H50` / `Relay-H80`) by model/runtime/harness instead of treating the provisional 2–6 human-hour default as permanent.
+- [ ] Track pathological microtasking signals: repeated Human "proceed" turns, one-file-per-WorkPacket behavior without risk justification, inseparable sequential WorkPackets, and repeated context reload caused by externally fragmented work.
+- [ ] Track overload signals: scope drift, forgotten constraints, unrelated refactors, independent rollback units bundled together, context/budget exhaustion, and multi-cycle rework approaching the original task size.
+- [ ] Use observed acceptance/rework data to tune task-size policy upward or downward; do not encode one model generation's limitations as permanent Relay architecture.
+
+## Contract-preservation rule
+
+- [ ] Treat Slices 2.2 / 2.3 / 2.4 as sufficient by default. If Phase 3 cannot implement one of these commitments using the accepted contracts, create a concrete evidenced contract-gap record before proposing any reopening or schema change.
 
 # DO NOT DRIFT
 
