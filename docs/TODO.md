@@ -3,7 +3,7 @@
 **Purpose:** Human-readable execution checklist. Keep this file short.  
 **Rule:** if this list and the actual repository state disagree, update this list as part of the same governed increment.
 
-## Current Slice 2.3 closed state
+## Current Slice 2.4 implementation state
 
 ```text
 COMPLETE / ACCEPTED / CLOSED
@@ -13,7 +13,7 @@ Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
 Closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S23-CLOSE-EVAL-001 — ACCEPT
 Production wiring, material resolver/storage, DB/lifecycle mutation, runtime execution, workspace enforcement: NOT AUTHORIZED
-Slice 2.4: NOT OPEN / NOT AUTHORIZED
+Slice 2.4: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
@@ -88,7 +88,8 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Execute B4 attempt 001; record `RLY-S110-DOGFOOD-B4-EXEC-EVAL-001 — FAIL_CLOSED / NO ANSWER PHASE` after exact-checkout preflight mismatch.
 - [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
-- [ ] **CURRENT — Human decision whether to open Slice 2.4 — Execution Workspace Authority.**
+- [x] Open Slice 2.4 — Execution Workspace Authority; Human-accept the combined design and authorize bounded implementation under `RLY-S24-IMPL-AUTH-001`.
+- [ ] **CURRENT — complete the authorized Slice 2.4 implementation candidate and independent implementation review.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
@@ -111,8 +112,20 @@ Real-project agent execution: NOT AUTHORIZED
 
 - [x] Slice 2.2 — Role Contracts COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Slice 2.3 — Context and Work-Packet Contract COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`.
-- [ ] Slice 2.4 — Execution Workspace Authority.
+- [ ] Slice 2.4 — Execution Workspace Authority — implementation authorized; technical candidate/evaluation/acceptance/closure still pending.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable.
+
+# AUTHORIZED WORK GRANULARITY
+
+- [x] Adopt the Human-approved **Authorized Work Decomposition and Execution Granularity** policy under `RLY-GOV-AUTHWORK-GRANULARITY-001`.
+- [x] Freeze the architectural rule that WorkPacket is the authoritative external work unit and runtime/internal milestones are non-authoritative execution decomposition.
+- [x] Preserve existing specialized roles: IMPLEMENTER / INDEPENDENT_EVALUATOR / HUMAN_AUTHORITY / PROMOTION_EXECUTOR; do not create a parallel planner-task authority system.
+- [x] Freeze `PROPOSED_WORK / STOP` as the response when correct completion requires work outside exact current authority.
+- [ ] Apply the new handoff rule to future implementation prompts: Implementer owns planning/implementation/validation/repair/self-review inside scope and must not stop after routine internal milestones.
+- [ ] In Phase 3 design, operationalize this policy through existing WorkPacket/RoleContract/Workspace/AgentRuntime contracts only.
+- [ ] Once governed agent execution exists, collect granularity telemetry and calibrate Relay-H50 / Relay-H80 rather than treating the provisional 2–6 human-hour default as permanent.
+- [ ] Watch for pathological microtasking: repeated Human "proceed" turns, one-file-per-WorkPacket behavior without risk justification, and inseparable sequential WorkPackets.
+- [ ] Watch for overload: scope drift, repeated forgotten constraints, independent rollback units bundled together, and multi-cycle rework approaching original task size.
 
 # DO NOT DRIFT
 
