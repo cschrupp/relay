@@ -2,67 +2,67 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0002-7000-8000-000000000139",
+      "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:8baff7f9a201b0ef82cfcc0f2ad53d73da626f7584b6f6c0682b34b0a2654413",
+      "content_digest": "sha256:6f05a2d8a5458ee38d07f292120a9d6bb8de7f79b0e628942c2422c9b5e0e3ec",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 139,
+      "revision": 140,
       "schema_version": 1,
       "scope": "Current canonical build plan document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-22T19:21:42Z"
+      "updated_at": "2026-10-23T17:30:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0001-7000-8000-000000000148",
+      "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:7980a585fac020188605a51860dde747ec432e1d3d6431b7701fc0ac1e133483",
+      "content_digest": "sha256:39b164082c6587ebe86d9784bbfd51a267629d45baf462cfc203f1b2fea6507a",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 148,
+      "revision": 149,
       "schema_version": 1,
       "scope": "Current canonical current baseline document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-22T19:21:42Z"
+      "updated_at": "2026-10-23T17:30:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0004-7000-8000-000000000055",
+      "artifact_id": "art_52cb3717-dc4c-445a-ae1d-f429deb35943",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:0f2301e5af5d6f1c8bc435c6c63889ce1beb1634313e3939edbe627e025aa585",
+      "content_digest": "sha256:db4b58d6b2adc7791dd98f8d75310b9beab3adea1ad8423af5a047b3198d78ac",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 55,
+      "revision": 56,
       "schema_version": 1,
       "scope": "Current canonical product and technical proposal.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product and Technical Proposal",
-      "updated_at": "2026-10-22T19:21:42Z"
+      "updated_at": "2026-10-23T17:30:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_019a05b0-0003-7000-8000-000000000046",
+      "artifact_id": "art_a73adfd4-3b35-40ea-843c-abc83d1e7697",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:fdd9d720f4f1fbf50a55cdca793f998dfb6b303cbc3c2e33e556abc1938649bb",
+      "content_digest": "sha256:48353269067fa51ddcdcf4df30d6e59f0997286843ef1bc40fd80cd8d3efc7ad",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 46,
+      "revision": 47,
       "schema_version": 1,
       "scope": "Current human-readable Relay development execution checklist with NOW/NEXT/DOGFOOD/THEN and anti-drift controls.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-22T19:21:42Z"
+      "updated_at": "2026-10-23T17:30:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -113,6 +113,22 @@
       "updated_at": "2026-10-16T23:22:26Z"
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_365f159d-f443-4654-bdff-72df9dc58079",
+      "revision": 1,
+      "title": "Authorized-Work Decomposition and Execution Granularity",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LIVING_PROJECTION",
+      "artifact_state": "CURRENT",
+      "path": "docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md",
+      "content_digest": "sha256:2347cdcd12d98ebf3d42bfad9396568f77628ee0f637102af030c8659adc2cc9",
+      "human_version": "0.1",
+      "updated_at": "2026-10-23T17:30:00Z",
+      "scope": "Current canonical policy for WorkPacket sizing, bounded internal decomposition, agent autonomy, stop conditions, and execution-granularity calibration.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_018f47c1-7b2c-7abc-8def-123456789108",
       "artifact_state": "CURRENT",
@@ -130,19 +146,19 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_018f47c1-7b2c-7abc-8def-123456789105",
+      "artifact_id": "art_f3a721ec-aabd-488d-83e6-542d85c24ba9",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:36f01faacd5619d634c2399793b6ca0f07c187b7c76257fd696e9d1b9b557b20",
+      "content_digest": "sha256:9be7af97d5d8cf04995c6bd35e436381df28d562680897eeeefcd191f17c8c84",
       "human_version": null,
       "path": "docs/policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md",
-      "revision": 1,
+      "revision": 2,
       "schema_version": 1,
       "scope": "Current canonical engineering simplicity, scope, and quality document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Engineering Simplicity, Scope, and Quality",
-      "updated_at": "2026-09-26T00:00:00Z"
+      "updated_at": "2026-10-23T17:30:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -383,6 +399,22 @@
       "supersedes": null,
       "title": "Phase 1 Hardening and Phase 2 Roadmap Re-baseline Promotion Authority",
       "updated_at": "2026-10-10T15:41:00Z"
+    },
+    {
+      "schema_version": 1,
+      "artifact_id": "art_9ef87efa-a70d-460a-87b5-a7a4cd511990",
+      "revision": 1,
+      "title": "Authorized-Work Granularity Policy Documentation Authorization",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/RELAY_AUTHORIZED_WORK_GRANULARITY_POLICY_AUTHORIZATION.md",
+      "content_digest": "sha256:73cc1b61748179c8949c2a2f21a5d7a1b268a0d6ba535652cafd55521e077ee7",
+      "human_version": "RLY-GOV-AUTHWORK-GRANULARITY-001",
+      "updated_at": "2026-10-23T17:30:00Z",
+      "scope": "Human authority for the Relay-specific authorized-work decomposition and execution-granularity documentation re-baseline; no new implementation authority.",
+      "supersedes": null,
+      "superseded_by": null
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
@@ -5027,11 +5059,20 @@
   ],
   "canonical": [
     {
+      "canonical_key": "authorized-work-granularity",
+      "schema_version": 1,
+      "target": {
+        "artifact_id": "art_365f159d-f443-4654-bdff-72df9dc58079",
+        "revision": 1,
+        "schema_version": 1
+      }
+    },
+    {
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0002-7000-8000-000000000139",
-        "revision": 139,
+        "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
+        "revision": 140,
         "schema_version": 1
       }
     },
@@ -5039,8 +5080,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0001-7000-8000-000000000148",
-        "revision": 148,
+        "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
+        "revision": 149,
         "schema_version": 1
       }
     },
@@ -5057,8 +5098,8 @@
       "canonical_key": "engineering-simplicity-quality",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_018f47c1-7b2c-7abc-8def-123456789105",
-        "revision": 1,
+        "artifact_id": "art_f3a721ec-aabd-488d-83e6-542d85c24ba9",
+        "revision": 2,
         "schema_version": 1
       }
     },
@@ -5066,8 +5107,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_019a05b0-0004-7000-8000-000000000055",
-        "revision": 55,
+        "artifact_id": "art_52cb3717-dc4c-445a-ae1d-f429deb35943",
+        "revision": 56,
         "schema_version": 1
       }
     }
