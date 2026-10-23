@@ -114,17 +114,17 @@
     },
     {
       "schema_version": 1,
-      "artifact_id": "art_365f159d-f443-4654-bdff-72df9dc58079",
-      "revision": 1,
+      "artifact_id": "art_71480f1b-c868-41bb-aa85-0e86d60c8170",
+      "revision": 2,
       "title": "Authorized-Work Decomposition and Execution Granularity",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md",
-      "content_digest": "sha256:2347cdcd12d98ebf3d42bfad9396568f77628ee0f637102af030c8659adc2cc9",
-      "human_version": "0.1",
-      "updated_at": "2026-10-23T17:30:00Z",
-      "scope": "Current canonical policy for WorkPacket sizing, bounded internal decomposition, agent autonomy, stop conditions, and execution-granularity calibration.",
+      "content_digest": "sha256:373287daf55e5056563d02aa00fe834f5d353b3ceea0caa0f450de8a5d97cb00",
+      "human_version": "0.1.1",
+      "updated_at": "2026-10-23T17:56:00Z",
+      "scope": "Detailed living policy companion for WorkPacket sizing, bounded internal decomposition, agent autonomy, stop conditions, and execution-granularity calibration; canonical entry point remains engineering-simplicity-quality.",
       "supersedes": null,
       "superseded_by": null
     },
@@ -5058,15 +5058,6 @@
     }
   ],
   "canonical": [
-    {
-      "canonical_key": "authorized-work-granularity",
-      "schema_version": 1,
-      "target": {
-        "artifact_id": "art_365f159d-f443-4654-bdff-72df9dc58079",
-        "revision": 1,
-        "schema_version": 1
-      }
-    },
     {
       "canonical_key": "build-plan",
       "schema_version": 1,
