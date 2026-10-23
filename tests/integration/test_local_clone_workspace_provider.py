@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import subprocess
 from pathlib import Path
 
@@ -36,7 +37,10 @@ from relay_engine.execution_workspace.models import (
     WorkspaceRetentionPolicy,
     workspace_change_manifest_ref,
 )
-from relay_engine.execution_workspace.provider import WorkspaceProviderError
+from relay_engine.execution_workspace.provider import (
+    WorkspaceProviderError,
+    WorkspaceProviderErrorCode,
+)
 from relay_engine.work_packets import SourceBaselineRef, WorkPacketRef, WorkspacePolicyRef
 
 
@@ -236,3 +240,67 @@ def test_provider_injected_file_is_digest_bound_and_tracked_as_change(tmp_path: 
     assert change[0].after.content_digest == "sha256:" + hashlib.sha256(changed_content).hexdigest()
     assert git(source, "status", "--porcelain") == ""
     provider.teardown(result.instance_ref)
+
+
+def test_gitlink_in_source_tree_fails_closed_during_provision(tmp_path: Path) -> None:
+    source = tmp_path / "source-gitlink"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    plan = make_plan(source)
+
+    submodule = tmp_path / "submodule"
+    submodule.mkdir()
+    git(submodule, "init", "-b", "main")
+    git(submodule, "config", "user.name", "Disposable Test")
+    git(submodule, "config", "user.email", "test@example.invalid")
+    (submodule / "nested.txt").write_text("nested\n", encoding="utf-8")
+    git(submodule, "add", "nested.txt")
+    git(submodule, "commit", "-m", "nested commit")
+    submodule_commit = git(submodule, "rev-parse", "HEAD")
+
+    git(
+        source,
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        f"160000,{submodule_commit},nested-module",
+    )
+    git(source, "commit", "-m", "add gitlink")
+    plan = plan.model_copy(
+        update={
+            "source_baseline_ref": plan.source_baseline_ref.model_copy(
+                update={
+                    "commit": plan.source_baseline_ref.commit.model_copy(
+                        update={"sha": git(source, "rev-parse", "HEAD")}
+                    )
+                }
+            )
+        }
+    )
+    provider = LocalCloneWorkspaceProvider(source, workspace_parent=tmp_path / "workspaces")
+
+    with pytest.raises(WorkspaceProviderError) as error:
+        provider.provision(plan)
+
+    assert error.value.code is WorkspaceProviderErrorCode.INSPECTION_FAILED
+
+
+def test_unsupported_worktree_node_fails_closed_for_inspection_and_changes(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source-special-node"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    plan = make_plan(source)
+    provider = LocalCloneWorkspaceProvider(source, workspace_parent=tmp_path / "workspaces")
+    result = provider.provision(plan)
+    special_node = Path(result.instance_ref.root) / "unsupported-fifo"
+    os.mkfifo(special_node)
+
+    with pytest.raises(WorkspaceProviderError) as inspection_error:
+        provider.inspect(result.instance_ref)
+    assert inspection_error.value.code is WorkspaceProviderErrorCode.INSPECTION_FAILED
+
+    with pytest.raises(WorkspaceProviderError) as changeset_error:
+        provider.extract_changes(result.instance_ref)
+    assert changeset_error.value.code is WorkspaceProviderErrorCode.CHANGESET_FAILED

@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 from datetime import UTC, datetime
@@ -296,6 +297,11 @@ class LocalCloneWorkspaceProvider:
                     untracked.append(path)
                 else:
                     tracked.append(path)
+            self._git_tree_states(
+                str(root),
+                instance_ref.source_commit.sha,
+                failure_code=WorkspaceProviderErrorCode.INSPECTION_FAILED,
+            )
             expected_injected = (
                 () if plan is None else tuple(item.path for item in plan.provider_injected_files)
             )
@@ -370,8 +376,15 @@ class LocalCloneWorkspaceProvider:
     def extract_changes(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceChangeManifest:
         self._require_instance(instance_ref)
         try:
-            baseline = self._git_tree_states(instance_ref.root, instance_ref.source_commit.sha)
-            current = self._worktree_states(Path(instance_ref.root))
+            baseline = self._git_tree_states(
+                instance_ref.root,
+                instance_ref.source_commit.sha,
+                failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
+            )
+            current = self._worktree_states(
+                Path(instance_ref.root),
+                failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
+            )
             plan = self._plans[instance_ref.workspace_id]
             injected = {item.path: item for item in plan.provider_injected_files}
             for path, requirement in injected.items():
@@ -476,7 +489,13 @@ class LocalCloneWorkspaceProvider:
             ) from exc
         return result.stdout
 
-    def _git_tree_states(self, root: str, commit: str) -> dict[str, WorkspaceEntryState]:
+    def _git_tree_states(
+        self,
+        root: str,
+        commit: str,
+        *,
+        failure_code: WorkspaceProviderErrorCode,
+    ) -> dict[str, WorkspaceEntryState]:
         output = self._git_bytes(Path(root), "ls-tree", "-r", "-z", "--full-tree", commit).decode(
             "utf-8", errors="surrogateescape"
         )
@@ -486,8 +505,15 @@ class LocalCloneWorkspaceProvider:
                 continue
             metadata, path = record.split("\t", 1)
             mode, kind, object_id = metadata.split(" ")
-            if kind != "blob":
-                continue
+            if (kind, mode) not in {
+                ("blob", "100644"),
+                ("blob", "100755"),
+                ("blob", "120000"),
+            }:
+                raise WorkspaceProviderError(
+                    failure_code,
+                    "Git tree contains an unsupported entry kind",
+                )
             raw = self._git_bytes(Path(root), "cat-file", "blob", object_id)
             if mode == "120000":
                 states[path] = WorkspaceEntryState(
@@ -530,7 +556,11 @@ class LocalCloneWorkspaceProvider:
         return result.stdout
 
     @staticmethod
-    def _worktree_states(root: Path) -> dict[str, WorkspaceEntryState]:
+    def _worktree_states(
+        root: Path,
+        *,
+        failure_code: WorkspaceProviderErrorCode = WorkspaceProviderErrorCode.INSPECTION_FAILED,
+    ) -> dict[str, WorkspaceEntryState]:
         states: dict[str, WorkspaceEntryState] = {}
         for path in root.rglob("*"):
             if ".git" in path.relative_to(root).parts:
@@ -544,8 +574,15 @@ class LocalCloneWorkspaceProvider:
                     symlink_target_digest=_sha256(target),
                     executable=None,
                 )
-            elif path.is_file():
-                mode = path.stat(follow_symlinks=False).st_mode
+            else:
+                mode = path.lstat().st_mode
+                if stat.S_ISDIR(mode):
+                    continue
+                if not stat.S_ISREG(mode):
+                    raise WorkspaceProviderError(
+                        failure_code,
+                        "worktree contains an unsupported filesystem node",
+                    )
                 states[relative] = WorkspaceEntryState(
                     kind=WorkspaceEntryKind.REGULAR_FILE,
                     content_digest=_sha256(path.read_bytes()),

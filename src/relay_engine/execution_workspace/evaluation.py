@@ -329,6 +329,15 @@ def resolve_workspace_plan(
         if requirement.required_operation not in role_contract.verification_asset_permissions:
             known_failure = True
             reasons.append(WorkspaceReason.ROLE_PERMISSION_INSUFFICIENT)
+        ordinary_access = effective_filesystem_access(
+            workspace_policy.filesystem_policy, requirement.artifact.path
+        )
+        requires_write = requirement.required_operation.value in {"CREATE", "MODIFY"}
+        if ordinary_access is FilesystemAccess.DENY or (
+            requires_write and ordinary_access is not FilesystemAccess.READ_WRITE
+        ):
+            known_failure = True
+            reasons.append(WorkspaceReason.FILESYSTEM_SCOPE_VIOLATION)
         bindings.append(
             ProtectedAssetWorkspaceBinding(
                 requirement_ref=requirement_ref,
@@ -337,9 +346,7 @@ def resolve_workspace_plan(
                 separate_authority_ref=requirement.separate_authority_ref,
                 workspace_path=requirement.artifact.path,
                 physical_access=(
-                    FilesystemAccess.READ_WRITE
-                    if requirement.required_operation.value in {"CREATE", "MODIFY"}
-                    else FilesystemAccess.READ_ONLY
+                    FilesystemAccess.READ_WRITE if requires_write else FilesystemAccess.READ_ONLY
                 ),
                 control_property_key=control_property_key or "protected-assets",
             )
