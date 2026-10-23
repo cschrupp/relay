@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slice 2.3 COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT; Phase 2 open
+**Status:** Current living product and architecture proposal — Slice 2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED under RLY-S24-IMPL-AUTH-001; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -32,6 +32,44 @@ Future `GovernanceProfile` design is intended to select the minimum sufficient c
 External planning artifacts may eventually be normalized through explicit adapters, with source provenance and adapter identity/version preserved. A normalized artifact is not an authorized Relay Work Packet. Relay binds exact input to its own authority and policy. Spec Kit, OpenSpec, BMAD, and Consort document different workflows and controls; they are reference points for interoperability and research, not evidence of Relay superiority [SRC-GITHUB-SPEC-KIT-2026] [SRC-OPENSPEC-2026] [SRC-BMAD-METHOD-2026] [SRC-CONSORT-PAPER-2026] [SRC-CONSORT-IMPLEMENTATION-2026]. A future controlled comparison is specified only as a non-authoritative research plan in `docs/references/RELAY_COMPETITIVE_VALIDATION_PLAN.md`; it has not been run.
 
 Relay is authoritative for its own governed subjects, policy, and lifecycle decisions. External assurance systems such as SLSA, NIST SSDF, and DORA may inform or evaluate applicable subsets of Relay; they do not define Relay's domain model, lifecycle, or authority semantics [SRC-SLSA-V1_2] [SRC-NIST-SSDF-1_1] [SRC-DORA-CHANGE-APPROVAL].
+
+## Authorized work, specialized agents, and execution granularity
+
+Relay does not need a second planner/worker/reviewer architecture to obtain higher agent autonomy.
+
+The product boundary is:
+
+```text
+Human Authority
+      ↓
+authorized WorkPacket
+      ↓
+exact RoleContract binding
+      ↓
+Execution Workspace / AgentRuntime
+      ↓
+Implementer-owned bounded internal decomposition
+      ↓
+terminal candidate
+      ↓
+Independent Evaluator
+      ↓
+Human acceptance / authorized promotion
+```
+
+Planning, architecture, and research agents/personas may produce source artifacts or normalized intent, but those artifacts do not create Relay authority. Runtime-local plans, checklists, subagents, and milestones remain execution mechanics inside the current WorkPacket.
+
+The detailed policy is:
+
+`docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
+
+The strategic product rule is:
+
+> **Control should live primarily in exact authority, constraints, deterministic oracles, independent evaluation, and Human acceptance—not in repeated Human permission prompts for routine internal steps that are already authorized.**
+
+When an Implementer discovers required work outside the exact WorkPacket, it must surface non-authoritative `PROPOSED_WORK` and stop rather than expanding its own authority.
+
+This preserves the accepted specialized-agent separation while allowing capable coding agents to work at PR-sized/cohesive-outcome scale instead of being reduced to one-edit-at-a-time natural-language terminals.
 
 # 2. Accepted technical foundation
 
@@ -149,7 +187,7 @@ Production wiring, material resolver/storage, DB/lifecycle mutation, runtime exe
 workspace enforcement: NOT AUTHORIZED
 
 Slice 2.4 - Execution Workspace Authority:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 
 Phase 3 - First Governed Autonomous Engineering Loop:
 NOT OPEN / NOT AUTHORIZED
@@ -215,7 +253,7 @@ Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the 
 Roadmap re-baseline authority:
 `RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED`
 
-Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 remains planned, unopened, and unauthorized.
+Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 is open with Human-accepted design and bounded implementation authority.
 
 # 5. Implementation and closure governance
 
