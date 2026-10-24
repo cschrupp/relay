@@ -17,16 +17,16 @@
       "updated_at": "2026-10-23T17:30:00Z"
     },
     {
-      "artifact_id": "art_cf930606-e5e1-48d7-b805-4c640ec0d800",
-      "revision": 152,
+      "artifact_id": "art_3d8f6a21-7b54-4c90-ae13-6f2b9d5c7814",
+      "revision": 153,
       "title": "Current Baseline",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/CURRENT_BASELINE.md",
-      "content_digest": "sha256:1253bdd9f63b7af0b6df3f0b07bbc3e7b5a99580078167d0579adf3876a26f8f",
+      "content_digest": "sha256:5a4695415fc29bf5eaca785ec4885e57f38439fb69ac704ace0d50e95c031a34",
       "human_version": null,
-      "updated_at": "2026-10-24T17:30:09Z",
+      "updated_at": "2026-10-24T20:17:00Z",
       "scope": "Current canonical current baseline document.",
       "supersedes": null,
       "superseded_by": null,
@@ -5231,8 +5231,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_cf930606-e5e1-48d7-b805-4c640ec0d800",
-        "revision": 152,
+        "artifact_id": "art_3d8f6a21-7b54-4c90-ae13-6f2b9d5c7814",
+        "revision": 153,
         "schema_version": 1
       }
     },
