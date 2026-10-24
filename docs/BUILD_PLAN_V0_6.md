@@ -377,10 +377,18 @@ Finalization / closure authority: RLY-S22-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S22-CLOSE-EVAL-001 — ACCEPT
 
 Slice 2.3 — Context and Work-Packet Contract:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
 
 Slice 2.4 — Execution Workspace Authority:
-PLANNED / NOT OPEN / NOT AUTHORIZED
+OPEN / COMPOSITE DESIGN HUMAN ACCEPTED / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Accepted implementation: 73a1525282e41464d31cd458b8a50703bfa9553c
+Independent implementation evaluation: RLY-S24-IMPL-EVAL-003 — ACCEPT
+Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
+Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+
+Slice 2.5 — Project State Resolution & Authority Compilation:
+PROPOSED / NOT OPEN / NOT AUTHORIZED
 
 Phase 3:
 NOT OPEN / NOT AUTHORIZED
