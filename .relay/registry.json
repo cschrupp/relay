@@ -4434,6 +4434,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_4c61f7a9-3b28-4d70-8e25-2a9f6c1d5b43",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:d1094dade40bb99c4c20bcbc8f0cf56ac1f4ee675a777c6c1d5ec0419012ef72",
+      "human_version": "RLY-S24-I003-R2-DESIGN-EVAL-001",
+      "path": "docs/reviews/SLICE_2_4_I003_R2_DESIGN_CLARIFICATION_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent SOL evaluation of the Slice 2.4 I003-R2 runtime tool/shell exposure boundary clarification candidate.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.4 — I003-R2 Design Clarification Evaluation 001",
+      "updated_at": "2026-10-24T18:45:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31f570f2-7d35-4cb9-b8f0-0e9afdfde0e1",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
