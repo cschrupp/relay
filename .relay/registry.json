@@ -4417,6 +4417,22 @@
       "updated_at": "2026-10-24T05:47:00Z"
     },
     {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_7ab341d2-5e80-4c19-9fd7-2c6e58a413b0",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:b28aff6aa78c9a7a7f1f1f05fa9a591893dfa08312b95b285e1b7e35ea0146cb",
+      "human_version": "RLY-S24-I003-R2-DESIGN-ACCEPT-001",
+      "path": "docs/reviews/SLICE_2_4_I003_R2_DESIGN_CLARIFICATION_ACCEPTANCE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human acceptance of the independently accepted Slice 2.4 I003-R2 runtime tool/shell exposure boundary clarification.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.4 — I003-R2 Design Clarification Human Acceptance 001",
+      "updated_at": "2026-10-24T20:08:00Z"
+    },
+    {
       "artifact_id": "art_8e775f68-6097-410d-9ab6-9a460abb06e3",
       "revision": 1,
       "title": "Slice 2.4 — I003-R2 Design Clarification Authorization 001",
