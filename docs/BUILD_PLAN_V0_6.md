@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN under RLY-S25-OPEN-001 / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN / DESIGN AUTHORIZED under RLY-S25-DESIGN-AUTH-001 / IMPLEMENTATION NOT AUTHORIZED; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.5 OPEN; design authorization is the next governance gate before Phase 3
+# 0. CURRENT ROADMAP — Slice 2.5 OPEN / DESIGN AUTHORIZED; produce one normative design candidate for independent review
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -77,9 +77,11 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-2.5 Project State Resolution & Authority Compilation: OPEN / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+2.5 Project State Resolution & Authority Compilation: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 Opening authority: RLY-S25-OPEN-001 — OPEN
+Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
+Normative design candidate: NOT YET PRODUCED / NOT YET ACCEPTED
 Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 closure is now a prerequisite
 Real-project agent execution: NOT AUTHORIZED
 ```
@@ -104,7 +106,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED
   -> 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT
   -> 2.4 Execution Workspace Authority — COMPLETE / ACCEPTED / CLOSED
-  -> 2.5 Project State Resolution & Authority Compilation — OPEN / DESIGN NOT YET AUTHORIZED
+  -> 2.5 Project State Resolution & Authority Compilation — OPEN / DESIGN AUTHORIZED
   -> explicit Phase 3 opening
   -> Phase 3 governed autonomous engineering loop
 ```
@@ -133,7 +135,7 @@ Open Slice 2.5 planning source:
 
 The observed failure class is not lack of historical information but failure to convert accepted knowledge into machine-resolvable obligations for later work. Slice 2.5 is the final Phase-2 foundation before Phase 3. It must compile present applicable state into a complete authority candidate while preserving Human Authority, WorkPacket primacy, exact evidence lineage, and the rule that Relay remains the only governance state machine.
 
-Slice 2.5 is OPEN under `RLY-S25-OPEN-001`. Opening does not authorize its design or implementation.
+Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; bounded design is authorized under `RLY-S25-DESIGN-AUTH-001`; implementation remains unauthorized.
 
 ## Authorized-work granularity and autonomous internal decomposition
 
