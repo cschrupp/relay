@@ -3,7 +3,7 @@
 **Purpose:** Human-readable execution checklist. Keep this file short.  
 **Rule:** if this list and the actual repository state disagree, update this list as part of the same governed increment.
 
-## Current Slice 2.4 closure state
+## Current Phase-2 frontier
 
 ```text
 Slice 2.3: COMPLETE / ACCEPTED / CLOSED
@@ -13,12 +13,13 @@ Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
 Closure authority: RLY-S23-CLOSE-AUTH-001 — AUTHORIZED
 Independent closure evaluation: RLY-S23-CLOSE-EVAL-001 — ACCEPT
 Production wiring, material resolver/storage, DB/lifecycle mutation, runtime execution, workspace enforcement: NOT AUTHORIZED
-Slice 2.4: OPEN / COMPOSITE DESIGN HUMAN ACCEPTED / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Slice 2.4: COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 73a1525282e41464d31cd458b8a50703bfa9553c
 Independent implementation evaluation: RLY-S24-IMPL-EVAL-003 — ACCEPT
 Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
+Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
 Slice 2.5: PROPOSED / NOT OPEN / NOT AUTHORIZED — Project State Resolution & Authority Compilation
 Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 completion is a prerequisite
 Real-project agent execution: NOT AUTHORIZED
@@ -95,7 +96,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Open Slice 2.4 — Execution Workspace Authority; Human-accept the combined design and authorize bounded implementation under `RLY-S24-IMPL-AUTH-001`.
-- [ ] **CURRENT — independently evaluate the exact Slice 2.4 closure-ready candidate under `RLY-S24-CLOSE-AUTH-001`; do not mark CLOSED before `RLY-S24-CLOSE-EVAL-001 — ACCEPT`.**
+- [ ] **NEXT HUMAN GATE — decide whether to open Slice 2.5 Project State Resolution & Authority Compilation. Slice 2.4 closure does not open or authorize Slice 2.5.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
@@ -119,7 +120,7 @@ Real-project agent execution: NOT AUTHORIZED
 
 - [x] Slice 2.2 — Role Contracts COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Slice 2.3 — Context and Work-Packet Contract COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`.
-- [ ] Slice 2.4 — Execution Workspace Authority — exact implementation `73a1525282e41464d31cd458b8a50703bfa9553c` is independently and Human accepted; closure-ready candidate is pending independent closure evaluation.
+- [x] Slice 2.4 — Execution Workspace Authority COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `73a1525282e41464d31cd458b8a50703bfa9553c`.
 - [ ] Open **Slice 2.5 — Project State Resolution & Authority Compilation** only after Slice 2.4 is COMPLETE / ACCEPTED / CLOSED and separate Human opening/design authority exists.
 - [ ] Complete Slice 2.5 before Phase 3 opening. Phase 3 must not depend on SOL/worker memory to reconstruct accepted prerequisites, prohibitions, applicability, or evidence lineage.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable **and** Slice 2.5 is COMPLETE / ACCEPTED / CLOSED.
