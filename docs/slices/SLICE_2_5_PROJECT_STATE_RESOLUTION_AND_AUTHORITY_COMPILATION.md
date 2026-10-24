@@ -1,10 +1,10 @@
 # Slice 2.5 — Project State Resolution and Authority Compilation
 
-**Status:** PROPOSED / NOT OPEN / NOT AUTHORIZED  
+**Status:** OPEN / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`  
 **Predecessor:** Slice 2.4 — Execution Workspace Authority  
-**Phase-3 relationship:** proposed mandatory prerequisite for Phase 3 opening
+**Phase-3 relationship:** mandatory prerequisite for Phase 3 opening; Slice 2.5 must close first
 
 ## Objective
 
@@ -218,15 +218,19 @@ The exact fixtures and external-project evidence must be separately authorized a
 - Phase 3 opening;
 - real-project autonomous execution.
 
-## Opening condition
+## Opening condition — satisfied
 
-Slice 2.5 may open only after:
+Opening conditions are satisfied under:
 
-1. Slice 2.4 is COMPLETE / ACCEPTED / CLOSED;
-2. Human Authority explicitly opens Slice 2.5;
-3. an exact opening baseline is recorded.
+`RLY-S25-OPEN-001 — OPEN`
 
-Roadmap placement alone grants no authority.
+Exact opening baseline:
+
+`fbe41dfcb72df2dd3d145818c6b22478416de789`
+
+Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`.
+
+Opening Slice 2.5 does not authorize design or implementation. The normative design remains behind a separate Human design authorization and independent review.
 
 ## Completion implication
 
