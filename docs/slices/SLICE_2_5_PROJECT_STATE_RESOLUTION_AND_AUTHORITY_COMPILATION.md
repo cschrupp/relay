@@ -1,8 +1,10 @@
 # Slice 2.5 — Project State Resolution and Authority Compilation
 
-**Status:** OPEN / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
-**Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`  
+**Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
+**Opening authority:** `RLY-S25-OPEN-001 — OPEN`
+**Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`  
 **Predecessor:** Slice 2.4 — Execution Workspace Authority  
 **Phase-3 relationship:** mandatory prerequisite for Phase 3 opening; Slice 2.5 must close first
 
@@ -230,7 +232,7 @@ Exact opening baseline:
 
 Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`.
 
-Opening Slice 2.5 does not authorize design or implementation. The normative design remains behind a separate Human design authorization and independent review.
+Slice 2.5 design is authorized under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`. The normative design candidate remains unaccepted until independent review and Human acceptance. Implementation remains unauthorized.
 
 ## Completion implication
 
