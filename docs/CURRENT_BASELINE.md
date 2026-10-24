@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.4 COMPLETE / ACCEPTED / CLOSED under RLY-S24-CLOSE-EVAL-001 — ACCEPT; Slice 2.5 PROPOSED / NOT OPEN / NOT AUTHORIZED
+**Status:** Current living baseline — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN under RLY-S25-OPEN-001 / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 24, 2026
 
 ---
 
-# 0. Executive current state — Slice 2.4 closed; Slice 2.5 proposed
+# 0. Executive current state — Slice 2.4 closed; Slice 2.5 open
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -68,7 +68,8 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-Slice 2.5: PROPOSED / NOT OPEN / NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Slice 2.5: OPEN / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Opening authority: RLY-S25-OPEN-001 — OPEN
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
@@ -155,7 +156,7 @@ Proposed Slice:
 
 `docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`
 
-The observed integrity failure is that Relay can preserve accepted knowledge without deterministically propagating it as prerequisites and inherited constraints for later authority. The proposed Slice 2.5 addresses this by deriving current project state from canonical records and compiling requested outcomes against exact predecessors, invariants, prohibitions, qualification applicability, responsibility ownership, and evidence lineage.
+The observed integrity failure is that Relay can preserve accepted knowledge without deterministically propagating it as prerequisites and inherited constraints for later authority. Slice 2.5 addresses this by deriving current project state from canonical records and compiling requested outcomes against exact predecessors, invariants, prohibitions, qualification applicability, responsibility ownership, and evidence lineage.
 
 Frozen strategic rules:
 
@@ -168,7 +169,7 @@ Historical evidence remains immutable; current applicability is derived.
 Slice 2.5 must close before Phase 3 becomes eligible to open.
 ```
 
-Slice 2.5 is not open and no production implementation is authorized.
+Slice 2.5 is OPEN under `RLY-S25-OPEN-001`. Normative design work is not yet authorized, and no production implementation is authorized.
 
 ## Current product principle
 
