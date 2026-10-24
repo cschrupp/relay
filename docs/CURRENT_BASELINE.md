@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.4 OPEN / composite design Revisions 1–6 HUMAN ACCEPTED / implementation 73a1525 HUMAN TECHNICALLY ACCEPTED / CLOSURE ELIGIBLE
+**Status:** Current living baseline — Slice 2.4 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; proposed Slice 2.5 strategic direction preserved / NOT OPEN
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 24, 2026
 
 ---
 
-# 0. Executive current state — Slice 2.4 implementation Human technically accepted
+# 0. Executive current state — Slice 2.4 closure-ready; Slice 2.5 proposed
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -61,7 +61,9 @@ Context material resolver/storage: NOT AUTHORIZED
 Operational DB / lifecycle mutation: NOT AUTHORIZED
 Runtime/provider/model execution: NOT AUTHORIZED
 Workspace enforcement: NOT AUTHORIZED
-Slice 2.4: OPEN / COMPOSITE DESIGN REVISIONS 1–6 HUMAN ACCEPTED / I001 CLOSED / I002 CLOSED / I003-R1 CLOSED / I003-R2 RESOLVED BY ACCEPTED REV6 / implementation 73a1525282e41464d31cd458b8a50703bfa9553c INDEPENDENTLY ACCEPTED under RLY-S24-IMPL-EVAL-003 and HUMAN TECHNICALLY ACCEPTED under RLY-S24-ACCEPT-001 / CLOSURE ELIGIBLE
+Slice 2.4: OPEN / COMPOSITE DESIGN REVISIONS 1–6 HUMAN ACCEPTED / implementation 73a1525282e41464d31cd458b8a50703bfa9553c INDEPENDENTLY ACCEPTED under RLY-S24-IMPL-EVAL-003 and HUMAN TECHNICALLY ACCEPTED under RLY-S24-ACCEPT-001 / CLOSURE-READY under RLY-S24-CLOSE-AUTH-001 — AUTHORIZED / independent closure evaluation PENDING
+Slice 2.5: PROPOSED / NOT OPEN / NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 
@@ -130,8 +132,37 @@ Dedicated corrective branch:
 
 The corrective implementation is limited to I001/I002/I003 and the exact mutable surface named by the authority record. Human technical acceptance, Slice 2.4 closure, production wiring, AgentRuntime execution, Phase 3, and canonical/main promotion remain unauthorized.
 
-Corrective candidate `aa9d71fb749137b60ba8ad620cd43ef7155ad310` received `RLY-S24-IMPL-EVAL-002 — ESCALATE`. I001 and I002 were closed by that candidate. I003-R1 was closed by exact corrective candidate `73a1525282e41464d31cd458b8a50703bfa9553c`. I003-R2 was resolved by Design Revision 6, independently accepted under `RLY-S24-I003-R2-DESIGN-EVAL-002 — ACCEPT` and Human-accepted under `RLY-S24-I003-R2-DESIGN-ACCEPT-001 — ACCEPTED`. Runtime tool/shell exposure obligations remain preserved for runtime integration. Final independent implementation evaluation `RLY-S24-IMPL-EVAL-003 — ACCEPT` accepts exact implementation candidate `73a1525282e41464d31cd458b8a50703bfa9553c`. Human technical acceptance is recorded under `RLY-S24-ACCEPT-001 — ACCEPTED`. Slice 2.4 is now closure-eligible but remains OPEN until separately governed closure completes. Production workspace provisioning, production WorkPacket wiring, runtime-exposure implementation, Phase 3, real-project execution, and canonical/main promotion remain unauthorized.
+Corrective candidate `aa9d71fb749137b60ba8ad620cd43ef7155ad310` received `RLY-S24-IMPL-EVAL-002 — ESCALATE`. I001 and I002 were closed by that candidate. I003-R1 was closed by exact corrective candidate `73a1525282e41464d31cd458b8a50703bfa9553c`. I003-R2 was resolved by Design Revision 6, independently accepted under `RLY-S24-I003-R2-DESIGN-EVAL-002 — ACCEPT` and Human-accepted under `RLY-S24-I003-R2-DESIGN-ACCEPT-001 — ACCEPTED`. Runtime tool/shell exposure obligations remain preserved for runtime integration. Final independent implementation evaluation `RLY-S24-IMPL-EVAL-003 — ACCEPT` accepts exact implementation candidate `73a1525282e41464d31cd458b8a50703bfa9553c`. Human technical acceptance is recorded under `RLY-S24-ACCEPT-001 — ACCEPTED`. Finalization / closure is authorized under `RLY-S24-CLOSE-AUTH-001 — AUTHORIZED`; the exact closure-ready candidate is pending independent closure evaluation. Slice 2.4 remains OPEN until `RLY-S24-CLOSE-EVAL-001 — ACCEPT`. Production workspace provisioning, production WorkPacket wiring, runtime-exposure implementation, Slice 2.5 implementation, Phase 3, real-project execution, and canonical/main promotion remain unauthorized.
 
+
+## Strategic Phase-2 addition — Project State Resolution and Authority Compilation
+
+Human strategic authority:
+
+`RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
+
+Architecture direction:
+
+`docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`
+
+Proposed Slice:
+
+`docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`
+
+The observed integrity failure is that Relay can preserve accepted knowledge without deterministically propagating it as prerequisites and inherited constraints for later authority. The proposed Slice 2.5 addresses this by deriving current project state from canonical records and compiling requested outcomes against exact predecessors, invariants, prohibitions, qualification applicability, responsibility ownership, and evidence lineage.
+
+Frozen strategic rules:
+
+```text
+Relay remains the only governance state machine.
+Project state graph is derived, not independently authoritative.
+Authority Compiler does not grant Human authority.
+WorkPacket remains the authoritative external work unit.
+Historical evidence remains immutable; current applicability is derived.
+Slice 2.5 must close before Phase 3 becomes eligible to open.
+```
+
+Slice 2.5 is not open and no production implementation is authorized.
 
 ## Current product principle
 
@@ -154,7 +185,7 @@ B3 Forward Re-baseline / First Work       COMPLETE / HUMAN ACCEPTED
 B4 Relay Dogfood Acceptance               COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 
 Then:
-2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 is COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT; 2.4 is OPEN / COMPOSITE DESIGN REVISIONS 1–6 HUMAN ACCEPTED / exact implementation 73a1525282e41464d31cd458b8a50703bfa9553c INDEPENDENTLY ACCEPTED under RLY-S24-IMPL-EVAL-003 / HUMAN TECHNICALLY ACCEPTED under RLY-S24-ACCEPT-001 / CLOSURE ELIGIBLE
+2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED; 2.4 Execution Workspace Authority — OPEN / HUMAN ACCEPTED / CLOSURE-READY under RLY-S24-CLOSE-AUTH-001; 2.5 Project State Resolution & Authority Compilation — PROPOSED / NOT OPEN / NOT AUTHORIZED
 ```
 
 B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is Human-accepted under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, following `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed result is recorded before acceptance. B2 design is Human-accepted under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001` at exact composite `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`, comprising Revision 1 `189bb329e8d131c758a2a4d578f6ca2e701687b6` plus the Revision 2 Integrity Amendment. F001 and F002 from `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-001 — REWORK` are closed by `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`, following `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK` and corrective `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`. Real Relay B2 adoption executed successfully from the pinned clean checkout and was independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the published external operational database passed integrity, foreign-key, provenance, report-state, fingerprint, and minimal-history checks. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is COMPLETE. B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED. The Human-directed first governed work target was Slice 2.2 Role Contracts with authorized-work exhaustion integrated into the work boundary. B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
