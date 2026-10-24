@@ -1013,6 +1013,58 @@ def resolver_fixture() -> tuple[
     return packet, work_packet_ref(packet), policy, role, provider
 
 
+def resolved_plan_for_protected_operation(
+    operation: VerificationAssetPermission,
+) -> tuple[WorkspacePlan, WorkspaceProviderDescriptor]:
+    packet, _, policy, role, provider = resolver_fixture()
+    role = role.model_copy(
+        update={"verification_asset_permissions": tuple(VerificationAssetPermission)}
+    )
+    policy = policy.model_copy(
+        update={
+            "filesystem_policy": FilesystemPolicy(
+                default_access=FilesystemAccess.READ_WRITE,
+                writable_prefixes=(),
+                denied_prefixes=(),
+            )
+        }
+    )
+    packet_values = packet.model_dump()
+    packet_values.update(
+        {
+            "role_contract_ref": role_contract_ref(role),
+            "workspace_policy_ref": workspace_policy_ref(policy),
+            "protected_verification_requirements": (
+                packet.protected_verification_requirements[0].model_copy(
+                    update={"required_operation": operation}
+                ),
+            ),
+        }
+    )
+    packet = WorkPacket.model_validate(packet_values)
+    packet_ref = work_packet_ref(packet)
+    conformance = WorkPacketConformanceFact(
+        evaluated_work_packet_ref=packet_ref,
+        conformance=WorkPacketConformance(status=RequirementStatus.SATISFIED, reasons=()),
+    )
+
+    resolution = resolve_workspace_plan(
+        packet,
+        packet_ref,
+        conformance,
+        policy,
+        role,
+        (),
+        provider,
+        plan_key="workspace-plan",
+        revision=1,
+    )
+
+    assert resolution.status is RequirementStatus.SATISFIED
+    assert resolution.plan is not None
+    return resolution.plan, provider
+
+
 def test_plan_resolution_preserves_policy_added_requirements_and_no_authority_case() -> None:
     packet, packet_ref, policy, role, provider = resolver_fixture()
     conformance = WorkPacketConformanceFact(
@@ -1408,3 +1460,58 @@ def test_protected_control_key_and_strength_are_enforced() -> None:
     )
     assert weak_result.status is RequirementStatus.UNSATISFIED
     assert WorkspaceReason.CONTROL_STRENGTH_INSUFFICIENT in weak_result.reasons
+
+
+@pytest.mark.parametrize(
+    ("operation", "physical_access"),
+    (
+        (VerificationAssetPermission.MODIFY, FilesystemAccess.READ_ONLY),
+        (VerificationAssetPermission.MODIFY, FilesystemAccess.DENY),
+        (VerificationAssetPermission.CREATE, FilesystemAccess.READ_ONLY),
+        (VerificationAssetPermission.CREATE, FilesystemAccess.DENY),
+        (VerificationAssetPermission.READ, FilesystemAccess.DENY),
+        (VerificationAssetPermission.EXECUTE, FilesystemAccess.DENY),
+        (VerificationAssetPermission.EVALUATE, FilesystemAccess.DENY),
+    ),
+)
+def test_final_conformance_rejects_incompatible_protected_physical_access(
+    operation: VerificationAssetPermission,
+    physical_access: FilesystemAccess,
+) -> None:
+    plan, descriptor = resolved_plan_for_protected_operation(operation)
+    binding = plan.protected_asset_bindings[0].model_copy(
+        update={"physical_access": physical_access}
+    )
+    plan_values = plan.model_dump(mode="python")
+    plan_values["protected_asset_bindings"] = (binding.model_dump(mode="python"),)
+    plan = WorkspacePlan.model_validate(plan_values)
+    instance, facts = conformance_fixture(plan, descriptor)
+
+    result = evaluate_workspace_conformance(plan, instance, plan.provider_ref, facts)
+
+    assert result.status is RequirementStatus.UNSATISFIED
+    assert WorkspaceReason.FILESYSTEM_SCOPE_VIOLATION in result.reasons
+
+
+@pytest.mark.parametrize(
+    "operation",
+    (
+        VerificationAssetPermission.PROPOSE_MUTATION,
+        VerificationAssetPermission.APPROVE_MUTATION,
+    ),
+)
+def test_proposal_and_approval_operations_do_not_require_physical_write_access(
+    operation: VerificationAssetPermission,
+) -> None:
+    plan, descriptor = resolved_plan_for_protected_operation(operation)
+    binding = plan.protected_asset_bindings[0].model_copy(
+        update={"physical_access": FilesystemAccess.DENY}
+    )
+    plan_values = plan.model_dump(mode="python")
+    plan_values["protected_asset_bindings"] = (binding.model_dump(mode="python"),)
+    plan = WorkspacePlan.model_validate(plan_values)
+    instance, facts = conformance_fixture(plan, descriptor)
+
+    result = evaluate_workspace_conformance(plan, instance, plan.provider_ref, facts)
+
+    assert WorkspaceReason.FILESYSTEM_SCOPE_VIOLATION not in result.reasons

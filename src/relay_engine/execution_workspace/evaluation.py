@@ -36,7 +36,12 @@ from relay_engine.execution_workspace.models import (
     validate_repository_path,
     workspace_plan_ref,
 )
-from relay_engine.role_contracts import RequirementStatus, RoleContract, role_contract_ref
+from relay_engine.role_contracts import (
+    RequirementStatus,
+    RoleContract,
+    VerificationAssetPermission,
+    role_contract_ref,
+)
 from relay_engine.work_packets import (
     ProtectedVerificationAuthorityFact,
     WorkPacket,
@@ -661,6 +666,20 @@ def evaluate_workspace_conformance(
         item.requirement_ref: item for item in facts.initial_inspection.protected_asset_observations
     }
     for binding in plan.protected_asset_bindings:
+        requires_write_access = binding.required_operation in {
+            VerificationAssetPermission.CREATE,
+            VerificationAssetPermission.MODIFY,
+        }
+        requires_read_access = binding.required_operation in {
+            VerificationAssetPermission.READ,
+            VerificationAssetPermission.EXECUTE,
+            VerificationAssetPermission.EVALUATE,
+        }
+        if (
+            requires_write_access and binding.physical_access is not FilesystemAccess.READ_WRITE
+        ) or (requires_read_access and binding.physical_access is FilesystemAccess.DENY):
+            reasons.append(WorkspaceReason.FILESYSTEM_SCOPE_VIOLATION)
+            known_failure = True
         control_requirement = next(
             (
                 item
