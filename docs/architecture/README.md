@@ -10,7 +10,7 @@ Current frontier:
 2.3 Context / Work-Packet Contract                 COMPLETE / ACCEPTED / CLOSED
 2.4 Execution Workspace Authority                  COMPLETE / ACCEPTED / CLOSED
 2.5 Project State Resolution & Authority Compilation
-                                                   OPEN / DESIGN NOT YET AUTHORIZED
+                                                   OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 Phase 3                                           NOT OPEN / NOT AUTHORIZED
 ```
 
@@ -20,7 +20,7 @@ Key architecture references include:
 - [Governance Assurance Reference Model](GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md)
 - [Project State Resolution and Authority Compilation](PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md)
 
-The Project State Resolution / Authority Compilation capability is Human-directed strategic architecture under `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001`. Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; design and implementation remain separately unauthorized.
+The Project State Resolution / Authority Compilation capability is Human-directed strategic architecture under `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001`. Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; bounded design is authorized under `RLY-S25-DESIGN-AUTH-001`; implementation remains unauthorized.
 
 Future architecture documents may be present as planning artifacts; their presence does not authorize implementation.
 
