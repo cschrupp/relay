@@ -127,11 +127,19 @@ The following runtime-integration outcomes remain normative:
 
 ```text
 Relay denies exact tool websearch
-+ runtime reports TOOL_REQUESTED websearch
++ runtime evidence establishes that websearch was actually exposed
     -> UNSATISFIED
 
+Relay denies exact tool websearch
++ runtime evidence proves that websearch was actually executed
+    -> UNSATISFIED
+
+runtime reports TOOL_REQUESTED websearch
+    -> evidence of an attempted request only;
+       not by itself proof of exposure or successful execution
+
 runtime reports tool activity
-+ exact tool identity cannot be established
++ exact tool identity is required but cannot be established
     -> INDETERMINATE
 
 runtime event continuity is insufficient for a required conformance claim
@@ -192,22 +200,32 @@ The existing AgentRuntime event direction, including `TOOL_REQUESTED`, `TOOL_COM
 
 ```text
 ToolPolicy denies bash
-+ runtime event TOOL_REQUESTED bash
++ runtime evidence establishes that bash was actually exposed
     -> UNSATISFIED
+
+ToolPolicy denies bash
++ runtime evidence proves that bash was actually executed
+    -> UNSATISFIED
+
+runtime event TOOL_REQUESTED bash
+    -> evidence of an attempted request only
+    -> not sufficient by itself to establish exposure
+    -> not sufficient by itself to establish successful execution
 
 ToolPolicy allows websearch
 + runtime event TOOL_REQUESTED websearch
-    -> potentially conformant, subject to all other policy and evidence
+    -> evidence of an attempted request only;
+       the event alone does not establish exposure, execution, or conformance
 
 runtime indicates tool activity
-+ exact identity unavailable
++ exact identity is required but unavailable
     -> INDETERMINATE
 
 required runtime event continuity cannot be established
     -> INDETERMINATE / fail closed
 ```
 
-These evaluations are not implemented in Slice 2.4. A future evaluator must not infer non-exposure from the absence of `TOOL_REQUESTED`.
+`TOOL_REQUESTED` records an attempt and does not by itself prove that a tool was exposed or executed. A future evaluator must not infer non-exposure from the absence of `TOOL_REQUESTED`. The name `TOOL_COMPLETED`, or any other normalized event name, is not universally sufficient proof of successful execution; future runtime design must establish the event's exact evidence semantics before relying on it for that claim. These evaluations are not implemented in Slice 2.4.
 
 ## 9. Shell semantics
 
@@ -234,13 +252,13 @@ The following are **PROPOSED / DEFERRED**, **NORMATIVE SUCCESSOR OBLIGATIONS**, 
 | RTO-05 | Observe exact runtime tool identity where trustworthy. |
 | RTO-06 | Unknown runtime tool identity yields INDETERMINATE. |
 | RTO-07 | A denied tool that was exposed yields UNSATISFIED. |
-| RTO-08 | A denied tool that was invoked yields UNSATISFIED. |
+| RTO-08 | A denied tool proven actually executed yields UNSATISFIED. |
 | RTO-09 | Shell DENY with actual shell exposure yields UNSATISFIED. |
 | RTO-10 | Establish runtime event continuity sufficient for each required conformance claim; otherwise fail closed as INDETERMINATE. |
 | RTO-11 | Runtime permissions must never widen Relay authority. |
 | RTO-12 | An unmediated shell cannot claim fine-grained tool-side-effect prevention. |
 
-Each obligation requires its own future implementation authority and whatever design/schema authority is needed. Recording these obligations does not authorize runtime work.
+RTO-01 through RTO-12 require future explicit design and implementation authority coverage as applicable. They may be grouped into one or more cohesive future WorkPackets/authorities according to `RLY-GOV-AUTHWORK-GRANULARITY-001 — AUTHORIZED`. Separate RTO identifiers do not by themselves establish separate authority boundaries. Recording an RTO grants no authority. Separate authority is required where an actual authority, risk, or acceptance boundary requires it, not merely because an RTO has its own identifier. Any needed design or schema authority remains subject to the same scope and granularity policy.
 
 ## 11. No implementation or acceptance implied
 
