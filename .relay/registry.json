@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
+      "artifact_id": "art_1b4c6e8a-2f35-4d97-9ac1-6e20f8b3d451",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
       "content_digest": "sha256:7399231c95a2198c375bd8394de6e6c4e98d728c246c675c057c335a0641f999",
@@ -18,7 +18,7 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
+      "artifact_id": "art_7d2e5a91-4c68-4fb3-a170-93e6d1b42c58",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
       "content_digest": "sha256:264fd44f0bcc32568b46579c9e424d58fb4ad10291c4c0a922245dcc96763b15",
@@ -50,7 +50,7 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_72aa5635-a102-4f29-8a8c-39d4d02bb605",
+      "artifact_id": "art_9a31c7e4-65b2-4d8f-b903-2ce71a5f684d",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
       "content_digest": "sha256:7877beb1262dba27060e1b82d5b0667df519602f9c38fb209c9324b69ed0518a",
@@ -5174,7 +5174,7 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
+        "artifact_id": "art_1b4c6e8a-2f35-4d97-9ac1-6e20f8b3d451",
         "revision": 141,
         "schema_version": 1
       }
@@ -5183,7 +5183,7 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
+        "artifact_id": "art_7d2e5a91-4c68-4fb3-a170-93e6d1b42c58",
         "revision": 152,
         "schema_version": 1
       }
