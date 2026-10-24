@@ -21,16 +21,16 @@
       "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:53cf65500cb6d23fa098d0771606cc29a6f472b67bf3e5429f07f840775fc1fb",
+      "content_digest": "sha256:696bd4854bc3e50b689dcc4609f088fdd31b4bfbe38ce64f483e2aaeff94ab83",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 150,
+      "revision": 151,
       "schema_version": 1,
       "scope": "Current canonical current baseline document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-23T22:10:00Z"
+      "updated_at": "2026-10-24T05:47:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -4402,6 +4402,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_2f6d4c91-8a73-4e5b-b102-7d9c3a6e5f40",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:cc2e4049018250bec0ce08588cd47f66941f0fa0573af0745d081c976a8a9c32",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_2_4_I003_R1_REWORK_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.4 — I003-R1 Human Decision and Corrective Implementation Authorization 001",
+      "updated_at": "2026-10-24T05:47:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31f570f2-7d35-4cb9-b8f0-0e9afdfde0e1",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
@@ -4415,6 +4431,22 @@
       "supersedes": null,
       "title": "Slice 2.4 — Independent Implementation Evaluation 001",
       "updated_at": "2026-10-23T22:10:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_7c8a6f2e-3d91-4b52-9f08-6a1c2e4d7b30",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:144385aeb13fdcf51d20a19cb7b28a4142bbae5b458d63507b130fc6b59570b5",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_2_4_IMPLEMENTATION_EVALUATION_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Slice 2.4 governance or review record preserved byte-for-byte.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.4 — Independent Implementation Evaluation 002",
+      "updated_at": "2026-10-24T05:47:00Z"
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
@@ -5104,7 +5136,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
-        "revision": 150,
+        "revision": 151,
         "schema_version": 1
       }
     },
