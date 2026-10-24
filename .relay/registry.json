@@ -5,32 +5,32 @@
       "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:6f05a2d8a5458ee38d07f292120a9d6bb8de7f79b0e628942c2422c9b5e0e3ec",
+      "content_digest": "sha256:7399231c95a2198c375bd8394de6e6c4e98d728c246c675c057c335a0641f999",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 140,
+      "revision": 141,
       "schema_version": 1,
       "scope": "Current canonical build plan document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-23T17:30:00Z"
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:696bd4854bc3e50b689dcc4609f088fdd31b4bfbe38ce64f483e2aaeff94ab83",
+      "content_digest": "sha256:264fd44f0bcc32568b46579c9e424d58fb4ad10291c4c0a922245dcc96763b15",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 151,
+      "revision": 152,
       "schema_version": 1,
       "scope": "Current canonical current baseline document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-24T05:47:00Z"
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -53,16 +53,16 @@
       "artifact_id": "art_72aa5635-a102-4f29-8a8c-39d4d02bb605",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:410cb0ce5b61af1a86fd69a826aa3e8b88bacf44f5686a9f9c0f6e11077f4f4c",
+      "content_digest": "sha256:7877beb1262dba27060e1b82d5b0667df519602f9c38fb209c9324b69ed0518a",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 48,
+      "revision": 49,
       "schema_version": 1,
       "scope": "Current human-readable Relay development execution checklist with NOW/NEXT/DOGFOOD/THEN and anti-drift controls.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-23T18:15:00Z"
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -95,6 +95,22 @@
       "supersedes": null,
       "title": "Governance Assurance Reference Model",
       "updated_at": "2026-10-22T05:00:57Z"
+    },
+    {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_2c5e9a31-57b4-4f12-9c6d-8b32f4a1e705",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:b3986ba291ab17a9c6aed5db82f533fee7a0dfe65bee67424b84ebf13aa3433d",
+      "human_version": null,
+      "path": "docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human-directed strategic architecture for derived project-state resolution and authority-candidate compilation; no implementation authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Project State Resolution and Authority Compilation",
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -399,6 +415,22 @@
       "supersedes": null,
       "title": "Phase 1 Hardening and Phase 2 Roadmap Re-baseline Promotion Authority",
       "updated_at": "2026-10-10T15:41:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_8fd61f2a-0b3c-4c85-a2df-7d4b1a9e6205",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:33e4aa43d970b3f8dd9d75783879bdab18afab8343574d9ca64094afe22fc369",
+      "human_version": "RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001",
+      "path": "docs/reviews/PHASE_2_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION_STRATEGIC_AMENDMENT_AUTHORIZATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human strategic authority for documentation, architecture, roadmap and backlog amendment adding proposed Slice 2.5; no Slice opening or implementation authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Phase 2 Project State Resolution and Authority Compilation Strategic Amendment Authorization",
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "schema_version": 1,
@@ -5105,6 +5137,22 @@
       "updated_at": "2026-10-22T18:39:49Z"
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_64b7d3e9-92af-4a31-8ce1-5f0d2b7634a8",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:dc4fb5bed4bb269dcef192ee9ffbe19ffdc3059d575c22287012d525de334cb7",
+      "human_version": null,
+      "path": "docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposed Slice 2.5 definition for project-state resolution and authority compilation; not open and not authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.5 — Project State Resolution and Authority Compilation",
+      "updated_at": "2026-10-24T18:12:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
@@ -5127,7 +5175,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
-        "revision": 140,
+        "revision": 141,
         "schema_version": 1
       }
     },
@@ -5136,7 +5184,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
-        "revision": 151,
+        "revision": 152,
         "schema_version": 1
       }
     },
