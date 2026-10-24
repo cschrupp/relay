@@ -17,20 +17,20 @@
       "updated_at": "2026-10-23T17:30:00Z"
     },
     {
-      "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
-      "artifact_state": "CURRENT",
-      "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:696bd4854bc3e50b689dcc4609f088fdd31b4bfbe38ce64f483e2aaeff94ab83",
-      "human_version": null,
-      "path": "docs/CURRENT_BASELINE.md",
-      "revision": 151,
-      "schema_version": 1,
-      "scope": "Current canonical current baseline document.",
-      "superseded_by": null,
-      "supersedes": null,
+      "artifact_id": "art_cf930606-e5e1-48d7-b805-4c640ec0d800",
+      "revision": 152,
       "title": "Current Baseline",
-      "updated_at": "2026-10-24T05:47:00Z"
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LIVING_PROJECTION",
+      "artifact_state": "CURRENT",
+      "path": "docs/CURRENT_BASELINE.md",
+      "content_digest": "sha256:1253bdd9f63b7af0b6df3f0b07bbc3e7b5a99580078167d0579adf3876a26f8f",
+      "human_version": null,
+      "updated_at": "2026-10-24T17:30:09Z",
+      "scope": "Current canonical current baseline document.",
+      "supersedes": null,
+      "superseded_by": null,
+      "schema_version": 1
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -4417,6 +4417,22 @@
       "updated_at": "2026-10-24T05:47:00Z"
     },
     {
+      "artifact_id": "art_8e775f68-6097-410d-9ab6-9a460abb06e3",
+      "revision": 1,
+      "title": "Slice 2.4 — I003-R2 Design Clarification Authorization 001",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/SLICE_2_4_I003_R2_DESIGN_CLARIFICATION_AUTHORIZATION_001.md",
+      "content_digest": "sha256:77aea2dbfbb6d851a1442b931f3fb96027e0914f441eb6afedf454587b544e97",
+      "human_version": null,
+      "updated_at": "2026-10-24T17:30:09Z",
+      "scope": "Human Authority record for the bounded Slice 2.4 I003-R2 design clarification.",
+      "supersedes": null,
+      "superseded_by": null,
+      "schema_version": 1
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31f570f2-7d35-4cb9-b8f0-0e9afdfde0e1",
       "artifact_state": "IMMUTABLE",
@@ -5105,6 +5121,22 @@
       "updated_at": "2026-10-22T18:39:49Z"
     },
     {
+      "artifact_id": "art_3b57850f-4d09-4a64-90b0-b0e65f93661c",
+      "revision": 1,
+      "title": "Slice 2.4 — Execution Workspace Authority — Design Revision 6 Amendment",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/slices/SLICE_2_4_EXECUTION_WORKSPACE_AUTHORITY_DESIGN_REV6_AMENDMENT.md",
+      "content_digest": "sha256:ad12f65a2f4e6425a288c2545b0ffad7078271537475ad3b360930551b3582d6",
+      "human_version": null,
+      "updated_at": "2026-10-24T17:30:09Z",
+      "scope": "Proposed Slice 2.4 design amendment clarifying the runtime tool/shell exposure boundary; pending independent SOL design review.",
+      "supersedes": null,
+      "superseded_by": null,
+      "schema_version": 1
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
@@ -5135,8 +5167,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_8ab4de22-4290-4ad9-8206-5ac9c51ace38",
-        "revision": 151,
+        "artifact_id": "art_cf930606-e5e1-48d7-b805-4c640ec0d800",
+        "revision": 152,
         "schema_version": 1
       }
     },
