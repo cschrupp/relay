@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED under RLY-S24-IMPL-AUTH-001; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.4 OPEN with corrective candidate `73a1525282e41464d31cd458b8a50703bfa9553c`; I003-R2 clarification pending; proposed Slice 2.5 state-resolution direction authorized; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.4 implementation authorized
+# 0. CURRENT ROADMAP — complete Slice 2.4, then Slice 2.5 before Phase 3
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -70,8 +70,10 @@ Context material resolver/storage: NOT AUTHORIZED
 Operational DB / lifecycle mutation: NOT AUTHORIZED
 Runtime/provider/model execution: NOT AUTHORIZED
 Workspace enforcement: NOT AUTHORIZED
-2.4 Execution Workspace Authority: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
-Phase 3: NOT OPEN / NOT AUTHORIZED
+2.4 Execution Workspace Authority: OPEN / DESIGN HUMAN ACCEPTED / I003-R1 corrective candidate submitted / I003-R2 clarification pending
+2.5 Project State Resolution & Authority Compilation: PROPOSED / NOT OPEN / NOT AUTHORIZED
+Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
+Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 closure is now a prerequisite
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -95,6 +97,8 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED
   -> 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT
   -> 2.4 Execution Workspace Authority
+  -> 2.5 Project State Resolution & Authority Compilation — PROPOSED / NOT OPEN / NOT AUTHORIZED
+  -> explicit Phase 3 opening
   -> Phase 3 governed autonomous engineering loop
 ```
 
@@ -105,6 +109,24 @@ B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, 
 Governance hardening must serve delivery. As a planning target, product/code/test/integration work should normally account for at least two-thirds of active engineering effort. New governance work must name the concrete capability it unblocks or the observed integrity/security failure it fixes. If governance/documentation dominates two consecutive increments without shipping or unblocking product capability, stop and require explicit Human roadmap review.
 
 The live execution checklist is [docs/TODO.md](TODO.md).
+
+## Strategic Phase-2 addition — Project State Resolution and Authority Compilation
+
+Human strategic authority:
+
+`RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
+
+Architecture direction:
+
+`docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`
+
+Proposed Slice 2.5:
+
+`docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`
+
+The observed failure class is not lack of historical information but failure to convert accepted knowledge into machine-resolvable obligations for later work. Slice 2.5 is therefore proposed as the final Phase-2 foundation before Phase 3. It must compile present applicable state into a complete authority candidate while preserving Human Authority, WorkPacket primacy, exact evidence lineage, and the rule that Relay remains the only governance state machine.
+
+Roadmap placement does not open Slice 2.5 or authorize its design/implementation.
 
 ## Authorized-work granularity and autonomous internal decomposition
 
@@ -179,9 +201,10 @@ Slice 1.10 — Canonical Source and Promotion Enforcement:
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
   2.3 COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
-  2.4 OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
+  2.4 OPEN / DESIGN HUMAN ACCEPTED / corrective candidate 73a1525282e41464d31cd458b8a50703bfa9553c submitted; I003-R2 clarification pending
+  2.5 PROPOSED / NOT OPEN / NOT AUTHORIZED — Project State Resolution & Authority Compilation
 Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
-Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, and explicit Phase 3 opening
+Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, 2.5, and explicit Phase 3 opening
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -387,14 +410,16 @@ OPEN
         +-- 2.1 Agent Runtime Contract            CLOSED
         +-- 2.2 Role Contracts                    COMPLETE / ACCEPTED / CLOSED
         +-- 2.3 Context / Work-Packet Contract    COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
-        +-- 2.4 Execution Workspace Authority     PLANNED
+        +-- 2.4 Execution Workspace Authority     OPEN
+        +-- 2.5 Project State Resolution &
+        |       Authority Compilation              PROPOSED / NOT OPEN
                                                  |
                                                  v
 Phase 3 — first governed autonomous engineering loop
 NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 remains NOT OPEN / NOT AUTHORIZED.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 is OPEN; proposed Slice 2.5 remains NOT OPEN / NOT AUTHORIZED.
 
 Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 
@@ -419,10 +444,13 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 2.4  Execution Workspace Authority
      -> define where/how the authorized role may execute
 
+2.5  Project State Resolution and Authority Compilation — PROPOSED / NOT OPEN / NOT AUTHORIZED
+     -> resolve current prerequisites, invariants, applicability, prohibitions, responsibility ownership, and evidence lineage before authority issuance
+
 3.1  Coding Agent Execution
      -> first governed autonomous implementation execution
 
-Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Human Decision Support, 1.10 Source/Promotion Enforcement, 2.2 Role Contracts, 2.3 Context/Work Packets, 2.4 Workspace Authority, and explicit Phase 3 opening.
+Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Human Decision Support, 1.10 Source/Promotion Enforcement, 2.2 Role Contracts, 2.3 Context/Work Packets, 2.4 Workspace Authority, 2.5 Project State Resolution & Authority Compilation, and explicit Phase 3 opening.
 
 ## 1B.1 Strategic control-plane amendment — planned ownership
 
