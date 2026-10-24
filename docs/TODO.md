@@ -6,7 +6,7 @@
 ## Current Slice 2.4 closure state
 
 ```text
-COMPLETE / ACCEPTED / CLOSED
+Slice 2.3: COMPLETE / ACCEPTED / CLOSED
 Accepted Work-Packet implementation: 861ccb6bda528a98e1f570a32dcddc61358732e7
 Independent implementation evaluation: RLY-S23-IMPL-EVAL-002 — ACCEPT
 Human technical acceptance: RLY-S23-ACCEPT-001 — ACCEPTED
