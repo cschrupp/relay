@@ -17,16 +17,16 @@
       "updated_at": "2026-10-24T21:35:00Z"
     },
     {
-      "artifact_id": "art_92e4b6c1-3d75-4fa0-b218-7c5e1d93a640",
-      "revision": 158,
+      "artifact_id": "art_eb6fffd0-cf03-4b86-9df4-2a64ce89768b",
+      "revision": 159,
       "title": "Current Baseline",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/CURRENT_BASELINE.md",
-      "content_digest": "sha256:6a7362059a842663237b0b6c707ea4e74f87b37f0493e1e8acf51017ddbc7baa",
+      "content_digest": "sha256:f2650953067eb90fea09a05b169506240b4c2c25246ed30d17c183dd3a924cab",
       "human_version": null,
-      "updated_at": "2026-10-24T21:35:00Z",
+      "updated_at": "2026-10-24T23:37:29Z",
       "scope": "Current canonical current baseline document.",
       "supersedes": null,
       "superseded_by": null,
@@ -5345,6 +5345,22 @@
       "updated_at": "2026-10-24T21:35:00Z"
     },
     {
+      "artifact_id": "art_5c28b003-a788-497a-af32-34856ea1987e",
+      "revision": 1,
+      "title": "Slice 2.5 — Project State Resolution and Authority Compilation — Normative Design Candidate",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION_DESIGN.md",
+      "content_digest": "sha256:1195220482aded2099ee8832e14dca543e028731d01dbc9994321af9d74a3758",
+      "human_version": null,
+      "updated_at": "2026-10-24T23:40:24Z",
+      "scope": "Normative Slice 2.5 design candidate under RLY-S25-DESIGN-AUTH-001; pending independent SOL review and Human acceptance; implementation not authorized.",
+      "supersedes": null,
+      "superseded_by": null,
+      "schema_version": 1
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
@@ -5375,8 +5391,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_92e4b6c1-3d75-4fa0-b218-7c5e1d93a640",
-        "revision": 158,
+        "artifact_id": "art_eb6fffd0-cf03-4b86-9df4-2a64ce89768b",
+        "revision": 159,
         "schema_version": 1
       }
     },
