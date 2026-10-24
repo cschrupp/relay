@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN under RLY-S25-OPEN-001 / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+**Status:** Current living baseline — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN / DESIGN AUTHORIZED under RLY-S25-DESIGN-AUTH-001 / IMPLEMENTATION NOT AUTHORIZED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 24, 2026
@@ -68,9 +68,11 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-Slice 2.5: OPEN / DESIGN NOT YET AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Slice 2.5: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
 Opening authority: RLY-S25-OPEN-001 — OPEN
+Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
+Normative design candidate: NOT YET PRODUCED / NOT YET ACCEPTED
 Phase 3: NOT OPEN / NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 
@@ -169,7 +171,7 @@ Historical evidence remains immutable; current applicability is derived.
 Slice 2.5 must close before Phase 3 becomes eligible to open.
 ```
 
-Slice 2.5 is OPEN under `RLY-S25-OPEN-001`. Normative design work is not yet authorized, and no production implementation is authorized.
+Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; bounded normative design is authorized under `RLY-S25-DESIGN-AUTH-001`; the design is not yet accepted and no production implementation is authorized.
 
 ## Current product principle
 
