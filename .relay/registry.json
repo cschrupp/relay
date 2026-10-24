@@ -2,10 +2,10 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_63b0f241-1d7c-4a59-923e-8f164c2ab705",
+      "artifact_id": "art_1cf9a650-b27d-43e8-9f14-6d73c2a5b801",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:02cf41153aa2583a286e2c9676e34e0f8f9e2f40d998704be7d887784c955be3",
+      "content_digest": "sha256:cc868000a4917d381eef0f2a9aabedb2263d5f0ea6ec8daa80f23449bbeb2b58",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
       "revision": 141,
@@ -14,19 +14,19 @@
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-24T20:45:00Z"
+      "updated_at": "2026-10-24T20:51:00Z"
     },
     {
-      "artifact_id": "art_14d7c8a5-3f62-49b1-ae80-7c235d9f4612",
+      "artifact_id": "art_5e2d8b41-c693-4a70-bf25-8c1d47e9a362",
       "revision": 155,
       "title": "Current Baseline",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/CURRENT_BASELINE.md",
-      "content_digest": "sha256:a34504271912732572344d8cfddc0c2795d4308ddd40868ceff9802971992006",
+      "content_digest": "sha256:0c8d13950c51c85d177cc22bb0748afd95626f2e54d89f4ef5c926af68a33de1",
       "human_version": null,
-      "updated_at": "2026-10-24T20:45:00Z",
+      "updated_at": "2026-10-24T20:51:00Z",
       "scope": "Current canonical current baseline document.",
       "supersedes": null,
       "superseded_by": null,
@@ -50,10 +50,10 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_e4b72c19-8a36-45d0-9f21-5c63b0a7d948",
+      "artifact_id": "art_9b73d1e4-5a26-4c80-8f31-2de6a947bc15",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:5de061a50b59739a4e3be79b7d95f1331241c3ec8b9870b1fa89c2c975ed7369",
+      "content_digest": "sha256:b0f879f251264f63ef2ffafc45dc2341874cca13e66049c7ac594433f12cdefc",
       "human_version": null,
       "path": "docs/TODO.md",
       "revision": 49,
@@ -62,7 +62,7 @@
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-24T20:45:00Z"
+      "updated_at": "2026-10-24T20:51:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5318,7 +5318,7 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_63b0f241-1d7c-4a59-923e-8f164c2ab705",
+        "artifact_id": "art_1cf9a650-b27d-43e8-9f14-6d73c2a5b801",
         "revision": 141,
         "schema_version": 1
       }
@@ -5327,7 +5327,7 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_14d7c8a5-3f62-49b1-ae80-7c235d9f4612",
+        "artifact_id": "art_5e2d8b41-c693-4a70-bf25-8c1d47e9a362",
         "revision": 155,
         "schema_version": 1
       }
