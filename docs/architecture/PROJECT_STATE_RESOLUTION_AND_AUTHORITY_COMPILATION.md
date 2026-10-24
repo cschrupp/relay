@@ -1,9 +1,9 @@
 # Project State Resolution and Authority Compilation
 
-**Status:** Human-directed strategic architecture — proposed Phase-2 capability; implementation not authorized  
+**Status:** Human-directed strategic architecture — Slice 2.5 OPEN; normative design not yet authorized; implementation not authorized  
 **Authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`  
 **Date:** 2026-10-24  
-**Target slice:** Proposed Slice 2.5 — Project State Resolution and Authority Compilation
+**Target slice:** Slice 2.5 — Project State Resolution and Authority Compilation — OPEN under `RLY-S25-OPEN-001`
 
 ## 1. Problem statement
 
