@@ -2,31 +2,31 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
+      "artifact_id": "art_63b0f241-1d7c-4a59-923e-8f164c2ab705",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:6f05a2d8a5458ee38d07f292120a9d6bb8de7f79b0e628942c2422c9b5e0e3ec",
+      "content_digest": "sha256:02cf41153aa2583a286e2c9676e34e0f8f9e2f40d998704be7d887784c955be3",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 140,
+      "revision": 141,
       "schema_version": 1,
       "scope": "Current canonical build plan document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-23T17:30:00Z"
+      "updated_at": "2026-10-24T20:45:00Z"
     },
     {
-      "artifact_id": "art_8e4b1f62-3d90-4ca7-b125-6f39d2a580ce",
-      "revision": 154,
+      "artifact_id": "art_14d7c8a5-3f62-49b1-ae80-7c235d9f4612",
+      "revision": 155,
       "title": "Current Baseline",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/CURRENT_BASELINE.md",
-      "content_digest": "sha256:09e9387460f27eb6c057c22cfb885eb31c9a8c00e0c9542dfa2a0f7d6c641452",
+      "content_digest": "sha256:a34504271912732572344d8cfddc0c2795d4308ddd40868ceff9802971992006",
       "human_version": null,
-      "updated_at": "2026-10-24T20:24:00Z",
+      "updated_at": "2026-10-24T20:45:00Z",
       "scope": "Current canonical current baseline document.",
       "supersedes": null,
       "superseded_by": null,
@@ -34,35 +34,35 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_52cb3717-dc4c-445a-ae1d-f429deb35943",
+      "artifact_id": "art_a8c1e362-54d9-4f07-b215-63e7a9c40d18",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:db4b58d6b2adc7791dd98f8d75310b9beab3adea1ad8423af5a047b3198d78ac",
+      "content_digest": "sha256:340c8bec012da05be5c8fbb39f415bfa1edbf99c531aa99465fe9abc852b4a86",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 56,
+      "revision": 57,
       "schema_version": 1,
       "scope": "Current canonical product and technical proposal.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product and Technical Proposal",
-      "updated_at": "2026-10-23T17:30:00Z"
+      "updated_at": "2026-10-24T20:45:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_72aa5635-a102-4f29-8a8c-39d4d02bb605",
+      "artifact_id": "art_e4b72c19-8a36-45d0-9f21-5c63b0a7d948",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:410cb0ce5b61af1a86fd69a826aa3e8b88bacf44f5686a9f9c0f6e11077f4f4c",
+      "content_digest": "sha256:5de061a50b59739a4e3be79b7d95f1331241c3ec8b9870b1fa89c2c975ed7369",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 48,
+      "revision": 49,
       "schema_version": 1,
       "scope": "Current human-readable Relay development execution checklist with NOW/NEXT/DOGFOOD/THEN and anti-drift controls.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Relay Development TODO",
-      "updated_at": "2026-10-23T18:15:00Z"
+      "updated_at": "2026-10-24T20:45:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -95,6 +95,22 @@
       "supersedes": null,
       "title": "Governance Assurance Reference Model",
       "updated_at": "2026-10-22T05:00:57Z"
+    },
+    {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_2c5e9a31-57b4-4f12-9c6d-8b32f4a1e705",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:b3986ba291ab17a9c6aed5db82f533fee7a0dfe65bee67424b84ebf13aa3433d",
+      "human_version": null,
+      "path": "docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human-directed strategic architecture for derived project-state resolution and authority-candidate compilation; no implementation authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Project State Resolution and Authority Compilation",
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -399,6 +415,22 @@
       "supersedes": null,
       "title": "Phase 1 Hardening and Phase 2 Roadmap Re-baseline Promotion Authority",
       "updated_at": "2026-10-10T15:41:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_8fd61f2a-0b3c-4c85-a2df-7d4b1a9e6205",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:33e4aa43d970b3f8dd9d75783879bdab18afab8343574d9ca64094afe22fc369",
+      "human_version": "RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001",
+      "path": "docs/reviews/PHASE_2_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION_STRATEGIC_AMENDMENT_AUTHORIZATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human strategic authority for documentation, architecture, roadmap and backlog amendment adding proposed Slice 2.5; no Slice opening or implementation authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Phase 2 Project State Resolution and Authority Compilation Strategic Amendment Authorization",
+      "updated_at": "2026-10-24T18:12:00Z"
     },
     {
       "schema_version": 1,
@@ -5249,6 +5281,22 @@
       "schema_version": 1
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_64b7d3e9-92af-4a31-8ce1-5f0d2b7634a8",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:dc4fb5bed4bb269dcef192ee9ffbe19ffdc3059d575c22287012d525de334cb7",
+      "human_version": null,
+      "path": "docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposed Slice 2.5 definition for project-state resolution and authority compilation; not open and not authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.5 — Project State Resolution and Authority Compilation",
+      "updated_at": "2026-10-24T18:12:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
@@ -5270,8 +5318,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_dbb7b993-1dff-4b29-9db8-d602c57634f3",
-        "revision": 140,
+        "artifact_id": "art_63b0f241-1d7c-4a59-923e-8f164c2ab705",
+        "revision": 141,
         "schema_version": 1
       }
     },
@@ -5279,8 +5327,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_8e4b1f62-3d90-4ca7-b125-6f39d2a580ce",
-        "revision": 154,
+        "artifact_id": "art_14d7c8a5-3f62-49b1-ae80-7c235d9f4612",
+        "revision": 155,
         "schema_version": 1
       }
     },
@@ -5306,8 +5354,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_52cb3717-dc4c-445a-ae1d-f429deb35943",
-        "revision": 56,
+        "artifact_id": "art_a8c1e362-54d9-4f07-b215-63e7a9c40d18",
+        "revision": 57,
         "schema_version": 1
       }
     }
