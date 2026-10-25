@@ -148,9 +148,9 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Authorize bounded Slice 2.5 design under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`.
 - [x] Accept exact Slice 2.5 normative design `b2f566d3f8ed616e3e901795858b7046aa3fa6c6` under `RLY-S25-DESIGN-EVAL-002 — ACCEPT` and `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`.
 - [x] Complete, independently accept, and Human-accept Slice 2.5 implementation `88dcb97110665a60b21b5d36f82f0d82b015b098` under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and `RLY-S25-ACCEPT-001 — ACCEPTED`.
-- [x] Complete Slice 2.5 closure under `RLY-S25-CLOSE-EVAL-001 — ACCEPT`; Phase 3 still requires a separate Human opening decision.
+- [x] Complete Slice 2.5 closure under `RLY-S25-CLOSE-EVAL-001 — ACCEPT`; Phase 3 was subsequently opened under `RLY-P3-OPEN-001`.
 - [x] Complete Slice 2.5 before Phase 3 opening. Phase 3 must not depend on SOL/worker memory to reconstruct accepted prerequisites, prohibitions, applicability, or evidence lineage.
-- [ ] Open Phase 3 only after onboarding/dogfood is usable **and** Slice 2.5 is COMPLETE / ACCEPTED / CLOSED.
+- [x] Open Phase 3 only after onboarding/dogfood is usable **and** Slice 2.5 is COMPLETE / ACCEPTED / CLOSED; `RLY-P3-OPEN-001` records the opening.
 
 # PROJECT STATE RESOLUTION / AUTHORITY COMPILATION — DURABLE BACKLOG
 
@@ -204,7 +204,7 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 - [x] Open Phase 3 at the phase level under `RLY-P3-OPEN-001` after Slice 2.5 closure.
 - [x] Preserve the Slice 2.5 prerequisite and require separate authority to open Slice 3.1.
 - [x] Establish top-level Slice 1.10 closure under its own authority; `RLY-S110-CLOSE-EVAL-001 — ACCEPT` completed this prerequisite.
-- [ ] Keep Slice 3.1 unopened and Phase-3 execution unauthorized until separate Slice 3.1 authority is granted.
+- [x] Open Slice 3.1 under `RLY-S31-OPEN-001` and authorize its design under `RLY-S31-DESIGN-AUTH-001`; implementation and Phase-3 execution remain unauthorized pending their separate authority.
 
 # AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
 

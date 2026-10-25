@@ -421,7 +421,14 @@ RLY-S25-IMPL-EVAL-003 — ACCEPT / RLY-S25-ACCEPT-001 — ACCEPTED
 RLY-S25-CLOSE-AUTH-001 — AUTHORIZED / RLY-S25-CLOSE-EVAL-001 — ACCEPT
 
 Phase 3:
-NOT OPEN / NOT AUTHORIZED
+OPEN under RLY-P3-OPEN-001
+
+Slice 3.1:
+OPEN under RLY-S31-OPEN-001
+Design AUTHORIZED under RLY-S31-DESIGN-AUTH-001
+Design acceptance PENDING
+Implementation NOT AUTHORIZED
+Phase 3 execution NOT AUTHORIZED
 
 Real-project agent execution:
 NOT AUTHORIZED
@@ -459,7 +466,7 @@ OPEN
                                                  |
                                                  v
 Phase 3 — first governed autonomous engineering loop
-NOT OPEN / NOT AUTHORIZED
+OPEN — RLY-P3-OPEN-001
 ```
 
 Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 and Slice 2.3 are COMPLETE / ACCEPTED / CLOSED. Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; Slice 2.5 is COMPLETE / ACCEPTED / CLOSED under `RLY-S25-CLOSE-EVAL-001 — ACCEPT`.
@@ -490,10 +497,11 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 2.5  Project State Resolution and Authority Compilation — COMPLETE / ACCEPTED / CLOSED
      -> resolve current prerequisites, invariants, applicability, prohibitions, responsibility ownership, and evidence lineage before authority issuance
 
-3.1  Coding Agent Execution — NOT OPEN / NOT AUTHORIZED
-     -> eligible to open after Slice 1.10 closure; separate opening authority required
+3.1  Coding Agent Execution — OPEN / DESIGN AUTHORIZED
+     -> RLY-S31-OPEN-001 — OPEN; RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
+     -> design acceptance pending; implementation and execution remain unauthorized
 
-Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 1.10 is closed under `RLY-S110-CLOSE-EVAL-001 — ACCEPT`. Slice 3.1 is eligible to open, but remains NOT OPEN / NOT AUTHORIZED; Phase 3 execution requires separate Slice 3.1 authority.
+Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 1.10 is COMPLETE / ACCEPTED / CLOSED under `RLY-S110-CLOSE-EVAL-001 — ACCEPT`. Slice 3.1 is OPEN under `RLY-S31-OPEN-001`, and its design is AUTHORIZED under `RLY-S31-DESIGN-AUTH-001`; design acceptance is pending. Implementation, Phase 3 execution, and real-project execution remain NOT AUTHORIZED.
 
 ## 1B.1 Strategic control-plane amendment — planned ownership
 
@@ -1212,8 +1220,9 @@ Slice 2.4:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
 Phase 3: OPEN under RLY-P3-OPEN-001
-Slice 3.1: NOT OPEN / NOT AUTHORIZED
-Execution frontier: GATED by the unsatisfied, unwaived Slice 1.10 closure prerequisite
+Slice 3.1: OPEN under RLY-S31-OPEN-001
+Design: AUTHORIZED under RLY-S31-DESIGN-AUTH-001; acceptance PENDING
+Implementation and Phase 3 execution: NOT AUTHORIZED
 
 Agent execution:
 NOT AUTHORIZED

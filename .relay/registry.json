@@ -2,67 +2,67 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_0a782e12-080d-4e80-8016-8d93f3401817",
+      "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:b760817cff78b0579cd7f642459325b611356f9792de932f3e91640670122684",
+      "content_digest": "sha256:d269c4fb3eb09fc4c539faadc3defd9a0834fb7d54c46f827db9ca0f178057a8",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 151,
+      "revision": 152,
       "schema_version": 1,
-      "scope": "Current canonical build plan; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
+      "scope": "Current canonical build plan; Slice 3.1 is open with bounded design authorized; design acceptance is pending; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-25T20:20:00Z"
+      "updated_at": "2026-10-25T21:44:12Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_b3fb97a4-af2b-4186-874e-652d45902df5",
+      "artifact_id": "art_5604d75b-cf0f-4056-9fde-6d3127cb4c58",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:4c7e0fc91d0957e53beed135969865b9b3d9b157fe584f7c7188fbc2e678055e",
+      "content_digest": "sha256:b07ca0dac81d73b12463125a35e6994a68c2cf47c92a7df724f92484ee1222c2",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 168,
+      "revision": 169,
       "schema_version": 1,
-      "scope": "Current canonical baseline; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
+      "scope": "Current canonical baseline; Phase 3 and Slice 3.1 are open, Slice 3.1 design is authorized and pending acceptance, implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-25T20:20:00Z"
+      "updated_at": "2026-10-25T21:44:12Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_32d3d63b-b517-455f-82d9-53451bfbde44",
+      "artifact_id": "art_7d143b4c-f0b7-4aaf-89ee-9c02cdae7f3e",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:d95d9be7f6945ca96316edb15c9f11a560d2cb287ef9fa7de5ef4b1fd9c72528",
+      "content_digest": "sha256:c1e98b80f4a50f755344efc2173b097af8d73bbd600bc66272ca8d2626bbfd4d",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 67,
+      "revision": 68,
       "schema_version": 1,
       "scope": "Current canonical product proposal; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product Proposal",
-      "updated_at": "2026-10-25T20:20:00Z"
+      "updated_at": "2026-10-25T21:44:12Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_d93ecccc-3873-4504-8ce7-71d1eaddcd87",
+      "artifact_id": "art_405e8bcd-1e83-4560-9c1e-5163d3dc6710",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:aa55386d18cb2e67458c16714cf4e2dab7c38d54f952ceae618ad9647d80d3f9",
+      "content_digest": "sha256:86d438b4578b3e78287baae1e0491b1c6f7ae9901a888bd674e6a5b473e4bb0a",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 59,
+      "revision": 60,
       "schema_version": 1,
-      "scope": "Current development checklist; Slice 3.1 design is authorized while implementation and execution remain unauthorized.",
+      "scope": "Current development checklist; Slice 3.1 is open and design-authorized; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-25T20:20:00Z"
+      "updated_at": "2026-10-25T21:44:12Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5734,8 +5734,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_0a782e12-080d-4e80-8016-8d93f3401817",
-        "revision": 151,
+        "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
+        "revision": 152,
         "schema_version": 1
       }
     },
@@ -5743,8 +5743,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_b3fb97a4-af2b-4186-874e-652d45902df5",
-        "revision": 168,
+        "artifact_id": "art_5604d75b-cf0f-4056-9fde-6d3127cb4c58",
+        "revision": 169,
         "schema_version": 1
       }
     },
@@ -5770,8 +5770,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_32d3d63b-b517-455f-82d9-53451bfbde44",
-        "revision": 67,
+        "artifact_id": "art_7d143b4c-f0b7-4aaf-89ee-9c02cdae7f3e",
+        "revision": 68,
         "schema_version": 1
       }
     }

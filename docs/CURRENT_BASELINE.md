@@ -189,7 +189,7 @@ Project state graph is derived, not independently authoritative.
 Authority Compiler does not grant Human authority.
 WorkPacket remains the authoritative external work unit.
 Historical evidence remains immutable; current applicability is derived.
-Slice 2.5 is closed; Phase 3 is eligible for a separate opening authority but remains NOT OPEN / NOT AUTHORIZED.
+Slice 2.5 is COMPLETE / ACCEPTED / CLOSED. Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 3.1 is OPEN under `RLY-S31-OPEN-001`; its design is AUTHORIZED under `RLY-S31-DESIGN-AUTH-001`, with design acceptance PENDING. Implementation, Phase 3 execution, and real-project execution remain NOT AUTHORIZED.
 ```
 
 Slice 2.5 is COMPLETE / ACCEPTED / CLOSED at `88dcb97110665a60b21b5d36f82f0d82b015b098`, independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Closure authority `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED` is recorded; independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Production ProjectStateResolver/AuthorityCompiler and WorkPacket wiring remain unauthorized.
@@ -347,8 +347,9 @@ Then Phase 2 continues:
 2.4 — Execution Workspace Authority
 
 Phase 3: OPEN under RLY-P3-OPEN-001
-Slice 3.1: NOT OPEN / NOT AUTHORIZED
-Execution frontier: GATED by the unsatisfied, unwaived Slice 1.10 closure prerequisite
+Slice 3.1: OPEN under RLY-S31-OPEN-001
+Design: AUTHORIZED under RLY-S31-DESIGN-AUTH-001; acceptance PENDING
+Implementation and Phase 3 execution: NOT AUTHORIZED
 ```
 
 This ordering places assurance and promotion hardening beneath later agent autonomy. External standards remain compliance/assurance references; Relay-native semantics remain authoritative.

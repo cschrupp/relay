@@ -245,7 +245,7 @@ Role Contract
 
 Runtime and provider/model choice remain execution-substrate concerns. Relay does not require a particular upstream planning or SDLC workflow.
 
-The first autonomous execution work is re-numbered as Slice 3.1. Phase 3 is open under `RLY-P3-OPEN-001`; that phase opening does not open Slice 3.1 or authorize execution.
+The first autonomous execution work was re-numbered as Slice 3.1. Opening Phase 3 under `RLY-P3-OPEN-001` did not itself open the slice. Slice 3.1 is now OPEN under `RLY-S31-OPEN-001`, and design is AUTHORIZED under `RLY-S31-DESIGN-AUTH-001`; design acceptance is pending. Implementation, Phase 3 execution, and real-project execution remain NOT AUTHORIZED.
 
 # Current Slice 2.1 closed state
 
