@@ -157,7 +157,12 @@ RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
 Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 
 Slice 1.10 - Canonical Source and Promotion Enforcement:
-OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
+OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; B4 COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
+Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
+Independent evaluation: RLY-S110-IMPL-EVAL-001 — ACCEPT
+Human technical acceptance: RLY-S110-ACCEPT-001 — ACCEPTED
+Finalization authority: RLY-S110-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
 
 Phase 2:
 OPEN - RLY-P2-OPEN-001
@@ -211,7 +216,7 @@ Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under `RLY-P3-OPEN-001`
 Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
-Phase 3 execution frontier: GATED by the unsatisfied, unwaived Slice 1.10 top-level closure prerequisite
+Phase 3 execution frontier: GATED pending independent Slice 1.10 closure evaluation; closure remains unestablished and unwaived
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED

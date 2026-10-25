@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.4 and Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED by Slice 1.10 closure
+**Status:** Current living implementation plan — Slice 2.4 and Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Slice 1.10 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED pending Slice 1.10 closure evaluation
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -18,8 +18,13 @@
 Phase 1 foundation:
 Slices 1.1–1.9                  COMPLETE / ACCEPTED / CLOSED
 
-Slice 1.10 core:
-Canonical source/promotion      OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
+Slice 1.10 — Canonical Source and Promotion Enforcement:
+OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Accepted implementation        8003170f56120640ab29eb776cc1b2ba53c66a5f
+Independent evaluation         RLY-S110-IMPL-EVAL-001 — ACCEPT
+Human technical acceptance    RLY-S110-ACCEPT-001 — ACCEPTED
+Finalization authority         RLY-S110-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation PENDING
 Dogfood V1 control surface      COMPLETE / HUMAN ACCEPTED
 PG1 pre-genesis representation COMPLETE / HUMAN ACCEPTED
 B0 Rev3 design                  HUMAN ACCEPTED
@@ -214,7 +219,11 @@ Slice 1.9 — Human Decision Support & Governance Review Surface:
   RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
   Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 Slice 1.10 — Canonical Source and Promotion Enforcement:
-  OPEN — DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE / HUMAN ACCEPTED
+  OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+  Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
+  RLY-S110-IMPL-EVAL-001 — ACCEPT; RLY-S110-ACCEPT-001 — ACCEPTED
+  RLY-S110-CLOSE-AUTH-001 — AUTHORIZED; RLY-S110-CLOSE-EVAL-001 PENDING
+  B4 COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 
 Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
@@ -223,7 +232,7 @@ Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.5 COMPLETE / ACCEPTED / CLOSED — Project State Resolution & Authority Compilation
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1: NOT OPEN / NOT AUTHORIZED; execution frontier GATED
-Remaining prerequisite: Slice 1.10 top-level closure NOT ESTABLISHED / NOT WAIVED
+Remaining prerequisite: Slice 1.10 top-level closure evaluation PENDING; closure NOT ESTABLISHED / NOT WAIVED
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -463,8 +472,8 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 1.9  Human Decision Support and Governance Review Surface — COMPLETE / ACCEPTED / CLOSED — RLY-S19-CLOSE-EVAL-002 — ACCEPT / CLOSURE CANDIDATE e8dd2970df445f39954be19dea7ee8241294f44a
      -> future legibility and decision-scoped review design
 
-1.10 Canonical Source and Promotion Enforcement — OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED; B4 COMPLETE
-     -> canonical/promotion implementation exists; top-level Slice 1.10 closure is not established
+1.10 Canonical Source and Promotion Enforcement — OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+     -> exact implementation 8003170f56120640ab29eb776cc1b2ba53c66a5f; independent closure evaluation pending
 
 2.2  Role Contracts — COMPLETE / ACCEPTED / CLOSED
      -> accepted role-contract semantics; production Role Contract wiring remains unauthorized

@@ -1,6 +1,6 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slices 2.4 and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; Phase 3 execution frontier GATED
+**Status:** Current living baseline — Slices 2.4 and 2.5 COMPLETE / ACCEPTED / CLOSED; Slice 1.10 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED pending closure evaluation
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 25, 2026
@@ -14,7 +14,12 @@ This is the controlling current-state summary. Older detailed records below rema
 ```text
 Core governance foundation:
 1.1–1.9                       COMPLETE / CLOSED
-1.10 canonical/promotion core OPEN / DESIGN ACCEPTED / IMPLEMENTATION AUTHORIZED
+1.10 canonical/promotion core OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
+Independent evaluation: RLY-S110-IMPL-EVAL-001 — ACCEPT
+Human technical acceptance: RLY-S110-ACCEPT-001 — ACCEPTED
+Finalization authority: RLY-S110-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
 2.1 Agent Runtime Contract    COMPLETE / CLOSED
 
 Dogfood/onboarding:
@@ -84,7 +89,7 @@ Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
 Phase 3 execution frontier: GATED
-Slice 1.10 top-level closure: NOT ESTABLISHED / UNSATISFIED / NOT WAIVED
+Slice 1.10 top-level closure: CLOSURE-READY / INDEPENDENT EVALUATION PENDING / NOT ESTABLISHED / NOT WAIVED
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED

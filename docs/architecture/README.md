@@ -13,7 +13,8 @@ Current frontier:
                                                    COMPLETE / ACCEPTED / CLOSED
 Phase 3                                           OPEN — RLY-P3-OPEN-001
 Slice 3.1                                         NOT OPEN / NOT AUTHORIZED
-Phase 3 execution frontier                       GATED — Slice 1.10 top-level closure not established
+Slice 1.10                                        OPEN — IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Phase 3 execution frontier                       GATED — independent Slice 1.10 closure evaluation pending
 ```
 
 Key architecture references include:
