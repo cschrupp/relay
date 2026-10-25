@@ -4674,6 +4674,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_6e3b1d92-5a74-4c80-b216-9f4d27a5e830",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:0b736a6578e95789b212cf30dd7c2efe1514de5041adc852bee0a550da698184",
+      "human_version": "RLY-S25-DESIGN-EVAL-002",
+      "path": "docs/reviews/SLICE_2_5_DESIGN_EVALUATION_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent SOL acceptance of Slice 2.5 corrective normative design candidate b2f566d; closes EVAL-001 F001/F002 and makes Human design acceptance eligible.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.5 — Independent Design Evaluation 002",
+      "updated_at": "2026-10-25T00:34:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_7f2a5c91-6d34-4e80-b127-9c3a65e2d418",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
