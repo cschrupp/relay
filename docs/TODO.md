@@ -32,8 +32,10 @@ Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
-Slice 3.1 — Coding Agent Execution: ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED
-Phase 3 execution: NOT AUTHORIZED until separate Slice 3.1 authority
+Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
+Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
+Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+Phase 3 execution: NOT AUTHORIZED
 Slice 1.10: COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
 Independent closure evaluation: RLY-S110-CLOSE-EVAL-001 — ACCEPT
