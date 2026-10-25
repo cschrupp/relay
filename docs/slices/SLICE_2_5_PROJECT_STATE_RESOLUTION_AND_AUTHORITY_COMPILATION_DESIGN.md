@@ -6,8 +6,10 @@
 - **Slice:** 2.5 — Project State Resolution and Authority Compilation
 - **Opening authority:** `RLY-S25-OPEN-001 — OPEN`
 - **Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`
+- **Review revision:** 2 — corrective design candidate after `RLY-S25-DESIGN-EVAL-001 — REWORK`
 - **Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 - **Exact design-branch base:** `029712fd31f79ee75f4b85e3cdfbc41a85d4770f`
+- **Corrective rework base:** `d46ab2ecde9f7a987feeea9937db3f36f72ba48b`
 - **Canonical opening baseline:** `fbe41dfcb72df2dd3d145818c6b22478416de789`
 
 ## 1. Purpose and disposition
@@ -135,9 +137,10 @@ Every resolution is evaluated against an explicit immutable snapshot containing,
 - exact project and repository identity;
 - exact source `CommitRef`;
 - exact repository-registry bytes and digest observed at that commit;
-- exact canonical pointers and their target artifact revisions;
+- exact canonical pointers and their target artifact revisions, used to select current projections rather than to confer authority on their claims;
 - the accepted source-coverage declaration for the requested outcome;
 - exact referenced immutable/locked records and content digests;
+- exact backing provenance for any authority-bearing predicate summarized by a living projection;
 - exact accepted evidence, qualification, and consumption records required by the request;
 - explicitly authorized external observations, each with source identity, observation time/provenance, and exact subject; and
 - a normalized requested-outcome identity and applicable design/policy references.
@@ -158,22 +161,25 @@ The design candidate's own source lineage is:
 
 The two planning documents above are registered working/review artifacts. They inform the design but do not override the immutable Slice 2.5 Human Authority or create accepted project-state rules by themselves.
 
-### 4.2 Eligible sources
+### 4.2 Eligible sources and projection authority
 
-Only these source classes can establish state:
+A canonical pointer proves which registered revision is current for that canonical key. It does not, by itself, prove the authority semantics of every claim in that revision. The resolver distinguishes projection selection from predicate provenance:
 
-1. **Current canonical projections:** the exact revision selected by the canonical pointer in the pinned registry snapshot. A higher revision that is not the pointer target is not current authority.
-2. **Accepted immutable or locked records:** exact registered authority, decision, accepted design, evaluation, acceptance, closure, promotion, evidence, qualification, source-coverage declaration, or other record whose own disposition and applicable acceptance path establish the fact being used.
-3. **Exact governed domain records:** exact RoleContract, WorkPacket, ContextManifest, WorkspacePlan/policy, and other existing records referenced by identity and digest, used only within their owning slice semantics.
-4. **Authorized external facts:** observations admitted through an explicit Relay-governed evidence path and bound to an exact subject. The resolver does not contact a runtime, model, provider, network endpoint, or external project to create a fact.
+1. **Current canonical projections** provide the exact current projection selected by the pinned registry. A living summary or planning projection may supply current navigation, selection, and descriptive state, and may point to or summarize an underlying record. It cannot by itself prove Human authority, independent or technical acceptance, qualification acceptance, a prohibition, responsibility ownership, consumption, or another authority-bearing predicate. A higher revision that is not the pointer target is not current for projection selection; pointer currentness still does not make its text an authority record.
+2. **Living canonical policy** may state normative rules only within the exact policy ownership, scope, and authority granted by its own accepted policy contract. The resolver must verify that contract and the policy's exact current bytes. A document's canonical status or self-description as policy does not supply that authority.
+3. **Accepted immutable or locked records** establish authority-bearing predicates only when the exact registered record, its disposition, and its applicable acceptance path establish the predicate being used. This includes exact authority, decision, accepted design, evaluation, acceptance, closure, promotion, evidence, qualification, source-coverage declaration, and other owning records.
+4. **Exact governed domain records** include RoleContract, WorkPacket, ContextManifest, WorkspacePlan/policy, and other existing records referenced by identity and digest. They establish facts only within their owning slice semantics and cannot substitute for an authority-bearing record owned elsewhere.
+5. **Authorized external facts** are observations admitted through an explicit Relay-governed evidence path, bound to an exact subject, and permitted by that path to establish the predicate at issue. The resolver does not contact a runtime, model, provider, network endpoint, or external project to create a fact.
 
-Only an already-authorized owner may create or attest such an observation. Slice 2.5 defines how a supplied fact is resolved; it does not authorize new observation collection or an integration that produces the fact.
+An authority-bearing predicate must trace to its exact owning accepted/immutable/locked record or to an explicitly authorized external fact whose accepted contract allows it. A summary projection can point to or summarize that record but never replaces it. If required backing provenance is absent, the predicate is `INDETERMINATE`; if a summary claim conflicts with its exact backing record, the result is also `INDETERMINATE` with the contradiction preserved in the trace.
+
+Only an already-authorized owner may create or attest such an observation. Slice 2.5 defines how a supplied fact is resolved; it does not authorize new observation collection or an integration that produces the fact. A living projection's summary that such an observation or acceptance exists is a navigation claim; the exact governed observation/acceptance record remains required to establish it.
 
 An artifact's existence, immutable state, or digest alone does not mean its conclusion is accepted. The record's disposition and any required Human/independent acceptance must be checked. An immutable `REWORK`, `REJECT`, or `ESCALATE` outcome remains that outcome; it cannot be read as positive authority.
 
 ### 4.3 Descriptive and excluded inputs
 
-Planning documents, architecture prose, `TODO`, Product Proposal, chat history, runtime-local plans, and worker memory may explain context or supply a normalized request only when an accepted source explicitly makes them applicable. They do not independently establish a normative invariant, qualification, permission, or acceptance fact.
+Planning documents, architecture prose, `TODO`, Product Proposal, chat history, runtime-local plans, and worker memory may explain context or supply a normalized request only when an accepted source explicitly makes them applicable. Summary/planning projections do not independently establish a normative invariant, qualification, permission, Human authority, independent/technical acceptance, prohibition, responsibility owner, consumption, or other authority-bearing fact. A living canonical policy is normative only under the exact accepted policy ownership described in §4.2. In every case, a canonical pointer selects a projection; it does not manufacture the provenance of claims inside it.
 
 Unregistered drafts, unpinned branch tips, implicit file recency, inferred intent, and raw observations without governed provenance are not state sources. If a required source cannot be identified exactly, resolution is `INDETERMINATE`.
 
@@ -194,6 +200,9 @@ The declaration uses exact references or explicit canonical keys; it does not us
 
 Resolution does not choose whichever conflicting statement is newest. A conflict is resolved only by an explicit exact supersession/successor chain or an accepted decision whose scope expressly changes the prior rule. Otherwise:
 
+- a living summary's authority-bearing claim without its exact owning accepted record or authorized external fact -> `INDETERMINATE`;
+- a living summary claim that contradicts its exact backing record -> `INDETERMINATE`, retaining both sources and the contradiction in the trace;
+- a living canonical policy claim outside the exact ownership/scope granted by its accepted policy contract -> it cannot establish the predicate; if that predicate is required and has no other valid source, `INDETERMINATE`;
 - conflicting accepted facts for the same stable identity and overlapping scope -> `INDETERMINATE`;
 - an explicit active prohibition matching the request -> known blocker;
 - a superseded record remains historical and is not current merely because it remains registered;
@@ -368,9 +377,9 @@ For one request and pinned snapshot, resolution proceeds as follows:
 
 1. Verify project/repository identity, exact source commit, registry schema/digest, canonical pointer set, and source artifact digests.
 2. Resolve the current baseline through the exact `current-baseline` pointer. Never infer it from a branch name or highest revision.
-3. Resolve the request's explicit accepted-source closure by exact references; verify each artifact's state, disposition, digest, provenance, and required acceptance.
+3. Resolve the request's explicit accepted-source closure by exact references; verify each artifact's state, disposition, digest, provenance, and required acceptance. Treat canonical projections as current navigation/selection inputs, and follow each authority-bearing summary claim to its exact owning record or explicitly authorized external fact before using it as a predicate.
 4. Build the fact index by stable identity. Detect missing refs, duplicate identities, conflicting accepted facts, cycles in supersession/predecessor relations, and unsupported types.
-5. Materialize only accepted invariants, qualification facts, negative decisions, responsibility claims, relation edges, and consumable facts. Descriptive prose may not create missing nodes or edges.
+5. Materialize only accepted invariants, qualification facts, negative decisions, responsibility claims, relation edges, and consumable facts from their exact owning sources. Descriptive prose may point to or summarize these facts but may not create a missing predicate, acceptance, node, or edge.
 6. Evaluate each fact's exact applicability envelope against supplied authorized observations. Preserve historical result; derive current applicability separately.
 7. Evaluate `REQUIRES`, `FORBIDS`, `CONSUMES`, and `PRODUCES` edges. Verify all predecessors and acceptance references are exact.
 8. Evaluate responsibility collisions using accepted keys and scopes.

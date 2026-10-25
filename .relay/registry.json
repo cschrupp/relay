@@ -17,16 +17,16 @@
       "updated_at": "2026-10-24T21:35:00Z"
     },
     {
-      "artifact_id": "art_eb6fffd0-cf03-4b86-9df4-2a64ce89768b",
-      "revision": 159,
+      "artifact_id": "art_08cc5765-b4e6-4381-8eec-11ed2c4e5c57",
+      "revision": 160,
       "title": "Current Baseline",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LIVING_PROJECTION",
       "artifact_state": "CURRENT",
       "path": "docs/CURRENT_BASELINE.md",
-      "content_digest": "sha256:f2650953067eb90fea09a05b169506240b4c2c25246ed30d17c183dd3a924cab",
+      "content_digest": "sha256:d79c41c7d5cc79c824702cf3d9935f00e650b21bb37185aeec46ba4d532e0f92",
       "human_version": null,
-      "updated_at": "2026-10-24T23:37:29Z",
+      "updated_at": "2026-10-25T00:25:34Z",
       "scope": "Current canonical current baseline document.",
       "supersedes": null,
       "superseded_by": null,
@@ -5361,17 +5361,17 @@
       "updated_at": "2026-10-24T21:35:00Z"
     },
     {
-      "artifact_id": "art_5c28b003-a788-497a-af32-34856ea1987e",
-      "revision": 1,
-      "title": "Slice 2.5 — Project State Resolution and Authority Compilation — Normative Design Candidate",
+      "artifact_id": "art_d4e439de-1838-4c85-b448-a30f8d25fc31",
+      "revision": 2,
+      "title": "Slice 2.5 — Project State Resolution and Authority Compilation — Normative Design Candidate Revision 2",
       "artifact_type": "DOCUMENT",
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_state": "REVIEW",
       "path": "docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION_DESIGN.md",
-      "content_digest": "sha256:1195220482aded2099ee8832e14dca543e028731d01dbc9994321af9d74a3758",
-      "human_version": null,
-      "updated_at": "2026-10-24T23:40:24Z",
-      "scope": "Normative Slice 2.5 design candidate under RLY-S25-DESIGN-AUTH-001; pending independent SOL review and Human acceptance; implementation not authorized.",
+      "content_digest": "sha256:78e97cdba7510fb6f21fe358488f1ce4900a93cddbdc32839d6650184a817afc",
+      "human_version": "Revision 2",
+      "updated_at": "2026-10-25T00:25:34Z",
+      "scope": "Corrective normative Slice 2.5 design candidate under RLY-S25-DESIGN-AUTH-001; addresses RLY-S25-DESIGN-EVAL-001 findings F001/F002; pending independent SOL re-review and Human acceptance; implementation not authorized.",
       "supersedes": null,
       "superseded_by": null,
       "schema_version": 1
@@ -5407,8 +5407,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_eb6fffd0-cf03-4b86-9df4-2a64ce89768b",
-        "revision": 159,
+        "artifact_id": "art_08cc5765-b4e6-4381-8eec-11ed2c4e5c57",
+        "revision": 160,
         "schema_version": 1
       }
     },
