@@ -2,67 +2,67 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_ff05844d-0f86-4508-b035-54b6f4135896",
+      "artifact_id": "art_0a782e12-080d-4e80-8016-8d93f3401817",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:f3f2495e08164d7fbb1b28389bd95c7e490644bf46849b5616c9cb3a0cdedc86",
+      "content_digest": "sha256:b760817cff78b0579cd7f642459325b611356f9792de932f3e91640670122684",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 150,
+      "revision": 151,
       "schema_version": 1,
-      "scope": "Current canonical build plan; Slice 1.10 is closed after independent acceptance; Slice 3.1 remains eligible but unauthorized.",
+      "scope": "Current canonical build plan; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-25T20:08:28Z"
+      "updated_at": "2026-10-25T20:20:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_389d65c0-b847-4b1a-b6e8-cbcc7c5754cd",
+      "artifact_id": "art_b3fb97a4-af2b-4186-874e-652d45902df5",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:9bcd34536ca95e963c068500c6560a6ad32380959fde0aaa6d07364fa7b6c0d5",
+      "content_digest": "sha256:4c7e0fc91d0957e53beed135969865b9b3d9b157fe584f7c7188fbc2e678055e",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 167,
+      "revision": 168,
       "schema_version": 1,
-      "scope": "Current canonical baseline; Slice 1.10 is complete and closed; Slice 3.1 remains eligible but unauthorized.",
+      "scope": "Current canonical baseline; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-25T20:08:28Z"
+      "updated_at": "2026-10-25T20:20:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_0c8f26db-6ee4-4b58-b167-31fd0f284415",
+      "artifact_id": "art_32d3d63b-b517-455f-82d9-53451bfbde44",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:6922f8ae3c7a8106ecea2b078563f70c07bcf44b338d5cbdfaa5ba4b45bfa4d0",
+      "content_digest": "sha256:d95d9be7f6945ca96316edb15c9f11a560d2cb287ef9fa7de5ef4b1fd9c72528",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 66,
+      "revision": 67,
       "schema_version": 1,
-      "scope": "Current canonical product proposal; Slice 1.10 is closed; Phase 3 execution requires separate Slice 3.1 authority.",
+      "scope": "Current canonical product proposal; Slice 3.1 is open with bounded design authorized; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product Proposal",
-      "updated_at": "2026-10-25T20:08:28Z"
+      "updated_at": "2026-10-25T20:20:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_5f2878ae-1a02-412c-88fb-85cb99b72e44",
+      "artifact_id": "art_d93ecccc-3873-4504-8ce7-71d1eaddcd87",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:9065f86aecb4fb3804ea2bd926c8df728c6485aa72935ea504200d2e2e28cb2c",
+      "content_digest": "sha256:aa55386d18cb2e67458c16714cf4e2dab7c38d54f952ceae618ad9647d80d3f9",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 58,
+      "revision": 59,
       "schema_version": 1,
-      "scope": "Current development checklist; Slice 1.10 is closed and Slice 3.1 remains unopened pending separate authority.",
+      "scope": "Current development checklist; Slice 3.1 design is authorized while implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-25T20:08:28Z"
+      "updated_at": "2026-10-25T20:20:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -4993,6 +4993,38 @@
       "updated_at": "2026-10-24T21:20:00Z"
     },
     {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_0397f49f-102f-4eac-8c47-8a9e5fd6ef90",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:19fa13dc6bfb755b6241ba247bda1059b1a7b48f1e861027485c67663b8b0076",
+      "human_version": "RLY-S31-DESIGN-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DESIGN_AUTHORIZATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for one bounded normative Slice 3.1 design; implementation and execution remain unauthorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 — Design Authorization",
+      "updated_at": "2026-10-25T20:20:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:563d1bd2f5f4fd63c1d710913cc619fd31b81627995f306d6fdfa7286b3cd28e",
+      "human_version": "RLY-S31-OPEN-001",
+      "path": "docs/reviews/SLICE_3_1_OPENING.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human opening authority for Slice 3.1 — Coding Agent Execution; design, implementation, and execution remain separate gates.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 — Opening",
+      "updated_at": "2026-10-25T20:20:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_1a10e001-6c3d-4e30-8f30-3300ccddee03",
       "artifact_state": "LOCKED",
@@ -5702,8 +5734,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_ff05844d-0f86-4508-b035-54b6f4135896",
-        "revision": 150,
+        "artifact_id": "art_0a782e12-080d-4e80-8016-8d93f3401817",
+        "revision": 151,
         "schema_version": 1
       }
     },
@@ -5711,8 +5743,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_389d65c0-b847-4b1a-b6e8-cbcc7c5754cd",
-        "revision": 167,
+        "artifact_id": "art_b3fb97a4-af2b-4186-874e-652d45902df5",
+        "revision": 168,
         "schema_version": 1
       }
     },
@@ -5738,8 +5770,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_0c8f26db-6ee4-4b58-b167-31fd0f284415",
-        "revision": 66,
+        "artifact_id": "art_32d3d63b-b517-455f-82d9-53451bfbde44",
+        "revision": 67,
         "schema_version": 1
       }
     }
