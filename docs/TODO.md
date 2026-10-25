@@ -20,7 +20,7 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-Slice 2.5: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Slice 2.5: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
 Opening authority: RLY-S25-OPEN-001 — OPEN
 Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 completion is a prerequisite
@@ -98,7 +98,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Open Slice 2.4 — Execution Workspace Authority; Human-accept the combined design and authorize bounded implementation under `RLY-S24-IMPL-AUTH-001`.
-- [ ] **CURRENT — produce one bounded Slice 2.5 normative design candidate under `RLY-S25-DESIGN-AUTH-001`, then STOP for SOL independent design review. Implementation remains unauthorized.**
+- [ ] **NEXT HUMAN GATE — decide whether to authorize one cohesive Slice 2.5 implementation WorkPacket. Design is Human accepted; implementation remains unauthorized.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
@@ -124,7 +124,8 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Slice 2.3 — Context and Work-Packet Contract COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Slice 2.4 — Execution Workspace Authority COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `73a1525282e41464d31cd458b8a50703bfa9553c`.
 - [x] Open **Slice 2.5 — Project State Resolution & Authority Compilation** under `RLY-S25-OPEN-001`; Slice 2.4 is COMPLETE / ACCEPTED / CLOSED.
-- [x] Authorize bounded Slice 2.5 design under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`; implementation remains unauthorized.
+- [x] Authorize bounded Slice 2.5 design under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`.
+- [x] Accept exact Slice 2.5 normative design `b2f566d3f8ed616e3e901795858b7046aa3fa6c6` under `RLY-S25-DESIGN-EVAL-002 — ACCEPT` and `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`; implementation remains unauthorized.
 - [ ] Complete Slice 2.5 before Phase 3 opening. Phase 3 must not depend on SOL/worker memory to reconstruct accepted prerequisites, prohibitions, applicability, or evidence lineage.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable **and** Slice 2.5 is COMPLETE / ACCEPTED / CLOSED.
 
@@ -134,7 +135,7 @@ Human strategic direction:
 
 `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 
-These items are durable Phase-2 commitments. Slice 2.5 is OPEN and bounded normative design is authorized under `RLY-S25-DESIGN-AUTH-001`; they do not authorize production implementation.
+These items are durable Phase-2 commitments. Slice 2.5 is OPEN and its normative design is Human accepted under `RLY-S25-DESIGN-ACCEPT-001`; these commitments do not authorize production implementation.
 
 ## Architecture direction captured now
 
@@ -146,7 +147,7 @@ These items are durable Phase-2 commitments. Slice 2.5 is OPEN and bounded norma
 - [x] Preserve the architecture direction in `docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`.
 - [x] Preserve the proposed slice contract in `docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`.
 
-## Slice 2.5 design backlog — DESIGN AUTHORIZED / implementation not authorized
+## Slice 2.5 implementation frontier — DESIGN HUMAN ACCEPTED / implementation not authorized
 
 - [ ] Design a durable **Invariant / Constraint** representation with stable identity, applicability, rationale, provenance, and protected failure rationale.
 - [ ] Design exact **Qualification Fact** semantics for environment/runtime/operational prerequisites without confusing evidence with authority.
