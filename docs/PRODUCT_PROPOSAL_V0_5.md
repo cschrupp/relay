@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slices 2.4 and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED
+**Status:** Current living product and architecture proposal — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED; execution requires separate Slice 3.1 authority
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -157,12 +157,12 @@ RLY-S19-CLOSE-AUTH-001 — AUTHORIZED
 Exact closure candidate: e8dd2970df445f39954be19dea7ee8241294f44a
 
 Slice 1.10 - Canonical Source and Promotion Enforcement:
-OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; B4 COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
+COMPLETE / ACCEPTED / CLOSED; B4 COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED
 Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
 Independent evaluation: RLY-S110-IMPL-EVAL-001 — ACCEPT
 Human technical acceptance: RLY-S110-ACCEPT-001 — ACCEPTED
 Finalization authority: RLY-S110-CLOSE-AUTH-001 — AUTHORIZED
-Independent closure evaluation: PENDING
+Independent closure evaluation: RLY-S110-CLOSE-EVAL-001 — ACCEPT
 
 Phase 2:
 OPEN - RLY-P2-OPEN-001
@@ -215,8 +215,8 @@ Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under `RLY-P3-OPEN-001`
-Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
-Phase 3 execution frontier: GATED pending independent Slice 1.10 closure evaluation; closure remains unestablished and unwaived
+Slice 3.1 — Coding Agent Execution: ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED
+Phase 3 execution: NOT AUTHORIZED until separate Slice 3.1 authority
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED
@@ -226,13 +226,13 @@ Normative design: exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`
 
 Phase 3 - First Governed Autonomous Engineering Loop:
 OPEN at phase level under `RLY-P3-OPEN-001`
-Slice 3.1 remains NOT OPEN / NOT AUTHORIZED; execution is GATED by Slice 1.10 top-level closure.
+Slice 3.1 is ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED; Phase 3 execution requires separate Slice 3.1 authority.
 
 Real-project agent execution:
 NOT AUTHORIZED
 ```
 
-Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED. Accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55` was accepted for closure by `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 carries the source/promotion enforcement work and is OPEN under `RLY-S110-DESIGN-ACCEPT-001 — ACCEPTED` and `RLY-S110-IMPL-AUTH-001 — AUTHORIZED`; B4 Relay Dogfood Acceptance is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED, while no top-level Slice 1.10 closure record is established.
+Slice 1.9 Human Decision Support is COMPLETE / ACCEPTED / CLOSED. Accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55` was accepted for closure by `RLY-S19-CLOSE-EVAL-002 — ACCEPT` under `RLY-S19-CLOSE-AUTH-001`; closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 source/promotion enforcement is COMPLETE / ACCEPTED / CLOSED under `RLY-S110-CLOSE-EVAL-001 — ACCEPT` at closure-ready candidate `8f69d909ad8f4fee698783ac8de821cb54e29168`; its accepted implementation subject is `8003170f56120640ab29eb776cc1b2ba53c66a5f`. B4 Relay Dogfood Acceptance is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED.
 
 After those hardening prerequisites, Phase 2 continues upward from the accepted AgentRuntime boundary:
 

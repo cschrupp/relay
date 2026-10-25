@@ -32,16 +32,14 @@ Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
-Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
-Phase 3 execution frontier: GATED
-Slice 1.10: OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+Slice 3.1 — Coding Agent Execution: ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED
+Phase 3 execution: NOT AUTHORIZED until separate Slice 3.1 authority
+Slice 1.10: COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
-Slice 1.10 top-level closure: NOT ESTABLISHED / NOT WAIVED; independent evaluation pending
+Independent closure evaluation: RLY-S110-CLOSE-EVAL-001 — ACCEPT
 Independent implementation evaluation: RLY-S110-IMPL-EVAL-001 — ACCEPT
 Human technical acceptance: RLY-S110-ACCEPT-001 — ACCEPTED
 Finalization authority: RLY-S110-CLOSE-AUTH-001 — AUTHORIZED
-Closure-ready finalization candidate: PENDING
-Independent closure evaluation: PENDING
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED
@@ -203,8 +201,8 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 
 - [x] Open Phase 3 at the phase level under `RLY-P3-OPEN-001` after Slice 2.5 closure.
 - [x] Preserve the Slice 2.5 prerequisite and require separate authority to open Slice 3.1.
-- [ ] Establish top-level Slice 1.10 closure under its own authority before opening Slice 3.1; this prerequisite is not waived.
-- [ ] Keep Slice 3.1 and all Phase-3 execution unauthorized until the remaining prerequisite is satisfied and separately authorized.
+- [x] Establish top-level Slice 1.10 closure under its own authority; `RLY-S110-CLOSE-EVAL-001 — ACCEPT` completed this prerequisite.
+- [ ] Keep Slice 3.1 unopened and Phase-3 execution unauthorized until separate Slice 3.1 authority is granted.
 
 # AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
 
