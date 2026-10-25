@@ -1,6 +1,6 @@
 # Slice 2.5 — Project State Resolution and Authority Compilation
 
-**Status:** OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
 **Phase:** 2 — Provider and Agent Foundation  
 **Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 **Opening authority:** `RLY-S25-OPEN-001 — OPEN`
@@ -9,6 +9,16 @@
 **Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`  
 **Predecessor:** Slice 2.4 — Execution Workspace Authority  
 **Phase-3 relationship:** mandatory prerequisite for Phase 3 opening; Slice 2.5 must close first
+
+## Current implementation and closure status
+
+Accepted implementation: `88dcb97110665a60b21b5d36f82f0d82b015b098`
+Independent implementation evaluation: `RLY-S25-IMPL-EVAL-003 — ACCEPT`
+Human technical acceptance: `RLY-S25-ACCEPT-001 — ACCEPTED`
+Closure authority: `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`
+Independent closure evaluation: PENDING
+
+Slice 2.5 remains OPEN / CLOSURE-READY until independent closure evaluation accepts the exact closure-ready candidate. Production ProjectStateResolver/AuthorityCompiler wiring, production WorkPacket compilation, operational persistence/lifecycle mutation, and Phase 3 remain unauthorized.
 
 ## Objective
 
@@ -234,7 +244,7 @@ Exact opening baseline:
 
 Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`.
 
-Slice 2.5 design is authorized under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`. The normative design is independently and Human accepted at exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`. Implementation remains unauthorized.
+Slice 2.5 design is authorized under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`. The normative design is independently and Human accepted at exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`. The implementation is independently accepted and Human-accepted at exact candidate `88dcb97110665a60b21b5d36f82f0d82b015b098`; closure evaluation is pending.
 
 ## Completion implication
 

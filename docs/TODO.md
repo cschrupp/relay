@@ -20,9 +20,17 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-Slice 2.5: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED — Project State Resolution & Authority Compilation
+Slice 2.5: OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY — Project State Resolution & Authority Compilation
 Opening authority: RLY-S25-OPEN-001 — OPEN
 Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
+Accepted implementation: 88dcb97110665a60b21b5d36f82f0d82b015b098
+Independent implementation evaluation: RLY-S25-IMPL-EVAL-003 — ACCEPT
+Human technical acceptance: RLY-S25-ACCEPT-001 — ACCEPTED
+Finalization / closure authority: RLY-S25-CLOSE-AUTH-001 — AUTHORIZED
+Independent closure evaluation: PENDING
+Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
+Production WorkPacket compilation / wiring: NOT AUTHORIZED
+Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 completion is a prerequisite
 Real-project agent execution: NOT AUTHORIZED
 ```
@@ -98,7 +106,7 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Complete and Human-accept B4 Revision 2 Attempt 006 under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`.
 - [x] Complete, independently close, and canonically promote Slice 2.2 under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`.
 - [x] Open Slice 2.4 — Execution Workspace Authority; Human-accept the combined design and authorize bounded implementation under `RLY-S24-IMPL-AUTH-001`.
-- [ ] **NEXT HUMAN GATE — decide whether to authorize one cohesive Slice 2.5 implementation WorkPacket. Design is Human accepted; implementation remains unauthorized.**
+- [ ] **NEXT GOVERNANCE GATE — independently evaluate the Slice 2.5 closure-ready candidate under `RLY-S25-CLOSE-EVAL-001`. Slice 2.5 remains OPEN until that evaluation ACCEPTs.**
 - [ ] Preserve legacy context without synthesizing lifecycle/authority/evaluation history.
 - [x] Verify the Project adoption orientation supported the completed B3 forward re-baseline.
 
@@ -125,7 +133,9 @@ Real-project agent execution: NOT AUTHORIZED
 - [x] Slice 2.4 — Execution Workspace Authority COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `73a1525282e41464d31cd458b8a50703bfa9553c`.
 - [x] Open **Slice 2.5 — Project State Resolution & Authority Compilation** under `RLY-S25-OPEN-001`; Slice 2.4 is COMPLETE / ACCEPTED / CLOSED.
 - [x] Authorize bounded Slice 2.5 design under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`.
-- [x] Accept exact Slice 2.5 normative design `b2f566d3f8ed616e3e901795858b7046aa3fa6c6` under `RLY-S25-DESIGN-EVAL-002 — ACCEPT` and `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`; implementation remains unauthorized.
+- [x] Accept exact Slice 2.5 normative design `b2f566d3f8ed616e3e901795858b7046aa3fa6c6` under `RLY-S25-DESIGN-EVAL-002 — ACCEPT` and `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`.
+- [x] Complete, independently accept, and Human-accept Slice 2.5 implementation `88dcb97110665a60b21b5d36f82f0d82b015b098` under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and `RLY-S25-ACCEPT-001 — ACCEPTED`.
+- [ ] Complete Slice 2.5 closure only after `RLY-S25-CLOSE-EVAL-001 — ACCEPT`; then require a separate Human Phase 3 opening decision.
 - [ ] Complete Slice 2.5 before Phase 3 opening. Phase 3 must not depend on SOL/worker memory to reconstruct accepted prerequisites, prohibitions, applicability, or evidence lineage.
 - [ ] Open Phase 3 only after onboarding/dogfood is usable **and** Slice 2.5 is COMPLETE / ACCEPTED / CLOSED.
 
@@ -135,7 +145,7 @@ Human strategic direction:
 
 `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 
-These items are durable Phase-2 commitments. Slice 2.5 is OPEN and its normative design is Human accepted under `RLY-S25-DESIGN-ACCEPT-001`; these commitments do not authorize production implementation.
+These items are durable Phase-2 commitments. Slice 2.5 is OPEN and its normative design and implementation are Human accepted; these commitments do not authorize production ProjectStateResolver/AuthorityCompiler wiring or production WorkPacket compilation.
 
 ## Architecture direction captured now
 
@@ -147,34 +157,34 @@ These items are durable Phase-2 commitments. Slice 2.5 is OPEN and its normative
 - [x] Preserve the architecture direction in `docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`.
 - [x] Preserve the proposed slice contract in `docs/slices/SLICE_2_5_PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md`.
 
-## Slice 2.5 implementation frontier — DESIGN HUMAN ACCEPTED / implementation not authorized
+## Slice 2.5 implementation frontier — COMPLETE / HUMAN ACCEPTED / CLOSURE PENDING
 
-- [ ] Design a durable **Invariant / Constraint** representation with stable identity, applicability, rationale, provenance, and protected failure rationale.
-- [ ] Design exact **Qualification Fact** semantics for environment/runtime/operational prerequisites without confusing evidence with authority.
-- [ ] Design **Applicability Evaluation** so historical evidence remains immutable while current applicability can become false when executable/runtime/provider/environment/endpoint/fixture identity changes.
-- [ ] Design machine-readable **Requirement Edges** for at least `REQUIRES`, `FORBIDS`, `CONSUMES`, and `PRODUCES` without creating a generic second workflow engine.
-- [ ] Design negative-decision dispositions for at least `SUPERSEDED`, `REJECTED`, and `PROHIBITED_UNLESS_REAUTHORIZED`.
-- [ ] Design **Responsibility Claim / Responsibility Collision** semantics so new components cannot silently duplicate established architecture ownership.
-- [ ] Design deterministic **Project State Resolver** inputs, exact-subject semantics, present-state outputs, and fail-closed behavior.
-- [ ] Design **Authority Compiler** semantics: requested outcome -> applicable state resolution -> READY / BLOCKED / INDETERMINATE -> complete authority candidate.
-- [ ] Define how inherited invariants, prerequisites, prohibitions, qualifications, evidence lineage, resource/namespace consumption, and hard stops are injected into or gate the existing WorkPacket construction path.
-- [ ] Design **Knowledge Delta** proposal/promotion semantics so worker/evaluator discoveries become durable only through accepted governance.
-- [ ] Reuse existing `BLOCKED_BY_AUTHORITY`, `BLOCKED_BY_CONTRACT`, and `BLOCKED_BY_ENVIRONMENT` semantics where sufficient; add no new terminal category without demonstrated need.
-- [ ] Define deterministic reconstruction of the derived state graph from canonical Relay records; no independently mutable graph truth.
-- [ ] Define Human/operator projection for requested outcome, resolved prerequisites, missing/stale evidence, inherited constraints, prohibitions, collisions, and READY/BLOCKED/INDETERMINATE rationale.
+- [x] Design a durable **Invariant / Constraint** representation with stable identity, applicability, rationale, provenance, and protected failure rationale.
+- [x] Design exact **Qualification Fact** semantics for environment/runtime/operational prerequisites without confusing evidence with authority.
+- [x] Design **Applicability Evaluation** so historical evidence remains immutable while current applicability can become false when executable/runtime/provider/environment/endpoint/fixture identity changes.
+- [x] Design machine-readable **Requirement Edges** for at least `REQUIRES`, `FORBIDS`, `CONSUMES`, and `PRODUCES` without creating a generic second workflow engine.
+- [x] Design negative-decision dispositions for at least `SUPERSEDED`, `REJECTED`, and `PROHIBITED_UNLESS_REAUTHORIZED`.
+- [x] Design **Responsibility Claim / Responsibility Collision** semantics so new components cannot silently duplicate established architecture ownership.
+- [x] Design deterministic **Project State Resolver** inputs, exact-subject semantics, present-state outputs, and fail-closed behavior.
+- [x] Design **Authority Compiler** semantics: requested outcome -> applicable state resolution -> READY / BLOCKED / INDETERMINATE -> complete authority candidate.
+- [x] Define how inherited invariants, prerequisites, prohibitions, qualifications, evidence lineage, resource/namespace consumption, and hard stops are injected into or gate the existing WorkPacket construction path.
+- [x] Design **Knowledge Delta** proposal/promotion semantics so worker/evaluator discoveries become durable only through accepted governance.
+- [x] Reuse existing `BLOCKED_BY_AUTHORITY`, `BLOCKED_BY_CONTRACT`, and `BLOCKED_BY_ENVIRONMENT` semantics where sufficient; add no new terminal category without demonstrated need.
+- [x] Define deterministic reconstruction of the derived state graph from canonical Relay records; no independently mutable graph truth.
+- [x] Define Human/operator projection for requested outcome, resolved prerequisites, missing/stale evidence, inherited constraints, prohibitions, collisions, and READY/BLOCKED/INDETERMINATE rationale.
 
 ## Required dogfood/acceptance cases for Slice 2.5
 
-- [ ] Wellplot: `SMOKE_PASS -> prerequisite of SCIENTIFIC_LIVE_AUTH`; environment qualification and smoke acceptance must block downstream authority when absent.
-- [ ] Wellplot: an accepted smoke for a different executable/runtime/provider/environment envelope must be historically PASS but currently NOT_APPLICABLE.
-- [ ] Wellplot: proposal of a second smoke harness when the canonical campaign runner owns the responsibility must trigger responsibility collision / architecture authority.
-- [ ] Wellplot: previously rejected second semantic engine / fallback execution path must not silently reappear.
-- [ ] Tension/FEM: scientific-level or one-shot authority consumption must become machine-resolvable predecessor/resource state.
-- [ ] Tension/FEM: oracle evidence applicability must bind to exact frozen subject identities.
-- [ ] Seneca: GPU/backend/environment qualification must invalidate deterministically when the relevant execution envelope changes.
-- [ ] Relay: accepted predecessor, closure, promotion, and exact-baseline dependencies must resolve without chat reconstruction.
-- [ ] Evidence present but current applicability unresolved must produce INDETERMINATE, never optimistic authorization.
-- [ ] A worker/evaluator-produced Knowledge Delta must remain non-authoritative until separately accepted.
+- [x] Wellplot: `SMOKE_PASS -> prerequisite of SCIENTIFIC_LIVE_AUTH`; environment qualification and smoke acceptance must block downstream authority when absent.
+- [x] Wellplot: an accepted smoke for a different executable/runtime/provider/environment envelope must be historically PASS but currently NOT_APPLICABLE.
+- [x] Wellplot: proposal of a second smoke harness when the canonical campaign runner owns the responsibility must trigger responsibility collision / architecture authority.
+- [x] Wellplot: previously rejected second semantic engine / fallback execution path must not silently reappear.
+- [x] Tension/FEM: scientific-level or one-shot authority consumption must become machine-resolvable predecessor/resource state.
+- [x] Tension/FEM: oracle evidence applicability must bind to exact frozen subject identities.
+- [x] Seneca: GPU/backend/environment qualification must invalidate deterministically when the relevant execution envelope changes.
+- [x] Relay: accepted predecessor, closure, promotion, and exact-baseline dependencies must resolve without chat reconstruction.
+- [x] Evidence present but current applicability unresolved must produce INDETERMINATE, never optimistic authorization.
+- [x] A worker/evaluator-produced Knowledge Delta must remain non-authoritative until separately accepted.
 
 ## Phase-3 gate
 

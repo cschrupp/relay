@@ -10,7 +10,7 @@ Current frontier:
 2.3 Context / Work-Packet Contract                 COMPLETE / ACCEPTED / CLOSED
 2.4 Execution Workspace Authority                  COMPLETE / ACCEPTED / CLOSED
 2.5 Project State Resolution & Authority Compilation
-                                                   OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
+                                                   OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
 Phase 3                                           NOT OPEN / NOT AUTHORIZED
 ```
 
@@ -20,7 +20,7 @@ Key architecture references include:
 - [Governance Assurance Reference Model](GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md)
 - [Project State Resolution and Authority Compilation](PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md)
 
-The Project State Resolution / Authority Compilation capability is Human-directed strategic architecture under `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001`. Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; normative design is independently and Human accepted under `RLY-S25-DESIGN-EVAL-002 — ACCEPT` and `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`; implementation remains unauthorized.
+The Project State Resolution / Authority Compilation capability is Human-directed strategic architecture under `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001`. Slice 2.5 implementation `88dcb97110665a60b21b5d36f82f0d82b015b098` is independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Closure authority `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED` is in force; independent closure evaluation is pending. Production wiring remains unauthorized.
 
 Future architecture documents may be present as planning artifacts; their presence does not authorize implementation.
 

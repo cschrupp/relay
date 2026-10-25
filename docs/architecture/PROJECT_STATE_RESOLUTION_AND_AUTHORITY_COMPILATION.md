@@ -1,12 +1,16 @@
 # Project State Resolution and Authority Compilation
 
-**Status:** Human-directed strategic architecture — Slice 2.5 OPEN; normative design HUMAN ACCEPTED; implementation not authorized  
+**Status:** Human-directed strategic architecture — Slice 2.5 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
 **Authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 **Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`
 **Independent design evaluation:** `RLY-S25-DESIGN-EVAL-002 — ACCEPT`
 **Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`  
 **Date:** 2026-10-24  
 **Target slice:** Slice 2.5 — Project State Resolution and Authority Compilation — OPEN under `RLY-S25-OPEN-001`
+
+## Current Slice 2.5 disposition
+
+The accepted implementation is `88dcb97110665a60b21b5d36f82f0d82b015b098`, independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Finalization is authorized under `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`; independent closure evaluation is pending. Slice 2.5 remains OPEN / CLOSURE-READY. Production ProjectStateResolver/AuthorityCompiler wiring, production WorkPacket wiring, persistence/lifecycle mutation, and Phase 3 remain unauthorized.
 
 ## 1. Problem statement
 
@@ -588,7 +592,7 @@ This direction does not authorize:
 - Phase 3 execution;
 - production code changes.
 
-The exact domain model, persistence strategy, algorithms, and UI are Slice 2.5 design work under future separate authority.
+The exact domain model and algorithms are defined by the Human-accepted Slice 2.5 design and implemented in the accepted Slice 2.5 candidate. Production wiring, persistence integration, and UI work remain outside this authority and require separate authorization.
 
 ## 21. Governing summary
 
