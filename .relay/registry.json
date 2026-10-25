@@ -2,67 +2,67 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_84dac84e-76aa-48de-8c24-0eee4f2229f3",
+      "artifact_id": "art_5a3d0597-54a7-4ecf-bb25-f44df1fa5399",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:6f9215d28b71c927b23a2681836dbd1ab07f6383c2c5ac0121032ed25dd20d33",
+      "content_digest": "sha256:c79ee4dce1ca421f39d9b2089e41f2a8339ce7e38a12512f604b8600195106c4",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 147,
+      "revision": 148,
       "schema_version": 1,
-      "scope": "Current canonical build plan; Slice 2.5 is complete and closed.",
+      "scope": "Current canonical build plan; Phase 3 is open and Slice 3.1 is gated by the unsatisfied Slice 1.10 closure prerequisite.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-25T04:14:21Z"
+      "updated_at": "2026-10-25T04:45:33Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_4075ce98-020c-4f7b-8a3e-0192b196a98d",
+      "artifact_id": "art_cb2f362f-32e7-4321-961c-3dcf617b95d2",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:ed4fe409b82283f19d1895bec7d3b7f9ab38339e373350aea59b7a6be848aa0f",
+      "content_digest": "sha256:622fde0417874efbf6c252ef0c6a523b69ce2539349014fc33714fdf770f9f16",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 164,
+      "revision": 165,
       "schema_version": 1,
-      "scope": "Current canonical baseline; Slice 2.5 is complete and closed, and Phase 3 remains unopened and unauthorized.",
+      "scope": "Current canonical baseline; Phase 3 is open, Slice 3.1 is unauthorized, and the execution frontier is gated by Slice 1.10 closure.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-25T04:14:21Z"
+      "updated_at": "2026-10-25T04:45:33Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_93cbe2d2-5146-4a1e-9aee-0ec7a5f8683b",
+      "artifact_id": "art_4e14e4ed-3197-4199-96e3-26023d283271",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:672eb82aca049c087c9b149544b56dc8de6b486d99c5c812c6811802ec1dc9a9",
+      "content_digest": "sha256:9455caccf7cc53a67a93c5571786464d67da4e83dba6a9b926f1e45a308326fe",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 63,
+      "revision": 64,
       "schema_version": 1,
-      "scope": "Current canonical product proposal; Slice 2.5 is complete and closed.",
+      "scope": "Current canonical product proposal; Phase 3 is open, but Slice 3.1 and execution remain gated.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product Proposal",
-      "updated_at": "2026-10-25T04:14:21Z"
+      "updated_at": "2026-10-25T04:45:33Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_1d17b10f-18ad-45c7-bc78-925b69062d1e",
+      "artifact_id": "art_22e320a9-be8d-45e8-a2a4-45b8cd26e3f9",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:4c323ac397b227ed25259cf9b01a7a8abfb4a4783cbaff4367c4aaeeeda439b5",
+      "content_digest": "sha256:3a29360591cc5e1046bde81e65c079b3e9fcf94530e8489e1fd082bf8e181643",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 55,
+      "revision": 56,
       "schema_version": 1,
-      "scope": "Current development checklist; Slice 2.5 is complete and closed.",
+      "scope": "Current development checklist; Phase 3 is open and Slice 3.1 remains gated by Slice 1.10 closure.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-25T04:14:21Z"
+      "updated_at": "2026-10-25T04:45:33Z"
     },
     {
       "artifact_class": "WORKING",
@@ -431,6 +431,22 @@
       "supersedes": null,
       "title": "Phase 2 Project State Resolution and Authority Compilation Strategic Amendment Authorization",
       "updated_at": "2026-10-24T18:12:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_ea040e7b-9d77-43d7-b574-0bc0731740bd",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:5240204953be081cf8e1efdce3e03a93f917cfa6a92114d4fe1803dabd224f1b",
+      "human_version": "RLY-P3-OPEN-001",
+      "path": "docs/reviews/PHASE_3_OPENING_AUTHORIZATION.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority opening Phase 3 at the phase level; Slice 3.1 remains gated.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Phase 3 Opening Authorization",
+      "updated_at": "2026-10-25T04:45:33Z"
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
@@ -5606,8 +5622,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_84dac84e-76aa-48de-8c24-0eee4f2229f3",
-        "revision": 147,
+        "artifact_id": "art_5a3d0597-54a7-4ecf-bb25-f44df1fa5399",
+        "revision": 148,
         "schema_version": 1
       }
     },
@@ -5615,8 +5631,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_4075ce98-020c-4f7b-8a3e-0192b196a98d",
-        "revision": 164,
+        "artifact_id": "art_cb2f362f-32e7-4321-961c-3dcf617b95d2",
+        "revision": 165,
         "schema_version": 1
       }
     },
@@ -5642,8 +5658,8 @@
       "canonical_key": "product-proposal",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_93cbe2d2-5146-4a1e-9aee-0ec7a5f8683b",
-        "revision": 63,
+        "artifact_id": "art_4e14e4ed-3197-4199-96e3-26023d283271",
+        "revision": 64,
         "schema_version": 1
       }
     }

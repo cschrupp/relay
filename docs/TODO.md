@@ -3,7 +3,7 @@
 **Purpose:** Human-readable execution checklist. Keep this file short.  
 **Rule:** if this list and the actual repository state disagree, update this list as part of the same governed increment.
 
-## Current Phase-2 frontier
+## Current governed frontier
 
 ```text
 Slice 2.3: COMPLETE / ACCEPTED / CLOSED
@@ -31,7 +31,13 @@ Independent closure evaluation: RLY-S25-CLOSE-EVAL-001 — ACCEPT
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
-Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 is closed; Phase 3 still requires separate opening authority
+Phase 3: OPEN under RLY-P3-OPEN-001
+Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
+Phase 3 execution frontier: GATED
+Slice 1.10 top-level closure: NOT ESTABLISHED / UNSATISFIED / NOT WAIVED
+Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
+Production WorkPacket wiring: NOT AUTHORIZED
+AgentRuntime / provider / model execution: NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -186,11 +192,12 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 - [x] Evidence present but current applicability unresolved must produce INDETERMINATE, never optimistic authorization.
 - [x] A worker/evaluator-produced Knowledge Delta must remain non-authoritative until separately accepted.
 
-## Phase-3 gate
+## Phase-3 execution gate
 
-- [ ] Do not open Phase 3 while authority issuance still requires an agent to reconstruct accepted predecessor chains, invariants, prohibitions, or evidence applicability from historical prose.
-- [ ] Treat Slice 2.5 COMPLETE / ACCEPTED / CLOSED as an explicit Phase-3 prerequisite.
-- [ ] After Slice 2.5 closes, require a separate Human Phase-3 opening decision; Slice 2.5 completion does not auto-open Phase 3.
+- [x] Open Phase 3 at the phase level under `RLY-P3-OPEN-001` after Slice 2.5 closure.
+- [x] Preserve the Slice 2.5 prerequisite and require separate authority to open Slice 3.1.
+- [ ] Establish top-level Slice 1.10 closure under its own authority before opening Slice 3.1; this prerequisite is not waived.
+- [ ] Keep Slice 3.1 and all Phase-3 execution unauthorized until the remaining prerequisite is satisfied and separately authorized.
 
 # AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
 

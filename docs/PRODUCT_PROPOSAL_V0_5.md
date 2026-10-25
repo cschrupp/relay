@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 2 open; Phase 3 NOT OPEN / NOT AUTHORIZED
+**Status:** Current living product and architecture proposal — Slices 2.4 and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -209,13 +209,19 @@ Independent closure evaluation: RLY-S25-CLOSE-EVAL-001 — ACCEPT
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
-Phase 3: NOT OPEN / NOT AUTHORIZED
+Phase 3: OPEN under `RLY-P3-OPEN-001`
+Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
+Phase 3 execution frontier: GATED by the unsatisfied, unwaived Slice 1.10 top-level closure prerequisite
+Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
+Production WorkPacket wiring: NOT AUTHORIZED
+AgentRuntime / provider / model execution: NOT AUTHORIZED
+Real-project agent execution: NOT AUTHORIZED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
 Normative design: exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`
 
 Phase 3 - First Governed Autonomous Engineering Loop:
-NOT OPEN / NOT AUTHORIZED
-Slice 2.5 COMPLETE / ACCEPTED / CLOSED is a prerequisite before Phase 3 opening eligibility.
+OPEN at phase level under `RLY-P3-OPEN-001`
+Slice 3.1 remains NOT OPEN / NOT AUTHORIZED; execution is GATED by Slice 1.10 top-level closure.
 
 Real-project agent execution:
 NOT AUTHORIZED
@@ -234,7 +240,7 @@ Role Contract
 
 Runtime and provider/model choice remain execution-substrate concerns. Relay does not require a particular upstream planning or SDLC workflow.
 
-The first autonomous execution work is re-numbered as the first Phase 3 slice. Phase 3 requires separate Human opening authority.
+The first autonomous execution work is re-numbered as Slice 3.1. Phase 3 is open under `RLY-P3-OPEN-001`; that phase opening does not open Slice 3.1 or authorize execution.
 
 # Current Slice 2.1 closed state
 

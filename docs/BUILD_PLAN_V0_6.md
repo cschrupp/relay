@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 NOT OPEN / NOT AUTHORIZED; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.4 and Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 NOT OPEN / NOT AUTHORIZED; execution frontier GATED by Slice 1.10 closure
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.5 COMPLETE / ACCEPTED / CLOSED
+# 0. CURRENT ROADMAP — Phase 3 OPEN / Slice 3.1 GATED
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -87,7 +87,11 @@ Independent implementation evaluation: `RLY-S25-IMPL-EVAL-003 — ACCEPT`
 Human technical acceptance: `RLY-S25-ACCEPT-001 — ACCEPTED`
 Finalization / closure authority: `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`
 Independent closure evaluation: RLY-S25-CLOSE-EVAL-001 — ACCEPT
-Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 is closed; Phase 3 still requires separate opening authority
+Phase 3: OPEN under RLY-P3-OPEN-001
+Slice 3.1 — Coding Agent Execution: NOT OPEN / NOT AUTHORIZED
+Phase 3 execution frontier: GATED
+Remaining prerequisite: Slice 1.10 top-level closure NOT ESTABLISHED / UNSATISFIED / NOT WAIVED
+Production resolver/compiler and WorkPacket wiring: NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -112,8 +116,8 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT
   -> 2.4 Execution Workspace Authority — COMPLETE / ACCEPTED / CLOSED
   -> 2.5 Project State Resolution & Authority Compilation — COMPLETE / ACCEPTED / CLOSED
-  -> explicit Phase 3 opening
-  -> Phase 3 governed autonomous engineering loop
+  -> Phase 3 OPEN under RLY-P3-OPEN-001
+  -> Slice 3.1 remains gated until Slice 1.10 top-level closure is established
 ```
 
 B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, after `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK` and `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed dogfood result is recorded before acceptance. B2 Revision 1 plus the Revision 2 Integrity Amendment is independently accepted and Human-accepted at composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`, following `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637` and is independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the external operational database is published and verified. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is complete. B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED. The Human-directed first governed work target is Slice 2.2 Role Contracts with authorized-work exhaustion integrated. B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`, evaluating closure-ready candidate `358e499ffd571e01d43343449f4bb4a0f50efd6b`. Accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
@@ -140,7 +144,7 @@ Open Slice 2.5 planning source:
 
 The observed failure class is not lack of historical information but failure to convert accepted knowledge into machine-resolvable obligations for later work. Slice 2.5 is the final Phase-2 foundation before Phase 3. It must compile present applicable state into a complete authority candidate while preserving Human Authority, WorkPacket primacy, exact evidence lineage, and the rule that Relay remains the only governance state machine.
 
-Slice 2.5 is COMPLETE / ACCEPTED / CLOSED under `RLY-S25-IMPL-EVAL-003 — ACCEPT`, `RLY-S25-ACCEPT-001 — ACCEPTED`, and `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`. Independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Production ProjectStateResolver/AuthorityCompiler wiring and Phase 3 remain unauthorized.
+Slice 2.5 is COMPLETE / ACCEPTED / CLOSED under `RLY-S25-IMPL-EVAL-003 — ACCEPT`, `RLY-S25-ACCEPT-001 — ACCEPTED`, and `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`. Independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Phase 3 is OPEN under `RLY-P3-OPEN-001`; Slice 3.1 execution is gated by the unsatisfied, unwaived Slice 1.10 top-level closure prerequisite. Production ProjectStateResolver/AuthorityCompiler and WorkPacket wiring remain unauthorized.
 
 ## Authorized-work granularity and autonomous internal decomposition
 
@@ -217,8 +221,9 @@ Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.3 COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
   2.4 COMPLETE / ACCEPTED / CLOSED — RLY-S24-CLOSE-EVAL-001 — ACCEPT
   2.5 COMPLETE / ACCEPTED / CLOSED — Project State Resolution & Authority Compilation
-Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
-Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, 2.5, and explicit Phase 3 opening
+Phase 3: OPEN under RLY-P3-OPEN-001
+Slice 3.1: NOT OPEN / NOT AUTHORIZED; execution frontier GATED
+Remaining prerequisite: Slice 1.10 top-level closure NOT ESTABLISHED / NOT WAIVED
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -473,10 +478,10 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 2.5  Project State Resolution and Authority Compilation — COMPLETE / ACCEPTED / CLOSED
      -> resolve current prerequisites, invariants, applicability, prohibitions, responsibility ownership, and evidence lineage before authority issuance
 
-3.1  Coding Agent Execution
-     -> first governed autonomous implementation execution
+3.1  Coding Agent Execution — NOT OPEN / NOT AUTHORIZED
+     -> GATED pending top-level Slice 1.10 closure
 
-Phase 3.1 prerequisites are the complete chain: 1.8 Governance Assurance, 1.9 Human Decision Support, 1.10 Source/Promotion Enforcement, 2.2 Role Contracts, 2.3 Context/Work Packets, 2.4 Workspace Authority, Slice 2.5 Project State Resolution & Authority Compilation COMPLETE / ACCEPTED / CLOSED, and explicit Phase 3 opening.
+Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 3.1 remains blocked until the complete prerequisite chain is satisfied, including top-level Slice 1.10 closure; this prerequisite is not waived.
 
 ## 1B.1 Strategic control-plane amendment — planned ownership
 
@@ -1194,8 +1199,9 @@ PLANNED / NOT OPEN / NOT AUTHORIZED
 Slice 2.4:
 PLANNED / NOT OPEN / NOT AUTHORIZED
 
-Phase 3:
-NOT OPEN / NOT AUTHORIZED
+Phase 3: OPEN under RLY-P3-OPEN-001
+Slice 3.1: NOT OPEN / NOT AUTHORIZED
+Execution frontier: GATED by the unsatisfied, unwaived Slice 1.10 closure prerequisite
 
 Agent execution:
 NOT AUTHORIZED
