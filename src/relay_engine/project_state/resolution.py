@@ -47,6 +47,7 @@ from relay_engine.project_state.models import (
     SourceRecordRef,
     SourceRole,
     SubjectValue,
+    digest_authority_content,
 )
 
 
@@ -312,6 +313,7 @@ def _verify_provenance(
     snapshot: ResolutionSnapshot,
     coverage: SourceCoverageDeclaration,
     reasons: list[ResolutionReason],
+    expected_value_digest: str | None = None,
 ) -> bool:
     matching = tuple(item for item in provenance if item.predicate_key == predicate_key)
     if not matching:
@@ -321,6 +323,18 @@ def _verify_provenance(
             ReasonSeverity.UNKNOWN,
             subject_key,
             f"predicate {predicate_key} has no exact owning provenance",
+        )
+        return False
+    if expected_value_digest is not None and any(
+        item.value_digest != expected_value_digest for item in matching
+    ):
+        _add_reason(
+            reasons,
+            ResolutionReasonCode.BACKING_PROVENANCE_INVALID,
+            ReasonSeverity.UNKNOWN,
+            subject_key,
+            "backing assertion digest does not bind the exact normative typed content",
+            tuple(item.source for item in matching),
         )
         return False
     valid = True
@@ -517,6 +531,100 @@ def _reason_for_applicability(
         )
 
 
+def _verify_qualification_evidence(
+    fact: QualificationFact,
+    *,
+    source_index: dict[str, SourceRecordRef],
+    snapshot: ResolutionSnapshot,
+    reasons: list[ResolutionReason],
+) -> bool:
+    if not fact.evidence_refs:
+        _add_reason(
+            reasons,
+            ResolutionReasonCode.EVIDENCE_LINEAGE_INCOMPLETE,
+            ReasonSeverity.UNKNOWN,
+            fact.qualification_key,
+            "qualification has no exact supporting evidence references",
+            tuple(item.source for item in fact.provenance),
+        )
+        return False
+
+    valid = True
+    pinned_refs = {item.source_key: item for item in snapshot.source_refs}
+    for evidence_ref in fact.evidence_refs:
+        record = source_index.get(evidence_ref.source_key)
+        assertion = (
+            None
+            if record is None
+            else next(
+                (
+                    item
+                    for item in record.assertions
+                    if item.predicate_key == f"evidence-for-{fact.qualification_key}"
+                ),
+                None,
+            )
+        )
+        if (
+            record is None
+            or pinned_refs.get(evidence_ref.source_key) != evidence_ref
+            or record.identity != evidence_ref
+            or record.role is not SourceRole.EVIDENCE
+            or record.scope_key != fact.scope_key
+            or not _source_is_accepted(record)
+            or assertion is None
+            or assertion.value_digest != evidence_ref.content_digest
+        ):
+            valid = False
+            _add_reason(
+                reasons,
+                ResolutionReasonCode.EVIDENCE_LINEAGE_INCOMPLETE,
+                ReasonSeverity.UNKNOWN,
+                fact.qualification_key,
+                "qualification evidence is absent, out of scope, or not bound to its exact subject",
+                (evidence_ref,),
+            )
+    return valid
+
+
+def _verify_qualification_acceptance(
+    fact: QualificationFact,
+    *,
+    source_index: dict[str, SourceRecordRef],
+    snapshot: ResolutionSnapshot,
+) -> bool:
+    pinned_refs = {item.source_key: item for item in snapshot.source_refs}
+    expected_digest = digest_authority_content(fact)
+    if not fact.acceptance_refs:
+        return False
+    for acceptance_ref in fact.acceptance_refs:
+        record = source_index.get(acceptance_ref.source_key)
+        assertion = (
+            None
+            if record is None
+            else next(
+                (
+                    item
+                    for item in record.assertions
+                    if item.predicate_key == f"accepts-{fact.qualification_key}"
+                ),
+                None,
+            )
+        )
+        if (
+            record is None
+            or pinned_refs.get(acceptance_ref.source_key) != acceptance_ref
+            or record.identity != acceptance_ref
+            or record.role not in {SourceRole.HUMAN_ACCEPTANCE, SourceRole.TECHNICAL_ACCEPTANCE}
+            or record.scope_key != fact.scope_key
+            or not _source_is_accepted(record)
+            or assertion is None
+            or assertion.value_digest != expected_digest
+        ):
+            return False
+    return True
+
+
 def _evaluate_responsibility(
     request: ProjectStateRequest,
     claims: tuple[ResponsibilityClaim, ...],
@@ -562,6 +670,7 @@ def _evaluate_responsibility(
             snapshot=snapshot,
             coverage=coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(claim),
         )
         if not valid:
             unresolved.append(claim.responsibility_key)
@@ -630,7 +739,6 @@ def resolve_project_state(
     consumable_facts: tuple[ConsumableFact, ...] = (),
     knowledge_delta_proposals: tuple[KnowledgeDeltaProposal, ...] = (),
     projection_claims: tuple[ProjectionClaim, ...] = (),
-    produced_expectations: tuple[ProducedExpectation, ...] = (),
 ) -> ResolvedProjectState:
     """Resolve a closed exact input set without discovery, I/O, or authority effects."""
 
@@ -675,12 +783,6 @@ def resolve_project_state(
         projection_claims,
         lambda item: f"{item.canonical_key}:{item.predicate_key}",
         label="projection claim",
-        reasons=reasons,
-    )
-    produced_expectations, _ = _deduplicate_records(
-        produced_expectations,
-        lambda item: item.output_key,
-        label="produced expectation",
         reasons=reasons,
     )
     consumable_facts, _ = _deduplicate_records(
@@ -751,6 +853,33 @@ def resolve_project_state(
                 reasons=reasons,
             )
 
+    resolved_negative_decisions: list[NegativeDecision] = []
+    superseded_targets: dict[str, str | None] = {}
+    for decision in negative_decisions:
+        if (
+            decision.disposition is not NegativeDisposition.SUPERSEDED
+            or decision.scope_key != request.scope_key
+            or not set(decision.target_keys).intersection(request.requested_subject_keys)
+        ):
+            continue
+        valid = _verify_provenance(
+            decision.provenance,
+            predicate_key=f"negative-decision-{decision.decision_key}",
+            scope_key=decision.scope_key,
+            authority_required=True,
+            subject_key=decision.decision_key,
+            source_index=source_index,
+            snapshot=snapshot,
+            coverage=source_coverage,
+            reasons=reasons,
+            expected_value_digest=digest_authority_content(decision),
+        )
+        if not valid:
+            continue
+        resolved_negative_decisions.append(decision)
+        for target_key in decision.target_keys:
+            superseded_targets[target_key] = decision.superseding_key
+
     facts_by_key: dict[str, PredicateFact] = {}
     conflicting_fact_keys: set[str] = set()
     for fact in predicate_facts:
@@ -790,14 +919,9 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(fact),
         )
-        matching_provenance = tuple(
-            item for item in fact.provenance if item.predicate_key == fact.predicate_key
-        )
-        if key in required_predicates and (
-            fact.value_digest is None
-            or any(item.value_digest != fact.value_digest for item in matching_provenance)
-        ):
+        if key in required_predicates and fact.value_digest is None:
             valid = False
             _add_reason(
                 reasons,
@@ -805,9 +929,11 @@ def resolve_project_state(
                 ReasonSeverity.UNKNOWN,
                 key,
                 "predicate value does not match its exact backing value digest",
-                tuple(item.source for item in matching_provenance),
+                tuple(item.source for item in fact.provenance),
             )
         if not valid:
+            continue
+        if key in superseded_targets:
             continue
         if key in required_predicates:
             if fact.result is PredicateResult.UNSATISFIED:
@@ -833,6 +959,16 @@ def resolve_project_state(
     resolved_facts_by_key = {fact.predicate_key: fact for fact in resolved_facts}
 
     for key in sorted(required_predicates):
+        if key in superseded_targets:
+            if key in request.requested_predicate_keys:
+                _add_reason(
+                    reasons,
+                    ResolutionReasonCode.PREDECESSOR_UNSATISFIED,
+                    ReasonSeverity.BLOCKER,
+                    key,
+                    "the exact requested prior subject is superseded and cannot be current",
+                )
+            continue
         if (
             key not in facts_by_key
             and key not in conflicting_fact_keys
@@ -870,6 +1006,7 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(invariant),
         )
         if not valid:
             continue
@@ -917,6 +1054,7 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(fact),
         )
         if fact.scope_key != request.scope_key:
             _add_reason(
@@ -926,6 +1064,13 @@ def resolve_project_state(
                 fact.qualification_key,
                 "qualification scope differs from the exact requested scope",
             )
+        evidence_valid = _verify_qualification_evidence(
+            fact,
+            source_index=source_index,
+            snapshot=snapshot,
+            reasons=reasons,
+        )
+        valid = valid and evidence_valid
         applicability = evaluate_applicability(fact.applicability, request.subject)
         applicable_required = fact.qualification_key in required_predicates or any(
             edge.target_key == fact.qualification_key
@@ -947,18 +1092,14 @@ def resolve_project_state(
                     if source_coverage.source_collection_complete
                     else PredicateResult.INDETERMINATE
                 )
-            else:
+            elif _verify_qualification_acceptance(
+                fact,
+                source_index=source_index,
+                snapshot=snapshot,
+            ):
                 acceptance_result = PredicateResult.SATISFIED
-                for acceptance_ref in fact.acceptance_refs:
-                    source = source_index.get(acceptance_ref.source_key)
-                    if (
-                        source is None
-                        or not _identity_matches(source.identity, acceptance_ref)
-                        or source.role
-                        not in {SourceRole.HUMAN_ACCEPTANCE, SourceRole.TECHNICAL_ACCEPTANCE}
-                        or not _source_is_accepted(source)
-                    ):
-                        acceptance_result = PredicateResult.INDETERMINATE
+            else:
+                acceptance_result = PredicateResult.INDETERMINATE
         if not valid:
             acceptance_result = PredicateResult.INDETERMINATE
         if applicable_required:
@@ -1039,6 +1180,7 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(fact),
         )
         if not valid:
             continue
@@ -1057,8 +1199,9 @@ def resolve_project_state(
     resolved_requirements: list[ResolvedRequirement] = []
     consumption_requirements_by_key: dict[str, ConsumptionRequirement] = {}
     conflicting_consumption_keys: set[str] = set()
-    produced_by_key = {item.output_key: item for item in produced_expectations}
+    produced_by_key: dict[str, ProducedExpectation] = {}
     conflicting_output_keys: set[str] = set()
+    produced_edge_indexes: dict[str, int] = {}
     for edge in requirement_edges:
         if edge.scope_key != request.scope_key:
             continue
@@ -1094,6 +1237,7 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(edge),
         )
         applicability = evaluate_applicability(edge.applicability, request.subject)
         _reason_for_applicability(
@@ -1125,8 +1269,14 @@ def resolve_project_state(
         result = PredicateResult.SATISFIED
         reason_codes: tuple[str, ...] = ()
         if relation is RequirementRelationKind.REQUIRES:
-            fact = resolved_facts_by_key.get(edge.target_key)
-            qualification = qualification_by_key.get(edge.target_key)
+            superseded_target = edge.target_key in superseded_targets
+            predecessor_key = (
+                superseded_targets.get(edge.target_key) if superseded_target else edge.target_key
+            )
+            fact = None if predecessor_key is None else resolved_facts_by_key.get(predecessor_key)
+            qualification = (
+                None if predecessor_key is None else qualification_by_key.get(predecessor_key)
+            )
             if fact is not None:
                 result = fact.result
             elif qualification is not None:
@@ -1136,7 +1286,7 @@ def resolve_project_state(
                     if item.fact.qualification_key == edge.target_key
                 )
                 result = resolved_qualification.accepted
-            elif edge.target_key in conflicting_qualifications:
+            elif predecessor_key in conflicting_qualifications or superseded_target:
                 result = PredicateResult.INDETERMINATE
             elif snapshot.source_collection_complete and source_coverage.source_collection_complete:
                 result = PredicateResult.UNSATISFIED
@@ -1273,6 +1423,15 @@ def resolve_project_state(
                     produced_by_key.pop(edge.target_key)
                     conflicting_output_keys.add(edge.target_key)
                     result = PredicateResult.INDETERMINATE
+                    previous_index = produced_edge_indexes.pop(edge.target_key, None)
+                    if previous_index is not None:
+                        previous = resolved_requirements[previous_index]
+                        resolved_requirements[previous_index] = previous.model_copy(
+                            update={
+                                "result": PredicateResult.INDETERMINATE,
+                                "reason_codes": (ResolutionReasonCode.CONTRADICTORY_FACTS.value,),
+                            }
+                        )
                     _add_reason(
                         reasons,
                         ResolutionReasonCode.CONTRADICTORY_FACTS,
@@ -1290,12 +1449,64 @@ def resolve_project_state(
                 provenance=edge.provenance,
             )
         )
+        if relation is RequirementRelationKind.PRODUCES and result is PredicateResult.SATISFIED:
+            produced_edge_indexes[edge.target_key] = len(resolved_requirements) - 1
 
-    resolved_negative_decisions: list[NegativeDecision] = []
     for decision in negative_decisions:
         if decision.scope_key != request.scope_key:
             continue
         if not set(decision.target_keys).intersection(request.requested_subject_keys):
+            continue
+        if decision.disposition is NegativeDisposition.SUPERSEDED:
+            if decision not in resolved_negative_decisions:
+                continue
+            successor_fact = (
+                None
+                if decision.superseding_key is None
+                else resolved_facts_by_key.get(decision.superseding_key)
+            )
+            successor_qualification = next(
+                (
+                    item
+                    for item in resolved_qualifications
+                    if item.fact.qualification_key == decision.superseding_key
+                ),
+                None,
+            )
+            if successor_fact is not None and successor_fact.result is PredicateResult.UNSATISFIED:
+                _add_reason(
+                    reasons,
+                    ResolutionReasonCode.PREDECESSOR_UNSATISFIED,
+                    ReasonSeverity.BLOCKER,
+                    decision.superseding_key or decision.decision_key,
+                    "the exact accepted successor is known unsatisfied",
+                    tuple(item.source for item in decision.provenance),
+                )
+            elif successor_qualification is not None and (
+                successor_qualification.accepted is PredicateResult.UNSATISFIED
+            ):
+                _add_reason(
+                    reasons,
+                    ResolutionReasonCode.PREDECESSOR_UNSATISFIED,
+                    ReasonSeverity.BLOCKER,
+                    decision.superseding_key or decision.decision_key,
+                    "the exact accepted successor qualification is known unsatisfied",
+                    tuple(item.source for item in decision.provenance),
+                )
+            elif not (
+                successor_fact is not None and successor_fact.result is PredicateResult.SATISFIED
+            ) and not (
+                successor_qualification is not None
+                and successor_qualification.accepted is PredicateResult.SATISFIED
+            ):
+                _add_reason(
+                    reasons,
+                    ResolutionReasonCode.EVIDENCE_LINEAGE_INCOMPLETE,
+                    ReasonSeverity.UNKNOWN,
+                    decision.decision_key,
+                    "the exact accepted successor for this superseded subject is unresolved",
+                    tuple(item.source for item in decision.provenance),
+                )
             continue
         valid = _verify_provenance(
             decision.provenance,
@@ -1307,20 +1518,12 @@ def resolve_project_state(
             snapshot=snapshot,
             coverage=source_coverage,
             reasons=reasons,
+            expected_value_digest=digest_authority_content(decision),
         )
         if not valid:
             continue
         resolved_negative_decisions.append(decision)
-        if decision.disposition is NegativeDisposition.SUPERSEDED:
-            _add_reason(
-                reasons,
-                ResolutionReasonCode.PROHIBITED_SUBJECT,
-                ReasonSeverity.BLOCKER,
-                decision.decision_key,
-                "the exact requested subject is superseded and cannot satisfy a current request",
-                tuple(item.source for item in decision.provenance),
-            )
-        elif decision.reauthorization_ref is None:
+        if decision.reauthorization_ref is None:
             _add_reason(
                 reasons,
                 ResolutionReasonCode.PROHIBITED_SUBJECT,
@@ -1339,6 +1542,7 @@ def resolve_project_state(
                 or reauthorization.scope_key != request.scope_key
                 or not any(
                     assertion.predicate_key == f"reauthorize-{decision.decision_key}"
+                    and assertion.value_digest == digest_authority_content(decision)
                     for assertion in reauthorization.assertions
                 )
             ):

@@ -63,6 +63,7 @@ from relay_engine.project_state.models import (
     SubjectValue,
     canonical_json,
     canonical_json_bytes,
+    digest_authority_content,
     digest_model,
     digest_source_coverage,
 )
@@ -129,6 +130,7 @@ __all__ = [
     "canonical_json_bytes",
     "check_candidate_freshness",
     "compile_authority",
+    "digest_authority_content",
     "digest_model",
     "digest_source_coverage",
     "evaluate_applicability",

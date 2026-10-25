@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 
 import pytest
+from pydantic import ValidationError
 
 from relay_engine.domain import ActorKind, ActorRef, CommitRef, RepositoryRef
+from relay_engine.domain._base import DomainModel
 from relay_engine.domain.ids import new_id
 from relay_engine.project_state import (
     ApplicabilityBinding,
@@ -34,6 +37,7 @@ from relay_engine.project_state import (
     RequirementEdge,
     ResolutionSnapshot,
     ResolutionStatus,
+    ResolvedProjectState,
     ResponsibilityClaim,
     SourceAcceptance,
     SourceCoverageDeclaration,
@@ -44,6 +48,7 @@ from relay_engine.project_state import (
     SourceRecordRef,
     SourceRole,
     SubjectValue,
+    digest_authority_content,
     evaluate_applicability,
     resolve_project_state,
 )
@@ -176,6 +181,39 @@ def _proof(record: SourceRecordRef, key: str) -> BackingProvenanceRef:
     return BackingProvenanceRef(predicate_key=key, source=record.identity, value_digest=_B)
 
 
+def _bind(record: SourceRecordRef, key: str, value: DomainModel):
+    digest = digest_authority_content(value)
+    assertions = {item.predicate_key: item for item in record.assertions}
+    assertions[key] = PredicateAssertion(predicate_key=key, value_digest=digest)
+    updated_record = record.model_copy(
+        update={"assertions": tuple(assertions[name] for name in sorted(assertions))}
+    )
+    proof = BackingProvenanceRef(
+        predicate_key=key,
+        source=updated_record.identity,
+        value_digest=digest,
+    )
+    return updated_record, value.model_copy(update={"provenance": (proof,)})
+
+
+def _replace_authority(records, authority):
+    return records[0], authority, *records[2:]
+
+
+def _add_source(snapshot, records, source):
+    updated_snapshot = snapshot.model_copy(
+        update={
+            "source_refs": tuple(
+                sorted(
+                    snapshot.source_refs + (source.identity,),
+                    key=lambda item: item.source_key,
+                )
+            )
+        }
+    )
+    return updated_snapshot, records + (source,)
+
+
 def _resolve(request, snapshot, coverage, records, **kwargs):
     return resolve_project_state(
         request,
@@ -270,14 +308,14 @@ def test_required_predicate_requires_accepted_exact_backing() -> None:
         scope_key="wellplot",
         result=PredicateResult.SATISFIED,
         value_digest=_B,
-        provenance=(_proof(authority, "smoke-accepted"),),
     )
+    authority, fact = _bind(authority, "smoke-accepted", fact)
+    records = _replace_authority(records, authority)
     resolved = _resolve(request, snapshot, coverage, records, predicate_facts=(fact,))
     assert resolved.status is ResolutionStatus.RESOLVED
     assert resolved.predicate_facts == (fact,)
 
-    summary = records[0]
-    bad_fact = fact.model_copy(update={"provenance": (_proof(summary, "smoke-accepted"),)})
+    bad_fact = fact.model_copy(update={"result": PredicateResult.UNSATISFIED})
     rejected = _resolve(request, snapshot, coverage, records, predicate_facts=(bad_fact,))
     assert rejected.status is ResolutionStatus.INDETERMINATE
 
@@ -289,8 +327,9 @@ def test_conflicting_exact_facts_are_unknown_not_known_absent() -> None:
         scope_key="wellplot",
         result=PredicateResult.SATISFIED,
         value_digest=_B,
-        provenance=(_proof(authority, "smoke-accepted"),),
     )
+    authority, first = _bind(authority, "smoke-accepted", first)
+    records = _replace_authority(records, authority)
     second = first.model_copy(update={"result": PredicateResult.UNSATISFIED})
     result = _resolve(
         request,
@@ -313,8 +352,9 @@ def test_backing_source_from_another_scope_cannot_establish_a_required_fact() ->
         scope_key="wellplot",
         result=PredicateResult.SATISFIED,
         value_digest=_B,
-        provenance=(_proof(foreign_authority, "smoke-accepted"),),
     )
+    foreign_authority, fact = _bind(foreign_authority, "smoke-accepted", fact)
+    records = _replace_authority(records, foreign_authority)
     result = _resolve(request, snapshot, coverage, records, predicate_facts=(fact,))
     assert result.status is ResolutionStatus.INDETERMINATE
     assert any(
@@ -339,7 +379,7 @@ def test_invariants_qualifications_and_invalidation_are_subject_scoped() -> None
         rationale="Preserve runtime-specific evidence.",
         protects_against="stale qualification reuse",
         disposition=InvariantDisposition.ACTIVE,
-        provenance=(_proof(authority, "invariant-live"),),
+        provenance=(),
     )
     qualification = QualificationFact(
         qualification_key="smoke-qualification",
@@ -347,10 +387,30 @@ def test_invariants_qualifications_and_invalidation_are_subject_scoped() -> None
         result=QualificationResult.PASS,
         scope_key="wellplot",
         applicability=invariant.applicability,
-        provenance=(_proof(authority, "qualification-smoke-qualification"),),
+        provenance=(),
         acceptance_required=False,
         invalidation_keys=("runtime",),
     )
+    authority, invariant = _bind(authority, "invariant-live", invariant)
+    evidence_identity = _identity("smoke-evidence", _B)
+    qualification = qualification.model_copy(update={"evidence_refs": (evidence_identity,)})
+    evidence_record = SourceRecordRef(
+        identity=evidence_identity,
+        role=SourceRole.EVIDENCE,
+        kind=SourceKind.ACCEPTED_RECORD,
+        disposition=SourceDisposition.ACCEPTED,
+        acceptance=SourceAcceptance.ACCEPTED,
+        scope_key="wellplot",
+        assertions=(
+            PredicateAssertion(
+                predicate_key="evidence-for-smoke-qualification",
+                value_digest=evidence_identity.content_digest,
+            ),
+        ),
+    )
+    authority, qualification = _bind(authority, "qualification-smoke-qualification", qualification)
+    records = _replace_authority(records, authority)
+    snapshot, records = _add_source(snapshot, records, evidence_record)
     resolved = _resolve(
         request,
         snapshot,
@@ -363,6 +423,156 @@ def test_invariants_qualifications_and_invalidation_are_subject_scoped() -> None
     assert not resolved.invariants
     assert resolved.qualifications[0].accepted is PredicateResult.UNSATISFIED
     assert any(reason.code == "APPLICABILITY_MISMATCH" for reason in resolved.reasons)
+
+
+def test_qualification_requires_exact_evidence_and_acceptance_binding() -> None:
+    request, snapshot, coverage, records, authority = _case(
+        requested=("smoke-qualification",),
+        subject=(SubjectValue(dimension="runtime", value="runtime-a"),),
+    )
+    evidence_identity = _identity("smoke-evidence", _B)
+    acceptance_identity = _identity("smoke-acceptance", _A)
+    qualification = QualificationFact(
+        qualification_key="smoke-qualification",
+        qualification_kind="live-smoke",
+        result=QualificationResult.PASS,
+        scope_key="wellplot",
+        applicability=ApplicabilityEnvelope(
+            bindings=(ApplicabilityBinding(dimension="runtime", expected_value="runtime-a"),)
+        ),
+        provenance=(),
+        evidence_refs=(evidence_identity,),
+        acceptance_refs=(acceptance_identity,),
+        acceptance_required=True,
+    )
+    exact_subject_digest = digest_authority_content(qualification)
+    evidence = SourceRecordRef(
+        identity=evidence_identity,
+        role=SourceRole.EVIDENCE,
+        kind=SourceKind.ACCEPTED_RECORD,
+        disposition=SourceDisposition.ACCEPTED,
+        acceptance=SourceAcceptance.ACCEPTED,
+        scope_key="wellplot",
+        assertions=(
+            PredicateAssertion(
+                predicate_key="evidence-for-smoke-qualification",
+                value_digest=evidence_identity.content_digest,
+            ),
+        ),
+    )
+    acceptance = SourceRecordRef(
+        identity=acceptance_identity,
+        role=SourceRole.HUMAN_ACCEPTANCE,
+        kind=SourceKind.ACCEPTED_RECORD,
+        disposition=SourceDisposition.ACCEPTED,
+        acceptance=SourceAcceptance.ACCEPTED,
+        scope_key="wellplot",
+        assertions=(
+            PredicateAssertion(
+                predicate_key="accepts-smoke-qualification",
+                value_digest=exact_subject_digest,
+            ),
+        ),
+    )
+    authority, qualification = _bind(authority, "qualification-smoke-qualification", qualification)
+    records = _replace_authority(records, authority)
+    snapshot, records = _add_source(snapshot, records, evidence)
+    snapshot, records = _add_source(snapshot, records, acceptance)
+
+    valid = _resolve(
+        request,
+        snapshot,
+        coverage,
+        records,
+        qualification_facts=(qualification,),
+    )
+    assert valid.status is ResolutionStatus.RESOLVED
+    assert valid.qualifications[0].accepted is PredicateResult.SATISFIED
+
+    unrelated_identity = _identity("unrelated-acceptance", _A)
+    unrelated_fact = qualification.model_copy(update={"acceptance_refs": (unrelated_identity,)})
+    unrelated_digest = digest_authority_content(unrelated_fact)
+    unrelated_authority, unrelated_fact = _bind(
+        records[1], "qualification-smoke-qualification", unrelated_fact
+    )
+    unrelated_evidence = evidence.model_copy(
+        update={
+            "assertions": (
+                PredicateAssertion(
+                    predicate_key="evidence-for-smoke-qualification",
+                    value_digest=evidence_identity.content_digest,
+                ),
+            )
+        }
+    )
+    unrelated_acceptance = SourceRecordRef(
+        identity=unrelated_identity,
+        role=SourceRole.HUMAN_ACCEPTANCE,
+        kind=SourceKind.ACCEPTED_RECORD,
+        disposition=SourceDisposition.ACCEPTED,
+        acceptance=SourceAcceptance.ACCEPTED,
+        scope_key="wellplot",
+        assertions=(
+            PredicateAssertion(
+                predicate_key="accepts-other-qualification",
+                value_digest=unrelated_digest,
+            ),
+        ),
+    )
+    unrelated_records = (
+        records[0],
+        unrelated_authority,
+        records[2],
+        unrelated_evidence,
+        unrelated_acceptance,
+    )
+    unrelated_snapshot = snapshot.model_copy(
+        update={
+            "source_refs": tuple(
+                sorted(
+                    (item.identity for item in unrelated_records),
+                    key=lambda item: item.source_key,
+                )
+            )
+        }
+    )
+    unrelated = _resolve(
+        request,
+        unrelated_snapshot,
+        coverage,
+        unrelated_records,
+        qualification_facts=(unrelated_fact,),
+    )
+    assert unrelated.status is ResolutionStatus.INDETERMINATE
+    assert unrelated.qualifications[0].accepted is PredicateResult.INDETERMINATE
+
+    missing_evidence_fact = qualification.model_copy(update={"evidence_refs": ()})
+    missing_authority, missing_evidence_fact = _bind(
+        records[1], "qualification-smoke-qualification", missing_evidence_fact
+    )
+    missing_evidence_records = _replace_authority(records, missing_authority)
+    missing_evidence = _resolve(
+        request,
+        snapshot,
+        coverage,
+        missing_evidence_records,
+        qualification_facts=(missing_evidence_fact,),
+    )
+    assert missing_evidence.status is ResolutionStatus.INDETERMINATE
+
+    missing_acceptance_fact = qualification.model_copy(update={"acceptance_refs": ()})
+    missing_authority, missing_acceptance_fact = _bind(
+        records[1], "qualification-smoke-qualification", missing_acceptance_fact
+    )
+    missing_acceptance_records = _replace_authority(records, missing_authority)
+    missing_acceptance = _resolve(
+        request,
+        snapshot,
+        coverage,
+        missing_acceptance_records,
+        qualification_facts=(missing_acceptance_fact,),
+    )
+    assert missing_acceptance.status is ResolutionStatus.BLOCKED
 
 
 @pytest.mark.parametrize(
@@ -385,15 +595,18 @@ def test_typed_requirement_edges_fail_closed(
         source_key="live-confirmation",
         target_key="deployment",
         scope_key="wellplot",
-        provenance=(_proof(authority, "requirement-edge-a"),),
+        provenance=(),
     )
     fact = PredicateFact(
         predicate_key="deployment",
         scope_key="wellplot",
         result=fact_result,
         value_digest=_B,
-        provenance=(_proof(authority, "deployment"),),
+        provenance=(),
     )
+    authority, edge = _bind(authority, "requirement-edge-a", edge)
+    authority, fact = _bind(authority, "deployment", fact)
+    records = _replace_authority(records, authority)
     result = _resolve(
         request, snapshot, coverage, records, requirement_edges=(edge,), predicate_facts=(fact,)
     )
@@ -408,7 +621,7 @@ def test_produces_consumes_and_consumable_state_are_explicit() -> None:
         source_key="smoke",
         target_key="smoke-report",
         scope_key="wellplot",
-        provenance=(_proof(authority, "requirement-produce-edge"),),
+        provenance=(),
         produced_subject_digest=_B,
         produced_evidence_roles=(SourceRole.EVIDENCE,),
     )
@@ -416,7 +629,7 @@ def test_produces_consumes_and_consumable_state_are_explicit() -> None:
         ref=ConsumableRef(consumable_key="one-shot", scope_key="wellplot"),
         state=ConsumableState.AVAILABLE,
         ledger_complete=True,
-        provenance=(_proof(authority, "consumable-one-shot"),),
+        provenance=(),
     )
     consumes = RequirementEdge(
         edge_key="consume-edge",
@@ -424,8 +637,12 @@ def test_produces_consumes_and_consumable_state_are_explicit() -> None:
         source_key="live-confirmation",
         target_key="one-shot",
         scope_key="wellplot",
-        provenance=(_proof(authority, "requirement-consume-edge"),),
+        provenance=(),
     )
+    authority, produces = _bind(authority, "requirement-produce-edge", produces)
+    authority, consumable = _bind(authority, "consumable-one-shot", consumable)
+    authority, consumes = _bind(authority, "requirement-consume-edge", consumes)
+    records = _replace_authority(records, authority)
     result = _resolve(
         request,
         snapshot,
@@ -433,16 +650,18 @@ def test_produces_consumes_and_consumable_state_are_explicit() -> None:
         records,
         requirement_edges=(consumes, produces),
         consumable_facts=(consumable,),
-        produced_expectations=(
-            ProducedExpectation(output_key="declared-output", subject_digest=_A),
-        ),
     )
     assert result.status is ResolutionStatus.RESOLVED
-    assert [item.output_key for item in result.produced_expectations] == [
-        "declared-output",
-        "smoke-report",
-    ]
+    assert [item.output_key for item in result.produced_expectations] == ["smoke-report"]
     assert result.consumption_requirements[0].intended_attempt_id == "attempt-a"
+    assert "produced_expectations" not in inspect.signature(resolve_project_state).parameters
+
+    forged_payload = result.model_dump(mode="python")
+    forged_payload["produced_expectations"] = (
+        ProducedExpectation(output_key="caller-injected", subject_digest=_A),
+    )
+    with pytest.raises(ValidationError, match="derived from resolved PRODUCES edges"):
+        ResolvedProjectState.model_validate(forged_payload)
 
 
 def test_negative_decision_requires_exact_reauthorization() -> None:
@@ -454,40 +673,140 @@ def test_negative_decision_requires_exact_reauthorization() -> None:
         target_keys=("dangerous-fallback",),
         scope_key="wellplot",
         rationale="Fallback invalidates the evidence boundary.",
-        provenance=(_proof(authority, "negative-decision-ban-fallback"),),
+        provenance=(),
     )
+    authority, decision = _bind(authority, "negative-decision-ban-fallback", decision)
+    records = _replace_authority(records, authority)
     result = _resolve(request, snapshot, coverage, records, negative_decisions=(decision,))
     assert result.status is ResolutionStatus.BLOCKED
     assert any(reason.code == "PROHIBITED_SUBJECT" for reason in result.reasons)
 
+    human_identity = _identity("human-reauthorization")
+    reauthorized = decision.model_copy(update={"reauthorization_ref": human_identity})
+    authority, reauthorized = _bind(records[1], "negative-decision-ban-fallback", reauthorized)
+    records = _replace_authority(records, authority)
     human_record = SourceRecordRef(
-        identity=_identity("human-reauthorization"),
+        identity=human_identity,
         role=SourceRole.HUMAN_ACCEPTANCE,
         kind=SourceKind.ACCEPTED_RECORD,
         disposition=SourceDisposition.ACCEPTED,
         acceptance=SourceAcceptance.ACCEPTED,
         scope_key="wellplot",
-        assertions=(PredicateAssertion(predicate_key="reauthorize-ban-fallback", value_digest=_B),),
+        assertions=(
+            PredicateAssertion(
+                predicate_key="reauthorize-ban-fallback",
+                value_digest=digest_authority_content(reauthorized),
+            ),
+        ),
     )
-    expanded_snapshot = snapshot.model_copy(
-        update={
-            "source_refs": tuple(
-                sorted(
-                    snapshot.source_refs + (human_record.identity,),
-                    key=lambda item: item.source_key,
-                )
-            )
-        }
-    )
-    reauthorized = decision.model_copy(update={"reauthorization_ref": human_record.identity})
+    expanded_snapshot, records = _add_source(snapshot, records, human_record)
     result = _resolve(
         request,
         expanded_snapshot,
         coverage,
-        records + (human_record,),
+        records,
         negative_decisions=(reauthorized,),
     )
     assert result.status is ResolutionStatus.RESOLVED
+
+
+def test_superseded_subject_is_not_a_blanket_prohibition() -> None:
+    request, snapshot, coverage, records, authority = _case(requested=("new-implementation",))
+    request = request.model_copy(update={"requested_subject_keys": ("old-implementation",)})
+    successor = PredicateFact(
+        predicate_key="new-implementation",
+        scope_key="wellplot",
+        result=PredicateResult.SATISFIED,
+        value_digest=_B,
+    )
+    decision = NegativeDecision(
+        decision_key="old-implementation-superseded",
+        disposition=NegativeDisposition.SUPERSEDED,
+        target_keys=("old-implementation",),
+        scope_key="wellplot",
+        rationale="A later accepted implementation replaced the old one.",
+        provenance=(),
+        superseding_key="new-implementation",
+    )
+    authority, successor = _bind(authority, "new-implementation", successor)
+    authority, decision = _bind(
+        authority,
+        "negative-decision-old-implementation-superseded",
+        decision,
+    )
+    edge = RequirementEdge(
+        edge_key="requires-current-implementation",
+        relation="REQUIRES",
+        source_key="live-confirmation",
+        target_key="old-implementation",
+        scope_key="wellplot",
+    )
+    authority, edge = _bind(
+        authority,
+        "requirement-requires-current-implementation",
+        edge,
+    )
+    records = _replace_authority(records, authority)
+    resolved = _resolve(
+        request,
+        snapshot,
+        coverage,
+        records,
+        predicate_facts=(successor,),
+        negative_decisions=(decision,),
+        requirement_edges=(edge,),
+    )
+    assert resolved.status is ResolutionStatus.RESOLVED
+    assert resolved.requirements[0].result is PredicateResult.SATISFIED
+    assert not any(reason.code == "PROHIBITED_SUBJECT" for reason in resolved.reasons)
+
+    unresolved = _resolve(
+        request,
+        snapshot.model_copy(update={"source_collection_complete": False}),
+        coverage.model_copy(update={"source_collection_complete": False}),
+        records,
+        negative_decisions=(decision,),
+        requirement_edges=(edge,),
+    )
+    assert unresolved.status is ResolutionStatus.INDETERMINATE
+    assert unresolved.requirements[0].result is PredicateResult.INDETERMINATE
+    assert any(reason.code == "EVIDENCE_LINEAGE_INCOMPLETE" for reason in unresolved.reasons)
+
+    prior_subject_request = request.model_copy(
+        update={"requested_predicate_keys": ("old-implementation",)}
+    )
+    prior_subject = resolve_project_state(
+        prior_subject_request,
+        snapshot,
+        coverage,
+        source_records=records,
+        negative_decisions=(decision,),
+    )
+    assert prior_subject.status is ResolutionStatus.BLOCKED
+    assert any(reason.code == "PREDECESSOR_UNSATISFIED" for reason in prior_subject.reasons)
+    assert not any(reason.code == "PROHIBITED_SUBJECT" for reason in prior_subject.reasons)
+
+
+def test_tampered_requirement_payload_fails_exact_backing_digest() -> None:
+    request, snapshot, coverage, records, authority = _case()
+    edge = RequirementEdge(
+        edge_key="edge-a",
+        relation="PRODUCES",
+        source_key="live-confirmation",
+        target_key="smoke-report",
+        scope_key="wellplot",
+        provenance=(),
+        produced_subject_digest=_B,
+    )
+    authority, edge = _bind(authority, "requirement-edge-a", edge)
+    records = _replace_authority(records, authority)
+    tampered = edge.model_copy(update={"produced_subject_digest": _A})
+    resolved = _resolve(request, snapshot, coverage, records, requirement_edges=(tampered,))
+    assert resolved.status is ResolutionStatus.INDETERMINATE
+    assert any(
+        reason.code == "BACKING_PROVENANCE_INVALID" and "normative typed content" in reason.detail
+        for reason in resolved.reasons
+    )
 
 
 def test_responsibility_collisions_and_incomplete_inventory_are_distinct() -> None:
@@ -500,8 +819,10 @@ def test_responsibility_collisions_and_incomplete_inventory_are_distinct() -> No
         responsibility_key="runtime",
         owner_key="operator",
         scope_key="wellplot",
-        provenance=(_proof(authority, "responsibility-runtime-owner"),),
+        provenance=(),
     )
+    authority, claim = _bind(authority, "responsibility-runtime-owner", claim)
+    records = _replace_authority(records, authority)
     collision = _resolve(request, snapshot, coverage, records, responsibility_claims=(claim,))
     assert collision.responsibility.result.value == "COLLISION_REQUIRES_ARCHITECTURE_AUTHORITY"
     unknown = _resolve(
@@ -538,8 +859,9 @@ def test_known_blocker_and_unknown_are_both_preserved() -> None:
         scope_key="wellplot",
         result=PredicateResult.UNSATISFIED,
         value_digest=_B,
-        provenance=(_proof(authority, "known-fact"),),
     )
+    authority, fact = _bind(authority, "known-fact", fact)
+    records = _replace_authority(records, authority)
     result = _resolve(
         request,
         snapshot,

@@ -10,6 +10,8 @@ from relay_engine.project_state import (
     ApplicabilityEnvelope,
     BackingProvenanceRef,
     PredicateAssertion,
+    PredicateFact,
+    PredicateResult,
     SourceAcceptance,
     SourceCoverageDeclaration,
     SourceCoverageItem,
@@ -19,6 +21,7 @@ from relay_engine.project_state import (
     SourceRecordRef,
     SourceRole,
     canonical_json,
+    digest_authority_content,
     digest_model,
     digest_source_coverage,
 )
@@ -35,6 +38,32 @@ def test_source_identity_has_fixed_canonical_json_and_sha256_vector() -> None:
     assert digest_model(identity) == (
         "sha256:7f2f228ba84d9b311b18cdba4c22761fe1f0f9be719540d8e2fe4885c3578dfb"
     )
+
+
+def test_authority_content_has_fixed_vector_and_ignores_only_provenance_links() -> None:
+    fact = PredicateFact(
+        predicate_key="smoke-ok",
+        scope_key="wellplot",
+        result=PredicateResult.SATISFIED,
+        value_digest=_DIGEST_B,
+    )
+    assert digest_authority_content(fact) == (
+        "sha256:ab2f11913b8237729d1c7dfded1d531f02e14aeda675ae8b0c54afeaf1729400"
+    )
+    linked = fact.model_copy(
+        update={
+            "provenance": (
+                BackingProvenanceRef(
+                    predicate_key="smoke-ok",
+                    source=SourceIdentity(source_key="accepted-smoke", content_digest=_DIGEST_A),
+                    value_digest=_DIGEST_B,
+                ),
+            )
+        }
+    )
+    assert digest_authority_content(linked) == digest_authority_content(fact)
+    changed = fact.model_copy(update={"result": PredicateResult.UNSATISFIED})
+    assert digest_authority_content(changed) != digest_authority_content(fact)
 
 
 def test_models_are_strict_frozen_and_reject_noncanonical_tuples() -> None:

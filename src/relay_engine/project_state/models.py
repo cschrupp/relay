@@ -63,6 +63,21 @@ def digest_model(value: DomainModel) -> ContentDigest:
     return "sha256:" + hashlib.sha256(canonical_json_bytes(value)).hexdigest()
 
 
+def digest_authority_content(value: DomainModel) -> ContentDigest:
+    """Digest the exact normative payload while excluding its provenance links."""
+
+    validated = type(value).model_validate(value.model_dump(mode="python"))
+    payload = validated.model_dump(mode="json", exclude={"provenance"})
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
 def digest_source_coverage(value: SourceCoverageDeclaration) -> ContentDigest:
     """Digest a coverage declaration payload without its self-reference."""
 
@@ -933,6 +948,33 @@ class ResolvedProjectState(DomainModel):
             "resolution reasons",
         )
 
+    @model_validator(mode="after")
+    def produced_expectations_come_from_edges(self) -> ResolvedProjectState:
+        expected_by_key: dict[str, ProducedExpectation] = {}
+        for requirement in self.requirements:
+            edge = requirement.edge
+            if (
+                edge.relation != RequirementRelationKind.PRODUCES.value
+                or requirement.result is not PredicateResult.SATISFIED
+                or edge.produced_subject_digest is None
+            ):
+                continue
+            expectation = ProducedExpectation(
+                output_key=edge.target_key,
+                subject_digest=edge.produced_subject_digest,
+                required_evidence_roles=edge.produced_evidence_roles,
+            )
+            existing = expected_by_key.get(edge.target_key)
+            if existing is not None and existing != expectation:
+                raise ValueError(
+                    "conflicting PRODUCES edges cannot establish one output expectation"
+                )
+            expected_by_key[edge.target_key] = expectation
+        expected = tuple(expected_by_key[key] for key in sorted(expected_by_key))
+        if self.produced_expectations != expected:
+            raise ValueError("produced expectations must be derived from resolved PRODUCES edges")
+        return self
+
     @property
     def content_digest(self) -> ContentDigest:
         """Return this exact derived-state identity."""
@@ -1095,5 +1137,6 @@ __all__ = [
     "canonical_json",
     "canonical_json_bytes",
     "digest_model",
+    "digest_authority_content",
     "digest_source_coverage",
 ]
