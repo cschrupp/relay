@@ -1,8 +1,10 @@
 # Project State Resolution and Authority Compilation
 
-**Status:** Human-directed strategic architecture — Slice 2.5 OPEN; normative design AUTHORIZED / not yet accepted; implementation not authorized  
+**Status:** Human-directed strategic architecture — Slice 2.5 OPEN; normative design HUMAN ACCEPTED; implementation not authorized  
 **Authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
-**Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`  
+**Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`
+**Independent design evaluation:** `RLY-S25-DESIGN-EVAL-002 — ACCEPT`
+**Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`  
 **Date:** 2026-10-24  
 **Target slice:** Slice 2.5 — Project State Resolution and Authority Compilation — OPEN under `RLY-S25-OPEN-001`
 
