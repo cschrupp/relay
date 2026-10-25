@@ -1,16 +1,16 @@
 # Project State Resolution and Authority Compilation
 
-**Status:** Human-directed strategic architecture — Slice 2.5 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+**Status:** Human-directed strategic architecture — Slice 2.5 COMPLETE / ACCEPTED / CLOSED
 **Authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 **Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`
 **Independent design evaluation:** `RLY-S25-DESIGN-EVAL-002 — ACCEPT`
 **Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`  
 **Date:** 2026-10-24  
-**Target slice:** Slice 2.5 — Project State Resolution and Authority Compilation — OPEN under `RLY-S25-OPEN-001`
+**Target slice:** Slice 2.5 — Project State Resolution and Authority Compilation — COMPLETE / ACCEPTED / CLOSED under `RLY-S25-CLOSE-EVAL-001 — ACCEPT`
 
 ## Current Slice 2.5 disposition
 
-The accepted implementation is `88dcb97110665a60b21b5d36f82f0d82b015b098`, independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Finalization is authorized under `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`; independent closure evaluation is pending. Slice 2.5 remains OPEN / CLOSURE-READY. Production ProjectStateResolver/AuthorityCompiler wiring, production WorkPacket wiring, persistence/lifecycle mutation, and Phase 3 remain unauthorized.
+The accepted implementation is `88dcb97110665a60b21b5d36f82f0d82b015b098`, independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Finalization is authorized under `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`; independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Slice 2.5 remains COMPLETE / ACCEPTED / CLOSED. Production ProjectStateResolver/AuthorityCompiler wiring, production WorkPacket wiring, persistence/lifecycle mutation, and Phase 3 remain unauthorized.
 
 ## 1. Problem statement
 

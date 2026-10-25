@@ -1,7 +1,7 @@
 # Relay — Build Plan and Development Roadmap
 
 **Version:** 0.6  
-**Status:** Current living implementation plan — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY; Phase 3 NOT OPEN / NOT AUTHORIZED; strict B0 remains blocked
+**Status:** Current living implementation plan — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 NOT OPEN / NOT AUTHORIZED; strict B0 remains blocked
 **Document class:** Living canonical projection
 **Canonical key:** `build-plan`
 **Supersedes:** v0.5 at `docs/BUILD_PLAN_V0_5.md`  
@@ -10,7 +10,7 @@
 
 ---
 
-# 0. CURRENT ROADMAP — Slice 2.5 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+# 0. CURRENT ROADMAP — Slice 2.5 COMPLETE / ACCEPTED / CLOSED
 
 **Controlling summary:** this section is the current roadmap summary. Older detailed sections below are retained for historical traceability; where an older status statement conflicts with this section, this section controls until the next accepted roadmap projection.
 
@@ -77,7 +77,7 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-2.5 Project State Resolution & Authority Compilation: OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+2.5 Project State Resolution & Authority Compilation: COMPLETE / ACCEPTED / CLOSED
 Opening authority: RLY-S25-OPEN-001 — OPEN
 Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
@@ -86,8 +86,8 @@ Accepted implementation: `88dcb97110665a60b21b5d36f82f0d82b015b098`
 Independent implementation evaluation: `RLY-S25-IMPL-EVAL-003 — ACCEPT`
 Human technical acceptance: `RLY-S25-ACCEPT-001 — ACCEPTED`
 Finalization / closure authority: `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`
-Independent closure evaluation: PENDING
-Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 closure is now a prerequisite
+Independent closure evaluation: RLY-S25-CLOSE-EVAL-001 — ACCEPT
+Phase 3: NOT OPEN / NOT AUTHORIZED; Slice 2.5 is closed; Phase 3 still requires separate opening authority
 Real-project agent execution: NOT AUTHORIZED
 ```
 
@@ -111,7 +111,7 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED
   -> 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED under RLY-S23-CLOSE-EVAL-001 — ACCEPT
   -> 2.4 Execution Workspace Authority — COMPLETE / ACCEPTED / CLOSED
-  -> 2.5 Project State Resolution & Authority Compilation — OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+  -> 2.5 Project State Resolution & Authority Compilation — COMPLETE / ACCEPTED / CLOSED
   -> explicit Phase 3 opening
   -> Phase 3 governed autonomous engineering loop
 ```
@@ -140,7 +140,7 @@ Open Slice 2.5 planning source:
 
 The observed failure class is not lack of historical information but failure to convert accepted knowledge into machine-resolvable obligations for later work. Slice 2.5 is the final Phase-2 foundation before Phase 3. It must compile present applicable state into a complete authority candidate while preserving Human Authority, WorkPacket primacy, exact evidence lineage, and the rule that Relay remains the only governance state machine.
 
-Slice 2.5 is OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY under `RLY-S25-IMPL-EVAL-003 — ACCEPT`, `RLY-S25-ACCEPT-001 — ACCEPTED`, and `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`. Independent closure evaluation is pending. Production ProjectStateResolver/AuthorityCompiler wiring and Phase 3 remain unauthorized.
+Slice 2.5 is COMPLETE / ACCEPTED / CLOSED under `RLY-S25-IMPL-EVAL-003 — ACCEPT`, `RLY-S25-ACCEPT-001 — ACCEPTED`, and `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED`. Independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Production ProjectStateResolver/AuthorityCompiler wiring and Phase 3 remain unauthorized.
 
 ## Authorized-work granularity and autonomous internal decomposition
 
@@ -216,7 +216,7 @@ Phase 2: OPEN; Slice 2.1 COMPLETE / ACCEPTED / CLOSED;
   2.2 COMPLETE / ACCEPTED / CLOSED;
   2.3 COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
   2.4 COMPLETE / ACCEPTED / CLOSED — RLY-S24-CLOSE-EVAL-001 — ACCEPT
-  2.5 OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY — Project State Resolution & Authority Compilation
+  2.5 COMPLETE / ACCEPTED / CLOSED — Project State Resolution & Authority Compilation
 Phase 3: 3.1 FUTURE / NOT OPEN / NOT AUTHORIZED
 Prerequisites: 1.8, 1.9, 1.10, 2.2, 2.3, 2.4, 2.5, and explicit Phase 3 opening
 Real-project agent execution: NOT AUTHORIZED
@@ -398,10 +398,10 @@ Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
 
 Slice 2.5 — Project State Resolution & Authority Compilation:
-OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 88dcb97110665a60b21b5d36f82f0d82b015b098
 RLY-S25-IMPL-EVAL-003 — ACCEPT / RLY-S25-ACCEPT-001 — ACCEPTED
-RLY-S25-CLOSE-AUTH-001 — AUTHORIZED / RLY-S25-CLOSE-EVAL-001 — PENDING
+RLY-S25-CLOSE-AUTH-001 — AUTHORIZED / RLY-S25-CLOSE-EVAL-001 — ACCEPT
 
 Phase 3:
 NOT OPEN / NOT AUTHORIZED
@@ -438,14 +438,14 @@ OPEN
         +-- 2.3 Context / Work-Packet Contract    COMPLETE / ACCEPTED / CLOSED — RLY-S23-CLOSE-EVAL-001 — ACCEPT
         +-- 2.4 Execution Workspace Authority     COMPLETE / ACCEPTED / CLOSED
         +-- 2.5 Project State Resolution &
-        |       Authority Compilation              OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+        |       Authority Compilation              COMPLETE / ACCEPTED / CLOSED
                                                  |
                                                  v
 Phase 3 — first governed autonomous engineering loop
 NOT OPEN / NOT AUTHORIZED
 ```
 
-Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 and Slice 2.3 are COMPLETE / ACCEPTED / CLOSED. Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; Slice 2.5 is OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY, pending `RLY-S25-CLOSE-EVAL-001`.
+Phase 1 hardening and Phase 2 remain concurrent at the phase level. Slice 2.2 and Slice 2.3 are COMPLETE / ACCEPTED / CLOSED. Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; Slice 2.5 is COMPLETE / ACCEPTED / CLOSED under `RLY-S25-CLOSE-EVAL-001 — ACCEPT`.
 
 Any Phase 1 deficiency that threatens authority integrity, deterministic state, provenance, Human control, evaluator independence, promotion integrity, or fail-closed behavior blocks dependent Phase 2/3 work.
 
@@ -470,7 +470,7 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 2.4  Execution Workspace Authority — COMPLETE / ACCEPTED / CLOSED
      -> accepted workspace authority implementation; closed under RLY-S24-CLOSE-EVAL-001 — ACCEPT
 
-2.5  Project State Resolution and Authority Compilation — OPEN / IMPLEMENTATION HUMAN ACCEPTED / CLOSURE-READY
+2.5  Project State Resolution and Authority Compilation — COMPLETE / ACCEPTED / CLOSED
      -> resolve current prerequisites, invariants, applicability, prohibitions, responsibility ownership, and evidence lineage before authority issuance
 
 3.1  Coding Agent Execution
