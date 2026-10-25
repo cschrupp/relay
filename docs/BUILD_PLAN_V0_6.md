@@ -77,7 +77,7 @@ Human technical acceptance: RLY-S24-ACCEPT-001 — ACCEPTED
 Finalization / closure authority: RLY-S24-CLOSE-AUTH-001 — AUTHORIZED
 Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
-2.5 Project State Resolution & Authority Compilation: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+2.5 Project State Resolution & Authority Compilation: OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED
 Opening authority: RLY-S25-OPEN-001 — OPEN
 Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
