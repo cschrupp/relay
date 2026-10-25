@@ -4658,6 +4658,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_17c5e8a2-4d63-49b0-af21-6e3d92c7b540",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:9ab67f7e7b375045dca516d71ae99081755a46633f0f7f72de5a980d22196eba",
+      "human_version": "RLY-S25-DESIGN-EVAL-001",
+      "path": "docs/reviews/SLICE_2_5_DESIGN_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent SOL evaluation of Slice 2.5 normative design candidate 1e64b6b under RLY-S25-DESIGN-AUTH-001; disposition REWORK.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 2.5 — Independent Design Evaluation 001",
+      "updated_at": "2026-10-24T23:58:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_7f2a5c91-6d34-4e80-b127-9c3a65e2d418",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
