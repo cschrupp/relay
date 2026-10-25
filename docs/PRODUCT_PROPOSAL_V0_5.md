@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN / DESIGN AUTHORIZED under RLY-S25-DESIGN-AUTH-001 / IMPLEMENTATION NOT AUTHORIZED; Phase 2 open
+**Status:** Current living product and architecture proposal — Slice 2.4 COMPLETE / ACCEPTED / CLOSED; Slice 2.5 OPEN / DESIGN HUMAN ACCEPTED under RLY-S25-DESIGN-ACCEPT-001 / IMPLEMENTATION NOT AUTHORIZED; Phase 2 open
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -196,11 +196,13 @@ Closure-ready candidate: 8633a08d5ecffa95e518fda1a06765ce0b439388
 Independent closure evaluation: RLY-S24-CLOSE-EVAL-001 — ACCEPT
 
 Slice 2.5 - Project State Resolution & Authority Compilation:
-OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED
 Opening authority: RLY-S25-OPEN-001 — OPEN
 Design authority: RLY-S25-DESIGN-AUTH-001 — AUTHORIZED
+Independent design evaluation: RLY-S25-DESIGN-EVAL-002 — ACCEPT
+Human design acceptance: RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED
 Strategic authority: RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED
-Normative design candidate: NOT YET PRODUCED / NOT YET ACCEPTED
+Normative design: exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`
 
 Phase 3 - First Governed Autonomous Engineering Loop:
 NOT OPEN / NOT AUTHORIZED
@@ -267,7 +269,7 @@ Independent closure evaluation `RLY-S21-CLOSE-EVAL-002 — ACCEPT` accepted the 
 Roadmap re-baseline authority:
 `RLY-P2-ROADMAP-REBASE-001 — AUTHORIZED`
 
-Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; bounded design is authorized under `RLY-S25-DESIGN-AUTH-001`; implementation remains unauthorized.
+Slice 1.8 is COMPLETE / ACCEPTED / CLOSED under `RLY-S18-CLOSE-EVAL-001 — ACCEPT` and `RLY-S18-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `35046bb378808a1325ecb84eace5aacd3040ca98`, exact closure candidate `0946d083b1bc1ccd7773f709efacb04a0c00aacc`. Slice 1.9 is COMPLETE / ACCEPTED / CLOSED under `RLY-S19-CLOSE-EVAL-002 — ACCEPT` and `RLY-S19-CLOSE-AUTH-001 — AUTHORIZED`; accepted technical candidate `77ad34cf47828464a430ebdbecf1b816f158ae55`, closure candidate `e8dd2970df445f39954be19dea7ee8241294f44a`. Slice 1.10 is OPEN with Human-accepted design and authorized implementation; B4 is COMPLETE / HUMAN ACCEPTED, while top-level Slice 1.10 closure is not established. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; Slice 2.3 is COMPLETE / ACCEPTED / CLOSED under `RLY-S23-CLOSE-EVAL-001 — ACCEPT`; Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`; Slice 2.5 is OPEN under `RLY-S25-OPEN-001`; normative design is Human accepted under `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`; implementation remains unauthorized.
 
 # 5. Implementation and closure governance
 
