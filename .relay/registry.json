@@ -2,19 +2,19 @@
   "artifacts": [
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_6e9b4d21-8f75-4c90-a236-7d3e58c1b420",
+      "artifact_id": "art_7f1c5d32-8e64-4b90-a125-6d3e97c2b540",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:d70bb73a6074415143e0c0402960d7ea2ca31a9e827e0e06c0cdc88b8fa1079d",
+      "content_digest": "sha256:568b45e60df8914446bd717b25d2eab0ddce15d703771af7f242477654865e76",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 146,
+      "revision": 147,
       "schema_version": 1,
       "scope": "Current canonical build plan document.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-25T01:50:00Z"
+      "updated_at": "2026-10-25T01:56:00Z"
     },
     {
       "artifact_id": "art_b5f8d3a1-6e74-4ca0-b219-8d2c67e5a310",
@@ -5462,8 +5462,8 @@
       "canonical_key": "build-plan",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_6e9b4d21-8f75-4c90-a236-7d3e58c1b420",
-        "revision": 146,
+        "artifact_id": "art_7f1c5d32-8e64-4b90-a125-6d3e97c2b540",
+        "revision": 147,
         "schema_version": 1
       }
     },
