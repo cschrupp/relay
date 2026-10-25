@@ -12,7 +12,7 @@ Current frontier:
 2.5 Project State Resolution & Authority Compilation
                                                    COMPLETE / ACCEPTED / CLOSED
 Phase 3                                           OPEN — RLY-P3-OPEN-001
-Slice 3.1                                         ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED
+Slice 3.1                                         OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
 Slice 1.10                                        COMPLETE / ACCEPTED / CLOSED — RLY-S110-CLOSE-EVAL-001
 Phase 3 execution frontier                       NOT AUTHORIZED until separate Slice 3.1 authority
 ```
