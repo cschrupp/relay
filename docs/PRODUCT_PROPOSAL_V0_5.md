@@ -1,7 +1,7 @@
 # Relay — Product and Technical Proposal
 
 **Version:** 0.5  
-**Status:** Current living product and architecture proposal — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED; execution requires separate Slice 3.1 authority
+**Status:** Current living product and architecture proposal — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED; execution requires separate Slice 3.1 authority
 **Document class:** Living canonical projection
 **Canonical key:** `product-proposal`
 **Supersedes:** v0.4 at `docs/PRODUCT_PROPOSAL_V0_4.md`  
@@ -215,8 +215,8 @@ Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket compilation / wiring: NOT AUTHORIZED
 Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under `RLY-P3-OPEN-001`
-Slice 3.1 — Coding Agent Execution: ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED
-Phase 3 execution: NOT AUTHORIZED until separate Slice 3.1 authority
+Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+Phase 3 execution: NOT AUTHORIZED
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED
@@ -226,7 +226,7 @@ Normative design: exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`
 
 Phase 3 - First Governed Autonomous Engineering Loop:
 OPEN at phase level under `RLY-P3-OPEN-001`
-Slice 3.1 is ELIGIBLE TO OPEN / NOT OPEN / NOT AUTHORIZED; Phase 3 execution requires separate Slice 3.1 authority.
+Slice 3.1 is OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED; Phase 3 execution requires separate Slice 3.1 authority.
 
 Real-project agent execution:
 NOT AUTHORIZED
