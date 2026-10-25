@@ -1,12 +1,14 @@
 # Slice 2.5 — Project State Resolution and Authority Compilation
 
-**Status:** OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION NOT AUTHORIZED  
+**Status:** OPEN / DESIGN HUMAN ACCEPTED / IMPLEMENTATION AUTHORIZED  
 **Phase:** 2 — Provider and Agent Foundation  
 **Strategic authority:** `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001 — AUTHORIZED`
 **Opening authority:** `RLY-S25-OPEN-001 — OPEN`
 **Design authority:** `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`
 **Independent design evaluation:** `RLY-S25-DESIGN-EVAL-002 — ACCEPT`
-**Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`  
+**Human design acceptance:** `RLY-S25-DESIGN-ACCEPT-001 — ACCEPTED`
+**Implementation scope:** `RLY-S25-CODEX-SCOPE-001`
+**Implementation authority:** `RLY-S25-IMPL-AUTH-001 — AUTHORIZED`  
 **Predecessor:** Slice 2.4 — Execution Workspace Authority  
 **Phase-3 relationship:** mandatory prerequisite for Phase 3 opening; Slice 2.5 must close first
 
@@ -234,7 +236,7 @@ Exact opening baseline:
 
 Slice 2.4 is COMPLETE / ACCEPTED / CLOSED under `RLY-S24-CLOSE-EVAL-001 — ACCEPT`.
 
-Slice 2.5 design is authorized under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`. The normative design is independently and Human accepted at exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`. Implementation remains unauthorized.
+Slice 2.5 design is authorized under `RLY-S25-DESIGN-AUTH-001 — AUTHORIZED`. The normative design is independently and Human accepted at exact subject `b2f566d3f8ed616e3e901795858b7046aa3fa6c6`. Implementation is authorized only within `RLY-S25-CODEX-SCOPE-001`; production authority issuance, Phase 3, and real-project execution remain unauthorized.
 
 ## Completion implication
 
