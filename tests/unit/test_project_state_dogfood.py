@@ -253,6 +253,7 @@ def _qualification(
     *,
     applicability: ApplicabilityEnvelope,
     acceptance_required: bool = False,
+    acceptance_role: SourceRole = SourceRole.HUMAN_ACCEPTANCE,
     result: QualificationResult = QualificationResult.PASS,
 ) -> tuple[Scenario, QualificationFact]:
     evidence_identity = _identity(f"{key}-evidence", _B)
@@ -292,7 +293,7 @@ def _qualification(
     if acceptance_identity is not None:
         acceptance = SourceRecordRef(
             identity=acceptance_identity,
-            role=SourceRole.HUMAN_ACCEPTANCE,
+            role=acceptance_role,
             kind=SourceKind.ACCEPTED_RECORD,
             disposition=SourceDisposition.ACCEPTED,
             acceptance=SourceAcceptance.ACCEPTED,
@@ -354,6 +355,131 @@ def test_wellplot_known_missing_prerequisites_block(qualification_key: str) -> N
     resolution = _resolve(scenario)
     assert resolution.status is ResolutionStatus.BLOCKED
     assert _compile(scenario, resolution).status is CompilationStatus.BLOCKED
+
+
+def test_wellplot_exact_independent_evaluation_accepts_qualification() -> None:
+    scenario = _scenario(
+        scope="wellplot",
+        requested=("live-smoke",),
+        subject=_subject(runtime="runtime-a"),
+    )
+    scenario, smoke = _qualification(
+        scenario,
+        "live-smoke",
+        applicability=_envelope(runtime="runtime-a"),
+        acceptance_required=True,
+        acceptance_role=SourceRole.INDEPENDENT_EVALUATION,
+    )
+
+    resolution = _resolve(scenario, qualification_facts=(smoke,))
+    assert resolution.status is ResolutionStatus.RESOLVED
+    assert resolution.qualifications[0].accepted is PredicateResult.SATISFIED
+    assert _compile(scenario, resolution).status is CompilationStatus.READY
+
+    acceptance_record = next(
+        item for item in scenario.records if item.identity.source_key == "live-smoke-acceptance"
+    )
+    unrelated_acceptance = acceptance_record.model_copy(
+        update={
+            "assertions": (
+                PredicateAssertion(
+                    predicate_key="accepts-other-qualification",
+                    value_digest=acceptance_record.assertions[0].value_digest,
+                ),
+            )
+        }
+    )
+    unrelated_scenario = _replace_record(scenario, unrelated_acceptance)
+    unrelated = _resolve(unrelated_scenario, qualification_facts=(smoke,))
+    assert unrelated.status is ResolutionStatus.INDETERMINATE
+    assert unrelated.qualifications[0].accepted is PredicateResult.INDETERMINATE
+
+
+@pytest.mark.parametrize(
+    ("result", "runtime", "expected_status", "expected_requirement"),
+    [
+        (
+            QualificationResult.PASS,
+            "runtime-a",
+            ResolutionStatus.RESOLVED,
+            PredicateResult.SATISFIED,
+        ),
+        (
+            QualificationResult.FAIL,
+            "runtime-a",
+            ResolutionStatus.BLOCKED,
+            PredicateResult.UNSATISFIED,
+        ),
+        (
+            QualificationResult.PASS,
+            None,
+            ResolutionStatus.INDETERMINATE,
+            PredicateResult.INDETERMINATE,
+        ),
+    ],
+)
+def test_superseded_qualification_resolves_exact_successor(
+    result: QualificationResult,
+    runtime: str | None,
+    expected_status: ResolutionStatus,
+    expected_requirement: PredicateResult,
+) -> None:
+    scenario = _scenario(
+        scope="wellplot",
+        subject=_subject(runtime=runtime),
+    )
+    scenario = Scenario(
+        request=scenario.request.model_copy(update={"requested_subject_keys": ("old-smoke",)}),
+        snapshot=scenario.snapshot,
+        coverage=scenario.coverage,
+        records=scenario.records,
+    )
+    scenario, successor = _qualification(
+        scenario,
+        "new-smoke",
+        applicability=_envelope(runtime="runtime-a"),
+        acceptance_required=True,
+        result=result,
+    )
+    decision = NegativeDecision(
+        decision_key="old-smoke-superseded",
+        disposition=NegativeDisposition.SUPERSEDED,
+        target_keys=("old-smoke",),
+        scope_key="wellplot",
+        rationale="A new exact smoke qualification supersedes the old qualification.",
+        provenance=(),
+        superseding_key="new-smoke",
+    )
+    scenario, decision = _bind(
+        scenario,
+        scenario.authority,
+        "negative-decision-old-smoke-superseded",
+        decision,
+    )
+    edge = RequirementEdge(
+        edge_key="requires-current-smoke",
+        relation="REQUIRES",
+        source_key=scenario.request.outcome_key,
+        target_key="old-smoke",
+        scope_key="wellplot",
+    )
+    scenario, edge = _bind(
+        scenario,
+        scenario.authority,
+        "requirement-requires-current-smoke",
+        edge,
+    )
+
+    resolution = _resolve(
+        scenario,
+        qualification_facts=(successor,),
+        negative_decisions=(decision,),
+        requirement_edges=(edge,),
+    )
+    assert resolution.status is expected_status
+    assert resolution.requirements[0].result is expected_requirement
+    assert resolution.qualifications[0].accepted is expected_requirement
+    assert not any(reason.code == "PROHIBITED_SUBJECT" for reason in resolution.reasons)
 
 
 def test_wellplot_historical_smoke_mismatch_retains_pass_and_blocks_live_request() -> None:

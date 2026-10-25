@@ -615,7 +615,12 @@ def _verify_qualification_acceptance(
             record is None
             or pinned_refs.get(acceptance_ref.source_key) != acceptance_ref
             or record.identity != acceptance_ref
-            or record.role not in {SourceRole.HUMAN_ACCEPTANCE, SourceRole.TECHNICAL_ACCEPTANCE}
+            or record.role
+            not in {
+                SourceRole.HUMAN_ACCEPTANCE,
+                SourceRole.TECHNICAL_ACCEPTANCE,
+                SourceRole.INDEPENDENT_EVALUATION,
+            }
             or record.scope_key != fact.scope_key
             or not _source_is_accepted(record)
             or assertion is None
@@ -1072,10 +1077,14 @@ def resolve_project_state(
         )
         valid = valid and evidence_valid
         applicability = evaluate_applicability(fact.applicability, request.subject)
-        applicable_required = fact.qualification_key in required_predicates or any(
-            edge.target_key == fact.qualification_key
-            and edge.relation == RequirementRelationKind.REQUIRES.value
-            for edge in requirement_edges
+        applicable_required = (
+            fact.qualification_key in required_predicates
+            or any(
+                edge.target_key == fact.qualification_key
+                and edge.relation == RequirementRelationKind.REQUIRES.value
+                for edge in requirement_edges
+            )
+            or fact.qualification_key in superseded_targets.values()
         )
         _reason_for_applicability(
             reasons,
@@ -1283,7 +1292,7 @@ def resolve_project_state(
                 resolved_qualification = next(
                     item
                     for item in resolved_qualifications
-                    if item.fact.qualification_key == edge.target_key
+                    if item.fact.qualification_key == predecessor_key
                 )
                 result = resolved_qualification.accepted
             elif predecessor_key in conflicting_qualifications or superseded_target:
