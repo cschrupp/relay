@@ -34,8 +34,8 @@ Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
 Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
-Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
-Phase 3 execution: NOT AUTHORIZED
+Slice 3.1 — Coding Agent Execution: OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED
+Phase 3 live execution: NOT AUTHORIZED
 Slice 1.10: COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
 Independent closure evaluation: RLY-S110-CLOSE-EVAL-001 — ACCEPT
@@ -204,7 +204,9 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 - [x] Open Phase 3 at the phase level under `RLY-P3-OPEN-001` after Slice 2.5 closure.
 - [x] Preserve the Slice 2.5 prerequisite and require separate authority to open Slice 3.1.
 - [x] Establish top-level Slice 1.10 closure under its own authority; `RLY-S110-CLOSE-EVAL-001 — ACCEPT` completed this prerequisite.
-- [x] Open Slice 3.1 under `RLY-S31-OPEN-001` and authorize its design under `RLY-S31-DESIGN-AUTH-001`; implementation and Phase-3 execution remain unauthorized pending their separate authority.
+- [x] Open Slice 3.1 under `RLY-S31-OPEN-001` and authorize its design under `RLY-S31-DESIGN-AUTH-001`.
+- [x] Accept Slice 3.1 design under `RLY-S31-DESIGN-EVAL-002 — ACCEPT` and `RLY-S31-DESIGN-ACCEPT-001 — ACCEPTED`.
+- [x] Complete and Human-accept Slice 3.1 implementation `6dd4296440196b63078b13855b70dff60a386325` under `RLY-S31-IMPL-EVAL-003 — ACCEPT` and `RLY-S31-IMPL-ACCEPT-001 — ACCEPTED`; live execution remains separately unauthorized.
 
 # AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
 
