@@ -5,16 +5,16 @@
       "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:72eb63602fdbaf8f581349f7ffe6585d1d832fca44845a715cbadb1c336ae4e1",
+      "content_digest": "sha256:55784db5f9bdeada934763705394666f7843810cf1655b8fb7b52b631a2c14e6",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 154,
+      "revision": 155,
       "schema_version": 1,
-      "scope": "Current canonical build plan; Slice 3.1 design and implementation are accepted; live execution remains separately unauthorized.",
+      "scope": "Current canonical build plan; Slice 3.1 design and implementation are accepted; Dogfood 001 exposed a governance-to-operational Slice-definition mapping gap that is recorded without implementation authority.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-26T05:05:00Z"
+      "updated_at": "2026-10-26T19:16:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -53,16 +53,16 @@
       "artifact_id": "art_405e8bcd-1e83-4560-9c1e-5163d3dc6710",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:c73c8d4117671530faa57f40adbbfe5715fcb8c7125e8d0b86639d721074f066",
+      "content_digest": "sha256:2230df3f1af78af2a9396262dc174ece806eb208f5cba5d76db11b7d79efbf5b",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 61,
+      "revision": 62,
       "schema_version": 1,
-      "scope": "Current development checklist; Slice 3.1 design and implementation are accepted; live execution remains separately unauthorized.",
+      "scope": "Current development checklist; includes the Dogfood 001 governance-to-operational Slice-definition mapping gap as a bounded backlog item without implementation authority.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-26T05:00:00Z"
+      "updated_at": "2026-10-26T19:16:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5959,7 +5959,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
-        "revision": 154,
+        "revision": 155,
         "schema_version": 1
       }
     },
