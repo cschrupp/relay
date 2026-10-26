@@ -18,19 +18,19 @@
     },
     {
       "artifact_class": "LIVING_PROJECTION",
-      "artifact_id": "art_5604d75b-cf0f-4056-9fde-6d3127cb4c58",
+      "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:b07ca0dac81d73b12463125a35e6994a68c2cf47c92a7df724f92484ee1222c2",
+      "content_digest": "sha256:76d05a334fb6eb6a43ab4b3179dfeb8931f90c6d39ba56af93266a8d34c1d26f",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 169,
+      "revision": 170,
       "schema_version": 1,
-      "scope": "Current canonical baseline; Phase 3 and Slice 3.1 are open, Slice 3.1 design is authorized and pending acceptance, implementation and execution remain unauthorized.",
+      "scope": "Current canonical baseline; Slice 3.1 design candidate is pending independent review; implementation and execution remain unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-25T21:44:12Z"
+      "updated_at": "2026-10-26T00:15:04Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -5762,6 +5762,22 @@
     },
     {
       "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_650054e7-e7ec-40c7-b30c-6ea9de3181f2",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:fe265b512958ccef383f123593a57d5d1aeb3d2d3bef27cd70ecae8fdbe7d175",
+      "human_version": "Candidate Revision 1",
+      "path": "docs/slices/SLICE_3_1_CODING_AGENT_EXECUTION_DESIGN.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Normative Slice 3.1 design candidate under RLY-S31-DESIGN-AUTH-001; unaccepted and pending independent SOL design review; implementation and execution not authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 — Coding Agent Execution — Normative Design Candidate Revision 1",
+      "updated_at": "2026-10-26T00:15:04Z"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
       "artifact_type": "DOCUMENT",
@@ -5791,8 +5807,8 @@
       "canonical_key": "current-baseline",
       "schema_version": 1,
       "target": {
-        "artifact_id": "art_5604d75b-cf0f-4056-9fde-6d3127cb4c58",
-        "revision": 169,
+        "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
+        "revision": 170,
         "schema_version": 1
       }
     },

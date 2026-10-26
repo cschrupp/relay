@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED; Phase 3 execution requires separate Slice 3.1 authority
+**Status:** Current living baseline — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN AUTHORIZED; design candidate pending independent review; implementation and execution NOT AUTHORIZED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 25, 2026
 
 ---
 
-# 0. Executive current state — Phase 3 open; Slice 3.1 open / design authorized
+# 0. Executive current state — Phase 3 open; Slice 3.1 design candidate under review
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -89,7 +89,9 @@ Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
 Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
-Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / IMPLEMENTATION NOT AUTHORIZED
+Slice 3.1 normative design candidate: `docs/slices/SLICE_3_1_CODING_AGENT_EXECUTION_DESIGN.md` — UNACCEPTED / PENDING INDEPENDENT REVIEW
+Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / DESIGN ACCEPTANCE PENDING
+Implementation: NOT AUTHORIZED
 Phase 3 execution frontier: NOT AUTHORIZED until separate Slice 3.1 authority
 Slice 1.10 top-level closure: COMPLETE / ACCEPTED / CLOSED under RLY-S110-CLOSE-EVAL-001 — ACCEPT
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
