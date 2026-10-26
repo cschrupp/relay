@@ -31,6 +31,7 @@ from relay_engine.execution_workspace.models import (
     WorkspacePlanRef,
     WorkspaceProviderRef,
 )
+from relay_engine.project_state import ConsumableRef
 from relay_engine.role_contracts import RequirementStatus, RoleContractRef
 from relay_engine.work_packets import ContextManifestRef, WorkPacket, WorkPacketRef
 
@@ -170,13 +171,25 @@ class CorrectiveSubjectBinding(DomainModel):
     execution_id: ExecutionId
     grant: HumanGrantBinding
     reservations: tuple[ConsumableReservationBinding, ...]
-    required_reservation_keys: tuple[StableExecutionKey, ...]
+    required_reservation_keys: tuple[ConsumableRef, ...]
 
-    @field_validator("finding_ids", "required_reservation_keys")
+    @field_validator("finding_ids")
     @classmethod
     def keys_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != tuple(sorted(set(value))):
             raise ValueError("corrective binding keys must be unique and sorted")
+        return value
+
+    @field_validator("required_reservation_keys")
+    @classmethod
+    def required_reservations_are_canonical(
+        cls, value: tuple[ConsumableRef, ...]
+    ) -> tuple[ConsumableRef, ...]:
+        keys = tuple((item.consumable_key, item.scope_key) for item in value)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError(
+                "required reservation refs must be unique and sorted by consumable and scope"
+            )
         return value
 
     @field_validator("correction_scope")
@@ -191,9 +204,11 @@ class CorrectiveSubjectBinding(DomainModel):
     def reservations_are_canonical(
         cls, value: tuple[ConsumableReservationBinding, ...]
     ) -> tuple[ConsumableReservationBinding, ...]:
-        keys = tuple(item.consumable_key for item in value)
-        if keys != tuple(sorted(keys)) or len(keys) != len(set(keys)):
-            raise ValueError("corrective reservations must be unique and sorted")
+        keys = tuple((item.consumable_key, item.scope_key) for item in value)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError(
+                "corrective reservations must be unique and sorted by consumable and scope"
+            )
         return value
 
     @model_validator(mode="after")
@@ -220,9 +235,11 @@ class CorrectiveSubjectBinding(DomainModel):
             for item in self.reservations
         ):
             raise ValueError("corrective reservations must be exact grant-time evidence")
-        if tuple(item.consumable_key for item in self.reservations) != (
-            self.required_reservation_keys
-        ):
+        reservation_refs = tuple(
+            ConsumableRef(consumable_key=item.consumable_key, scope_key=item.scope_key)
+            for item in self.reservations
+        )
+        if reservation_refs != self.required_reservation_keys:
             raise ValueError("corrective reservations must exactly match required consumables")
         if not self.finding_ids:
             raise ValueError("corrective subject must bind at least one evaluator finding")
@@ -352,9 +369,9 @@ class ExecutionSubject(DomainModel):
     def reservations_are_canonical(
         cls, value: tuple[ConsumableReservationBinding, ...]
     ) -> tuple[ConsumableReservationBinding, ...]:
-        keys = tuple(item.consumable_key for item in value)
-        if keys != tuple(sorted(keys)) or len(keys) != len(set(keys)):
-            raise ValueError("reservations must be unique and sorted by consumable key")
+        keys = tuple((item.consumable_key, item.scope_key) for item in value)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError("reservations must be unique and sorted by consumable and scope key")
         return value
 
     @field_validator("control_references", "resource_references")

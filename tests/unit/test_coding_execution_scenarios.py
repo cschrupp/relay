@@ -204,6 +204,7 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         prior_execution_binding,
     )
     from relay_engine.coding_execution.models import (
+        ConsumableReservationBinding,
         ExecutionEvidenceBundle,
         ExecutionSubject,
         HumanGrantBinding,
@@ -344,6 +345,34 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         actual_provider_id=selection.requested_provider_id,
         actual_model_id=selection.requested_model_id,
     )
+
+    reservation_a = ConsumableReservationBinding(
+        consumable_key="campaign-budget",
+        scope_key="scope-a",
+        grant_record_digest=grant.grant_record_digest,
+        authority_candidate_digest=candidate_digest,
+        intended_attempt_id=attempt,
+        evidence_id="reservation-a",
+        evidence_digest="sha256:" + "c" * 64,
+        state="RESERVED",
+        created_atomically_at_grant=True,
+    )
+    reservation_b = reservation_a.model_copy(
+        update={"scope_key": "scope-b", "evidence_id": "reservation-b"}
+    )
+    pair_subject_data = subject.model_dump(mode="python")
+    pair_subject_data["reservations"] = (reservation_a, reservation_b)
+    pair_subject = ExecutionSubject.model_validate(pair_subject_data)
+    assert pair_subject.reservations == (reservation_a, reservation_b)
+
+    duplicate_subject_data = dict(pair_subject_data)
+    duplicate_subject_data["reservations"] = (
+        reservation_a,
+        reservation_a.model_copy(update={"evidence_id": "reservation-duplicate"}),
+    )
+    with pytest.raises(ValueError, match="unique and sorted by consumable and scope"):
+        ExecutionSubject.model_validate(duplicate_subject_data)
+
     evidence = ExecutionEvidenceBundle(
         execution_subject_digest=subject.content_digest,
         grant=grant,

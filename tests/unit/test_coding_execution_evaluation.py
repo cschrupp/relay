@@ -16,6 +16,7 @@ from relay_engine.agent_runtime import (
 )
 from relay_engine.coding_execution.evaluation import (
     RuntimePermissionEvidence,
+    _reservation_reasons,
     digest_runtime_payload_content,
     evaluate_corrective_subject_binding,
     evaluate_effective_tool_exposure,
@@ -27,6 +28,7 @@ from relay_engine.coding_execution.evaluation import (
 from relay_engine.coding_execution.models import (
     AdmissionStatus,
     ConsumableReservationBinding,
+    CorrectiveSubjectBinding,
     EvaluatorReworkBinding,
     HumanGrantBinding,
     PriorExecutionBinding,
@@ -369,8 +371,78 @@ def test_corrective_attempt_requires_new_identity_and_exact_reservations() -> No
     assert accepted.disposition is ReworkDisposition.IN_SCOPE_REWORK
     assert accepted.corrective_subject is not None
     assert accepted.corrective_subject.required_reservation_keys == tuple(
-        sorted(item.consumable_key for item in reservations)
+        sorted(
+            (
+                ConsumableRef(
+                    consumable_key=item.consumable_key,
+                    scope_key=item.scope_key,
+                )
+                for item in reservations
+            ),
+            key=lambda item: (item.consumable_key, item.scope_key),
+        )
     )
+
+
+def test_corrective_subject_reservations_use_exact_consumable_scope_pair() -> None:
+    scenario, compilation, candidate, prior, evaluator, grant, _ = rework_fixture()
+    result = evaluate_evaluator_rework(
+        prior,
+        evaluator,
+        compilation,
+        candidate,
+        scenario.snapshot,
+        grant,
+        (),
+        ("add models",),
+    )
+    assert result.corrective_subject is not None
+    base = result.corrective_subject.model_dump(mode="python")
+    reservation_a = ConsumableReservationBinding(
+        consumable_key="campaign-budget",
+        scope_key="scope-a",
+        grant_record_digest=grant.grant_record_digest,
+        authority_candidate_digest=candidate.content_digest,
+        intended_attempt_id=candidate.request.intended_attempt_id,
+        evidence_id="reservation-a",
+        evidence_digest=_A,
+        state="RESERVED",
+        created_atomically_at_grant=True,
+    )
+    reservation_b = reservation_a.model_copy(
+        update={"scope_key": "scope-b", "evidence_id": "reservation-b"}
+    )
+    base["reservations"] = (reservation_a, reservation_b)
+    base["required_reservation_keys"] = (
+        ConsumableRef(consumable_key="campaign-budget", scope_key="scope-a"),
+        ConsumableRef(consumable_key="campaign-budget", scope_key="scope-b"),
+    )
+
+    valid = CorrectiveSubjectBinding.model_validate(base)
+    assert tuple(
+        (item.consumable_key, item.scope_key) for item in valid.required_reservation_keys
+    ) == (("campaign-budget", "scope-a"), ("campaign-budget", "scope-b"))
+
+    duplicate = dict(base)
+    duplicate["reservations"] = (
+        reservation_a,
+        reservation_a.model_copy(update={"evidence_id": "reservation-duplicate"}),
+    )
+    with pytest.raises(ValueError, match="unique and sorted by consumable and scope"):
+        CorrectiveSubjectBinding.model_validate(duplicate)
+
+    missing_scope = dict(base)
+    missing_scope["reservations"] = (reservation_a,)
+    with pytest.raises(ValueError, match="exactly match required consumables"):
+        CorrectiveSubjectBinding.model_validate(missing_scope)
+
+    wrong_scope = dict(base)
+    wrong_scope["reservations"] = (
+        reservation_a,
+        reservation_b.model_copy(update={"scope_key": "scope-c"}),
+    )
+    with pytest.raises(ValueError, match="exactly match required consumables"):
+        CorrectiveSubjectBinding.model_validate(wrong_scope)
 
 
 def test_wrong_candidate_grant_is_denied_even_when_compilation_is_ready() -> None:
@@ -538,6 +610,72 @@ def test_missing_required_reservation_is_indeterminate_and_wrong_one_denied() ->
         slice_id=grant.slice_id,
     )
     assert consumed.status is AdmissionStatus.DENY
+
+
+def test_same_consumable_key_in_distinct_scopes_requires_both_exact_reservations() -> None:
+    _scenario_value, _compilation, candidate = ready_candidate()
+    candidate_digest = candidate.content_digest
+    refs = (
+        ConsumableRef(consumable_key="campaign-budget", scope_key="scope-a"),
+        ConsumableRef(consumable_key="campaign-budget", scope_key="scope-b"),
+    )
+    requirements = tuple(
+        ConsumptionRequirement(consumable=ref, intended_attempt_id=_ATTEMPT) for ref in refs
+    )
+
+    def reservation(scope: str, evidence_id: str) -> ConsumableReservationBinding:
+        return ConsumableReservationBinding(
+            consumable_key="campaign-budget",
+            scope_key=scope,
+            grant_record_digest=_A,
+            authority_candidate_digest=candidate_digest,
+            intended_attempt_id=_ATTEMPT,
+            evidence_id=evidence_id,
+            evidence_digest=_A,
+            state="RESERVED",
+            created_atomically_at_grant=True,
+        )
+
+    complete = (reservation("scope-a", "res-a"), reservation("scope-b", "res-b"))
+    bad, missing, reasons = _reservation_reasons(
+        requirements,
+        complete,
+        candidate_digest,
+        _ATTEMPT,
+    )
+    assert not bad
+    assert not missing
+    assert reasons == []
+
+    bad, missing, reasons = _reservation_reasons(
+        requirements,
+        complete[:1],
+        candidate_digest,
+        _ATTEMPT,
+    )
+    assert not bad
+    assert missing
+    assert "reservation:missing" in reasons
+
+    bad, missing, reasons = _reservation_reasons(
+        requirements,
+        (reservation("scope-c", "res-c"), complete[0]),
+        candidate_digest,
+        _ATTEMPT,
+    )
+    assert bad
+    assert missing
+    assert "reservation:unexpected" in reasons
+
+    duplicate = (complete[0], reservation("scope-a", "res-a-duplicate"), complete[1])
+    bad, _missing, reasons = _reservation_reasons(
+        requirements,
+        duplicate,
+        candidate_digest,
+        _ATTEMPT,
+    )
+    assert bad
+    assert "reservation:duplicate" in reasons
 
 
 def test_default_denied_tool_and_shell_exposure_fail_closed() -> None:

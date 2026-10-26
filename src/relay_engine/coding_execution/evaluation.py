@@ -263,8 +263,11 @@ def evaluate_evaluator_rework(
 
     required_reservation_keys = tuple(
         sorted(
-            requirement.consumable.consumable_key
-            for requirement in corrective_candidate.resolution.consumption_requirements
+            (
+                requirement.consumable
+                for requirement in corrective_candidate.resolution.consumption_requirements
+            ),
+            key=lambda item: (item.consumable_key, item.scope_key),
         )
     )
     subject = CorrectiveSubjectBinding(
