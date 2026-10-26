@@ -35,6 +35,7 @@ Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
 Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
 Slice 3.1 — Coding Agent Execution: OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED
+Slice 3.2 — Explorer Mode / Non-Authoritative Exploration: PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3 live execution: NOT AUTHORIZED
 Slice 1.10: COMPLETE / ACCEPTED / CLOSED
 Accepted implementation: 8003170f56120640ab29eb776cc1b2ba53c66a5f
@@ -207,6 +208,49 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 - [x] Open Slice 3.1 under `RLY-S31-OPEN-001` and authorize its design under `RLY-S31-DESIGN-AUTH-001`.
 - [x] Accept Slice 3.1 design under `RLY-S31-DESIGN-EVAL-002 — ACCEPT` and `RLY-S31-DESIGN-ACCEPT-001 — ACCEPTED`.
 - [x] Complete and Human-accept Slice 3.1 implementation `6dd4296440196b63078b13855b70dff60a386325` under `RLY-S31-IMPL-EVAL-003 — ACCEPT` and `RLY-S31-IMPL-ACCEPT-001 — ACCEPTED`; live execution remains separately unauthorized.
+
+# EXPLORER MODE — DURABLE BACKLOG
+
+Human product direction:
+
+> Explorers discover possibilities; Relay governs which possibilities become engineering reality.
+
+Architecture:
+
+`docs/architecture/EXPLORER_MODE.md`
+
+Roadmap slot:
+
+```text
+Slice 3.2 — Explorer Mode / Non-Authoritative Exploration
+PLANNED / NOT OPEN / NOT AUTHORIZED
+```
+
+Opening dependency: complete a successful bounded Slice 3.1 live-execution qualification first. Documentation of Slice 3.2 does not authorize its design, implementation, runtime execution, provider calls, or external effects.
+
+## Slice 3.2 design backlog
+
+- [ ] Decide whether `EXPLORER` is best represented as a new RoleClass or a specialized non-authoritative execution contract; do not reopen Slice 2.2 without an evidenced contract gap.
+- [ ] Define the minimum exploration-input contract: objective, source/context references, laboratory policy, resource limits, and explicit external-effect prohibitions.
+- [ ] Define `ExplorationResult` with dispositions at least `SOLVED / PARTIAL / UNSOLVED / REFUTED / INCONCLUSIVE`, plus derivation/reasoning summary, experiments, artifacts/prototypes, assumptions, limitations, alternatives tested, and recommended governed next step.
+- [ ] Preserve the invariant that `ExplorationResult` is evidence only: it is not Human authority, acceptance, independent evaluation, ProjectState truth, WorkPacket, implementation candidate, or promotion basis by itself.
+- [ ] Define a disposable laboratory boundary that permits broad scratch/prototype freedom without granting canonical repository, governance-record, production-data, release, deployment, or promotion mutation authority.
+- [ ] Define exploration package/tool/network policy separately from governance authority. “Unbounded” means high method freedom, not unlimited cost, compute, wall time, network access, or external side effects.
+- [ ] Define how an Explorer may challenge accepted assumptions/architecture and return that conclusion as non-authoritative evidence without silently changing accepted state.
+- [ ] Define exact export semantics for prototypes/patches so they enter later governed work as external/non-authoritative artifacts.
+- [ ] Define the conversion path `ExplorationResult -> Human/SOL review -> Project State Resolution / Authority Compilation -> Human grant -> WorkPacket`.
+- [ ] Define cancellation, partial-result retention, laboratory cleanup/retention, and reproducibility/provenance requirements.
+- [ ] Define UI/projection semantics that make exploratory progress visually distinct from governed authority/project state.
+- [ ] Define exploration telemetry: iterations, tools, compute/cost, alternative branches tested, conversion to governed work, eventual acceptance/rejection, and value versus governance overhead.
+
+## Slice 3.2 dogfood / acceptance targets
+
+- [ ] Demonstrate a scientific or mathematical problem where Explorer Mode may freely reformulate assumptions and iterate without mutating governed project state.
+- [ ] Demonstrate an architecture/debugging problem where the Explorer challenges the current design and produces a proposal without obtaining architecture authority.
+- [ ] Demonstrate a prototype/patch export that remains non-authoritative until imported through ordinary Relay authority and review.
+- [ ] Demonstrate that Explorer output cannot self-authorize, self-accept, self-promote, mutate canonical state, or create an authorized successor.
+- [ ] Demonstrate that a useful ExplorationResult can be converted into a normal governed WorkPacket with exact provenance.
+- [ ] Compare Explorer Mode against ordinary governed implementation on at least one difficult problem to measure whether freer iteration materially improves solution discovery.
 
 # AUTHORIZED WORK GRANULARITY — IMPLEMENTATION COMMITMENTS
 
