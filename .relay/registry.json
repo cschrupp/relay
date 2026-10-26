@@ -5,16 +5,16 @@
       "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:7640c338860336fab132ef29b33761f87888937b7039c983975235beeb125f53",
+      "content_digest": "sha256:72eb63602fdbaf8f581349f7ffe6585d1d832fca44845a715cbadb1c336ae4e1",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 153,
+      "revision": 154,
       "schema_version": 1,
       "scope": "Current canonical build plan; Slice 3.1 design and implementation are accepted; live execution remains separately unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-26T05:00:00Z"
+      "updated_at": "2026-10-26T05:05:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
