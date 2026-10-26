@@ -1,13 +1,13 @@
 # Relay — Current Baseline
 
-**Status:** Current living baseline — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN AUTHORIZED; design candidate pending independent review; implementation and execution NOT AUTHORIZED
+**Status:** Current living baseline — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED; live execution NOT AUTHORIZED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
 **Date:** October 25, 2026
 
 ---
 
-# 0. Executive current state — Phase 3 open; Slice 3.1 design candidate under review
+# 0. Executive current state — Phase 3 open; Slice 3.1 design and implementation accepted
 
 This is the controlling current-state summary. Older detailed records below remain useful history but may contain superseded status text.
 
@@ -89,10 +89,10 @@ Operational persistence / lifecycle mutation: NOT AUTHORIZED
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
 Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
-Slice 3.1 normative design candidate: `docs/slices/SLICE_3_1_CODING_AGENT_EXECUTION_DESIGN.md` — UNACCEPTED / PENDING INDEPENDENT REVIEW
-Slice 3.1 — Coding Agent Execution: OPEN / DESIGN AUTHORIZED / DESIGN ACCEPTANCE PENDING
-Implementation: NOT AUTHORIZED
-Phase 3 execution frontier: NOT AUTHORIZED until separate Slice 3.1 authority
+Slice 3.1 normative design: `a28a9b88ddd85cd1a32932b30c4e0e668f23b557` / `RLY-S31-DESIGN-EVAL-002 — ACCEPT` / `RLY-S31-DESIGN-ACCEPT-001 — ACCEPTED`
+Slice 3.1 — Coding Agent Execution: OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED
+Accepted implementation: `6dd4296440196b63078b13855b70dff60a386325` / `RLY-S31-IMPL-EVAL-003 — ACCEPT` / `RLY-S31-IMPL-ACCEPT-001 — ACCEPTED`
+Phase 3 live-execution frontier: NOT AUTHORIZED; separate exact execution authority required
 Slice 1.10 top-level closure: COMPLETE / ACCEPTED / CLOSED under RLY-S110-CLOSE-EVAL-001 — ACCEPT
 Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
@@ -191,7 +191,7 @@ Project state graph is derived, not independently authoritative.
 Authority Compiler does not grant Human authority.
 WorkPacket remains the authoritative external work unit.
 Historical evidence remains immutable; current applicability is derived.
-Slice 2.5 is COMPLETE / ACCEPTED / CLOSED. Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 3.1 is OPEN under `RLY-S31-OPEN-001`; its design is AUTHORIZED under `RLY-S31-DESIGN-AUTH-001`, with design acceptance PENDING. Implementation, Phase 3 execution, and real-project execution remain NOT AUTHORIZED.
+Slice 2.5 is COMPLETE / ACCEPTED / CLOSED. Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 3.1 is OPEN under `RLY-S31-OPEN-001`; design is Human-accepted under `RLY-S31-DESIGN-ACCEPT-001`, and implementation `6dd4296440196b63078b13855b70dff60a386325` is independently accepted under `RLY-S31-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S31-IMPL-ACCEPT-001 — ACCEPTED`. Live Phase 3 execution and real-project execution remain NOT AUTHORIZED.
 ```
 
 Slice 2.5 is COMPLETE / ACCEPTED / CLOSED at `88dcb97110665a60b21b5d36f82f0d82b015b098`, independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Closure authority `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED` is recorded; independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Production ProjectStateResolver/AuthorityCompiler and WorkPacket wiring remain unauthorized.
@@ -218,7 +218,7 @@ B4 Relay Dogfood Acceptance               COMPLETE / INDEPENDENTLY PASS / HUMAN 
 
 Then:
 2.2 Role Contracts — COMPLETE / ACCEPTED / CLOSED; 2.3 Context / Work-Packet Contract — COMPLETE / ACCEPTED / CLOSED; 2.4 Execution Workspace Authority — COMPLETE / ACCEPTED / CLOSED under RLY-S24-CLOSE-EVAL-001 — ACCEPT; 2.5 Project State Resolution & Authority Compilation — COMPLETE / ACCEPTED / CLOSED under RLY-S25-CLOSE-AUTH-001
-Phase 3: OPEN under RLY-P3-OPEN-001; Slice 1.10 is closed; Slice 3.1 is OPEN under RLY-S31-OPEN-001 with bounded design authorized under RLY-S31-DESIGN-AUTH-001; implementation and execution remain unauthorized.
+Phase 3: OPEN under RLY-P3-OPEN-001; Slice 1.10 is closed; Slice 3.1 is OPEN under RLY-S31-OPEN-001 with design and implementation Human-accepted. Live execution remains unauthorized pending separate exact authority.
 ```
 
 B0-F implementation is Human-accepted under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001` at exact candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was authorized under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` from opening tip `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 plus `docs/slices/SLICE_1_10_DOGFOOD_B1_PROJECT_DISCOVERY_HUMAN_INTAKE_DESIGN_REV2_OBSERVATION_INTEGRITY.md` is the accepted composite design at `837edeae8bf36c414e78aa7c68af708590b9e90b`. `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT` and `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001 — ACCEPTED` are recorded. B1 implementation is Human-accepted under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, following `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed result is recorded before acceptance. B2 design is Human-accepted under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001` at exact composite `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621`, comprising Revision 1 `189bb329e8d131c758a2a4d578f6ca2e701687b6` plus the Revision 2 Integrity Amendment. F001 and F002 from `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-001 — REWORK` are closed by `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`, following `RLY-S110-DOGFOOD-B2-IMPL-EVAL-001 — REWORK` and corrective `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002 — ACCEPT`. Real Relay B2 adoption executed successfully from the pinned clean checkout and was independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the published external operational database passed integrity, foreign-key, provenance, report-state, fingerprint, and minimal-history checks. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is COMPLETE. B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED. The Human-directed first governed work target was Slice 2.2 Role Contracts with authorized-work exhaustion integrated into the work boundary. B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`; accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
@@ -350,8 +350,8 @@ Then Phase 2 continues:
 
 Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1: OPEN under RLY-S31-OPEN-001
-Design: AUTHORIZED under RLY-S31-DESIGN-AUTH-001; acceptance PENDING
-Implementation and Phase 3 execution: NOT AUTHORIZED
+Design: ACCEPTED under RLY-S31-DESIGN-EVAL-002 and RLY-S31-DESIGN-ACCEPT-001
+Implementation: ACCEPTED at 6dd4296440196b63078b13855b70dff60a386325 under RLY-S31-IMPL-EVAL-003 and RLY-S31-IMPL-ACCEPT-001; live Phase 3 execution NOT AUTHORIZED
 ```
 
 This ordering places assurance and promotion hardening beneath later agent autonomy. External standards remain compliance/assurance references; Relay-native semantics remain authoritative.
