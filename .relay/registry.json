@@ -5762,19 +5762,19 @@
     },
     {
       "artifact_class": "LOCKABLE_RECORD",
-      "artifact_id": "art_650054e7-e7ec-40c7-b30c-6ea9de3181f2",
+      "artifact_id": "art_2c2746be-9d63-44f4-94bc-eb5e523f1c9b",
       "artifact_state": "REVIEW",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:fe265b512958ccef383f123593a57d5d1aeb3d2d3bef27cd70ecae8fdbe7d175",
-      "human_version": "Candidate Revision 1",
+      "content_digest": "sha256:f988c859de6b2127efde63436a81a89e5aa4a37f1104e859fa58c829e1258f78",
+      "human_version": "Corrective Candidate Revision 2",
       "path": "docs/slices/SLICE_3_1_CODING_AGENT_EXECUTION_DESIGN.md",
-      "revision": 1,
+      "revision": 2,
       "schema_version": 1,
-      "scope": "Normative Slice 3.1 design candidate under RLY-S31-DESIGN-AUTH-001; unaccepted and pending independent SOL design review; implementation and execution not authorized.",
+      "scope": "Corrective normative Slice 3.1 design candidate under RLY-S31-DESIGN-AUTH-001; addresses RLY-S31-DESIGN-EVAL-001 findings D31-F001/D31-F002/D31-F003; pending independent SOL re-review and Human acceptance; implementation and execution not authorized.",
       "superseded_by": null,
       "supersedes": null,
-      "title": "Slice 3.1 — Coding Agent Execution — Normative Design Candidate Revision 1",
-      "updated_at": "2026-10-26T00:15:04Z"
+      "title": "Slice 3.1 — Coding Agent Execution — Corrective Normative Design Candidate Revision 2",
+      "updated_at": "2026-10-26T00:54:39Z"
     },
     {
       "artifact_class": "LOCKABLE_RECORD",

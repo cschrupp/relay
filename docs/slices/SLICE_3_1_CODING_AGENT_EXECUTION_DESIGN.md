@@ -91,8 +91,8 @@ Internal progress != Human approval or independent-evaluation gate.
 Successful runtime completion != accepted engineering result.
 Terminal candidate != accepted result or canonical promotion authority.
 The implementer cannot independently evaluate, accept, or promote its result.
-PROPOSED_WORK != authorized successor work.
-Out-of-scope required work -> record PROPOSED_WORK -> STOP.
+PROPOSED_WORK observation != authorized successor work or terminal status.
+Out-of-scope required work -> record ProposedWorkObservation evidence -> STOP.
 No authorized successor -> BACKLOG_EXHAUSTED -> successful STOP.
 No automatic push, merge, canonical mutation, or promotion.
 Relay remains the only authoritative governance state machine.
@@ -119,55 +119,75 @@ continues to be reconstructed from accepted Relay records and derived facts.
 
 ## 5. Exact execution subject
 
-Before authorization, Relay prepares a `PreparedExecutionProposal` digest
-from the exact authority candidate and the proposed packet semantics, role,
-workspace plan and runtime/provider/model constraints. It contains no Human
-authority reference that does not yet exist and is not executable. Human
-Authority authorizes this exact proposal and its bounded outcome/scope. The
-proposal is a canonical projection of accepted contract values, not a new
-authority object. Its proposed WorkPacket projection excludes only the
-authority-reference link that cannot exist until the grant is recorded.
+The Slice 2.5 `AuthorityCandidate` is the exact Human-grant subject. It already
+binds the resolved project state, requested outcome, applicable constraints,
+required work/role references, consumables and intended attempt identity.
+Human Authority reviews that exact candidate and grants, denies or requests
+rework against its exact content digest. A UI or review projection may help a
+Human inspect the candidate, but it is non-authoritative and cannot replace
+that digest as the grant subject.
 
-After that authorization, Relay materializes or resolves the WorkPacket with
-its exact authority reference, binds the actual workspace instance/attachment
-and runtime identity, and derives one immutable `ExecutionSubject` for the
-attempt. This final identity envelope is not a new WorkPacket, authority, or
-production schema in this design task. Its canonical serialization and digest
-must cover at least:
+The candidate's `ProjectStateRequest.intended_attempt_id` is the exact
+pre-grant attempt identity. It maps one-to-one to Slice 2.1's `ExecutionId`:
+the stable key `exec-{uuid}` maps to runtime ID `exec_{uuid}` using the same
+UUID. Both identify the same attempt; the intended key is included in the
+AuthorityCandidate digest, and the corresponding `ExecutionId` is derived
+before runtime admission. A runtime session or handle is created later and is
+bound to that `ExecutionId`; it never replaces the intended attempt identity.
+Same-authority inspection, cancellation and safe resume retain this identity.
+A genuinely new attempt requires a new intended attempt identity and a new
+applicable candidate/grant/reservation.
+
+On Human grant, the existing Human Authority path atomically reserves every
+applicable consumable against the exact AuthorityCandidate digest and its
+intended attempt identity. If exact atomic reservation cannot be established,
+the grant is not executable. The Slice 3.1 coordinator verifies this existing
+reservation and never creates or moves it.
+When the governed attempt consumes a reserved consumable, the accepted owning
+resource contract records that consumption event; Slice 3.1 binds and reports
+the exact evidence without becoming a second resource-state writer.
+
+Only after the grant does Relay materialize the exact authority-linked
+WorkPacket, evaluate WorkPacket conformance, and compute its exact
+`WorkPacketRef`. Only then may Slice 2.4 resolve a `WorkspacePlan` from that
+exact WorkPacket and ref. The coordinator subsequently binds the workspace
+instance/`RuntimeWorkspaceAttachment` and a permitted actual
+runtime/provider/model selection. It then derives the final immutable
+`ExecutionSubject` for this attempt. This identity envelope is not a new
+WorkPacket, authority, or production schema in this design task. Its canonical
+serialization and digest must cover at least:
 
 | Binding | Required identity |
 |---|---|
 | Project and slice | Exact project and slice identifiers |
-| Human authority | Exact immutable authorization record/digest and the exact prepared-proposal digest it authorizes, including outcome and scope |
+| Human authority | Exact immutable grant record/digest and the exact AuthorityCandidate digest it grants |
 | Project-state basis | Exact source snapshot, resolution digest, compilation result and authority-candidate digest |
 | Work | Exact `WorkPacketRef` and content digest; exact `ContextManifestRef` and required material identities |
 | Role | Exact `RoleContractRef` and content digest, applicable actor identity, and permitted actions |
-| Workspace | Exact `WorkspacePlanRef`, policy digest, provisioned instance identity, source commit, provider identity, and exact `RuntimeWorkspaceAttachment` |
+| Workspace | Exact conformed `WorkPacketRef`, `WorkspacePlanRef`, policy digest, provisioned instance identity, source commit, provider identity, and exact `RuntimeWorkspaceAttachment` |
 | Runtime | Exact `RuntimeDescriptor` identity/version and selected runtime; provider/model constraints and actual identity once bound |
 | Controls | Effective filesystem, tool, shell, network, external-effect, credential, protected-asset, and resource-limit contract references |
 | Result contract | Exact required deliverables, evidence requirements, hard stops, validation requirements and result-contract version |
-| Attempt | Unique execution identity and exact consumable/attempt reservation |
+| Attempt | Exact `intended_attempt_id`, its `ExecutionId` mapping, reservation refs/status, and runtime session/handle when created |
 
 Every field affecting authority, scope, execution, or result interpretation is
 inside the final subject digest. Unknown or unbound required identity prevents
 execution. References alone are insufficient if their exact content cannot be
-resolved. The final subject includes the exact Human authority record and
-digest; the authorization record binds the proposal digest, avoiding a
-self-referential digest cycle. The coordinator verifies that the final
-WorkPacket has exactly the proposed normative fields plus the exact authority
-reference; the role and workspace plan match their proposed refs; and the
-runtime, provider/model and limits fall within the authorized selection
-constraints. Any difference outside those explicit constraints requires fresh
-authority. If an accepted WorkPacket contract cannot support this
-non-circular check, stop and report a contract gap.
+resolved. The final subject includes the exact AuthorityCandidate and Human
+grant, the WorkPacket materialized from that grant, the WorkspacePlan resolved
+from the exact conformed WorkPacketRef, the verified reservation, and all
+later runtime/workspace bindings. This ordering avoids a circular grant
+reference: the grant binds the candidate digest; the derived subject then
+binds the grant record and downstream artifacts. Any downstream value that
+does not follow from the candidate's exact constraints is denied and requires
+fresh compilation and Human authority.
 
-Preparation and execution authorization are separate. A resolver/compiler may
-produce `READY` and a complete candidate; the coordinator may prepare the
-proposal and present it to a Human. `READY` or a prepared proposal alone is
-not executable. After Human authorization, the coordinator resolves and
-verifies the final subject. Candidate freshness and every subject binding are
-rechecked immediately before consuming the attempt and admitting the runtime
-request.
+`READY` alone is never executable. After the exact Human grant and atomic
+reservation, the coordinator verifies freshness, WorkPacket conformance,
+WorkspacePlan/instance conformance, runtime constraints, and that the existing
+reservation still matches the candidate digest and intended attempt. It does
+not create the grant or reservation. These checks are repeated immediately
+before runtime admission.
 
 ## 6. Deterministic readiness and admission
 
@@ -179,40 +199,55 @@ established from the exact current snapshot:
    do not turn summary text into authority-bearing provenance.
 2. Slice 2.5 resolution is resolved, compilation is `READY`, and its candidate
    is fresh against the same snapshot. Required qualifications and their exact
-   evidence/acceptance lineage are current and applicable.
+   evidence/acceptance lineage are current and applicable. The candidate
+   contains the exact intended attempt identity and applicable consumables.
 3. No prohibition, invariant failure, responsibility collision, unresolved
-   predicate, stale evidence, or consumed/unavailable namespace blocks this
-   exact attempt. Contradiction is retained and fails closed.
+   predicate, stale evidence, or unavailable/consumed namespace blocks this
+   exact attempt. Required consumables are established available for the exact
+   candidate before grant. Contradiction is retained and fails closed.
 4. The exact Human authorization record exists, is valid, is applicable to the
-   project and action, and binds the `PreparedExecutionProposal` digest. The
-   final `ExecutionSubject` includes that record and must be proven to be the
-   exact authorized materialization. `READY` or a proposal without that record
-   is denied.
-5. The exact WorkPacket and ContextManifest satisfy Slice 2.3 conformance,
-   including source baseline, authority refs, complete normalized intent,
-   required context, deliverables, evidence, limits, and hard stops.
+   project and action, and grants the exact `AuthorityCandidate` digest.
+   At that grant, the existing Human Authority path atomically reserves each
+   applicable consumable against that digest and the candidate's exact
+   intended attempt identity. The coordinator verifies this reservation; it
+   must not create it. `READY` without the exact grant and reservation is
+   denied.
+5. Only after grant, materialize the authority-linked WorkPacket and evaluate
+   Slice 2.3 conformance, including source baseline, authority refs, complete
+   normalized intent, required context, deliverables, evidence, limits, and
+   hard stops. Compute the exact `WorkPacketRef` from that conformed packet.
 6. The exact RoleContract is applicable to the implementer and permits the
    required actions while preserving role separation. It does not grant
    acceptance, evaluation, Human-authority, or promotion actions to the
    implementer.
-7. Workspace policy and plan conform under Slice 2.4. The exact instance,
-   provider and runtime attachment match; required controls are represented
-   with sufficient strength; protected assets and credentials satisfy their
-   exact restrictions.
-8. Runtime capabilities and effective permissions satisfy the already-bound
+7. Only after the exact WorkPacketRef exists, resolve the WorkspacePlan
+   through Slice 2.4 using the exact WorkPacket, ref, satisfied conformance,
+   policy and other accepted inputs. The exact instance and
+   `RuntimeWorkspaceAttachment` must match; required controls must be
+   represented with sufficient strength; protected assets and credentials
+   must satisfy their exact restrictions.
+8. Bind an actual runtime/provider/model selection that satisfies the
+   AuthorityCandidate and WorkPacket constraints. Runtime capabilities and
+   effective permissions satisfy the already-bound
    Relay policy. A runtime/provider capability claim is not proof of actual
    enforcement. Slice 2.4 Revision 6 assigns effective tool/shell exposure
    evidence to runtime integration; missing or incomplete required evidence is
    not treated as permission.
 9. Provider, model, runtime, workspace, source baseline, resource limits and
    any other execution constraints match the exact Human-authorized subject.
-10. The attempt reservation is available and bound to this execution identity.
-    The same consumable cannot be replayed by retrying runtime admission.
+10. Derive the final `ExecutionSubject`; revalidate candidate freshness and
+    verify the exact existing reservation against the candidate digest and
+    intended attempt identity. Derive and verify its one-to-one
+    `ExecutionId` mapping before runtime admission. A new attempt requires a
+    new candidate/grant/reservation; the coordinator cannot reserve or replay
+    a consumable.
 
 An established denial returns a blocked outcome with exact reasons and no
 runtime admission. A required fact that is absent, conflicting, stale, or
 unverifiable returns an indeterminate/contract-blocked outcome and no runtime
-admission. The coordinator must not select a more permissive default.
+admission. If grant-time atomic reservation is absent or cannot be verified,
+do not admit the runtime or attempt to create a replacement reservation. The
+coordinator must not select a more permissive default.
 
 ## 7. One governed WorkPacket, internal decomposition
 
@@ -248,11 +283,15 @@ than a new authoritative lifecycle:
 ```text
 exact request
   -> resolve current state and compile authority candidate
-  -> prepare exact proposal semantics and bind its digest
-  -> obtain Human authorization bound to that proposal digest
-  -> materialize/resolve the authority-linked WorkPacket and final subject
-  -> verify the final subject against the authorized proposal
-  -> revalidate freshness and reserve the exact attempt
+  -> Human grants exact AuthorityCandidate digest and atomically reserves
+     applicable consumables for candidate + intended attempt
+  -> materialize the authority-linked WorkPacket
+  -> evaluate WorkPacket conformance and compute exact WorkPacketRef
+  -> resolve WorkspacePlan from that exact conformed WorkPacketRef
+  -> provision/resolve workspace instance and RuntimeWorkspaceAttachment
+  -> bind a permitted actual runtime/provider/model selection
+  -> derive ExecutionSubject with exact candidate, grant, reservation and bindings
+  -> revalidate freshness and verify the existing reservation
   -> establish effective runtime permissions before admission
   -> create/bind runtime session and admit one exact request
   -> observe runtime events and continuity while the agent works
@@ -276,7 +315,6 @@ The terminal result vocabulary for one authorized WorkPacket execution is:
 | `BLOCKED_BY_ENVIRONMENT` | Workspace, provider, runtime, dependency, or other declared environment prerequisite is unavailable or nonconformant. |
 | `BUDGET_EXHAUSTED` | An authorized resource/time/attempt limit is reached; preserve evidence and stop. |
 | `BACKLOG_EXHAUSTED` | The existing RoleContract work disposition establishes `NO_AUTHORIZED_SUCCESSOR`; this is a successful stop, not a failure or invitation to invent work. |
-| `PROPOSED_WORK` | Out-of-scope work is recorded as a non-authoritative proposal and the current execution stops. |
 | `CANCELLED` | Human or authorized operator cancellation is confirmed; partial evidence and side-effect state are retained. |
 | `INTERRUPTED` | Runtime/host loss or uncertain termination prevents a confident terminal result; preserve partial evidence and fail closed. |
 
@@ -287,15 +325,27 @@ accepted interfaces cannot represent a required distinction, the result is
 `BLOCKED_BY_CONTRACT` and the owning contract gap is raised before
 implementation scope changes.
 
+`PROPOSED_WORK` is not a terminal status or work disposition. It names
+non-authoritative evidence content only. When a hard stop applies, the current
+execution terminates under that exact WorkPacket hard-stop/blocking result;
+the RoleContract's successor resolution remains a separate work disposition.
+
 ## 9. Scope expansion and authorized-work exhaustion
 
-When implementation requires work outside the exact WorkPacket, the
-implementer records a `PROPOSED_WORK` item containing the observed need, exact
-file/behavior or decision basis, relation to the current objective, and why it
-cannot be completed inside the current authority. This proposal is explicitly
-non-authoritative. The agent stops the current WorkPacket at the hard stop and
-does not add the work to the Relay backlog, create a successor, amend the
-packet, or continue on the theory that the change is useful.
+When implementation discovers work outside the exact WorkPacket, it may
+record a non-authoritative `ProposedWorkObservation` in execution evidence,
+with source slice/execution identity, summary, rationale, evidence refs and
+proposal digest as permitted by the accepted Slice 2.2 contract. This
+observation is evidence content only: it is not a terminal result, lifecycle
+state, backlog item, successor authority or permission to continue.
+
+The agent stops the current WorkPacket under its exact applicable hard-stop or
+blocking disposition. The RoleContract's successor resolution is evaluated
+separately: an established authorized successor enables only a later governed
+handoff; established no successor produces `BACKLOG_EXHAUSTED` / successful
+STOP; unknown or conflicting resolution requires escalation and fail-closed
+stop. The agent never mutates the backlog, creates a successor, amends the
+packet, or continues because the proposed work seems useful.
 
 Where the accepted RoleContract evaluation establishes
 `NO_AUTHORIZED_SUCCESSOR`, the coordinator records `BACKLOG_EXHAUSTED` and
@@ -318,7 +368,8 @@ evidence bundle binds:
 - runtime descriptor/version, effective permission-profile attestation,
   provider/model identity and provenance; if a required identity is
   unavailable, mark the claim indeterminate and do not assert conformance;
-- runtime request digest, session/handle, event references, continuity state,
+- exact intended attempt identity, `ExecutionId` mapping, Human-grant
+  reservation refs/status, runtime request digest, session/handle, event references, continuity state,
   terminal inspection, usage/budget, and cancellation/recovery observations;
 - exact changed paths and resulting content identities, including file kind,
   symlink target where applicable, deletions, and repository state;
@@ -326,7 +377,7 @@ evidence bundle binds:
   skipped required check;
 - protected-verification results and the allowed evidence projection;
 - external effects, network use, credential exposure status (never secret
-  values), blockers, hard-stop reasons, and `PROPOSED_WORK` references;
+  values), blockers, hard-stop reasons, and `ProposedWorkObservation` refs;
 - whether the result is dirty/uncommitted, has a local commit, or has no
   commit; if committed, exact commit and parent identities.
 
@@ -402,7 +453,8 @@ weakened to make an implementation pass.
 The coordinator submits one immutable handoff containing the exact
 `ExecutionSubject`, authority and contract refs, terminal result, workspace
 and runtime evidence, change set, validation evidence, protected-verification
-projection, and any `PROPOSED_WORK` or recovery records. The evaluator must be
+projection, and any `ProposedWorkObservation` evidence or recovery records.
+The evaluator must be
 able to reproduce which exact authority, source baseline, contracts, runtime,
 workspace, changes and evidence it is judging.
 
@@ -430,7 +482,8 @@ new exact identity; it never overwrites the reviewed subject.
 `ESCALATE` ends implementation work pending a Human/design/contract decision.
 It cannot be converted into an implementation task by the worker. A correction
 that crosses a WorkPacket or accepted-contract boundary is a scope expansion:
-record it as `PROPOSED_WORK` or a concrete contract gap and stop.
+record a `ProposedWorkObservation` in execution evidence or a concrete
+contract gap and stop.
 
 ## 15. Cancellation, interruption and recovery
 
@@ -449,9 +502,13 @@ fail closed.
 
 A retry that is a continuation within the same still-valid authority may use
 the existing attempt only when the exact runtime/workspace contract proves
-that continuation is safe and idempotent. A new attempt, changed subject,
-changed provider/model/runtime/workspace, consumed resource, or expired/stale
-authority requires fresh compilation and Human authorization as applicable.
+that continuation is safe and idempotent. It retains the candidate's
+pre-grant `intended_attempt_id`, its one-to-one `ExecutionId` mapping, and the
+existing grant-time reservation; a runtime session/handle is evidence bound
+to that attempt, not a replacement identity. A genuinely new attempt,
+changed subject, changed provider/model/runtime/workspace, consumed resource,
+or expired/stale authority requires fresh compilation, a new intended attempt
+identity, and a new Human grant/reservation as applicable.
 
 ## 16. Limits and provider/model selection
 
@@ -515,10 +572,15 @@ criteria, not tests or execution authority in this candidate.
 The implementation test plan must use fixed source records, fixed digests,
 deterministic workspace/provider descriptors, and a fake `AgentRuntime` that
 records requests and returns scripted events/inspections. Pure unit tests
-cover proposal/subject canonicality, digest binding, freshness, tri-state
-readiness, authority matching, role separation, limits and terminal mapping.
-Coordinator tests prove call ordering and that no runtime admission occurs on
-any blocked or indeterminate preflight. Negative tests mutate each bound
+cover AuthorityCandidate/ExecutionSubject canonicality, digest binding,
+freshness, tri-state readiness, authority matching, role separation, limits
+and terminal mapping. Coordinator tests prove the exact order from Human grant
+and atomic reservation through WorkPacket conformance/WorkPacketRef,
+WorkspacePlan resolution, subject derivation and final reservation
+verification; they also prove the coordinator never creates a reservation
+and no runtime admission occurs on blocked or indeterminate preflight. Tests
+exercise reservation replay/concurrency and exact candidate/attempt binding.
+Negative tests mutate each bound
 identity independently and exercise missing/incomplete evidence, denied
 effective permissions, unknown tool identity, shell exposure, prohibited
 effects, protected mutation, stale qualifications and consumed attempts.
@@ -534,25 +596,25 @@ implementation acceptance.
 
 | ID | Scenario | Required result |
 |---|---|---|
-| A01 | Exact Human authority, fresh `READY` compilation, and conformant packet/role/workspace/runtime | One exact execution may be admitted. |
-| A02 | Compilation is `READY`, but no exact Human execution authority exists | Deny admission; preserve `READY != AUTHORIZED`. |
+| A01 | Fresh `READY` compilation and exact Human grant for its AuthorityCandidate digest | Atomically reserve applicable consumables at grant; materialize the authority-linked WorkPacket, establish conformance and exact WorkPacketRef, then resolve WorkspacePlan from that exact WorkPacketRef before runtime admission. |
+| A02 | Compilation is `READY`, but no exact Human grant for the AuthorityCandidate digest exists | Deny admission; preserve `READY != AUTHORIZED`; no WorkPacket materialization or runtime admission. |
 | A03 | Packet, baseline, role, workspace, runtime, provider or model differs from the authorized subject | Deny or return indeterminate; no runtime admission. |
 | A04 | Qualification becomes stale or provider/model/runtime/workspace changes after authorization | Revalidate and stop; require fresh authority where the subject changed. |
-| A05 | Unresolved prohibition, responsibility collision, or consumed resource/namespace | Deny admission; do not infer readiness. |
+| A05 | Unresolved prohibition, responsibility collision, unavailable/consumed namespace, or concurrent attempt reservation | Deny admission or fail closed; reservation is atomic at Human grant, bound to the exact candidate digest and intended attempt, and cannot be replayed. |
 | A06 | One cohesive WorkPacket needs multiple internal steps | Permit internal decomposition without creating Relay work units or Human gates. |
 | A07 | An internal milestone completes | Record non-authoritative progress only; no acceptance/evaluation event. |
-| A08 | Required work exceeds authorized scope | Record exact `PROPOSED_WORK`, stop current packet, do not mutate backlog or invent successor. |
+| A08 | Required work exceeds authorized scope | Record a non-authoritative `ProposedWorkObservation` in execution evidence, then stop under the exact applicable WorkPacket hard-stop/blocking disposition; do not mutate backlog or invent a successor. `PROPOSED_WORK` is not a terminal status. |
 | A09 | RoleContract establishes no authorized successor | Record `BACKLOG_EXHAUSTED` and successful STOP; create no successor. |
 | A10 | Protected verification mutation lacks separate exact authority | Deny/fail closed; preserve protected asset and evidence. |
 | A11 | Effective runtime exposes a denied tool or shell | Nonconformant, even without observed invocation; use runtime-attestation evidence, not provider capability claims. |
 | A12 | Runtime tool identity or required exposure/use identity cannot be established | Return indeterminate; never treat unknown identity as allowed. |
 | A13 | Execution ends with dirty workspace and no commit | Produce an exact reviewable result and evidence; do not report clean/committed. |
 | A14 | Execution creates a local commit | Bind commit and parent; do not imply push, merge or promotion authority. |
-| A15 | Runtime failure leaves an external effect or prompt admission ambiguous | Inspect/reconcile exact session and effect; fail closed, no blind retry. |
+| A15 | Runtime failure leaves an external effect or prompt admission ambiguous | Inspect/reconcile the exact runtime session bound to the pre-grant intended attempt/ExecutionId and effect; fail closed, no blind retry or replacement reservation. |
 | A16 | Terminal evidence is submitted for evaluation | Evaluator receives immutable exact subject/evidence; implementer cannot self-accept. |
-| A17 | Evaluator requests correction within exact authority | Bound corrective candidate to recorded findings/scope and link both candidates. |
-| A18 | Correction requires new authority or crosses scope | Stop; no automatic follow-on WorkPacket or continued mutation. |
-| A19 | Human cancels an active attempt | Preserve cancel acknowledgement, partial changes and evidence; no silent resume. |
+| A17 | Evaluator requests correction within exact authority | Bound the corrective candidate to recorded findings/scope and link both candidates; any genuinely new attempt has its own exact intended identity and grant-time reservation. |
+| A18 | Correction requires new authority or crosses scope | Stop; no automatic follow-on WorkPacket or continued mutation. A new attempt requires a new candidate, Human grant and reservation. |
+| A19 | Human cancels an active attempt | Preserve the pre-grant intended attempt identity, its ExecutionId mapping, grant-time reservation, cancel acknowledgement, partial changes and evidence; no silent resume or identity substitution. |
 | A20 | Authorized budget is exhausted | Record usage and stop; no silent limit/provider/model expansion. |
 | A21 | An accepted predecessor contract cannot express required evidence/behavior | Create exact contract-gap analysis and stop; do not rewrite predecessor. |
 | A22 | Only phase opening, slice opening, or design authority exists | No execution; separate exact implementation/execution authority is required. |
