@@ -1,0 +1,61 @@
+"""Deterministic Slice 3.1 coding-agent execution coordination."""
+
+from relay_engine.coding_execution.coordinator import (
+    AdmissionRejected,
+    CoordinatorInputs,
+    MaterializedRuntimePayload,
+    MaterializedWorkPacket,
+    execute_governed_attempt,
+)
+from relay_engine.coding_execution.evaluation import (
+    AdmissionInputs,
+    RuntimePermissionEvidence,
+    evaluate_admission,
+    evaluate_effective_tool_exposure,
+    evaluate_runtime_payload_evidence,
+    evaluate_runtime_tool_events,
+)
+from relay_engine.coding_execution.models import (
+    AdmissionEvidence,
+    AdmissionStatus,
+    ConsumableReservationBinding,
+    ExecutionEvidenceBundle,
+    ExecutionSubject,
+    ExecutionTerminalOutcome,
+    HumanGrantBinding,
+    ProposedWorkObservation,
+    RuntimePayloadEvidence,
+    TerminalExecutionResult,
+    attempt_id_for_execution,
+    canonical_subject_json,
+    digest_evaluator_handoff,
+    execution_id_for_attempt,
+)
+
+__all__ = [
+    "AdmissionEvidence",
+    "AdmissionInputs",
+    "AdmissionRejected",
+    "AdmissionStatus",
+    "ConsumableReservationBinding",
+    "CoordinatorInputs",
+    "ExecutionEvidenceBundle",
+    "ExecutionSubject",
+    "ExecutionTerminalOutcome",
+    "HumanGrantBinding",
+    "MaterializedRuntimePayload",
+    "MaterializedWorkPacket",
+    "ProposedWorkObservation",
+    "RuntimePayloadEvidence",
+    "RuntimePermissionEvidence",
+    "TerminalExecutionResult",
+    "attempt_id_for_execution",
+    "canonical_subject_json",
+    "digest_evaluator_handoff",
+    "evaluate_admission",
+    "evaluate_effective_tool_exposure",
+    "evaluate_runtime_payload_evidence",
+    "evaluate_runtime_tool_events",
+    "execute_governed_attempt",
+    "execution_id_for_attempt",
+]
