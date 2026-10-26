@@ -454,6 +454,7 @@ async def execute_governed_attempt(
         runtime_request=request,
         runtime_payload_evidence=materialized_payload.evidence,
         runtime_permission_evidence=inputs.runtime_permission_evidence,
+        corrective_subject_binding=admission.corrective_subject_binding,
         actual_provider_id=inputs.runtime_permission_evidence.actual_provider_id,
         actual_model_id=inputs.runtime_permission_evidence.actual_model_id,
         reservations=staged.reservations,

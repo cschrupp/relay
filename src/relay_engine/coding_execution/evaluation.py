@@ -15,11 +15,20 @@ from relay_engine.coding_execution.models import (
     AdmissionEvidence,
     AdmissionStatus,
     ConsumableReservationBinding,
+    CorrectiveSubjectBinding,
+    EvaluatorReworkBinding,
+    EvaluatorReworkEvaluation,
     ExecutionTerminalOutcome,
     HumanGrantBinding,
+    PriorExecutionBinding,
     ProposedWorkObservation,
+    ReworkDisposition,
     RuntimePayloadEvidence,
     RuntimePermissionEvidence,
+    TerminalExecutionResult,
+    digest_evaluator_rework_record,
+    digest_terminal_candidate,
+    digest_terminal_result,
     execution_id_for_attempt,
 )
 from relay_engine.domain import ActorRef, ContentDigest, ExecutionId
@@ -95,6 +104,7 @@ class AdmissionInputs(DomainModel):
     runtime_descriptor: RuntimeDescriptor
     permission_evidence: RuntimePermissionEvidence
     workspace_plan: WorkspacePlan | None = None
+    corrective_subject_binding: CorrectiveSubjectBinding | None = None
 
 
 def evaluate_grant_and_reservations(
@@ -165,6 +175,146 @@ def evaluate_grant_and_reservations(
         reasons=tuple(sorted(set(reasons))),
         checked_candidate_digest=digest,
         checked_attempt_id=attempt_id,
+    )
+
+
+def evaluate_evaluator_rework(
+    prior: PriorExecutionBinding,
+    evaluator_binding: EvaluatorReworkBinding | None,
+    corrective_compilation: AuthorityCompilation,
+    corrective_candidate: AuthorityCandidate,
+    current_snapshot: ResolutionSnapshot,
+    grant: HumanGrantBinding | None,
+    reservations: tuple[ConsumableReservationBinding, ...],
+    correction_scope: tuple[str, ...],
+) -> EvaluatorReworkEvaluation:
+    """Classify a REWORK request without issuing authority or creating work."""
+
+    if evaluator_binding is None:
+        return _rework_indeterminate("rework:evaluator-record-missing")
+
+    if (
+        evaluator_binding.registered_record_digest is None
+        or evaluator_binding.projection_digest != digest_evaluator_rework_record(evaluator_binding)
+        or evaluator_binding.provenance_status is not RequirementStatus.SATISFIED
+        or evaluator_binding.evaluator_identity is None
+        or evaluator_binding.source_role != "INDEPENDENT_EVALUATION"
+        or not evaluator_binding.finding_ids
+        or not evaluator_binding.permitted_correction_scope
+    ):
+        return _rework_indeterminate("rework:evaluator-provenance-incomplete-or-conflicting")
+
+    if prior.terminal_candidate_digest is None:
+        return _rework_indeterminate("rework:prior-terminal-candidate-unavailable")
+    if (
+        evaluator_binding.reviewed_candidate_digest != prior.terminal_candidate_digest
+        or evaluator_binding.reviewed_handoff_digest != prior.handoff_digest
+    ):
+        return _rework_indeterminate("rework:reviewed-subject-mismatch")
+
+    normalized_scope = tuple(sorted(set(correction_scope), key=lambda item: item.encode("utf-8")))
+    if not correction_scope or normalized_scope != correction_scope:
+        return _rework_indeterminate("rework:correction-scope-missing-or-noncanonical")
+
+    permitted_scope = set(evaluator_binding.permitted_correction_scope)
+    authorized_scope = set(prior.authority_scope)
+    prohibited_scope = set(prior.authority_out_of_scope)
+    if (
+        not set(normalized_scope) <= permitted_scope
+        or not set(normalized_scope) <= authorized_scope
+        or set(normalized_scope) & prohibited_scope
+    ):
+        return EvaluatorReworkEvaluation(
+            disposition=ReworkDisposition.NEW_AUTHORITY_REQUIRED,
+            reasons=("rework:scope-exceeds-evaluator-or-original-authority",),
+        )
+
+    attempt_id = corrective_candidate.request.intended_attempt_id
+    if (
+        corrective_candidate.content_digest == prior.authority_candidate_digest
+        or attempt_id is None
+        or attempt_id == prior.intended_attempt_id
+    ):
+        return _rework_indeterminate("rework:corrective-candidate-or-attempt-not-new")
+    try:
+        corrective_execution_id = execution_id_for_attempt(attempt_id)
+    except ValueError:
+        return _rework_indeterminate("rework:corrective-attempt-identity-invalid")
+    if corrective_execution_id == prior.execution_id:
+        return _rework_indeterminate("rework:execution-identity-reused")
+
+    if corrective_candidate.resolution.snapshot.project_id != prior.project_id:
+        return _rework_indeterminate("rework:project-mismatch")
+
+    if grant is None:
+        return _rework_indeterminate("rework:fresh-grant-missing")
+    grant_check = evaluate_grant_and_reservations(
+        corrective_compilation,
+        corrective_candidate,
+        current_snapshot,
+        grant,
+        reservations,
+        project_id=prior.project_id,
+        slice_id=prior.slice_id,
+    )
+    if grant_check.status is not AdmissionStatus.ADMIT:
+        reasons = tuple(f"rework:{reason}" for reason in grant_check.reasons)
+        return _rework_indeterminate(*reasons or ("rework:fresh-grant-or-reservation-unverified",))
+
+    required_reservation_keys = tuple(
+        sorted(
+            requirement.consumable.consumable_key
+            for requirement in corrective_candidate.resolution.consumption_requirements
+        )
+    )
+    subject = CorrectiveSubjectBinding(
+        prior_authority_candidate_digest=prior.authority_candidate_digest,
+        prior_terminal_candidate_digest=prior.terminal_candidate_digest,
+        prior_terminal_result_digest=prior.terminal_result_digest,
+        prior_handoff_digest=prior.handoff_digest,
+        prior_work_packet_ref=prior.work_packet_ref,
+        evaluation_record_id=evaluator_binding.evaluation_record_id,
+        evaluation_record_digest=evaluator_binding.registered_record_digest,
+        finding_ids=evaluator_binding.finding_ids,
+        correction_scope=normalized_scope,
+        corrective_candidate_digest=corrective_candidate.content_digest,
+        intended_attempt_id=attempt_id,
+        execution_id=corrective_execution_id,
+        grant=grant,
+        reservations=reservations,
+        required_reservation_keys=required_reservation_keys,
+    )
+    return EvaluatorReworkEvaluation(
+        disposition=ReworkDisposition.IN_SCOPE_REWORK,
+        reasons=(),
+        corrective_subject=subject,
+    )
+
+
+def prior_execution_binding(
+    result: TerminalExecutionResult,
+) -> PriorExecutionBinding:
+    """Project exact prior terminal identity and packet scope for REWORK evaluation."""
+
+    return PriorExecutionBinding(
+        authority_candidate_digest=result.subject.candidate_digest,
+        terminal_candidate_digest=digest_terminal_candidate(result),
+        terminal_result_digest=digest_terminal_result(result),
+        handoff_digest=result.evaluator_handoff_digest,
+        intended_attempt_id=result.subject.intended_attempt_id,
+        execution_id=result.subject.execution_id,
+        project_id=result.subject.project_id,
+        slice_id=result.subject.slice_id,
+        work_packet_ref=result.subject.work_packet_ref,
+        authority_scope=result.subject.work_packet.normalized_intent.scope.in_scope,
+        authority_out_of_scope=result.subject.work_packet.normalized_intent.scope.out_of_scope,
+    )
+
+
+def _rework_indeterminate(*reasons: str) -> EvaluatorReworkEvaluation:
+    return EvaluatorReworkEvaluation(
+        disposition=ReworkDisposition.INDETERMINATE,
+        reasons=tuple(sorted(set(reasons))),
     )
 
 
@@ -458,6 +608,18 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
         or grant.slice_id != packet.slice_definition_ref.slice_id
     ):
         deny.append("grant:subject-mismatch")
+    if inputs.corrective_subject_binding is not None:
+        corrective_check = evaluate_corrective_subject_binding(
+            inputs.corrective_subject_binding,
+            candidate,
+            packet,
+            grant,
+            inputs.reservations,
+        )
+        if corrective_check.status is AdmissionStatus.DENY:
+            deny.extend(corrective_check.reasons)
+        elif corrective_check.status is AdmissionStatus.INDETERMINATE:
+            indeterminate.extend(corrective_check.reasons)
     if grant is not None:
         exact_authority = evaluate_grant_and_reservations(
             inputs.compilation,
@@ -616,6 +778,43 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
         status=status,
         reasons=tuple(sorted(set(deny + indeterminate))),
         checked_candidate_digest=digest,
+        checked_attempt_id=attempt_id,
+    )
+
+
+def evaluate_corrective_subject_binding(
+    binding: CorrectiveSubjectBinding,
+    candidate: AuthorityCandidate,
+    packet: WorkPacket,
+    grant: HumanGrantBinding | None,
+    reservations: tuple[ConsumableReservationBinding, ...],
+) -> AdmissionEvidence:
+    """Require an in-scope evaluator REWORK binding to survive packet admission."""
+
+    attempt_id = candidate.request.intended_attempt_id
+    try:
+        execution_id = execution_id_for_attempt(attempt_id) if attempt_id is not None else None
+    except ValueError:
+        execution_id = None
+    reasons: list[str] = []
+    if (
+        binding.corrective_candidate_digest != candidate.content_digest
+        or attempt_id is None
+        or binding.intended_attempt_id != attempt_id
+        or binding.execution_id != execution_id
+    ):
+        reasons.append("rework:corrective-subject-mismatch")
+    if grant is None or binding.grant != grant:
+        reasons.append("rework:fresh-grant-mismatch")
+    if binding.reservations != reservations:
+        reasons.append("rework:fresh-reservations-mismatch")
+    packet_scope = set(packet.normalized_intent.scope.in_scope)
+    if not packet_scope.issubset(set(binding.correction_scope)):
+        reasons.append("rework:packet-exceeds-evaluator-permitted-scope")
+    return AdmissionEvidence(
+        status=AdmissionStatus.DENY if reasons else AdmissionStatus.ADMIT,
+        reasons=tuple(sorted(set(reasons))),
+        checked_candidate_digest=candidate.content_digest,
         checked_attempt_id=attempt_id,
     )
 

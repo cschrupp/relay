@@ -6,9 +6,9 @@ import hashlib
 import json
 import re
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import Field, StringConstraints, field_validator, model_validator
+from pydantic import AfterValidator, Field, StringConstraints, field_validator, model_validator
 
 from relay_engine.agent_runtime import (
     RuntimeControlAck,
@@ -38,6 +38,11 @@ type StableExecutionKey = Annotated[
     str,
     StringConstraints(strict=True, min_length=1, max_length=128),
     Field(pattern=r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"),
+]
+type CorrectionScopeEntry = Annotated[
+    str,
+    StringConstraints(strict=True, min_length=1, max_length=2048),
+    AfterValidator(require_nonblank),
 ]
 
 
@@ -87,6 +92,172 @@ class ConsumableReservationBinding(DomainModel):
     evidence_digest: ContentDigest
     state: str
     created_atomically_at_grant: bool
+
+
+class EvaluatorReworkBinding(DomainModel):
+    """Read-only exact independent-evaluation REWORK record projection."""
+
+    evaluation_record_id: StableExecutionKey
+    registered_record_digest: ContentDigest | None
+    projection_digest: ContentDigest
+    evaluator_identity: StableExecutionKey | None
+    source_role: Literal["INDEPENDENT_EVALUATION"] | None
+    provenance_status: RequirementStatus | None
+    outcome: Literal["REWORK"]
+    reviewed_candidate_digest: ContentDigest
+    reviewed_handoff_digest: ContentDigest
+    finding_ids: tuple[StableExecutionKey, ...] = ()
+    permitted_correction_scope: tuple[CorrectionScopeEntry, ...] = ()
+
+    @field_validator("finding_ids")
+    @classmethod
+    def finding_ids_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value))):
+            raise ValueError("evaluator finding IDs must be unique and sorted")
+        return value
+
+    @field_validator("permitted_correction_scope")
+    @classmethod
+    def correction_scope_is_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value), key=lambda item: item.encode("utf-8"))):
+            raise ValueError("evaluator correction scope must be unique and UTF-8 sorted")
+        return value
+
+
+class PriorExecutionBinding(DomainModel):
+    """Exact prior terminal identity and authority scope used for REWORK checks."""
+
+    authority_candidate_digest: ContentDigest
+    terminal_candidate_digest: ContentDigest | None
+    terminal_result_digest: ContentDigest
+    handoff_digest: ContentDigest
+    intended_attempt_id: StableExecutionKey
+    execution_id: ExecutionId
+    project_id: ProjectId
+    slice_id: SliceId
+    work_packet_ref: WorkPacketRef
+    authority_scope: tuple[CorrectionScopeEntry, ...]
+    authority_out_of_scope: tuple[CorrectionScopeEntry, ...]
+
+    @field_validator("authority_scope", "authority_out_of_scope")
+    @classmethod
+    def authority_scopes_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value), key=lambda item: item.encode("utf-8"))):
+            raise ValueError("prior authority scopes must be unique and UTF-8 sorted")
+        return value
+
+    @model_validator(mode="after")
+    def attempt_identity_is_exact(self) -> PriorExecutionBinding:
+        if execution_id_for_attempt(self.intended_attempt_id) != self.execution_id:
+            raise ValueError("prior attempt and ExecutionId must be an exact pair")
+        return self
+
+
+class CorrectiveSubjectBinding(DomainModel):
+    """Immutable lineage and fresh-authority binding for an in-scope correction."""
+
+    prior_authority_candidate_digest: ContentDigest
+    prior_terminal_candidate_digest: ContentDigest
+    prior_terminal_result_digest: ContentDigest
+    prior_handoff_digest: ContentDigest
+    prior_work_packet_ref: WorkPacketRef
+    evaluation_record_id: StableExecutionKey
+    evaluation_record_digest: ContentDigest
+    finding_ids: tuple[StableExecutionKey, ...]
+    correction_scope: tuple[CorrectionScopeEntry, ...]
+    corrective_candidate_digest: ContentDigest
+    intended_attempt_id: StableExecutionKey
+    execution_id: ExecutionId
+    grant: HumanGrantBinding
+    reservations: tuple[ConsumableReservationBinding, ...]
+    required_reservation_keys: tuple[StableExecutionKey, ...]
+
+    @field_validator("finding_ids", "required_reservation_keys")
+    @classmethod
+    def keys_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value))):
+            raise ValueError("corrective binding keys must be unique and sorted")
+        return value
+
+    @field_validator("correction_scope")
+    @classmethod
+    def correction_scope_is_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value), key=lambda item: item.encode("utf-8"))):
+            raise ValueError("correction scope must be unique and UTF-8 sorted")
+        return value
+
+    @field_validator("reservations")
+    @classmethod
+    def reservations_are_canonical(
+        cls, value: tuple[ConsumableReservationBinding, ...]
+    ) -> tuple[ConsumableReservationBinding, ...]:
+        keys = tuple(item.consumable_key for item in value)
+        if keys != tuple(sorted(keys)) or len(keys) != len(set(keys)):
+            raise ValueError("corrective reservations must be unique and sorted")
+        return value
+
+    @model_validator(mode="after")
+    def exact_fresh_attempt_authority(self) -> CorrectiveSubjectBinding:
+        if self.corrective_candidate_digest == self.prior_authority_candidate_digest:
+            raise ValueError("corrective authority candidate must be new")
+        if execution_id_for_attempt(self.intended_attempt_id) != self.execution_id:
+            raise ValueError("corrective attempt and ExecutionId must be an exact pair")
+        if self.intended_attempt_id != self.grant.intended_attempt_id:
+            raise ValueError("grant must bind the corrective attempt")
+        if (
+            self.grant.authority_candidate_digest != self.corrective_candidate_digest
+            or self.grant.intended_attempt_id != self.intended_attempt_id
+            or not self.grant.valid
+            or not self.grant.applicable
+        ):
+            raise ValueError("corrective grant must be valid for the exact new candidate/attempt")
+        if any(
+            item.grant_record_digest != self.grant.grant_record_digest
+            or item.authority_candidate_digest != self.corrective_candidate_digest
+            or item.intended_attempt_id != self.intended_attempt_id
+            or item.state != "RESERVED"
+            or not item.created_atomically_at_grant
+            for item in self.reservations
+        ):
+            raise ValueError("corrective reservations must be exact grant-time evidence")
+        if tuple(item.consumable_key for item in self.reservations) != (
+            self.required_reservation_keys
+        ):
+            raise ValueError("corrective reservations must exactly match required consumables")
+        if not self.finding_ids:
+            raise ValueError("corrective subject must bind at least one evaluator finding")
+        return self
+
+
+class ReworkDisposition(StrEnum):
+    """Pure classification of one independently evaluated corrective request."""
+
+    IN_SCOPE_REWORK = "IN_SCOPE_REWORK"
+    NEW_AUTHORITY_REQUIRED = "NEW_AUTHORITY_REQUIRED"
+    INDETERMINATE = "INDETERMINATE"
+
+
+class EvaluatorReworkEvaluation(DomainModel):
+    """Decision result only; it grants no authority and performs no mutation."""
+
+    disposition: ReworkDisposition
+    reasons: tuple[str, ...]
+    corrective_subject: CorrectiveSubjectBinding | None = None
+
+    @field_validator("reasons")
+    @classmethod
+    def reasons_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if value != tuple(sorted(set(value))):
+            raise ValueError("rework evaluation reasons must be unique and sorted")
+        return value
+
+    @model_validator(mode="after")
+    def subject_matches_disposition(self) -> EvaluatorReworkEvaluation:
+        if (self.disposition is ReworkDisposition.IN_SCOPE_REWORK) != (
+            self.corrective_subject is not None
+        ):
+            raise ValueError("only in-scope REWORK may carry a corrective subject")
+        return self
 
 
 class RuntimePayloadEvidence(DomainModel):
@@ -166,6 +337,7 @@ class ExecutionSubject(DomainModel):
     runtime_request: RuntimeExecutionRequest
     runtime_payload_evidence: RuntimePayloadEvidence
     runtime_permission_evidence: RuntimePermissionEvidence
+    corrective_subject_binding: CorrectiveSubjectBinding | None = None
     actual_provider_id: str | None = None
     actual_model_id: str | None = None
     runtime_session: RuntimeSessionRef | None = None
@@ -209,6 +381,21 @@ class ExecutionSubject(DomainModel):
             raise ValueError("reservation must be exact grant-time evidence for this attempt")
         if self.runtime_request.basis.execution_id != self.execution_id:
             raise ValueError("runtime request must use the exact subject ExecutionId")
+        if self.corrective_subject_binding is not None:
+            correction = self.corrective_subject_binding
+            if (
+                correction.corrective_candidate_digest != self.candidate_digest
+                or correction.intended_attempt_id != self.intended_attempt_id
+                or correction.execution_id != self.execution_id
+                or correction.grant != self.human_grant
+                or correction.reservations != self.reservations
+                or not set(self.work_packet.normalized_intent.scope.in_scope).issubset(
+                    set(correction.correction_scope)
+                )
+            ):
+                raise ValueError(
+                    "corrective execution subject must preserve exact lineage, authority, and scope"
+                )
         if self.runtime_session is not None and self.runtime_session.runtime_id != (
             self.runtime_descriptor.runtime_id
         ):
@@ -673,6 +860,57 @@ def digest_evaluator_handoff(
     }
     canonical = json.dumps(
         payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def digest_evaluator_rework_record(binding: EvaluatorReworkBinding) -> ContentDigest:
+    """Digest the evaluator projection, excluding source identity and verification state."""
+
+    payload = binding.model_dump(
+        mode="json",
+        exclude={"registered_record_digest", "projection_digest", "provenance_status"},
+    )
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def digest_terminal_candidate(result: TerminalExecutionResult) -> ContentDigest | None:
+    """Digest exact terminal workspace changes and commit state for evaluator review."""
+
+    if result.evidence.changes is None:
+        return None
+    payload = {
+        "changes": result.evidence.changes.model_dump(mode="json"),
+        "local_commit": result.evidence.local_commit,
+        "commit_parent": result.evidence.commit_parent,
+        "dirty": result.evidence.dirty,
+    }
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def digest_terminal_result(result: TerminalExecutionResult) -> ContentDigest:
+    """Digest the exact immutable result, including subject, evidence and handoff."""
+
+    canonical = json.dumps(
+        result.model_dump(mode="json"),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,

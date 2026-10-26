@@ -199,7 +199,10 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         RuntimeInputPayload,
         digest_execution_basis,
     )
-    from relay_engine.coding_execution.evaluation import digest_runtime_payload_content
+    from relay_engine.coding_execution.evaluation import (
+        digest_runtime_payload_content,
+        prior_execution_binding,
+    )
     from relay_engine.coding_execution.models import (
         ExecutionEvidenceBundle,
         ExecutionSubject,
@@ -357,6 +360,22 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         initial_workspace_digest=_digest_canonical_model(workspace_facts.initial_inspection),
     )
     outcome = ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT
+
+    result = TerminalExecutionResult(
+        execution_id=execution_id,
+        subject=subject,
+        outcome=outcome,
+        evidence=evidence,
+        evaluator_handoff_digest=digest_evaluator_handoff(subject, outcome, evidence),
+    )
+    prior = prior_execution_binding(result)
+    assert prior.authority_candidate_digest == subject.candidate_digest
+    assert prior.terminal_candidate_digest is None
+    assert prior.terminal_result_digest.startswith("sha256:")
+    assert prior.handoff_digest == result.evaluator_handoff_digest
+    assert prior.intended_attempt_id == subject.intended_attempt_id
+    assert prior.execution_id == subject.execution_id
+    assert prior.work_packet_ref == subject.work_packet_ref
 
     with pytest.raises(ValueError, match="cannot self-accept"):
         TerminalExecutionResult(
