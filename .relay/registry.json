@@ -5202,6 +5202,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00004-7b2c-4a11-9e31-000000000004",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:4586396bbc1eb6ef7a969fcfb7ac28f0988fe8657e7d1c7516feb7f18eb3f18a",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent review of the Slice 3.1 operational Slice-definition mapping candidate; disposition REWORK / NARROW.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Definition Mapping Evaluation 001",
+      "updated_at": "2026-10-26T21:27:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_e721c64d-ef65-42aa-8a88-b7090800306b",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
