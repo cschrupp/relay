@@ -71,6 +71,62 @@ When an Implementer discovers required work outside the exact WorkPacket, it mus
 
 This preserves the accepted specialized-agent separation while allowing capable coding agents to work at PR-sized/cohesive-outcome scale instead of being reduced to one-edit-at-a-time natural-language terminals.
 
+## Explorer Mode and non-authoritative exploration
+
+Relay should also support a distinct **exploration lane** for objectives where the immediate problem is to discover what may work rather than to execute an already-authorized engineering change.
+
+The planned first-class semantic role is `EXPLORER`. Scientist, mathematician, architect, ideator, debugger, algorithm researcher, and product explorer are prompting/persona variants rather than separate sources of authority.
+
+Explorer Mode deliberately separates **freedom of method** from **authority over consequences**:
+
+```text
+reasoning / hypothesis freedom       HIGH
+experimental iteration freedom       HIGH
+prototype / scratch-work freedom     HIGH
+
+governance authority                 ZERO
+canonical mutation authority         ZERO
+Human acceptance authority           ZERO
+promotion authority                  ZERO
+production effects                   ZERO by default
+```
+
+An Explorer may challenge the current framing, test alternatives, create disposable prototypes, run simulations, pursue dead ends, and conclude that an accepted architecture or constraint should be reconsidered. Those conclusions remain non-authoritative evidence.
+
+The conversion boundary remains ordinary Relay governance:
+
+```text
+ExplorationResult
+      ↓
+Human / SOL review
+      ↓
+Project State Resolution / Authority Compilation
+      ↓
+Human grant
+      ↓
+WorkPacket
+      ↓
+governed implementation
+      ↓
+independent evaluation
+      ↓
+acceptance / promotion
+```
+
+Explorer Mode therefore does not create a second planner, lifecycle, backlog, acceptance system, or governance state machine.
+
+The detailed architecture direction is recorded in:
+
+`docs/architecture/EXPLORER_MODE.md`
+
+Roadmap position:
+
+```text
+Slice 3.2 — Explorer Mode / Non-Authoritative Exploration
+PLANNED / NOT OPEN / NOT AUTHORIZED
+```
+
+
 # 2. Accepted technical foundation
 
 ```text
