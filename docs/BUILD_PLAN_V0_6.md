@@ -127,6 +127,18 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> Slice 1.10 is closed; Slice 3.1 is OPEN with design and implementation accepted; live execution remains unauthorized
 ```
 
+## Cross-cutting product addition — Project ToolingPolicy
+
+**Status:** PLANNED / BACKLOGGED — NO IMPLEMENTATION AUTHORITY
+
+Relay already distinguishes project-selected deterministic quality checks from universal tool brands. Extend that model with an explicit project-level `ToolingPolicy` that governs implementation stack choices: required, required-when-applicable, preferred, allowed, restricted, and forbidden tools/dependencies.
+
+The policy should cover package/environment management, quality tools, schema libraries, dataframe/numerical libraries, frameworks, and project-specific dependencies. It should support reusable Human/team defaults for new projects while preserving explicit existing-repository tooling as the higher-precedence source for adopted projects.
+
+The effective policy must eventually flow through Project State Resolution / Authority Compilation into the WorkPacket and agent context, so an implementation agent cannot silently introduce a forbidden dependency, replace a required tool, or perform a toolchain migration outside authority.
+
+Example Human default profiles may choose combinations such as UV + Ruff + pytest + Pydantic, prefer Polars for dataframe work, allow NumPy for numerical work, or prohibit/restrict selected libraries. These are project/profile choices, not Relay-global mandates.
+
 ## Dogfood 001 architectural observation — governance-to-operational Slice definition gap
 
 **Status:** OBSERVED / BACKLOGGED — NO IMPLEMENTATION AUTHORITY
