@@ -432,6 +432,171 @@ The user or repository determines the active toolchain.
 
 ---
 
+# 15A. Project Tooling and Dependency Policy
+
+The Project-Selected Quality Profile answers **which deterministic checks must run**.
+
+Relay also needs a distinct project-level **ToolingPolicy** answering:
+
+> **Which tools, package managers, libraries, frameworks, and dependency choices must, should, may, or must not be used by engineering agents?**
+
+This is broader than quality tooling. It governs implementation choices before code is written.
+
+A project ToolingPolicy may classify an exact tool or dependency as:
+
+```text
+REQUIRED
+REQUIRED_WHEN_APPLICABLE
+PREFERRED
+ALLOWED
+RESTRICTED
+FORBIDDEN
+```
+
+Semantics:
+
+- `REQUIRED` — the project must use this tool for the declared capability.
+- `REQUIRED_WHEN_APPLICABLE` — use it whenever the stated capability/boundary is present.
+- `PREFERRED` — default choice unless the worker records a concrete reason another allowed choice is materially better.
+- `ALLOWED` — permitted but not preferred.
+- `RESTRICTED` — requires explicit project/Human authorization before introduction or use.
+- `FORBIDDEN` — may not be introduced or used in the governed scope.
+
+The policy may cover categories such as:
+
+```text
+language/runtime
+environment/package manager
+formatter/linter
+type checker
+test framework
+schema/validation library
+dataframe library
+numerical/scientific library
+database/ORM
+serialization
+HTTP client
+CLI framework
+UI framework
+logging/observability
+build/package tooling
+deployment tooling
+project-specific libraries
+```
+
+A policy entry should be able to bind:
+
+```text
+tool/dependency identity
+category/capability
+disposition
+version constraint or pin if material
+applicability condition
+preferred replacement(s)
+reason/rationale
+authority/provenance
+exception rule
+```
+
+Example project configuration:
+
+```yaml
+tooling:
+  dependency_changes_require_authority: true
+
+  package_manager:
+    uv:
+      disposition: REQUIRED
+
+  quality:
+    ruff:
+      disposition: REQUIRED
+      capabilities: [format, lint]
+    pytest:
+      disposition: REQUIRED
+      capabilities: [test]
+
+  schema:
+    pydantic:
+      disposition: REQUIRED_WHEN_APPLICABLE
+      applies_to:
+        - durable schemas
+        - configuration boundaries
+        - structured external payloads
+
+  data:
+    polars:
+      disposition: PREFERRED
+      capabilities: [dataframe]
+    numpy:
+      disposition: ALLOWED
+      capabilities: [numerical-array]
+    pandas:
+      disposition: RESTRICTED
+      preferred_replacement: polars
+
+  forbidden:
+    - package: example-legacy-library
+      reason: "Project policy prohibits new use."
+```
+
+This example is illustrative. Relay itself does not universally require UV, Ruff, pytest, Pydantic, Polars, NumPy, or any other named library.
+
+A Human may maintain a reusable personal/team default ToolingPolicy profile. For a new project, that profile can be proposed as the initial project policy. For an adopted repository, explicit existing repository tooling remains authoritative until a separate migration is approved.
+
+## 15B. ToolingPolicy inheritance and execution behavior
+
+Once accepted for a project, ToolingPolicy becomes part of the authoritative engineering context.
+
+At minimum:
+
+- Project State Resolution should expose the current applicable ToolingPolicy.
+- Authority compilation should preserve applicable mandatory/restricted/forbidden tooling constraints.
+- WorkPacket construction should transport the exact ToolingPolicy reference or effective tooling constraints.
+- Agent context should clearly distinguish REQUIRED, PREFERRED, ALLOWED, RESTRICTED, and FORBIDDEN choices.
+- Workspace/runtime preparation may establish required tool availability when applicable.
+- Evaluators should report unauthorized dependency/tool introduction as contract or scope findings.
+- A worker may propose a ToolingPolicy exception or migration, but may not silently authorize one.
+
+A missing REQUIRED tool must be surfaced before or during execution according to the applicable contract. It must not be silently replaced.
+
+A FORBIDDEN dependency must not be added because it is convenient, popular, already known to the model, or used by neighboring projects.
+
+A PREFERRED dependency is not absolute. A worker may select another ALLOWED dependency when justified by the authorized task, but the deviation should be explicit and reviewable where materially relevant.
+
+## 15C. Dependency introduction and migration
+
+New dependencies have maintenance, security, reproducibility, licensing, and cognitive costs.
+
+Relay should therefore support a project rule such as:
+
+```text
+new dependency
+    -> check ToolingPolicy
+    -> REQUIRED/PREFERRED/ALLOWED: proceed only within existing authority
+    -> RESTRICTED: PROPOSED_WORK or explicit exception authority
+    -> FORBIDDEN: STOP
+```
+
+The presence of a package in the environment does not make its use authorized.
+
+Likewise:
+
+```text
+existing library
+    != mandatory library
+
+agent preference
+    != project preference
+
+recommended replacement
+    != migration authority
+```
+
+A tooling or dependency migration that changes the project's declared stack remains a separately scoped engineering change unless the current WorkPacket explicitly authorizes it.
+
+---
+
 # 16. Existing Repository Tooling Has Precedence
 
 For an imported repository, precedence is:
