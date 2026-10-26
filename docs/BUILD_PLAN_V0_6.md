@@ -96,6 +96,7 @@ Phase 3: OPEN under RLY-P3-OPEN-001
 Slice 3.1 opening authority: RLY-S31-OPEN-001 — OPEN
 Slice 3.1 design authority: RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
 Slice 3.1 — Coding Agent Execution: OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED
+Slice 3.2 — Explorer Mode / Non-Authoritative Exploration: PLANNED / NOT OPEN / NOT AUTHORIZED
 Phase 3 live execution: NOT AUTHORIZED
 Slice 1.10 closure prerequisite: SATISFIED under RLY-S110-CLOSE-EVAL-001 — ACCEPT
 Production resolver/compiler and WorkPacket wiring: NOT AUTHORIZED
@@ -190,6 +191,65 @@ preferred initial target ~2–6 hours
 These are provisional sizing heuristics, not schema enums, lifecycle states, or authority limits.
 
 Phase 3 must operationalize this policy through the existing Relay architecture rather than introducing a private authoritative task graph. Runtime-local plans/subagents may be observed as execution provenance, but they do not become WorkPackets or Relay authority.
+
+## Planned Slice 3.2 — Explorer Mode / Non-Authoritative Exploration
+
+Human product direction adds a distinct future exploration capability after bounded Slice 3.1 live-execution qualification.
+
+Architecture direction:
+
+`docs/architecture/EXPLORER_MODE.md`
+
+The purpose is to let an agent iterate much more freely when the immediate objective is discovery rather than an already-specified governed change.
+
+Core boundary:
+
+```text
+Explorer:
+free to hypothesize, reframe, experiment, prototype, simulate,
+discard approaches, challenge assumptions, and iterate rapidly
+
+Explorer:
+NOT authorized to grant authority, accept results, independently
+promote itself, mutate canonical Relay state, or create governed
+successor work
+```
+
+The planned output is a durable but non-authoritative `ExplorationResult`. A useful result returns to the existing governance path:
+
+```text
+ExplorationResult
+  -> Human / SOL review
+  -> Project State Resolver / Authority Compiler
+  -> Human grant
+  -> WorkPacket
+  -> governed implementation
+  -> independent evaluation
+  -> acceptance / promotion
+```
+
+This is not a second governance system. Relay remains the sole authority/lifecycle state machine.
+
+Planned Slice 3.2 design must settle the EXPLORER role/contract representation, disposable laboratory boundary, ExplorationResult/provenance schema, resource and external-effect limits, prototype/patch export, exploration-to-governance conversion, cancellation/partial-result behavior, UI distinction from governed state, and telemetry.
+
+Status:
+
+```text
+Slice 3.2:
+PLANNED / NOT OPEN / NOT AUTHORIZED
+
+Dependency:
+successful bounded Slice 3.1 live-execution qualification
+
+Design authority:
+NOT ISSUED
+
+Implementation authority:
+NOT ISSUED
+
+Explorer runtime execution:
+NOT AUTHORIZED
+```
 
 ## Documentation synchronization rule
 
@@ -500,6 +560,12 @@ Any Phase 1 deficiency that threatens authority integrity, deterministic state, 
 3.1  Coding Agent Execution — OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED
      -> RLY-S31-OPEN-001 — OPEN; RLY-S31-DESIGN-AUTH-001 — AUTHORIZED
      -> implementation 6dd4296440196b63078b13855b70dff60a386325 is accepted; live execution remains unauthorized
+
+3.2  Explorer Mode / Non-Authoritative Exploration — PLANNED / NOT OPEN / NOT AUTHORIZED
+     -> establish a high-freedom exploration lane whose outputs are non-authoritative evidence
+     -> maximize hypothesis/experiment/prototype freedom while preserving zero governance, acceptance, promotion, and canonical-mutation authority
+     -> depend on successful bounded Slice 3.1 live-execution qualification before opening
+     -> convert useful ExplorationResult artifacts back through ordinary Project State Resolution / Authority Compilation / Human grant / WorkPacket governance
 
 Phase 3 is OPEN under `RLY-P3-OPEN-001`. Slice 1.10 is COMPLETE / ACCEPTED / CLOSED under `RLY-S110-CLOSE-EVAL-001 — ACCEPT`. Slice 3.1 is OPEN with design and implementation accepted; live Phase 3 execution and real-project execution remain NOT AUTHORIZED.
 
