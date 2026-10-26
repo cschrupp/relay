@@ -127,6 +127,24 @@ B0-F  Bootstrap Engine Finish — COMPLETE / HUMAN ACCEPTED
   -> Slice 1.10 is closed; Slice 3.1 is OPEN with design and implementation accepted; live execution remains unauthorized
 ```
 
+## Dogfood 001 architectural observation — governance-to-operational Slice definition gap
+
+**Status:** OBSERVED / BACKLOGGED — NO IMPLEMENTATION AUTHORITY
+
+Dogfood 001 exposed a gap between accepted governance state and executable operational state. Accepted Slice 3.1 governance records establish its purpose and accepted A01–A22 scenarios, but they do not uniquely define the operational `Slice` payload required by the existing `create_slice` service. In particular, no accepted record currently provides one canonical mapping for operational scope, acceptance criteria, parent relationship, and dependency fields.
+
+The existing canonical service can persist a caller-supplied Slice payload, but it does not compile accepted governance records into that payload. Relay therefore currently lacks a canonical governance-record → operational Slice-definition compiler/materializer.
+
+Current handling is intentionally bounded:
+
+- Dogfood 001 remains fail-closed until an exact Human-approved operational mapping exists.
+- No `SliceId`, scope, acceptance criterion, parent, or dependency may be inferred from roadmap position, labels, neighboring Slice records, implementation convenience, or values chosen merely to make execution pass.
+- No direct database patch is an acceptable substitute for canonical materialization.
+- The immediate recovery path is an explicit Human-reviewed mapping artifact followed, if accepted, by materialization through the existing canonical service.
+- The workspace-provider gap and fixture/source reachability remain separate admission conditions and must not be weakened or conflated with this identity gap.
+
+**Durable backlog direction:** after the bounded Dogfood 001 mapping/materialization exercise, determine whether this gap is systematic across governed slices. If it is, separately design and authorize a canonical compiler/materializer from accepted governance records to operational Slice definitions. This observation records the product gap; it does **not** authorize production-code changes.
+
 B0-F is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B0F-IMPL-ACCEPT-001`, with exact accepted candidate `65bf57f69f8de4526d080e03da9f796bc20f46ec`. B1 design was opened under `RLY-S110-DOGFOOD-B1-DESIGN-AUTH-001` at `4283c2e55da17af8b1c07af6b554a581028e51db`. Revision 1 received `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-001 — REWORK`; the Revision 2 amendment closed F001/F002 and the composite design was independently accepted by `RLY-S110-DOGFOOD-B1-DESIGN-EVAL-002 — ACCEPT`. The Human accepted exact composite candidate `837edeae8bf36c414e78aa7c68af708590b9e90b` under `RLY-S110-DOGFOOD-B1-DESIGN-ACCEPT-001`. B1 implementation is COMPLETE / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B1-IMPL-ACCEPT-001` at exact candidate `22fb742965ed6424a18275b4234e1399021d4aed`, after `RLY-S110-DOGFOOD-B1-IMPL-EVAL-001 — REWORK` and `RLY-S110-DOGFOOD-B1-IMPL-EVAL-002 — ACCEPT`. Real-world dogfood was authorized but no completed dogfood result is recorded before acceptance. B2 Revision 1 plus the Revision 2 Integrity Amendment is independently accepted and Human-accepted at composite candidate `80b1f77c4d4cd1f3303b4a1072a46b0cfb605621` under `RLY-S110-DOGFOOD-B2-DESIGN-ACCEPT-001`, following `RLY-S110-DOGFOOD-B2-DESIGN-EVAL-002 — ACCEPT`. B2 implementation is independently accepted under `RLY-S110-DOGFOOD-B2-IMPL-EVAL-002` and Human-accepted under `RLY-S110-DOGFOOD-B2-IMPL-ACCEPT-001` at exact candidate `0b3c07dc41d4a0cb81749e8c00a3d006b9645097`. The authorized real Relay B2 adoption executed from clean HEAD `be1dd6f479d601c7ae2eea3985675f53ab748637` and is independently accepted under `RLY-S110-DOGFOOD-B2-ADOPTION-EVAL-001`. T1 is `2026-10-20T03:27:54.511113Z`; the external operational database is published and verified. Human result acceptance is recorded under `RLY-S110-DOGFOOD-B2-ADOPTION-ACCEPT-001`. B2 real adoption is complete. B3 design, Stage A tooling, and Stage B materialization are COMPLETE / HUMAN ACCEPTED. The Human-directed first governed work target is Slice 2.2 Role Contracts with authorized-work exhaustion integrated. B4 Revision 2 Attempt 006 is COMPLETE / INDEPENDENTLY PASS / HUMAN ACCEPTED under `RLY-S110-DOGFOOD-B4-R2-EXEC-EVAL-006 — PASS` and `RLY-S110-DOGFOOD-B4-R2-RESULT-ACCEPT-006 — ACCEPTED`. Slice 2.2 is COMPLETE / ACCEPTED / CLOSED under `RLY-S22-CLOSE-EVAL-001 — ACCEPT`, evaluating closure-ready candidate `358e499ffd571e01d43343449f4bb4a0f50efd6b`. Accepted implementation `4400bd1da0db04e41077c3a6ed1c16d258104ba5` remains unchanged.
 
 ## Anti-drift guardrail
