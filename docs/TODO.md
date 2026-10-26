@@ -144,6 +144,17 @@ Real-project agent execution: NOT AUTHORIZED
 - [ ] After the Dogfood 001 mapping/materialization exercise, determine whether the governance-record → operational Slice-definition gap is systematic. If systematic, open a separate design workstream for a canonical compiler/materializer; this backlog item is not implementation authority.
 - [ ] Keep the workspace-provider capability gap and fixture/source reachability as separate Dogfood 001 admission conditions; do not weaken workspace policy to bypass them.
 
+# PROJECT TOOLING POLICY — DURABLE BACKLOG
+
+- [x] Record the requirement for a project-level ToolingPolicy distinct from the existing Quality Profile.
+- [ ] Design exact ToolingPolicy semantics for `REQUIRED`, `REQUIRED_WHEN_APPLICABLE`, `PREFERRED`, `ALLOWED`, `RESTRICTED`, and `FORBIDDEN` tools/dependencies.
+- [ ] Define policy entries for tool/dependency identity, capability/category, version constraint, applicability, preferred replacement, rationale/provenance, and exception authority.
+- [ ] Define reusable Human/team default tooling profiles for new projects while preserving explicit existing-repository tooling precedence for adopted projects.
+- [ ] Integrate the effective ToolingPolicy with Project State Resolution / Authority Compilation and WorkPacket/context generation so mandatory, restricted, and forbidden tooling constraints are inherited by agents.
+- [ ] Define deterministic handling for missing REQUIRED tools, RESTRICTED dependency introduction, FORBIDDEN dependencies, and tooling migrations.
+- [ ] Add evaluator findings/evidence requirements for unauthorized dependency introduction, prohibited tooling, and unapproved toolchain migration.
+- [ ] Keep ToolingPolicy design separate from implementation authority; no production change is authorized by this backlog entry.
+
 # THEN — resume autonomous-execution roadmap
 
 - [ ] **Phase 3 operationalization — authorized-work exhaustion and execution granularity:** implement the already-accepted semantics through the existing RoleContract / WorkPacket / Execution Workspace / AgentRuntime chain. Executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly authorized.
