@@ -136,6 +136,14 @@ Real-project agent execution: NOT AUTHORIZED
 - [ ] Confirm the Human can identify CURRENT / NEXT / LATER / BLOCKED from Relay.
 - [x] Confirm through B4 cold-start dogfood that Relay—not prior conversation context—is sufficient to recover governed continuation state.
 
+# PHASE 3 DOGFOOD — GOVERNANCE → OPERATIONAL SLICE DEFINITION GAP
+
+- [x] Record the Dogfood 001 observation that accepted Slice governance does not currently compile canonically into the operational `Slice` payload required by `create_slice`.
+- [ ] Complete the bounded Human-reviewed mapping for Slice 3.1 operational scope, acceptance criteria, parent relationship, dependencies, and every other required `create_slice` field; do not infer semantic values from roadmap position or implementation convenience.
+- [ ] After exact mapping acceptance, materialize Slice 3.1 only through the existing canonical service under separate authority; no direct database patch or manually invented `SliceId`.
+- [ ] After the Dogfood 001 mapping/materialization exercise, determine whether the governance-record → operational Slice-definition gap is systematic. If systematic, open a separate design workstream for a canonical compiler/materializer; this backlog item is not implementation authority.
+- [ ] Keep the workspace-provider capability gap and fixture/source reachability as separate Dogfood 001 admission conditions; do not weaken workspace policy to bypass them.
+
 # THEN — resume autonomous-execution roadmap
 
 - [ ] **Phase 3 operationalization — authorized-work exhaustion and execution granularity:** implement the already-accepted semantics through the existing RoleContract / WorkPacket / Execution Workspace / AgentRuntime chain. Executors may autonomously decompose current authorized work but may not extend the authoritative backlog; no authorized successor means successful `BACKLOG_EXHAUSTED` and STOP; discovered future work remains non-authoritative `PROPOSED_WORK` until explicitly authorized.
