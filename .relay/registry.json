@@ -5,16 +5,16 @@
       "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:55784db5f9bdeada934763705394666f7843810cf1655b8fb7b52b631a2c14e6",
+      "content_digest": "sha256:2b45ff2cdd96406ed36cc8694412901d240d96e9c59783cf9e4710023133d852",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 155,
+      "revision": 156,
       "schema_version": 1,
-      "scope": "Current canonical build plan; Slice 3.1 design and implementation are accepted; Dogfood 001 exposed a governance-to-operational Slice-definition mapping gap that is recorded without implementation authority.",
+      "scope": "Current canonical build plan; includes Dogfood 001 operational Slice-definition gap and planned project ToolingPolicy direction without implementation authority.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-26T19:16:00Z"
+      "updated_at": "2026-10-26T19:30:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -53,16 +53,16 @@
       "artifact_id": "art_405e8bcd-1e83-4560-9c1e-5163d3dc6710",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:2230df3f1af78af2a9396262dc174ece806eb208f5cba5d76db11b7d79efbf5b",
+      "content_digest": "sha256:bb8ed5404ca8727bf105da6863760552dc9994f7b14d290a002a539eeaa84339",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 62,
+      "revision": 63,
       "schema_version": 1,
-      "scope": "Current development checklist; includes the Dogfood 001 governance-to-operational Slice-definition mapping gap as a bounded backlog item without implementation authority.",
+      "scope": "Current development checklist; includes Dogfood 001 identity work and project ToolingPolicy durable backlog without implementation authority.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-26T19:16:00Z"
+      "updated_at": "2026-10-26T19:30:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -165,16 +165,16 @@
       "artifact_id": "art_f3a721ec-aabd-488d-83e6-542d85c24ba9",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:9be7af97d5d8cf04995c6bd35e436381df28d562680897eeeefcd191f17c8c84",
+      "content_digest": "sha256:b9f295c82ab7eb1376bb4ee4c70d3ddc975ad021d6e7948f02a13cf7efe09e0b",
       "human_version": null,
       "path": "docs/policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md",
-      "revision": 2,
+      "revision": 3,
       "schema_version": 1,
-      "scope": "Current canonical engineering simplicity, scope, and quality document.",
+      "scope": "Current canonical engineering simplicity, scope, quality, and project ToolingPolicy direction, including required/preferred/allowed/restricted/forbidden dependency semantics.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Engineering Simplicity, Scope, and Quality",
-      "updated_at": "2026-10-23T17:30:00Z"
+      "updated_at": "2026-10-26T19:30:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5959,7 +5959,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
-        "revision": 155,
+        "revision": 156,
         "schema_version": 1
       }
     },
@@ -5986,7 +5986,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_f3a721ec-aabd-488d-83e6-542d85c24ba9",
-        "revision": 2,
+        "revision": 3,
         "schema_version": 1
       }
     },
