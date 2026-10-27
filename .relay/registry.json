@@ -5090,6 +5090,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00017-7b2c-4a11-9e31-000000000017",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:b3f152451075115409118bfdbf269d7d832f0157a535a12050869104b9f81b5e",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-DESIGN-REWORK-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_DESIGN_REWORK_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for narrow M001 rework of Runtime Boundary Binding and Attestation Design Candidate 001: separate Slice 2.1 runtime permission attestation from placement evidence, correct no-prompt session ordering, and clarify placement-attester trust; no implementation.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Design M001 Rework Authority 001",
+      "updated_at": "2026-10-27T11:45:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
