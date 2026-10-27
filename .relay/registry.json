@@ -5058,6 +5058,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:637d0317c6d7e7f6c93b5695dba4b7a732ca56d6f7619729c4fd827f8335767a",
+      "human_version": "RLY-S31-DOGFOOD-001-WORKSPACE-PROVIDER-GAP-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_WORKSPACE_PROVIDER_CONFORMANCE_GAP_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for bounded Dogfood 001 workspace-provider conformance gap investigation/design, including read-only host capability and synthetic feasibility probes; no provider implementation or execution admission.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 Workspace-Provider Conformance Gap Investigation / Design Authority 001",
+      "updated_at": "2026-10-27T03:48:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_d2849ce0-ebe4-415b-8e9f-247a4626092c",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
