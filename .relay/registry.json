@@ -5330,6 +5330,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00012-7b2c-4a11-9e31-000000000012",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:ab929635b6584e27a3c7c0adcac4c275f5fc055e4c64c22adf1301cb5d912fe1",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-EVAL-001",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_IDENTITY_MATERIALIZATION_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent exact-subject review of Slice 3.1 operational Slice identity materialization; disposition ACCEPT.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Identity Materialization Evaluation 001",
+      "updated_at": "2026-10-27T02:46:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00011-7b2c-4a11-9e31-000000000011",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DATA",
