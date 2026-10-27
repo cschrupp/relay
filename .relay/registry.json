@@ -5237,7 +5237,7 @@
       "artifact_id": "art_31a00006-7b2c-4a11-9e31-000000000006",
       "artifact_state": "REVIEW",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:146afda654f959d68d8b2dd5f20379298895e685f1b75bca1650fa938c82c872",
+      "content_digest": "sha256:e53154d9e0d68b7cadf2a7ce3e46c56cc37d18253592864b4d8690f5d39b4463",
       "human_version": null,
       "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.md",
       "revision": 1,

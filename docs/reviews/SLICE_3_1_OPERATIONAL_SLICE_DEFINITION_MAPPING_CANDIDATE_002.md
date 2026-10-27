@@ -1,11 +1,11 @@
 # Relay — Slice 3.1 Operational Slice Definition Mapping Candidate 002
 
-**Document class:** Working governance/design artifact  
+**Document class:** Working governance/design artifact
 **Status:** REVIEW — MAPPING_CANDIDATE_COMPLETE
-**Date:** 2026-10-26  
-**Authority:** `RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-AUTH-001 — AUTHORIZED`  
-**Project:** Relay  
-**Slice:** 3.1 — Coding Agent Execution  
+**Date:** 2026-10-26
+**Authority:** `RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-AUTH-001 — AUTHORIZED`
+**Project:** Relay
+**Slice:** 3.1 — Coding Agent Execution
 **Supersedes for review:** `docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_001.md` and `.json` (historical; unchanged)
 **Companion machine-readable artifact:** `docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.json`
 
