@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import secrets
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import NoReturn, cast
 
 from relay_engine.agent_runtime import (
     AgentRuntime,
     RuntimeCancelRequest,
+    RuntimeCapability,
     RuntimeContinuityState,
+    RuntimeDescriptor,
     RuntimeEventEnvelope,
     RuntimeEventType,
     RuntimeExecutionBasis,
@@ -19,10 +23,19 @@ from relay_engine.agent_runtime import (
     RuntimeExecutionRequest,
     RuntimeInputPayload,
     RuntimePermissionProfileRef,
+    RuntimeSessionBinding,
     RuntimeSessionRef,
     RuntimeStatus,
     digest_execution_basis,
 )
+from relay_engine.agent_runtime.boundary import (
+    RuntimeEvidenceCompleteness,
+    RuntimeLaunchSubject,
+    RuntimePermissionAttestation,
+    RuntimeRequestV2,
+    build_runtime_request_v2,
+)
+from relay_engine.agent_runtime.protocol import BoundaryManagedAgentRuntime
 from relay_engine.coding_execution.evaluation import (
     AdmissionInputs,
     apply_scope_and_successor_disposition,
@@ -51,12 +64,21 @@ from relay_engine.coding_execution.models import (
     execution_id_for_attempt,
 )
 from relay_engine.domain import ContentDigest, SliceId
+from relay_engine.domain._base import DomainModel
 from relay_engine.execution_workspace import (
+    BoundaryScopedRuntimeLauncher,
     WorkspaceProvider,
     derive_runtime_workspace_attachment,
     evaluate_workspace_conformance,
     evaluate_workspace_preflight,
     resolve_workspace_plan,
+)
+from relay_engine.execution_workspace.boundary import (
+    RuntimePlacementAttestation,
+    RuntimePlacementContinuityEvidence,
+    RuntimeProcessTeardownEvidence,
+    WorkspaceBoundaryRef,
+    placement_attestation_matches_boundary,
 )
 from relay_engine.execution_workspace.evaluation import workspace_plan_ref, workspace_provider_ref
 from relay_engine.execution_workspace.models import (
@@ -65,6 +87,7 @@ from relay_engine.execution_workspace.models import (
     WorkspaceConformanceFacts,
     WorkspaceInspection,
     WorkspaceInstanceRef,
+    WorkspacePlan,
     WorkspacePolicyDefinition,
 )
 from relay_engine.project_state import (
@@ -125,10 +148,17 @@ type GrantReservationReader = Callable[
 class AdmissionRejected(RuntimeError):
     """Fail-closed preflight stop before any runtime prompt is admitted."""
 
-    def __init__(self, outcome: ExecutionTerminalOutcome, reason: str) -> None:
+    def __init__(
+        self,
+        outcome: ExecutionTerminalOutcome,
+        reason: str,
+        *,
+        boundary_failure: BoundaryPreparationFailure | None = None,
+    ) -> None:
         super().__init__(reason)
         self.outcome = outcome
         self.reason = reason
+        self.boundary_failure = boundary_failure
 
 
 @dataclass(frozen=True)
@@ -159,6 +189,366 @@ class CoordinatorInputs:
     terminal_workspace_facts_factory: WorkspaceFactsFactory | None = None
     current_snapshot_reader: SnapshotReader | None = None
     grant_reservation_reader: GrantReservationReader | None = None
+    boundary_nonce_factory: Callable[[], str] | None = None
+    boundary_runtime_launcher: BoundaryScopedRuntimeLauncher | None = None
+
+
+@dataclass(frozen=True)
+class BoundaryRuntimePreparation:
+    """Exact no-prompt V2 session and evidence before final admission."""
+
+    boundary: WorkspaceBoundaryRef
+    launch_subject: RuntimeLaunchSubject
+    placement: RuntimePlacementAttestation
+    request_v2: RuntimeRequestV2
+    session: RuntimeSessionBinding
+    permission_attestation: RuntimePermissionAttestation
+    continuity: RuntimePlacementContinuityEvidence
+    permission_evidence: RuntimePermissionEvidence
+
+
+@dataclass(frozen=True)
+class BoundaryPreparationFailure:
+    """Exact available preparation evidence retained when admission stops early."""
+
+    boundary: WorkspaceBoundaryRef
+    launch_subject: RuntimeLaunchSubject
+    placement: RuntimePlacementAttestation
+    request_v2: RuntimeRequestV2 | None
+    session: RuntimeSessionBinding | None
+    permission_attestation: RuntimePermissionAttestation | None
+    continuity: RuntimePlacementContinuityEvidence | None
+    teardown: RuntimeProcessTeardownEvidence | None
+    failure_reason: str
+    cleanup_error_type: str | None = None
+
+
+async def _stop_with_boundary_evidence(
+    *,
+    launcher: BoundaryScopedRuntimeLauncher,
+    boundary: WorkspaceBoundaryRef,
+    launch_subject: RuntimeLaunchSubject,
+    placement: RuntimePlacementAttestation,
+    execution_id: str,
+    outcome: ExecutionTerminalOutcome,
+    reason: str,
+    request_v2: RuntimeRequestV2 | None = None,
+    session: RuntimeSessionBinding | None = None,
+    permission: RuntimePermissionAttestation | None = None,
+    continuity: RuntimePlacementContinuityEvidence | None = None,
+) -> NoReturn:
+    """Tear down one prepared tree and attach exact partial evidence to the stop."""
+
+    cleanup_error_type = None
+    if request_v2 is not None:
+        try:
+            continuity = launcher.inspect_runtime_continuity(
+                boundary,
+                placement,
+                execution_id=execution_id,
+                request_digest_v2=request_v2.request_digest_v2,
+            )
+        except Exception as error:
+            cleanup_error_type = type(error).__name__
+    teardown = None
+    try:
+        teardown = await launcher.teardown_runtime(
+            boundary,
+            placement,
+            execution_id=execution_id,
+        )
+    except Exception as error:
+        cleanup_error_type = type(error).__name__
+    failure = BoundaryPreparationFailure(
+        boundary=boundary,
+        launch_subject=launch_subject,
+        placement=placement,
+        request_v2=request_v2,
+        session=session,
+        permission_attestation=permission,
+        continuity=continuity,
+        teardown=teardown,
+        failure_reason=reason,
+        cleanup_error_type=cleanup_error_type,
+    )
+    raise AdmissionRejected(outcome, reason, boundary_failure=failure)
+
+
+def _canonical_model_digest(value: DomainModel) -> ContentDigest:
+    payload = json.dumps(
+        value.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _requires_strong_boundary(plan: WorkspacePlan) -> bool:
+    return any(
+        item.minimum_strength.value == "BOUNDARY_ENFORCED" for item in plan.property_requirements
+    )
+
+
+def _permission_evidence_from_attestation(
+    attestation: RuntimePermissionAttestation,
+) -> RuntimePermissionEvidence:
+    completeness = RequirementStatus(attestation.completeness.value)
+    return RuntimePermissionEvidence(
+        execution_id=attestation.execution_id,
+        runtime_id=attestation.session_binding.runtime_session.runtime_id,
+        attestation_id=attestation.attestation_id,
+        evidence_digest=attestation.content_digest,
+        effective_profile_ref=attestation.expected_permission_profile_ref,
+        completeness=completeness,
+        exposed_tools=attestation.effective_tool_exposure,
+        unknown_tool_identity=attestation.unknown_tool_identity,
+        shell_exposed=attestation.effective_shell_exposure,
+        actual_provider_id=attestation.actual_provider_id,
+        actual_model_id=attestation.actual_model_id,
+        provenance_status=completeness,
+    )
+
+
+async def _prepare_boundary_runtime(
+    *,
+    launcher: BoundaryScopedRuntimeLauncher,
+    runtime: AgentRuntime,
+    descriptor: RuntimeDescriptor,
+    request: RuntimeExecutionRequest,
+    candidate: AuthorityCandidate,
+    grant: HumanGrantBinding,
+    packet: WorkPacket,
+    packet_ref: WorkPacketRef,
+    manifest_ref: ContextManifestRef,
+    plan: WorkspacePlan,
+    instance: WorkspaceInstanceRef,
+    permission_profile_ref: RuntimePermissionProfileRef,
+    nonce_factory: Callable[[], str],
+) -> BoundaryRuntimePreparation:
+    """Launch in the provider boundary and prepare one exact session without prompt."""
+
+    execution_id = request.basis.execution_id
+    intended_attempt_id = candidate.request.intended_attempt_id
+    if intended_attempt_id is None:
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            "runtime-boundary:intended-attempt-missing",
+        )
+    if (
+        descriptor.runtime_version is None
+        or descriptor.executable_digest is None
+        or descriptor.configuration_digest is None
+    ):
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            "runtime-descriptor:version-executable-or-configuration-digest-missing",
+        )
+    boundary = launcher.boundary_ref(instance)
+    if boundary.instance_ref != instance or boundary.plan_ref != workspace_plan_ref(plan):
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            "runtime-boundary:workspace-ref-mismatch",
+        )
+    selection = request.basis.runtime_selection
+    nonce = nonce_factory()
+    if not nonce.strip() or len(nonce) > 256:
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            "runtime-boundary:launch-nonce-invalid",
+        )
+    descriptor_digest = _canonical_model_digest(descriptor)
+    plan_ref = workspace_plan_ref(plan)
+    launch_subject = RuntimeLaunchSubject(
+        execution_id=execution_id,
+        intended_attempt_id=intended_attempt_id,
+        authority_candidate_digest=candidate.content_digest,
+        human_grant_digest=grant.grant_record_digest,
+        work_packet_ref_digest=_canonical_model_digest(packet_ref),
+        context_manifest_ref_digest=_canonical_model_digest(manifest_ref),
+        workspace_plan_ref_digest=_canonical_model_digest(plan_ref),
+        workspace_instance_digest=_canonical_model_digest(instance),
+        workspace_boundary_digest=boundary.content_digest,
+        runtime_descriptor_digest=descriptor_digest,
+        runtime_id=descriptor.runtime_id,
+        runtime_version=descriptor.runtime_version,
+        adapter_id=descriptor.runtime_id,
+        adapter_version=descriptor.adapter_version,
+        challenge_or_launch_nonce=nonce,
+        executable_identity=(
+            f"{descriptor.runtime_id}@{descriptor.runtime_version}#{descriptor.executable_digest}"
+        ),
+        runtime_configuration_digest=descriptor.configuration_digest,
+        runtime_api_generation=descriptor.api_generation,
+        endpoint_allocation_policy="explicit-loopback-no-discovery-no-credentials",
+        requested_provider_id=selection.requested_provider_id,
+        requested_model_id=selection.requested_model_id,
+        permission_profile_ref=permission_profile_ref,
+        credential_reference_ids=tuple(
+            sorted(item.credential_id for item in request.basis.credential_refs)
+        ),
+        runtime_request_payload_digest=request.basis.input_payload.payload_digest,
+        runtime_limits_digest=_canonical_model_digest(request.basis.limits),
+    )
+    placement = await launcher.launch_runtime(boundary, launch_subject)
+    if not placement_attestation_matches_boundary(
+        boundary,
+        placement,
+        launch_subject_digest=launch_subject.content_digest,
+        runtime_descriptor_digest=descriptor_digest,
+        launch_nonce=nonce,
+    ):
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            reason="runtime-boundary:placement-attestation-invalid",
+        )
+    request_v2 = build_runtime_request_v2(
+        request=request,
+        launch_subject=launch_subject,
+        placement_attestation_ref=placement.ref,
+        endpoint_identity=placement.endpoint_identity,
+    )
+    managed_runtime = runtime
+    for method in ("create_session_v2", "attest_permissions_v2", "open_execution_v2"):
+        if not callable(getattr(managed_runtime, method, None)):
+            await _stop_with_boundary_evidence(
+                launcher=launcher,
+                boundary=boundary,
+                launch_subject=launch_subject,
+                placement=placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+                reason="runtime:boundary-v2-capability-missing",
+                request_v2=request_v2,
+            )
+    boundary_runtime = cast(BoundaryManagedAgentRuntime, managed_runtime)
+    try:
+        session = await boundary_runtime.create_session_v2(request_v2)
+    except Exception as error:
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            reason="runtime:prompt-free-session-creation-failed",
+            request_v2=request_v2,
+        )
+        raise AssertionError("unreachable") from error
+    if (
+        session.execution_id != execution_id
+        or session.request_digest != request.request_digest
+        or session.request_digest_v2 != request_v2.request_digest_v2
+        or session.runtime_session.runtime_id != descriptor.runtime_id
+        or session.workspace_id != instance.workspace_id
+    ):
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            reason="runtime:session-v2-binding-mismatch",
+            request_v2=request_v2,
+            session=session,
+        )
+    try:
+        continuity = launcher.inspect_runtime_continuity(
+            boundary,
+            placement,
+            execution_id=execution_id,
+            request_digest_v2=request_v2.request_digest_v2,
+        )
+    except Exception as error:
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            reason="runtime-boundary:pre-admission-continuity-observation-failed",
+            request_v2=request_v2,
+            session=session,
+        )
+        raise AssertionError("unreachable") from error
+    if (
+        continuity.workspace_boundary_ref_digest != boundary.content_digest
+        or continuity.placement_attestation_ref != placement.ref
+        or continuity.execution_id != execution_id
+        or continuity.request_digest_v2 != request_v2.request_digest_v2
+        or continuity.process_tree_identity != placement.process_tree_identity
+        or continuity.status is not RequirementStatus.SATISFIED
+    ):
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            reason="runtime-boundary:continuity-unverified-before-admission",
+            request_v2=request_v2,
+            session=session,
+            continuity=continuity,
+        )
+    try:
+        permission = await boundary_runtime.attest_permissions_v2(request_v2, session)
+    except Exception as error:
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            reason="runtime:permission-attestation-failed",
+            request_v2=request_v2,
+            session=session,
+            continuity=continuity,
+        )
+        raise AssertionError("unreachable") from error
+    if (
+        permission.execution_id != execution_id
+        or permission.request_digest_v2 != request_v2.request_digest_v2
+        or permission.session_binding != session
+        or permission.runtime_descriptor_digest != descriptor_digest
+        or permission.launch_subject_digest != launch_subject.content_digest
+        or permission.placement_attestation_digest != placement.content_digest
+        or permission.expected_permission_profile_ref != permission_profile_ref
+        or permission.completeness is not RuntimeEvidenceCompleteness.SATISFIED
+    ):
+        await _stop_with_boundary_evidence(
+            launcher=launcher,
+            boundary=boundary,
+            launch_subject=launch_subject,
+            placement=placement,
+            execution_id=execution_id,
+            outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            reason="runtime:permission-attestation-invalid",
+            request_v2=request_v2,
+            session=session,
+            permission=permission,
+            continuity=continuity,
+        )
+    return BoundaryRuntimePreparation(
+        boundary=boundary,
+        launch_subject=launch_subject,
+        placement=placement,
+        request_v2=request_v2,
+        session=session,
+        permission_attestation=permission,
+        continuity=continuity,
+        permission_evidence=_permission_evidence_from_attestation(permission),
+    )
 
 
 def _digest_json(value: object) -> ContentDigest:
@@ -375,22 +765,6 @@ async def execute_governed_attempt(
         return _blocked_result(inputs, execution_id, "runtime:capability-mismatch")
     if inputs.permission_profile_ref != packet.runtime_permission_profile_ref:
         return _blocked_result(inputs, execution_id, "runtime:permission-profile-mismatch")
-    if (
-        inputs.runtime_permission_evidence.actual_provider_id != selection.requested_provider_id
-        or inputs.runtime_permission_evidence.actual_model_id != selection.requested_model_id
-    ):
-        return _blocked_result(inputs, execution_id, "runtime:provider-model-identity-unbound")
-    exposure = evaluate_effective_tool_exposure(
-        plan,
-        inputs.runtime_permission_evidence,
-        expected_execution_id=execution_id,
-        expected_runtime_id=descriptor.runtime_id,
-    )
-    if exposure.status is not AdmissionStatus.ADMIT:
-        return _blocked_result(inputs, execution_id, "runtime:effective-permission-unproven")
-    if inputs.runtime_permission_evidence.effective_profile_ref != inputs.permission_profile_ref:
-        return _blocked_result(inputs, execution_id, "runtime:effective-profile-mismatch")
-
     basis = RuntimeExecutionBasis(
         execution_id=execution_id,
         slice_id=packet.slice_definition_ref.slice_id,
@@ -405,12 +779,120 @@ async def execute_governed_attempt(
     )
     request = RuntimeExecutionRequest(basis=basis, request_digest=digest_execution_basis(basis))
 
+    boundary_preparation: BoundaryRuntimePreparation | None = None
+    runtime_permission_evidence = inputs.runtime_permission_evidence
+    if _requires_strong_boundary(plan):
+        if inputs.boundary_runtime_launcher is None:
+            return _blocked_result(inputs, execution_id, "runtime:boundary-launcher-missing")
+        if RuntimeCapability.BOUNDARY_MANAGED_LAUNCH not in descriptor.capabilities:
+            return _blocked_result(inputs, execution_id, "runtime:managed-launch-unsupported")
+        if RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION not in descriptor.capabilities:
+            return _blocked_result(
+                inputs, execution_id, "runtime:permission-attestation-unsupported"
+            )
+        try:
+            boundary_preparation = await _prepare_boundary_runtime(
+                launcher=inputs.boundary_runtime_launcher,
+                runtime=runtime,
+                descriptor=descriptor,
+                request=request,
+                candidate=candidate,
+                grant=grant,
+                packet=packet,
+                packet_ref=packet_ref,
+                manifest_ref=manifest_ref,
+                plan=plan,
+                instance=provision.instance_ref,
+                permission_profile_ref=inputs.permission_profile_ref,
+                nonce_factory=inputs.boundary_nonce_factory or secrets.token_urlsafe,
+            )
+        except AdmissionRejected:
+            raise
+        runtime_permission_evidence = boundary_preparation.permission_evidence
+    boundary_launcher = inputs.boundary_runtime_launcher
+    if boundary_preparation is not None:
+        assert boundary_launcher is not None, (
+            "prepared runtime boundary requires its exact launcher"
+        )
+    if boundary_preparation is None and (
+        runtime_permission_evidence.actual_provider_id != selection.requested_provider_id
+        or runtime_permission_evidence.actual_model_id != selection.requested_model_id
+    ):
+        return _blocked_result(inputs, execution_id, "runtime:provider-model-identity-unbound")
+
+    exposure = evaluate_effective_tool_exposure(
+        plan,
+        runtime_permission_evidence,
+        expected_execution_id=execution_id,
+        expected_runtime_id=descriptor.runtime_id,
+    )
+    if exposure.status is not AdmissionStatus.ADMIT:
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+                reason="runtime:effective-permission-unproven",
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
+        return _blocked_result(inputs, execution_id, "runtime:effective-permission-unproven")
+    if runtime_permission_evidence.effective_profile_ref != inputs.permission_profile_ref:
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+                reason="runtime:effective-profile-mismatch",
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
+        return _blocked_result(inputs, execution_id, "runtime:effective-profile-mismatch")
+
     pre_admission_inspection = workspace_provider.inspect(provision.instance_ref)
     if pre_admission_inspection.model_dump(exclude={"inspected_at"}) != (
         provision.initial_inspection.model_dump(exclude={"inspected_at"})
     ):
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+                reason="workspace:changed-before-admission",
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
         return _blocked_result(inputs, execution_id, "workspace:changed-before-admission")
     if inputs.current_snapshot_reader is None or inputs.grant_reservation_reader is None:
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+                reason="admission:final-revalidation-unavailable",
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
         return _blocked_result(inputs, execution_id, "admission:final-revalidation-unavailable")
     latest_snapshot = inputs.current_snapshot_reader()
     latest_grant, latest_reservations = inputs.grant_reservation_reader()
@@ -419,18 +901,70 @@ async def execute_governed_attempt(
             "provider_runtime_status": RequirementStatus.SATISFIED,
             "workspace_status": RequirementStatus.SATISFIED,
             "runtime_descriptor": descriptor,
-            "permission_evidence": inputs.runtime_permission_evidence,
+            "permission_evidence": runtime_permission_evidence,
             "workspace_plan": plan,
             "current_snapshot": latest_snapshot,
             "grant": latest_grant,
             "reservations": latest_reservations,
+            "runtime_request_v2": (
+                boundary_preparation.request_v2 if boundary_preparation is not None else None
+            ),
+            "workspace_boundary_ref": (
+                boundary_preparation.boundary if boundary_preparation is not None else None
+            ),
+            "runtime_placement_attestation": (
+                boundary_preparation.placement if boundary_preparation is not None else None
+            ),
+            "runtime_session_binding": (
+                boundary_preparation.session if boundary_preparation is not None else None
+            ),
+            "runtime_permission_attestation": (
+                boundary_preparation.permission_attestation
+                if boundary_preparation is not None
+                else None
+            ),
+            "runtime_placement_continuity": (
+                boundary_preparation.continuity if boundary_preparation is not None else None
+            ),
         }
     )
     final_admission = evaluate_admission(staged)
     if final_admission.status is not AdmissionStatus.ADMIT:
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=(
+                    ExecutionTerminalOutcome.BLOCKED_BY_AUTHORITY
+                    if final_admission.status is AdmissionStatus.DENY
+                    else ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT
+                ),
+                reason="admission:" + final_admission.status.value,
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
         return _blocked_result(inputs, execution_id, "admission:" + final_admission.status.value)
     freshness = check_candidate_freshness(candidate, latest_snapshot)
     if freshness.status is not CandidateFreshnessStatus.CURRENT:
+        if boundary_preparation is not None:
+            await _stop_with_boundary_evidence(
+                launcher=cast(BoundaryScopedRuntimeLauncher, boundary_launcher),
+                boundary=boundary_preparation.boundary,
+                launch_subject=boundary_preparation.launch_subject,
+                placement=boundary_preparation.placement,
+                execution_id=execution_id,
+                outcome=ExecutionTerminalOutcome.BLOCKED_BY_AUTHORITY,
+                reason="candidate:final-freshness-failed",
+                request_v2=boundary_preparation.request_v2,
+                session=boundary_preparation.session,
+                permission=boundary_preparation.permission_attestation,
+                continuity=boundary_preparation.continuity,
+            )
         return _blocked_result(inputs, execution_id, "candidate:final-freshness-failed")
 
     assert staged.grant is not None
@@ -452,21 +986,62 @@ async def execute_governed_attempt(
         workspace_provider_ref=provider_ref,
         runtime_descriptor=descriptor,
         runtime_request=request,
+        runtime_request_v2=(
+            boundary_preparation.request_v2 if boundary_preparation is not None else None
+        ),
+        workspace_boundary_ref=(
+            boundary_preparation.boundary if boundary_preparation is not None else None
+        ),
+        runtime_placement_attestation=(
+            boundary_preparation.placement if boundary_preparation is not None else None
+        ),
+        runtime_permission_attestation=(
+            boundary_preparation.permission_attestation
+            if boundary_preparation is not None
+            else None
+        ),
+        runtime_permission_attestation_ref=(
+            boundary_preparation.permission_attestation.ref
+            if boundary_preparation is not None
+            else None
+        ),
+        runtime_session_binding=(
+            boundary_preparation.session if boundary_preparation is not None else None
+        ),
         runtime_payload_evidence=materialized_payload.evidence,
-        runtime_permission_evidence=inputs.runtime_permission_evidence,
+        runtime_permission_evidence=runtime_permission_evidence,
         corrective_subject_binding=admission.corrective_subject_binding,
-        actual_provider_id=inputs.runtime_permission_evidence.actual_provider_id,
-        actual_model_id=inputs.runtime_permission_evidence.actual_model_id,
+        actual_provider_id=runtime_permission_evidence.actual_provider_id,
+        actual_model_id=runtime_permission_evidence.actual_model_id,
+        runtime_session=(
+            boundary_preparation.session.runtime_session
+            if boundary_preparation is not None
+            else None
+        ),
         reservations=staged.reservations,
         control_references=tuple(sorted(packet.required_workspace_property_keys)),
         resource_references=tuple(sorted(inputs.admission.candidate.work_packet_constraints)),
     )
 
-    session = await runtime.create_session(request)
-    if session.execution_id != execution_id or session.request_digest != request.request_digest:
-        return _blocked_result(inputs, execution_id, "runtime:session-binding-mismatch")
-    handle = await runtime.open_execution(request, session)
-    if handle.execution_id != execution_id or handle.request_digest != request.request_digest:
+    if boundary_preparation is None:
+        session = await runtime.create_session(request)
+        if session.execution_id != execution_id or session.request_digest != request.request_digest:
+            return _blocked_result(inputs, execution_id, "runtime:session-binding-mismatch")
+        handle = await runtime.open_execution(request, session)
+    else:
+        session = boundary_preparation.session
+        boundary_runtime = cast(BoundaryManagedAgentRuntime, runtime)
+        handle = await boundary_runtime.open_execution_v2(
+            boundary_preparation.request_v2,
+            session,
+            boundary_preparation.permission_attestation,
+        )
+    if (
+        handle.execution_id != execution_id
+        or handle.request_digest != request.request_digest
+        or boundary_preparation is not None
+        and handle.request_digest_v2 != boundary_preparation.request_v2.request_digest_v2
+    ):
         return _blocked_result(inputs, execution_id, "runtime:handle-binding-mismatch")
     observed_events: list[RuntimeEventEnvelope] = []
     cancellation_ack = None
@@ -533,6 +1108,45 @@ async def execute_governed_attempt(
         if terminal_facts is not None
         else RequirementStatus.INDETERMINATE
     )
+    terminal_boundary_continuity: RuntimePlacementContinuityEvidence | None = None
+    runtime_process_teardown: RuntimeProcessTeardownEvidence | None = None
+    boundary_terminal_ok = True
+    if boundary_preparation is not None:
+        assert inputs.boundary_runtime_launcher is not None
+        terminal_boundary_continuity = inputs.boundary_runtime_launcher.inspect_runtime_continuity(
+            boundary_preparation.boundary,
+            boundary_preparation.placement,
+            execution_id=execution_id,
+            request_digest_v2=boundary_preparation.request_v2.request_digest_v2,
+        )
+        runtime_process_teardown = await inputs.boundary_runtime_launcher.teardown_runtime(
+            boundary_preparation.boundary,
+            boundary_preparation.placement,
+            execution_id=execution_id,
+        )
+        boundary_terminal_ok = all(
+            (
+                terminal_boundary_continuity.workspace_boundary_ref_digest
+                == boundary_preparation.boundary.content_digest,
+                terminal_boundary_continuity.placement_attestation_ref
+                == boundary_preparation.placement.ref,
+                terminal_boundary_continuity.execution_id == execution_id,
+                terminal_boundary_continuity.request_digest_v2
+                == boundary_preparation.request_v2.request_digest_v2,
+                terminal_boundary_continuity.process_tree_identity
+                == boundary_preparation.placement.process_tree_identity,
+                terminal_boundary_continuity.status is RequirementStatus.SATISFIED,
+                runtime_process_teardown.workspace_boundary_ref_digest
+                == boundary_preparation.boundary.content_digest,
+                runtime_process_teardown.placement_attestation_ref
+                == boundary_preparation.placement.ref,
+                runtime_process_teardown.execution_id == execution_id,
+                runtime_process_teardown.process_tree_identity
+                == boundary_preparation.placement.process_tree_identity,
+                runtime_process_teardown.process_tree_terminated is RequirementStatus.SATISFIED,
+                runtime_process_teardown.credential_cleanup is RequirementStatus.SATISFIED,
+            )
+        )
     identity_matches = (
         inspection.execution_id == execution_id
         and inspection.runtime_session == session.runtime_session
@@ -544,7 +1158,9 @@ async def execute_governed_attempt(
         and inspection.provenance.identity_completeness.value == "FULL"
     )
     continuity_ok = (
-        event_bindings_valid and inspection.continuity.state is RuntimeContinuityState.COMPLETE
+        event_bindings_valid
+        and inspection.continuity.state is RuntimeContinuityState.COMPLETE
+        and boundary_terminal_ok
     )
     event_conformance = evaluate_runtime_tool_events(plan, events)
     outcome = ExecutionTerminalOutcome.DONE
@@ -595,6 +1211,7 @@ async def execute_governed_attempt(
             "actual_provider_id": inspection.provenance.actual_provider_id,
             "actual_model_id": inspection.provenance.actual_model_id,
             "runtime_session": session.runtime_session,
+            "runtime_session_binding": (session if boundary_preparation is not None else None),
             "runtime_handle": handle,
         }
     )
@@ -609,8 +1226,29 @@ async def execute_governed_attempt(
         grant=grant,
         reservations=admission.reservations,
         runtime_request=request,
+        runtime_request_v2=(
+            boundary_preparation.request_v2 if boundary_preparation is not None else None
+        ),
+        workspace_boundary_ref=(
+            boundary_preparation.boundary if boundary_preparation is not None else None
+        ),
+        runtime_placement_attestation=(
+            boundary_preparation.placement if boundary_preparation is not None else None
+        ),
+        runtime_placement_continuity=terminal_boundary_continuity,
+        runtime_process_teardown=runtime_process_teardown,
+        runtime_permission_attestation=(
+            boundary_preparation.permission_attestation
+            if boundary_preparation is not None
+            else None
+        ),
+        runtime_permission_attestation_ref=(
+            boundary_preparation.permission_attestation.ref
+            if boundary_preparation is not None
+            else None
+        ),
         runtime_payload_evidence=materialized_payload.evidence,
-        runtime_permission_evidence=inputs.runtime_permission_evidence,
+        runtime_permission_evidence=runtime_permission_evidence,
         runtime_session=session,
         runtime_handle=handle,
         runtime_inspection=inspection,

@@ -77,6 +77,8 @@ class RuntimeCapability(StrEnum):
     ACTUAL_MODEL_IDENTITY = "ACTUAL_MODEL_IDENTITY"
     EVENT_REPLAY = "EVENT_REPLAY"
     NATIVE_WORKTREE = "NATIVE_WORKTREE"
+    BOUNDARY_MANAGED_LAUNCH = "BOUNDARY_MANAGED_LAUNCH"
+    EFFECTIVE_PERMISSION_ATTESTATION = "EFFECTIVE_PERMISSION_ATTESTATION"
 
 
 class RuntimeStatus(StrEnum):
@@ -173,6 +175,8 @@ class RuntimeDescriptor(DomainModel):
     runtime_version: RuntimeIdentifier | None
     api_generation: RuntimeIdentifier
     capabilities: tuple[RuntimeCapability, ...]
+    executable_digest: ContentDigest | None = None
+    configuration_digest: ContentDigest | None = None
 
     @field_validator("capabilities")
     @classmethod
@@ -397,6 +401,7 @@ class RuntimeSessionBinding(DomainModel):
     execution_id: ExecutionId
     runtime_session: RuntimeSessionRef
     request_digest: ContentDigest
+    request_digest_v2: ContentDigest | None = None
     workspace_id: RuntimeIdentifier
     created_at: datetime
 
@@ -417,6 +422,7 @@ class RuntimeExecutionHandle(DomainModel):
     runtime_session: RuntimeSessionRef
     runtime_invocation: RuntimeInvocationRef | None = None
     request_digest: ContentDigest
+    request_digest_v2: ContentDigest | None = None
     opened_at: datetime
 
     @field_validator("opened_at")

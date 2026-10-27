@@ -5,6 +5,14 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Protocol
 
+from relay_engine.agent_runtime.boundary import RuntimeLaunchSubject
+from relay_engine.domain import ContentDigest, ExecutionId
+from relay_engine.execution_workspace.boundary import (
+    RuntimePlacementAttestation,
+    RuntimePlacementContinuityEvidence,
+    RuntimeProcessTeardownEvidence,
+    WorkspaceBoundaryRef,
+)
 from relay_engine.execution_workspace.models import (
     WorkspaceChangeManifest,
     WorkspaceInspection,
@@ -50,4 +58,38 @@ class WorkspaceProvider(Protocol):
     def teardown(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceTeardownEvidence: ...
 
 
-__all__ = ["WorkspaceProvider", "WorkspaceProviderError", "WorkspaceProviderErrorCode"]
+class BoundaryScopedRuntimeLauncher(Protocol):
+    """Optional provider capability for runtime launch inside an exact boundary."""
+
+    def boundary_ref(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceBoundaryRef: ...
+
+    async def launch_runtime(
+        self,
+        boundary: WorkspaceBoundaryRef,
+        subject: RuntimeLaunchSubject,
+    ) -> RuntimePlacementAttestation: ...
+
+    def inspect_runtime_continuity(
+        self,
+        boundary: WorkspaceBoundaryRef,
+        placement: RuntimePlacementAttestation,
+        *,
+        execution_id: ExecutionId,
+        request_digest_v2: ContentDigest,
+    ) -> RuntimePlacementContinuityEvidence: ...
+
+    async def teardown_runtime(
+        self,
+        boundary: WorkspaceBoundaryRef,
+        placement: RuntimePlacementAttestation,
+        *,
+        execution_id: ExecutionId,
+    ) -> RuntimeProcessTeardownEvidence: ...
+
+
+__all__ = [
+    "BoundaryScopedRuntimeLauncher",
+    "WorkspaceProvider",
+    "WorkspaceProviderError",
+    "WorkspaceProviderErrorCode",
+]

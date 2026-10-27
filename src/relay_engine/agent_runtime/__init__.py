@@ -1,5 +1,19 @@
 """Runtime-neutral execution contracts and adapters."""
 
+from relay_engine.agent_runtime.boundary import (
+    RuntimeEvidenceCompleteness,
+    RuntimeLaunchSubject,
+    RuntimePermissionAttestation,
+    RuntimePermissionAttestationRef,
+    RuntimePlacementAttestationRef,
+    RuntimeRequestV2,
+    build_runtime_request_v2,
+    canonical_runtime_permission_attestation_json,
+    canonical_runtime_request_v2_json,
+    digest_runtime_permission_attestation,
+    digest_runtime_request_v2,
+    verify_runtime_permission_attestation_ref,
+)
 from relay_engine.agent_runtime.errors import AgentRuntimeError
 from relay_engine.agent_runtime.models import (
     CredentialRef,
@@ -35,10 +49,11 @@ from relay_engine.agent_runtime.models import (
     canonical_execution_basis_json,
     digest_execution_basis,
 )
-from relay_engine.agent_runtime.protocol import AgentRuntime
+from relay_engine.agent_runtime.protocol import AgentRuntime, BoundaryManagedAgentRuntime
 
 __all__ = [
     "AgentRuntime",
+    "BoundaryManagedAgentRuntime",
     "AgentRuntimeError",
     "CredentialRef",
     "EventContinuity",
@@ -49,6 +64,7 @@ __all__ = [
     "RuntimeControlAck",
     "RuntimeControlAckState",
     "RuntimeDescriptor",
+    "RuntimeEvidenceCompleteness",
     "RuntimeEventEnvelope",
     "RuntimeEventType",
     "RuntimeExecutionBasis",
@@ -63,7 +79,12 @@ __all__ = [
     "RuntimeInputPayload",
     "RuntimeInvocationRef",
     "RuntimePermissionProfileRef",
+    "RuntimePermissionAttestation",
+    "RuntimePermissionAttestationRef",
+    "RuntimePlacementAttestationRef",
     "RuntimeProvenance",
+    "RuntimeLaunchSubject",
+    "RuntimeRequestV2",
     "RuntimeSelection",
     "RuntimeSessionBinding",
     "RuntimeSessionRef",
@@ -71,5 +92,11 @@ __all__ = [
     "RuntimeUsage",
     "RuntimeWorkspaceAttachment",
     "canonical_execution_basis_json",
+    "canonical_runtime_permission_attestation_json",
+    "canonical_runtime_request_v2_json",
+    "build_runtime_request_v2",
     "digest_execution_basis",
+    "digest_runtime_permission_attestation",
+    "digest_runtime_request_v2",
+    "verify_runtime_permission_attestation_ref",
 ]

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -15,6 +16,12 @@ from urllib.parse import quote
 
 import httpx
 
+from relay_engine.agent_runtime.boundary import (
+    RuntimeEvidenceCompleteness,
+    RuntimePermissionAttestation,
+    RuntimeRequestV2,
+    verify_runtime_permission_attestation_ref,
+)
 from relay_engine.agent_runtime.errors import AgentRuntimeError, fail
 from relay_engine.agent_runtime.models import (
     EventContinuity,
@@ -39,6 +46,7 @@ from relay_engine.agent_runtime.models import (
     RuntimeStatus,
     RuntimeUsage,
 )
+from relay_engine.domain import new_id
 
 OPENCODE_RUNTIME_ID = "opencode"
 OPENCODE_API_GENERATION = "v2"
@@ -225,6 +233,13 @@ class OpenCodeRuntime:
         permission_profile: OpenCodePermissionProfile,
         client: httpx.AsyncClient | None = None,
         event_buffer_size: int = 256,
+        executable_digest: str | None = None,
+        configuration_digest: str | None = None,
+        permission_attestation_reader: Callable[
+            [RuntimeRequestV2, RuntimeSessionBinding], RuntimePermissionAttestation
+        ]
+        | None = None,
+        permission_attestation_id_factory: Callable[[], str] | None = None,
     ) -> None:
         endpoint_url = httpx.URL(endpoint)
         if (
@@ -247,12 +262,22 @@ class OpenCodeRuntime:
         self._expected_runtime_version = expected_runtime_version
         self._permission_profile = permission_profile
         self._event_buffer_size = event_buffer_size
+        self._executable_digest = executable_digest
+        self._configuration_digest = configuration_digest
+        self._permission_attestation_reader = permission_attestation_reader
+        self._permission_attestation_id_factory = permission_attestation_id_factory or (
+            lambda: new_id("evd_")
+        )
         self._owns_client = client is None
         self._client = client or httpx.AsyncClient(
             timeout=httpx.Timeout(connect=10, read=None, write=10, pool=10),
             follow_redirects=False,
         )
         self._bindings: dict[str, RuntimeSessionBinding] = {}
+        self._v2_bindings: dict[str, tuple[str, RuntimeSessionBinding]] = {}
+        self._permission_attestations: dict[
+            str, tuple[str, RuntimeSessionBinding, RuntimePermissionAttestation]
+        ] = {}
         self._create_attempts: dict[str, str] = {}
         self._requested_identities: dict[str, tuple[str, str, str]] = {}
         self._opened: set[str] = set()
@@ -312,21 +337,26 @@ class OpenCodeRuntime:
                 "OpenCode runtime version is outside the configured compatibility profile.",
             )
 
+        capabilities = [
+            RuntimeCapability.SESSION_CREATE,
+            RuntimeCapability.EXECUTE,
+            RuntimeCapability.EVENT_STREAM,
+            RuntimeCapability.CANCEL,
+            RuntimeCapability.RESULT_INSPECTION,
+            RuntimeCapability.USAGE_REPORTING,
+            RuntimeCapability.ACTUAL_PROVIDER_IDENTITY,
+            RuntimeCapability.ACTUAL_MODEL_IDENTITY,
+        ]
+        if self._permission_attestation_reader is not None:
+            capabilities.append(RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION)
         return RuntimeDescriptor(
             runtime_id=OPENCODE_RUNTIME_ID,
             adapter_version=OPENCODE_ADAPTER_VERSION,
             runtime_version=version,
             api_generation=OPENCODE_API_GENERATION,
-            capabilities=(
-                RuntimeCapability.SESSION_CREATE,
-                RuntimeCapability.EXECUTE,
-                RuntimeCapability.EVENT_STREAM,
-                RuntimeCapability.CANCEL,
-                RuntimeCapability.RESULT_INSPECTION,
-                RuntimeCapability.USAGE_REPORTING,
-                RuntimeCapability.ACTUAL_PROVIDER_IDENTITY,
-                RuntimeCapability.ACTUAL_MODEL_IDENTITY,
-            ),
+            capabilities=tuple(capabilities),
+            executable_digest=self._executable_digest,
+            configuration_digest=self._configuration_digest,
         )
 
     async def create_session(self, request: RuntimeExecutionRequest) -> RuntimeSessionBinding:
@@ -428,6 +458,144 @@ class OpenCodeRuntime:
             )
             self._bindings[execution_id] = binding
             return binding
+
+    async def create_session_v2(self, request: RuntimeRequestV2) -> RuntimeSessionBinding:
+        """Create one prompt-free session for a placement-bound V2 request."""
+
+        if str(self._endpoint).rstrip("/") != request.endpoint_identity.rstrip("/"):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Configured OpenCode endpoint does not match the attested V2 endpoint.",
+                execution_id=request.request.basis.execution_id,
+            )
+        descriptor = await self.describe()
+        if RuntimeCapability.BOUNDARY_MANAGED_LAUNCH not in descriptor.capabilities:
+            raise fail(
+                RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,
+                "OpenCode is not qualified for boundary-managed launch.",
+                execution_id=request.request.basis.execution_id,
+            )
+        if RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION not in descriptor.capabilities:
+            raise fail(
+                RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,
+                "OpenCode effective permission inspection is not configured.",
+                execution_id=request.request.basis.execution_id,
+            )
+        if request.launch_subject.runtime_descriptor_digest != self._descriptor_digest(descriptor):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "OpenCode descriptor does not match the exact launch subject.",
+                execution_id=request.request.basis.execution_id,
+            )
+        execution_id = request.request.basis.execution_id
+        known = self._v2_bindings.get(execution_id)
+        if known is not None:
+            if known[0] != request.request_digest_v2:
+                raise fail(
+                    RuntimeFailureCategory.REQUEST_CONFLICT,
+                    "Execution ID already has a different V2 request binding.",
+                    execution_id=execution_id,
+                )
+            return known[1]
+
+        binding = await self.create_session(request.request)
+        bound = binding.model_copy(update={"request_digest_v2": request.request_digest_v2})
+        self._v2_bindings[execution_id] = (request.request_digest_v2, bound)
+        return bound
+
+    async def attest_permissions_v2(
+        self,
+        request: RuntimeRequestV2,
+        binding: RuntimeSessionBinding,
+    ) -> RuntimePermissionAttestation:
+        """Read trustworthy effective permission evidence for one exact session."""
+
+        self._validate_v2_binding(request, binding)
+        if self._permission_attestation_reader is None:
+            raise fail(
+                RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,
+                "OpenCode effective permission inspection is not configured.",
+                execution_id=binding.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        existing = self._permission_attestations.get(binding.execution_id)
+        if existing is not None:
+            if existing[0] != request.request_digest_v2 or existing[1] != binding:
+                raise fail(
+                    RuntimeFailureCategory.REQUEST_CONFLICT,
+                    "Execution ID already has a different V2 permission observation.",
+                    execution_id=binding.execution_id,
+                    runtime_session=binding.runtime_session,
+                )
+            return existing[2]
+        evidence = self._permission_attestation_reader(request, binding)
+        if (
+            evidence.execution_id != binding.execution_id
+            or evidence.request_digest_v2 != request.request_digest_v2
+            or evidence.session_binding != binding
+            or evidence.runtime_descriptor_digest
+            != request.launch_subject.runtime_descriptor_digest
+            or evidence.launch_subject_digest != request.launch_subject.content_digest
+            or evidence.placement_attestation_digest != request.placement_attestation_digest
+            or evidence.expected_permission_profile_ref
+            != request.launch_subject.permission_profile_ref
+            or evidence.observed_effective_profile_digest
+            != request.launch_subject.permission_profile_ref.content_digest
+            or evidence.completeness is not RuntimeEvidenceCompleteness.SATISFIED
+        ):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "OpenCode permission evidence does not bind the exact V2 session.",
+                execution_id=binding.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        # The adapter owns the immutable Relay evidence identity. Any identifier
+        # supplied by the runtime-specific observation reader is discarded.
+        evidence_values = evidence.model_dump(mode="python")
+        evidence_values["attestation_id"] = self._permission_attestation_id_factory()
+        evidence = RuntimePermissionAttestation.model_validate(evidence_values)
+        self._permission_attestations[binding.execution_id] = (
+            request.request_digest_v2,
+            binding,
+            evidence,
+        )
+        return evidence
+
+    async def open_execution_v2(
+        self,
+        request: RuntimeRequestV2,
+        binding: RuntimeSessionBinding,
+        permission_attestation: RuntimePermissionAttestation,
+    ) -> RuntimeExecutionHandle:
+        """Admit one prompt only after exact V2 session permission evidence."""
+
+        self._validate_v2_binding(request, binding)
+        if (
+            permission_attestation.execution_id != binding.execution_id
+            or permission_attestation.request_digest_v2 != request.request_digest_v2
+            or permission_attestation.session_binding != binding
+            or permission_attestation.expected_permission_profile_ref
+            != request.launch_subject.permission_profile_ref
+            or permission_attestation.observed_effective_profile_digest
+            != request.launch_subject.permission_profile_ref.content_digest
+            or not verify_runtime_permission_attestation_ref(
+                permission_attestation, permission_attestation.ref
+            )
+            or permission_attestation.completeness is not RuntimeEvidenceCompleteness.SATISFIED
+        ):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Exact complete permission attestation is required before V2 prompt admission.",
+                execution_id=binding.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        v1_binding = binding.model_copy(update={"request_digest_v2": None})
+        handle = await self.open_execution(request.request, v1_binding)
+        v2_handle = handle.model_copy(update={"request_digest_v2": request.request_digest_v2})
+        active = self._active.get(handle.execution_id)
+        if active is not None and active.handle == handle:
+            active.handle = v2_handle
+        return v2_handle
 
     async def open_execution(
         self,
@@ -1046,6 +1214,41 @@ class OpenCodeRuntime:
                 runtime_session=binding.runtime_session,
             )
         self._validate_session_runtime(binding.runtime_session)
+
+    def _validate_v2_binding(
+        self,
+        request: RuntimeRequestV2,
+        binding: RuntimeSessionBinding,
+    ) -> None:
+        known = self._v2_bindings.get(request.request.basis.execution_id)
+        if (
+            known is None
+            or known[0] != request.request_digest_v2
+            or known[1] != binding
+            or binding.request_digest_v2 != request.request_digest_v2
+            or binding.execution_id != request.request.basis.execution_id
+            or binding.request_digest != request.request.request_digest
+            or binding.runtime_session.runtime_id
+            != request.request.basis.runtime_selection.runtime_id
+        ):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Runtime session binding does not match the exact V2 request.",
+                execution_id=request.request.basis.execution_id,
+                runtime_session=binding.runtime_session,
+            )
+        self._validate_session_runtime(binding.runtime_session)
+
+    @staticmethod
+    def _descriptor_digest(descriptor: RuntimeDescriptor) -> str:
+        payload = json.dumps(
+            descriptor.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        return "sha256:" + hashlib.sha256(payload).hexdigest()
 
     def _validate_permission_profile(
         self,

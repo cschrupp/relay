@@ -22,8 +22,21 @@ from relay_engine.agent_runtime import (
     RuntimeSessionRef,
     RuntimeWorkspaceAttachment,
 )
+from relay_engine.agent_runtime.boundary import (
+    RuntimeEvidenceCompleteness,
+    RuntimePermissionAttestation,
+    RuntimePermissionAttestationRef,
+    RuntimeRequestV2,
+)
 from relay_engine.domain import ActorRef, ContentDigest, ExecutionId, ProjectId, SliceId
 from relay_engine.domain._base import DomainModel, require_nonblank
+from relay_engine.execution_workspace.boundary import (
+    RuntimePlacementAttestation,
+    RuntimePlacementContinuityEvidence,
+    RuntimeProcessTeardownEvidence,
+    WorkspaceBoundaryRef,
+    placement_attestation_matches_boundary,
+)
 from relay_engine.execution_workspace.models import (
     WorkspaceChangeManifest,
     WorkspaceInspection,
@@ -352,6 +365,12 @@ class ExecutionSubject(DomainModel):
     workspace_provider_ref: WorkspaceProviderRef
     runtime_descriptor: RuntimeDescriptor
     runtime_request: RuntimeExecutionRequest
+    runtime_request_v2: RuntimeRequestV2 | None = None
+    workspace_boundary_ref: WorkspaceBoundaryRef | None = None
+    runtime_placement_attestation: RuntimePlacementAttestation | None = None
+    runtime_permission_attestation: RuntimePermissionAttestation | None = None
+    runtime_permission_attestation_ref: RuntimePermissionAttestationRef | None = None
+    runtime_session_binding: RuntimeSessionBinding | None = None
     runtime_payload_evidence: RuntimePayloadEvidence
     runtime_permission_evidence: RuntimePermissionEvidence
     corrective_subject_binding: CorrectiveSubjectBinding | None = None
@@ -398,6 +417,113 @@ class ExecutionSubject(DomainModel):
             raise ValueError("reservation must be exact grant-time evidence for this attempt")
         if self.runtime_request.basis.execution_id != self.execution_id:
             raise ValueError("runtime request must use the exact subject ExecutionId")
+        boundary_values = (
+            self.runtime_request_v2,
+            self.workspace_boundary_ref,
+            self.runtime_placement_attestation,
+            self.runtime_permission_attestation,
+            self.runtime_permission_attestation_ref,
+            self.runtime_session_binding,
+        )
+        if self.runtime_request_v2 is None:
+            if any(value is not None for value in boundary_values[1:]):
+                raise ValueError("boundary evidence requires an exact V2 runtime request")
+        else:
+            request_v2 = self.runtime_request_v2
+            placement = self.runtime_placement_attestation
+            permission_attestation = self.runtime_permission_attestation
+            if (
+                self.runtime_session is None
+                or self.runtime_session_binding is None
+                or (
+                    request_v2.request != self.runtime_request
+                    or request_v2.request_digest_v2
+                    != self.runtime_session_binding.request_digest_v2
+                )
+            ):
+                raise ValueError("V2 request and session must bind one exact request digest")
+            if (
+                self.workspace_boundary_ref is None
+                or placement is None
+                or permission_attestation is None
+                or self.runtime_permission_attestation_ref is None
+            ):
+                raise ValueError("strong-boundary subject requires complete boundary evidence")
+            if (
+                request_v2.workspace_boundary_digest != self.workspace_boundary_ref.content_digest
+                or request_v2.launch_subject.execution_id != self.execution_id
+                or request_v2.launch_subject.intended_attempt_id != self.intended_attempt_id
+                or request_v2.launch_subject.authority_candidate_digest != self.candidate_digest
+                or request_v2.launch_subject.human_grant_digest
+                != self.human_grant.grant_record_digest
+                or request_v2.launch_subject.work_packet_ref_digest
+                != _digest_canonical_model(self.work_packet_ref)
+                or request_v2.launch_subject.context_manifest_ref_digest
+                != _digest_canonical_model(self.context_manifest_ref)
+                or request_v2.launch_subject.workspace_plan_ref_digest
+                != _digest_canonical_model(self.workspace_plan_ref)
+                or request_v2.launch_subject.workspace_instance_digest
+                != _digest_canonical_model(self.workspace_instance)
+                or request_v2.launch_subject.runtime_descriptor_digest
+                != _digest_canonical_model(self.runtime_descriptor)
+                or request_v2.launch_subject.runtime_id != self.runtime_descriptor.runtime_id
+                or request_v2.launch_subject.runtime_version
+                != self.runtime_descriptor.runtime_version
+                or request_v2.launch_subject.adapter_version
+                != self.runtime_descriptor.adapter_version
+                or request_v2.launch_subject.runtime_api_generation
+                != self.runtime_descriptor.api_generation
+                or request_v2.launch_subject.executable_identity
+                != (
+                    f"{self.runtime_descriptor.runtime_id}@"
+                    f"{self.runtime_descriptor.runtime_version}#"
+                    f"{self.runtime_descriptor.executable_digest}"
+                )
+                or request_v2.launch_subject.runtime_configuration_digest
+                != self.runtime_descriptor.configuration_digest
+                or request_v2.launch_subject.requested_provider_id
+                != self.runtime_request.basis.runtime_selection.requested_provider_id
+                or request_v2.launch_subject.requested_model_id
+                != self.runtime_request.basis.runtime_selection.requested_model_id
+                or request_v2.launch_subject.permission_profile_ref
+                != self.runtime_request.basis.permission_profile_ref
+                or request_v2.launch_subject.credential_reference_ids
+                != tuple(
+                    sorted(
+                        item.credential_id for item in self.runtime_request.basis.credential_refs
+                    )
+                )
+                or request_v2.launch_subject.runtime_request_payload_digest
+                != self.runtime_request.basis.input_payload.payload_digest
+                or request_v2.launch_subject.runtime_limits_digest
+                != _digest_canonical_model(self.runtime_request.basis.limits)
+                or self.workspace_boundary_ref.plan_ref != self.workspace_plan_ref
+                or self.workspace_boundary_ref.instance_ref != self.workspace_instance
+                or self.workspace_boundary_ref.provider_ref != self.workspace_provider_ref
+                or request_v2.endpoint_identity != placement.endpoint_identity
+                or not placement_attestation_matches_boundary(
+                    self.workspace_boundary_ref,
+                    placement,
+                    launch_subject_digest=request_v2.launch_subject.content_digest,
+                    runtime_descriptor_digest=_digest_canonical_model(self.runtime_descriptor),
+                    launch_nonce=request_v2.launch_subject.challenge_or_launch_nonce,
+                )
+                or placement.ref != request_v2.placement_attestation_ref
+                or permission_attestation.ref != self.runtime_permission_attestation_ref
+                or permission_attestation.session_binding != self.runtime_session_binding
+                or self.runtime_session_binding.runtime_session != self.runtime_session
+                or permission_attestation.request_digest_v2 != request_v2.request_digest_v2
+                or permission_attestation.expected_permission_profile_ref
+                != self.runtime_request.basis.permission_profile_ref
+                or permission_attestation.completeness is not RuntimeEvidenceCompleteness.SATISFIED
+                or permission_attestation.observed_effective_profile_digest
+                != self.runtime_request.basis.permission_profile_ref.content_digest
+                or permission_attestation.actual_provider_id
+                != self.runtime_request.basis.runtime_selection.requested_provider_id
+                or permission_attestation.actual_model_id
+                != self.runtime_request.basis.runtime_selection.requested_model_id
+            ):
+                raise ValueError("subject must bind the exact placement and permission evidence")
         if self.corrective_subject_binding is not None:
             correction = self.corrective_subject_binding
             if (
@@ -464,7 +590,7 @@ class ExecutionSubject(DomainModel):
         """Return SHA-256 of canonical schema-v1 JSON for the complete subject."""
 
         data = json.dumps(
-            self.model_dump(mode="json"),
+            self.model_dump(mode="json", exclude_none=True),
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=False,
@@ -542,6 +668,13 @@ class ExecutionEvidenceBundle(DomainModel):
     grant: HumanGrantBinding
     reservations: tuple[ConsumableReservationBinding, ...]
     runtime_request: RuntimeExecutionRequest
+    runtime_request_v2: RuntimeRequestV2 | None = None
+    workspace_boundary_ref: WorkspaceBoundaryRef | None = None
+    runtime_placement_attestation: RuntimePlacementAttestation | None = None
+    runtime_placement_continuity: RuntimePlacementContinuityEvidence | None = None
+    runtime_process_teardown: RuntimeProcessTeardownEvidence | None = None
+    runtime_permission_attestation: RuntimePermissionAttestation | None = None
+    runtime_permission_attestation_ref: RuntimePermissionAttestationRef | None = None
     runtime_payload_evidence: RuntimePayloadEvidence
     runtime_permission_evidence: RuntimePermissionEvidence
     runtime_session: RuntimeSessionBinding | None
@@ -667,6 +800,63 @@ class ExecutionEvidenceBundle(DomainModel):
             != self.runtime_request.basis.permission_profile_ref
         ):
             raise ValueError("permission evidence must bind exact runtime profile")
+        boundary_refs = (
+            self.workspace_boundary_ref,
+            self.runtime_placement_attestation,
+            self.runtime_placement_continuity,
+            self.runtime_process_teardown,
+            self.runtime_permission_attestation,
+            self.runtime_permission_attestation_ref,
+        )
+        if self.runtime_request_v2 is None:
+            if any(value is not None for value in boundary_refs):
+                raise ValueError("boundary evidence requires a V2 runtime request")
+        else:
+            if (
+                self.runtime_request_v2.request != self.runtime_request
+                or self.runtime_session is None
+                or self.runtime_session.request_digest_v2
+                != self.runtime_request_v2.request_digest_v2
+                or self.workspace_boundary_ref is None
+                or self.runtime_placement_attestation is None
+                or self.runtime_permission_attestation is None
+                or self.runtime_permission_attestation_ref is None
+                or self.runtime_placement_continuity is None
+                or self.runtime_process_teardown is None
+            ):
+                raise ValueError("V2 evidence requires complete placement and permission evidence")
+            if (
+                self.runtime_placement_attestation.ref
+                != self.runtime_request_v2.placement_attestation_ref
+                or self.runtime_request_v2.workspace_boundary_digest
+                != self.workspace_boundary_ref.content_digest
+                or self.runtime_placement_attestation.workspace_boundary_ref_digest
+                != self.workspace_boundary_ref.content_digest
+                or self.runtime_permission_attestation.ref
+                != self.runtime_permission_attestation_ref
+                or self.runtime_permission_attestation.session_binding != self.runtime_session
+                or self.runtime_permission_attestation.request_digest_v2
+                != self.runtime_request_v2.request_digest_v2
+                or self.runtime_placement_continuity.workspace_boundary_ref_digest
+                != self.workspace_boundary_ref.content_digest
+                or self.runtime_placement_continuity.placement_attestation_ref
+                != self.runtime_placement_attestation.ref
+                or self.runtime_placement_continuity.execution_id
+                != self.runtime_request.basis.execution_id
+                or self.runtime_placement_continuity.request_digest_v2
+                != self.runtime_request_v2.request_digest_v2
+                or self.runtime_placement_continuity.process_tree_identity
+                != self.runtime_placement_attestation.process_tree_identity
+                or self.runtime_process_teardown.workspace_boundary_ref_digest
+                != self.workspace_boundary_ref.content_digest
+                or self.runtime_process_teardown.placement_attestation_ref
+                != self.runtime_placement_attestation.ref
+                or self.runtime_process_teardown.execution_id
+                != self.runtime_request.basis.execution_id
+                or self.runtime_process_teardown.process_tree_identity
+                != self.runtime_placement_attestation.process_tree_identity
+            ):
+                raise ValueError("V2 evidence references must bind the exact immutable payloads")
         if (
             self.terminal_workspace_inspection is not None
             and self.terminal_workspace_inspection.instance_ref != self.workspace_instance
@@ -759,6 +949,17 @@ class TerminalExecutionResult(DomainModel):
             is not RequirementStatus.SATISFIED
             or self.subject.runtime_permission_evidence.provenance_status
             is not RequirementStatus.SATISFIED
+            or self.subject.runtime_request_v2 is not None
+            and (
+                self.evidence.runtime_placement_continuity is None
+                or self.evidence.runtime_placement_continuity.status
+                is not RequirementStatus.SATISFIED
+                or self.evidence.runtime_process_teardown is None
+                or self.evidence.runtime_process_teardown.process_tree_terminated
+                is not RequirementStatus.SATISFIED
+                or self.evidence.runtime_process_teardown.credential_cleanup
+                is not RequirementStatus.SATISFIED
+            )
         ):
             raise ValueError("DONE requires successful runtime and terminal workspace evidence")
         if self.outcome is ExecutionTerminalOutcome.DONE:
@@ -789,6 +990,16 @@ class TerminalExecutionResult(DomainModel):
             self.evidence.grant != self.subject.human_grant
             or self.evidence.reservations != self.subject.reservations
             or self.evidence.runtime_request != self.subject.runtime_request
+            or self.evidence.runtime_request_v2 != self.subject.runtime_request_v2
+            or self.evidence.workspace_boundary_ref != self.subject.workspace_boundary_ref
+            or self.evidence.runtime_placement_attestation
+            != self.subject.runtime_placement_attestation
+            or self.subject.runtime_request_v2 is not None
+            and self.evidence.runtime_session != self.subject.runtime_session_binding
+            or self.evidence.runtime_permission_attestation
+            != self.subject.runtime_permission_attestation
+            or self.evidence.runtime_permission_attestation_ref
+            != self.subject.runtime_permission_attestation_ref
             or self.evidence.runtime_payload_evidence != self.subject.runtime_payload_evidence
             or self.evidence.workspace_instance != self.subject.workspace_instance
             or self.evidence.runtime_permission_evidence != self.subject.runtime_permission_evidence
@@ -855,7 +1066,7 @@ def canonical_subject_json(subject: ExecutionSubject) -> str:
     """Serialize subject identity deterministically as compact canonical JSON."""
 
     return json.dumps(
-        subject.model_dump(mode="json"),
+        subject.model_dump(mode="json", exclude_none=True),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,

@@ -3,6 +3,10 @@
 from collections.abc import AsyncIterator
 from typing import Protocol
 
+from relay_engine.agent_runtime.boundary import (
+    RuntimePermissionAttestation,
+    RuntimeRequestV2,
+)
 from relay_engine.agent_runtime.models import (
     EventContinuity,
     RuntimeCancelRequest,
@@ -57,4 +61,29 @@ class ContinuityInspectable(Protocol):
 
     def continuity(self, handle: RuntimeExecutionHandle) -> EventContinuity:
         """Return current continuity for an active or completed event stream."""
+        ...
+
+
+class BoundaryManagedAgentRuntime(Protocol):
+    """V2 session and prompt operations bound to verified placement evidence."""
+
+    async def create_session_v2(self, request: RuntimeRequestV2) -> RuntimeSessionBinding:
+        """Create exactly one prompt-free session for the placement-bound request."""
+        ...
+
+    async def attest_permissions_v2(
+        self,
+        request: RuntimeRequestV2,
+        binding: RuntimeSessionBinding,
+    ) -> RuntimePermissionAttestation:
+        """Attest actual effective permissions of that exact prompt-free session."""
+        ...
+
+    async def open_execution_v2(
+        self,
+        request: RuntimeRequestV2,
+        binding: RuntimeSessionBinding,
+        permission_attestation: RuntimePermissionAttestation,
+    ) -> RuntimeExecutionHandle:
+        """Admit one prompt only after Relay's final V2 admission decision."""
         ...

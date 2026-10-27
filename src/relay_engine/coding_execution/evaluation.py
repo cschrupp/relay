@@ -11,6 +11,13 @@ from relay_engine.agent_runtime import (
     RuntimeEventType,
     RuntimeInputPayload,
 )
+from relay_engine.agent_runtime.boundary import (
+    RuntimeEvidenceCompleteness,
+    RuntimePermissionAttestation,
+    RuntimeRequestV2,
+    verify_runtime_permission_attestation_ref,
+)
+from relay_engine.agent_runtime.models import RuntimeSessionBinding
 from relay_engine.coding_execution.models import (
     AdmissionEvidence,
     AdmissionStatus,
@@ -33,6 +40,13 @@ from relay_engine.coding_execution.models import (
 )
 from relay_engine.domain import ActorRef, ContentDigest, ExecutionId
 from relay_engine.domain._base import DomainModel
+from relay_engine.execution_workspace.boundary import (
+    RuntimePlacementAttestation,
+    RuntimePlacementContinuityEvidence,
+    WorkspaceBoundaryRef,
+    placement_attestation_matches_boundary,
+)
+from relay_engine.execution_workspace.evaluation import workspace_plan_ref
 from relay_engine.execution_workspace.models import ShellMode, ToolDecision, WorkspacePlan
 from relay_engine.project_state import (
     AuthorityCandidate,
@@ -73,8 +87,10 @@ from relay_engine.work_packets import (
     WorkPacket,
     WorkPacketConformanceFacts,
     WorkPacketRef,
+    context_manifest_ref,
     evaluate_context_conformance,
     evaluate_work_packet_conformance,
+    work_packet_ref,
 )
 
 
@@ -104,6 +120,12 @@ class AdmissionInputs(DomainModel):
     runtime_descriptor: RuntimeDescriptor
     permission_evidence: RuntimePermissionEvidence
     workspace_plan: WorkspacePlan | None = None
+    runtime_request_v2: RuntimeRequestV2 | None = None
+    workspace_boundary_ref: WorkspaceBoundaryRef | None = None
+    runtime_placement_attestation: RuntimePlacementAttestation | None = None
+    runtime_session_binding: RuntimeSessionBinding | None = None
+    runtime_permission_attestation: RuntimePermissionAttestation | None = None
+    runtime_placement_continuity: RuntimePlacementContinuityEvidence | None = None
     corrective_subject_binding: CorrectiveSubjectBinding | None = None
 
 
@@ -769,6 +791,75 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
         or permission.actual_model_id != selection.requested_model_id
     ):
         indeterminate.append("runtime-permissions:provider-model-identity-unbound")
+    if inputs.workspace_plan is not None and _requires_boundary_enforcement(inputs.workspace_plan):
+        boundary_check = evaluate_runtime_boundary_evidence(
+            inputs.workspace_plan,
+            inputs.workspace_boundary_ref,
+            inputs.runtime_placement_attestation,
+            inputs.runtime_request_v2,
+            inputs.runtime_session_binding,
+            inputs.runtime_permission_attestation,
+            inputs.runtime_placement_continuity,
+            runtime_id=inputs.runtime_descriptor.runtime_id,
+            runtime_permission_evidence=permission,
+        )
+        if boundary_check.status is AdmissionStatus.DENY:
+            deny.extend(boundary_check.reasons)
+        elif boundary_check.status is AdmissionStatus.INDETERMINATE:
+            indeterminate.extend(boundary_check.reasons)
+        request_v2 = inputs.runtime_request_v2
+        packet = inputs.work_packet
+        manifest = inputs.context_manifest
+        boundary = inputs.workspace_boundary_ref
+        if (
+            request_v2 is None
+            or packet is None
+            or boundary is None
+            or inputs.grant is None
+            or request_v2.launch_subject.authority_candidate_digest != digest
+            or request_v2.launch_subject.intended_attempt_id != attempt_id
+            or request_v2.launch_subject.human_grant_digest != inputs.grant.grant_record_digest
+            or request_v2.launch_subject.work_packet_ref_digest
+            != _model_digest(work_packet_ref(packet))
+            or request_v2.launch_subject.context_manifest_ref_digest
+            != _model_digest(context_manifest_ref(manifest))
+            or request_v2.launch_subject.workspace_plan_ref_digest
+            != _model_digest(workspace_plan_ref(inputs.workspace_plan))
+            or request_v2.launch_subject.workspace_instance_digest
+            != _model_digest(boundary.instance_ref)
+            or request_v2.launch_subject.runtime_descriptor_digest
+            != _model_digest(inputs.runtime_descriptor)
+            or request_v2.launch_subject.runtime_id != inputs.runtime_descriptor.runtime_id
+            or request_v2.launch_subject.runtime_version
+            != inputs.runtime_descriptor.runtime_version
+            or request_v2.launch_subject.executable_identity
+            != (
+                f"{inputs.runtime_descriptor.runtime_id}@"
+                f"{inputs.runtime_descriptor.runtime_version}#"
+                f"{inputs.runtime_descriptor.executable_digest}"
+            )
+            or request_v2.launch_subject.runtime_configuration_digest
+            != inputs.runtime_descriptor.configuration_digest
+            or request_v2.launch_subject.adapter_id != inputs.runtime_descriptor.runtime_id
+            or request_v2.launch_subject.adapter_version
+            != inputs.runtime_descriptor.adapter_version
+            or request_v2.launch_subject.runtime_api_generation
+            != inputs.runtime_descriptor.api_generation
+            or request_v2.launch_subject.permission_profile_ref
+            != request_v2.request.basis.permission_profile_ref
+            or request_v2.launch_subject.requested_provider_id
+            != request_v2.request.basis.runtime_selection.requested_provider_id
+            or request_v2.launch_subject.requested_model_id
+            != request_v2.request.basis.runtime_selection.requested_model_id
+            or request_v2.launch_subject.credential_reference_ids
+            != tuple(sorted(item.credential_id for item in packet.credential_refs))
+            or request_v2.launch_subject.runtime_request_payload_digest
+            != request_v2.request.basis.input_payload.payload_digest
+            or request_v2.launch_subject.runtime_limits_digest
+            != _model_digest(request_v2.request.basis.limits)
+            or request_v2.workspace_boundary_digest != boundary.content_digest
+        ):
+            deny.append("runtime-boundary:launch-subject-binding-mismatch")
 
     status = (
         AdmissionStatus.DENY
@@ -783,6 +874,133 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
         checked_candidate_digest=digest,
         checked_attempt_id=attempt_id,
     )
+
+
+def _requires_boundary_enforcement(plan: WorkspacePlan) -> bool:
+    return any(
+        requirement.minimum_strength.value == "BOUNDARY_ENFORCED"
+        for requirement in plan.property_requirements
+    )
+
+
+def _model_digest(model: DomainModel) -> ContentDigest:
+    payload = json.dumps(
+        model.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def evaluate_runtime_boundary_evidence(
+    plan: WorkspacePlan,
+    boundary: WorkspaceBoundaryRef | None,
+    placement: RuntimePlacementAttestation | None,
+    request_v2: RuntimeRequestV2 | None,
+    session: RuntimeSessionBinding | None,
+    permission: RuntimePermissionAttestation | None,
+    continuity: RuntimePlacementContinuityEvidence | None,
+    *,
+    runtime_id: str,
+    runtime_permission_evidence: RuntimePermissionEvidence,
+) -> AdmissionEvidence:
+    """Verify the exact placement/session/permission chain for strong boundaries."""
+
+    deny: list[str] = []
+    unknown: list[str] = []
+    if any(item is None for item in (boundary, placement, request_v2, session, permission)):
+        unknown.append("runtime-boundary:evidence-missing")
+    else:
+        assert boundary is not None
+        assert placement is not None
+        assert request_v2 is not None
+        assert session is not None
+        assert permission is not None
+        if (
+            boundary.plan_ref != workspace_plan_ref(plan)
+            or boundary.provider_ref != plan.provider_ref
+        ):
+            deny.append("runtime-boundary:workspace-binding-mismatch")
+        if not placement_attestation_matches_boundary(
+            boundary,
+            placement,
+            launch_subject_digest=request_v2.launch_subject.content_digest,
+            runtime_descriptor_digest=request_v2.launch_subject.runtime_descriptor_digest,
+            launch_nonce=request_v2.launch_subject.challenge_or_launch_nonce,
+        ):
+            if placement.observed_boundary_membership is RequirementStatus.UNSATISFIED:
+                deny.append("runtime-boundary:placement-unsatisfied")
+            elif placement.credential_separation_status is RequirementStatus.UNSATISFIED:
+                deny.append("runtime-boundary:credential-separation-unsatisfied")
+            elif (
+                placement.observed_boundary_membership is RequirementStatus.INDETERMINATE
+                or placement.credential_separation_status is RequirementStatus.INDETERMINATE
+                or placement.completeness is RequirementStatus.INDETERMINATE
+            ):
+                unknown.append("runtime-boundary:placement-incomplete")
+            else:
+                deny.append("runtime-boundary:placement-binding-mismatch")
+        if request_v2.request.basis.execution_id != session.execution_id:
+            deny.append("runtime-boundary:execution-mismatch")
+        if (
+            session.request_digest != request_v2.request.request_digest
+            or session.request_digest_v2 != request_v2.request_digest_v2
+            or session.runtime_session.runtime_id != runtime_id
+            or session.workspace_id != request_v2.request.basis.workspace.workspace_id
+        ):
+            deny.append("runtime-boundary:session-binding-mismatch")
+        expected_permission = request_v2.request.basis.permission_profile_ref
+        if permission.observed_effective_profile_digest != expected_permission.content_digest:
+            deny.append("runtime-boundary:effective-profile-mismatch")
+        if (
+            permission.execution_id != session.execution_id
+            or permission.request_digest_v2 != request_v2.request_digest_v2
+            or permission.session_binding != session
+            or permission.runtime_descriptor_digest
+            != request_v2.launch_subject.runtime_descriptor_digest
+            or permission.launch_subject_digest != request_v2.launch_subject.content_digest
+            or permission.placement_attestation_digest != placement.content_digest
+            or permission.expected_permission_profile_ref != expected_permission
+            or not verify_runtime_permission_attestation_ref(permission, permission.ref)
+        ):
+            deny.append("runtime-boundary:permission-binding-mismatch")
+        if permission.completeness is RuntimeEvidenceCompleteness.UNSATISFIED:
+            deny.append("runtime-boundary:permissions-unsatisfied")
+        elif permission.completeness is RuntimeEvidenceCompleteness.INDETERMINATE:
+            unknown.append("runtime-boundary:permissions-incomplete")
+        if (
+            permission.actual_provider_id
+            != request_v2.request.basis.runtime_selection.requested_provider_id
+            or permission.actual_model_id
+            != request_v2.request.basis.runtime_selection.requested_model_id
+        ):
+            deny.append("runtime-boundary:provider-model-mismatch")
+        if continuity is None:
+            unknown.append("runtime-boundary:continuity-missing")
+        elif (
+            continuity.workspace_boundary_ref_digest != boundary.content_digest
+            or continuity.placement_attestation_ref != placement.ref
+            or continuity.execution_id != session.execution_id
+            or continuity.request_digest_v2 != request_v2.request_digest_v2
+            or continuity.process_tree_identity != placement.process_tree_identity
+        ):
+            deny.append("runtime-boundary:continuity-binding-mismatch")
+        elif continuity.status is RequirementStatus.UNSATISFIED:
+            deny.append("runtime-boundary:continuity-lost")
+        elif continuity.status is RequirementStatus.INDETERMINATE:
+            unknown.append("runtime-boundary:continuity-indeterminate")
+    if runtime_permission_evidence.completeness is not RequirementStatus.SATISFIED:
+        unknown.append("runtime-boundary:effective-permission-not-satisfied")
+    status = (
+        AdmissionStatus.DENY
+        if deny
+        else AdmissionStatus.INDETERMINATE
+        if unknown
+        else AdmissionStatus.ADMIT
+    )
+    return AdmissionEvidence(status=status, reasons=tuple(sorted(set(deny + unknown))))
 
 
 def evaluate_corrective_subject_binding(
