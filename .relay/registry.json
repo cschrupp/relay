@@ -6194,6 +6194,22 @@
     },
     {
       "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_782141a7-a118-47d9-a697-32efb2dd877e",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:d120997f11e6dfba78b64da3eb1c6939997857c94a5da86ae611fd10d72494cb",
+      "human_version": "Design Candidate 001",
+      "path": "docs/slices/SLICE_3_1_RUNTIME_BOUNDARY_BINDING_AND_ATTESTATION_DESIGN_CANDIDATE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposed provider-neutral Slice 2.1/2.4/3.1 runtime-boundary binding and attestation contract; pending independent design review and Human acceptance; implementation not authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 — Runtime Boundary Binding and Attestation Design Candidate 001",
+      "updated_at": "2026-10-27T00:00:00Z"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_7e512d61-0c2a-4ee0-8b37-9a824b9efc01",
       "artifact_state": "REVIEW",
       "artifact_type": "DOCUMENT",
