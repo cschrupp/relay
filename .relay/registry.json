@@ -5170,6 +5170,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00022-7b2c-4a11-9e31-000000000022",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:ff1ac1a854ca6e5d99b58dad2c177d030a56f74ec4cdacc40ca036f143a6bba0",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-IMPL-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_IMPLEMENTATION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority to implement the Human-accepted runtime-boundary binding and attestation Candidate 003 across existing Slice 2.1/2.4/3.1 implementation surfaces; live Dogfood execution remains prohibited.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Binding & Attestation Implementation Authority 001",
+      "updated_at": "2026-10-27T17:38:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
