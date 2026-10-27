@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "mapping_id": "RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-CANDIDATE-002",
+  "status": "MAPPING_CANDIDATE_COMPLETE",
+  "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+  "source_basis": {
+    "slice_opening": "RLY-S31-OPEN-001",
+    "accepted_design_subject": "a28a9b88ddd85cd1a32932b30c4e0e668f23b557",
+    "accepted_design_digest": "sha256:f988c859de6b2127efde63436a81a89e5aa4a37f1104e859fa58c829e1258f78",
+    "design_acceptance": "RLY-S31-DESIGN-ACCEPT-001 — ACCEPTED",
+    "implementation_authority": "RLY-S31-IMPL-AUTH-001 — AUTHORIZED",
+    "accepted_implementation_subject": "6dd4296440196b63078b13855b70dff60a386325",
+    "implementation_acceptance": "RLY-S31-IMPL-ACCEPT-001 — ACCEPTED"
+  },
+  "id_allocation": {
+    "state": "DEFERRED_TO_SEPARATE_MATERIALIZATION_AUTHORITY",
+    "required_generator": "relay_engine.domain.ids.new_id(\"slc_\")",
+    "rationale": "The mapping authority forbids creating a SliceId; create_slice requires the caller to supply one."
+  },
+  "proposed_definition_revision": 1,
+  "slice_definition_without_id": {
+    "schema_version": 1,
+    "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+    "title": "Slice 3.1 — Coding Agent Execution",
+    "scope": {
+      "schema_version": 1,
+      "in_scope": [
+        "consume an already-compiled fresh Slice 2.5 `AuthorityCandidate`",
+        "verify an exact Human grant bound to that candidate digest",
+        "verify applicable consumable reservations that were created atomically by the existing Human Authority path against candidate digest + intended attempt identity",
+        "materialize/consume an exact authority-linked WorkPacket input and establish WorkPacket conformance",
+        "compute the exact `WorkPacketRef`",
+        "resolve the exact `WorkspacePlan` from that conformed WorkPacketRef using existing Slice 2.4 functions",
+        "bind exact workspace/runtime/provider/model identities and the one-to-one intended-attempt -> `ExecutionId` mapping",
+        "derive one immutable final `ExecutionSubject`",
+        "make a deterministic admit/deny/indeterminate decision before any runtime admission",
+        "drive one injected `AgentRuntime` through the accepted create-session/open/events/inspect/cancel boundary when and only when admission succeeds",
+        "derive one Relay-owned terminal result/evidence bundle from runtime/workspace observations",
+        "preserve independent-evaluator handoff data without evaluating or accepting its own result."
+      ],
+      "out_of_scope": [
+        "defining or replacing the underlying policy semantics owned by Slices 2.1–2.5",
+        "issuing Human grants or creating, releasing, or consuming grant-time reservations",
+        "independently evaluating or accepting the implementation result",
+        "granting canonical-source mutation, push, merge, or promotion authority",
+        "automatically creating successor WorkPackets or treating internal plans, milestones, retries, or subagents as Relay work units",
+        "replacing Relay governance with a second planner, requirement graph, lifecycle engine, task database, provider framework, or generic multi-agent scheduler"
+      ]
+    },
+    "acceptance_criteria": [
+      {
+        "schema_version": 1,
+        "key": "A01",
+        "statement": "Scenario: Fresh `READY` compilation and exact Human grant for its AuthorityCandidate digest Required result: Atomically reserve applicable consumables at grant; materialize the authority-linked WorkPacket, establish conformance and exact WorkPacketRef, then resolve WorkspacePlan from that exact WorkPacketRef before runtime admission.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A02",
+        "statement": "Scenario: Compilation is `READY`, but no exact Human grant for the AuthorityCandidate digest exists Required result: Deny admission; preserve `READY != AUTHORIZED`; no WorkPacket materialization or runtime admission.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A03",
+        "statement": "Scenario: Packet, baseline, role, workspace, runtime, provider or model differs from the authorized subject Required result: Deny or return indeterminate; no runtime admission.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A04",
+        "statement": "Scenario: Qualification becomes stale or provider/model/runtime/workspace changes after authorization Required result: Revalidate and stop; require fresh authority where the subject changed.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A05",
+        "statement": "Scenario: Unresolved prohibition, responsibility collision, unavailable/consumed namespace, or concurrent attempt reservation Required result: Deny admission or fail closed; reservation is atomic at Human grant, bound to the exact candidate digest and intended attempt, and cannot be replayed.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A06",
+        "statement": "Scenario: One cohesive WorkPacket needs multiple internal steps Required result: Permit internal decomposition without creating Relay work units or Human gates.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A07",
+        "statement": "Scenario: An internal milestone completes Required result: Record non-authoritative progress only; no acceptance/evaluation event.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A08",
+        "statement": "Scenario: Required work exceeds authorized scope Required result: Record a non-authoritative `ProposedWorkObservation` in execution evidence, then stop under the exact applicable WorkPacket hard-stop/blocking disposition; do not mutate backlog or invent a successor. `PROPOSED_WORK` is not a terminal status.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A09",
+        "statement": "Scenario: RoleContract establishes no authorized successor Required result: Record `BACKLOG_EXHAUSTED` and successful STOP; create no successor.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A10",
+        "statement": "Scenario: Protected verification mutation lacks separate exact authority Required result: Deny/fail closed; preserve protected asset and evidence.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A11",
+        "statement": "Scenario: Effective runtime exposes a denied tool or shell Required result: Nonconformant, even without observed invocation; use runtime-attestation evidence, not provider capability claims.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A12",
+        "statement": "Scenario: Runtime tool identity or required exposure/use identity cannot be established Required result: Return indeterminate; never treat unknown identity as allowed.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A13",
+        "statement": "Scenario: Execution ends with dirty workspace and no commit Required result: Produce an exact reviewable result and evidence; do not report clean/committed.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A14",
+        "statement": "Scenario: Execution creates a local commit Required result: Bind commit and parent; do not imply push, merge or promotion authority.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A15",
+        "statement": "Scenario: Runtime failure leaves an external effect or prompt admission ambiguous Required result: Inspect/reconcile the exact runtime session bound to the pre-grant intended attempt/ExecutionId and effect; fail closed, no blind retry or replacement reservation.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A16",
+        "statement": "Scenario: Terminal evidence is submitted for evaluation Required result: Evaluator receives immutable exact subject/evidence; implementer cannot self-accept.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A17",
+        "statement": "Scenario: Evaluator requests correction within exact authority Required result: Bound the corrective candidate to recorded findings/scope and link both candidates; any genuinely new attempt has its own exact intended identity and grant-time reservation.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A18",
+        "statement": "Scenario: Correction requires new authority or crosses scope Required result: Stop; no automatic follow-on WorkPacket or continued mutation. A new attempt requires a new candidate, Human grant and reservation.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A19",
+        "statement": "Scenario: Human cancels an active attempt Required result: Preserve the pre-grant intended attempt identity, its ExecutionId mapping, grant-time reservation, cancel acknowledgement, partial changes and evidence; no silent resume or identity substitution.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A20",
+        "statement": "Scenario: Authorized budget is exhausted Required result: Record usage and stop; no silent limit/provider/model expansion.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A21",
+        "statement": "Scenario: An accepted predecessor contract cannot express required evidence/behavior Required result: Create exact contract-gap analysis and stop; do not rewrite predecessor.",
+        "required": true
+      },
+      {
+        "schema_version": 1,
+        "key": "A22",
+        "statement": "Scenario: Only phase opening, slice opening, or design authority exists Required result: No execution; separate exact implementation/execution authority is required.",
+        "required": true
+      }
+    ],
+    "parent_slice_id": null,
+    "dependency_ids": []
+  },
+  "parent_dependency_mapping": {
+    "parent_slice_id": {
+      "value": null,
+      "rationale": "No accepted Slice 3.1 governance record establishes an operational parent SliceId. Phase 3 is a phase, not a Slice."
+    },
+    "dependency_ids": {
+      "state": "HUMAN_DECIDED",
+      "value": [],
+      "decision": "For Slice 3.1, accepted Slices 2.1–2.5 are governance/contract prerequisites, not operational Slice dependency-graph edges.",
+      "rationale": "Their authority, applicability, accepted-contract status, and required evidence continue to be enforced through the governance/state-resolution/WorkPacket path. The operational store does not contain exact SliceIds for the entire predecessor set; adding only the available Slice 2.2 identity would encode a false partial dependency set."
+    }
+  },
+  "digest_derivation": {
+    "content_digest_state": "DEFERRED_UNTIL_SLICE_ID_ALLOCATION",
+    "function": "relay_engine.project_slice.origin.definition_payload_digest",
+    "canonicalization": "model_dump(mode=\"json\") -> recursively JSON-ready -> json.dumps(ensure_ascii=False, sort_keys=True, separators=(\",\", \":\")) -> UTF-8 -> SHA-256 -> prefix \"sha256:\"",
+    "slice_definition_ref_rule": "After separate authority allocates the SliceId and create_slice succeeds at revision 1, SliceDefinitionRef binds that SliceId, definition_revision=1, and the canonical digest of the complete Slice payload."
+  },
+  "scope_semantics_note": "The out_of_scope values are permanent Slice responsibility boundaries from the accepted design. They do not prohibit an appropriately authorized execution from using a runtime, provider/model, credentials, network, or real project. Those actions remain subject to exact Human authority, accepted upstream contracts, and final execution admission; this mapping grants no such authority.",
+  "non_authority": [
+    "This mapping candidate does not allocate a SliceId.",
+    "This mapping candidate does not call create_slice.",
+    "This mapping candidate does not mutate the operational store.",
+    "This mapping candidate does not authorize Dogfood 001 continuation.",
+    "This mapping candidate does not authorize workspace-provider work or weaken workspace policy."
+  ]
+}

@@ -5217,6 +5217,38 @@
       "updated_at": "2026-10-26T19:50:00Z"
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_31a00005-7b2c-4a11-9e31-000000000005",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DATA",
+      "content_digest": "sha256:3c4e991e043af245771e33b89a864a37399839fbac1ce6f1c93b44158a0225db",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.json",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Corrective Human-reviewable mapping candidate; M001 scope provenance corrected and M002 dependency semantics Human-decided.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Definition Mapping Candidate 002 JSON",
+      "updated_at": "2026-10-26T23:48:46Z"
+    },
+    {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_31a00006-7b2c-4a11-9e31-000000000006",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:146afda654f959d68d8b2dd5f20379298895e685f1b75bca1650fa938c82c872",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Corrective Human-reviewable mapping candidate; M001 scope provenance corrected and M002 dependency semantics Human-decided.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Definition Mapping Candidate 002",
+      "updated_at": "2026-10-26T23:48:46Z"
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00004-7b2c-4a11-9e31-000000000004",
       "artifact_state": "IMMUTABLE",
