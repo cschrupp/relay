@@ -5122,6 +5122,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00019-7b2c-4a11-9e31-000000000019",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:51b29678126ae421b0d18c533d5912c3cb63fe866cf3fc1869b2759d6074cc4d",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-DESIGN-REWORK-AUTH-002",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_DESIGN_REWORK_AUTHORIZATION_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for narrow M002/M003 rework of runtime-boundary Candidate 002; M001 and substantive architecture frozen; no implementation authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Design M002/M003 Rework Authority 002",
+      "updated_at": "2026-10-27T15:13:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
