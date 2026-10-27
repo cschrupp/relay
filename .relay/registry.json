@@ -5330,6 +5330,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00011-7b2c-4a11-9e31-000000000011",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DATA",
+      "content_digest": "sha256:91ae9fe00ebee348a87e4390a3dd7fcaedeb92cdcfb2e3cbb00e55722cf8567f",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-RESULT-001",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_IDENTITY_MATERIALIZATION_RESULT_001.json",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Durable canonical-service evidence for the one-authorized Slice 3.1 identity materialization; terminal IDENTITY_MATERIALIZED.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Identity Materialization Result 001",
+      "updated_at": "2026-10-27T02:45:30Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_e721c64d-ef65-42aa-8a88-b7090800306b",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",

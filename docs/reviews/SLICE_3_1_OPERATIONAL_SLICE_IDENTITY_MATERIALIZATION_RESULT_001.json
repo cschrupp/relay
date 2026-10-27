@@ -1,0 +1,664 @@
+{
+  "accepted_mapping": {
+    "candidate_commit": "758866346a13c1533423bafe41bd8d0aa8d0b49b",
+    "candidate_json": {
+      "artifact_id": "art_31a00005-7b2c-4a11-9e31-000000000005",
+      "content_digest": "sha256:3c4e991e043af245771e33b89a864a37399839fbac1ce6f1c93b44158a0225db",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.json",
+      "revision": 1
+    },
+    "candidate_markdown": {
+      "artifact_id": "art_31a00006-7b2c-4a11-9e31-000000000006",
+      "content_digest": "sha256:d705882e090e6e4799d6483d607f70172df8350b152ef573ed3cd2926d93b478",
+      "human_version": null,
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_CANDIDATE_002.md",
+      "revision": 1
+    },
+    "human_acceptance": {
+      "artifact_id": "art_31a00009-7b2c-4a11-9e31-000000000009",
+      "content_digest": "sha256:b1cb9603d9f584733b283965c85f5863d31467950af691abc7d8e0f61383e6c4",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-ACCEPT-001",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_ACCEPTANCE_001.md",
+      "revision": 1
+    },
+    "independent_evaluation": {
+      "artifact_id": "art_31a00008-7b2c-4a11-9e31-000000000008",
+      "content_digest": "sha256:939c5540f566ee5038ba3028827e282c5044d8e848364b3f15bae00a2eba4f60",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-EVAL-003",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_EVALUATION_003.md",
+      "revision": 1
+    }
+  },
+  "authority": {
+    "authority_commit": "f98737e4f3d5ef6c7a2dc0e6f298f71ba4804ad8",
+    "id": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002",
+    "record": {
+      "artifact_id": "art_31a00010-7b2c-4a11-9e31-000000000010",
+      "content_digest": "sha256:f2d40738d04bbeb9850318323243060e488bf4ee6f9eda1bcbc79b1ccdc9c363",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_IDENTITY_MATERIALIZATION_AUTHORIZATION_002.md",
+      "revision": 1
+    },
+    "registry_commit": "603d3f38e7dcf7022d604049eaf231b0c7683d4f"
+  },
+  "non_authority": {
+    "dogfood_attempt_resumed_or_consumed": false,
+    "provider_or_model_called": false,
+    "remote_mutation": false,
+    "runtime_admitted": false,
+    "workpacket_created": false,
+    "workspace_provisioned": false,
+    "workspaceplan_created": false
+  },
+  "operation": {
+    "canonical_service": "relay_engine.project_slice.service.create_slice",
+    "create_slice_changed": true,
+    "create_slice_invocations": 1,
+    "mutation_actor": {
+      "display_name": "interactive Human root authority",
+      "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+      "kind": "HUMAN",
+      "schema_version": 1
+    },
+    "mutation_occurred_at": "2026-10-27T02:43:49.988487Z",
+    "mutation_reason": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002; materialize Human-accepted Candidate 002 mapping",
+    "slice_id_allocations": 1,
+    "slice_id_generator": "relay_engine.domain.ids.new_id(\"slc_\")"
+  },
+  "operational_origin": {
+    "creation_payload_digest_matches_definition_digest": true,
+    "global_epoch_state": "NOT_ESTABLISHED",
+    "project_epoch_resolution": {
+      "diagnostic": null,
+      "epoch": {
+        "adoption_id": "adopt_01a15754-1123-7535-9ded-6a57d1dcc465",
+        "adoption_record_digest": "sha256:30c51e0f276c560a1bf8fe7dc5e79b37bc0f2a90fddb34e1b566fe93114e8c4c",
+        "basis_kind": "EXISTING_PROJECT_ADOPTION",
+        "epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+        "epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+        "genesis_cut_at": "2026-10-20T03:27:54.511113Z",
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "recorded_at": "2026-10-20T03:27:54.511113Z",
+        "schema_version": 1
+      },
+      "record_ids": [
+        "ohe_01a15754-1123-7535-9ded-6a587338a7b1"
+      ],
+      "schema_version": 1,
+      "state": "ESTABLISHED"
+    },
+    "project_resolution": {
+      "diagnostic": null,
+      "epoch": {
+        "adoption_id": "adopt_01a15754-1123-7535-9ded-6a57d1dcc465",
+        "adoption_record_digest": "sha256:30c51e0f276c560a1bf8fe7dc5e79b37bc0f2a90fddb34e1b566fe93114e8c4c",
+        "basis_kind": "EXISTING_PROJECT_ADOPTION",
+        "epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+        "epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+        "genesis_cut_at": "2026-10-20T03:27:54.511113Z",
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "recorded_at": "2026-10-20T03:27:54.511113Z",
+        "schema_version": 1
+      },
+      "origin": "PRE_GENESIS",
+      "record": {
+        "correction_authorization_digest": null,
+        "correction_authorization_id": null,
+        "epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+        "epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+        "establishing_authority_id": "adopt_01a15754-1123-7535-9ded-6a57d1dcc465",
+        "origin": "PRE_GENESIS",
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "proof": {
+          "actor": {
+            "display_name": "interactive Human root authority",
+            "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+            "kind": "HUMAN",
+            "schema_version": 1
+          },
+          "adoption_id": "adopt_01a15754-1123-7535-9ded-6a57d1dcc465",
+          "adoption_record_digest": "sha256:30c51e0f276c560a1bf8fe7dc5e79b37bc0f2a90fddb34e1b566fe93114e8c4c",
+          "assertion": "REPRESENTED_PROJECT_EXISTED_BEFORE_T1",
+          "attestation_id": "B2_PRE_T1_EXISTENCE_ATTESTATION_V1",
+          "decided_at": "2026-10-20T03:27:54.511113Z",
+          "fresh_head": {
+            "repository": {
+              "host": "github.com",
+              "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+              "path": "cschrupp/relay",
+              "schema_version": 1
+            },
+            "schema_version": 1,
+            "sha": "be1dd6f479d601c7ae2eea3985675f53ab748637"
+          },
+          "fresh_report_sha256": "sha256:6e542e3d5803781a3cbed97a9c4e4fd860a3f133709de36a7ff09cf673761f40",
+          "fresh_report_state_sha256": "sha256:a78a97db039825c7205d77920b96a3ff66434f3a540611ecb0423fb0728c4641",
+          "fresh_repository_fingerprint_sha256": "sha256:55cfa3995fe4ccc8e9c0ddd7f4fd80cec8d7c3839096a51a3305d285ce827651",
+          "input_report_sha256": "sha256:baef2587f1adfd9c1f103455ffcd8ac7e07d0163ca0333b789dfe1a800eac568",
+          "manifest_sha256": "sha256:deb1fb619fa8584e070a8508f18ddfe6d41e045e8426eed33e03c1a9e8c58f8c",
+          "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+          "proof_type": "ADOPTION_PRE_GENESIS_PROJECT",
+          "relay_contract_status": "VALID",
+          "repository": {
+            "host": "github.com",
+            "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+            "path": "cschrupp/relay",
+            "schema_version": 1
+          },
+          "repository_root": "/home/user/projects/relay",
+          "schema_version": 1
+        },
+        "rationale": null,
+        "record_digest": "sha256:2dad68251bfb66fad3113553a92306f6e3ef024fd5f5cee8e35aac0b168d24c1",
+        "record_id": "oor_01a15759-f0ff-765d-a7b4-82cbd2f4358f",
+        "record_kind": "INITIAL",
+        "recorded_at": "2026-10-20T03:27:54.511113Z",
+        "recorded_by": {
+          "display_name": "interactive Human root authority",
+          "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+          "kind": "HUMAN",
+          "schema_version": 1
+        },
+        "schema_version": 1,
+        "subject_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "subject_type": "PROJECT",
+        "supersedes_record_digest": null,
+        "supersedes_record_id": null
+      },
+      "schema_version": 1,
+      "state": "ESTABLISHED",
+      "subject_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+      "subject_type": "PROJECT"
+    },
+    "slice_origin": "NATIVE_RELAY",
+    "slice_origin_record_digest": "sha256:c8ba5de0eb2f9692b0c808700eeec65099a15545eda5c2bdd45ddc7d0f2dc8b6",
+    "slice_origin_record_id": "oor_01a17b3e-1a68-73f4-863a-b960ca9aa2d0",
+    "slice_resolution": {
+      "diagnostic": null,
+      "epoch": {
+        "adoption_id": "adopt_01a15754-1123-7535-9ded-6a57d1dcc465",
+        "adoption_record_digest": "sha256:30c51e0f276c560a1bf8fe7dc5e79b37bc0f2a90fddb34e1b566fe93114e8c4c",
+        "basis_kind": "EXISTING_PROJECT_ADOPTION",
+        "epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+        "epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+        "genesis_cut_at": "2026-10-20T03:27:54.511113Z",
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "recorded_at": "2026-10-20T03:27:54.511113Z",
+        "schema_version": 1
+      },
+      "origin": "NATIVE_RELAY",
+      "record": {
+        "correction_authorization_digest": null,
+        "correction_authorization_id": null,
+        "epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+        "epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+        "establishing_authority_id": "slice_definition_revisions/slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3/1",
+        "origin": "NATIVE_RELAY",
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "proof": {
+          "actor": {
+            "display_name": "interactive Human root authority",
+            "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+            "kind": "HUMAN",
+            "schema_version": 1
+          },
+          "created_at": "2026-10-27T02:43:49.988487Z",
+          "creation_payload_digest": "sha256:1659a313cf123983b8a003d2804141ddeca69e4b83f96c272e96030a9cebf8be",
+          "definition_revision": 1,
+          "operation": "CREATE",
+          "proof_type": "NATIVE_RELAY",
+          "reason": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002; materialize Human-accepted Candidate 002 mapping",
+          "schema_version": 1,
+          "subject_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+          "subject_type": "SLICE"
+        },
+        "rationale": null,
+        "record_digest": "sha256:c8ba5de0eb2f9692b0c808700eeec65099a15545eda5c2bdd45ddc7d0f2dc8b6",
+        "record_id": "oor_01a17b3e-1a68-73f4-863a-b960ca9aa2d0",
+        "record_kind": "INITIAL",
+        "recorded_at": "2026-10-27T02:43:49.988487Z",
+        "recorded_by": {
+          "display_name": "interactive Human root authority",
+          "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+          "kind": "HUMAN",
+          "schema_version": 1
+        },
+        "schema_version": 1,
+        "subject_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+        "subject_type": "SLICE",
+        "supersedes_record_digest": null,
+        "supersedes_record_id": null
+      },
+      "schema_version": 1,
+      "state": "ESTABLISHED",
+      "subject_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+      "subject_type": "SLICE"
+    }
+  },
+  "post_operation_basis": {
+    "database_mtime_ns": 1793069030002735585,
+    "database_sha256": "5770003f029262959b457f6a308be8d186c5472a0f122b682cc77713b3f2fdaa",
+    "database_size_bytes": 520192,
+    "project_definition_revision": 1,
+    "project_slices": [
+      {
+        "definition_revision": 2,
+        "slice_id": "slc_01a15754-1123-7535-9ded-6a564518e347",
+        "title": "Slice 2.2 — Role Contracts"
+      },
+      {
+        "definition_revision": 1,
+        "slice_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+        "title": "Slice 3.1 — Coding Agent Execution"
+      }
+    ],
+    "unrelated_slice_definitions_changed": false
+  },
+  "pre_operation_basis": {
+    "database_mtime_ns": 1792537578918689375,
+    "database_path": "/home/user/projects/relay-local-state/relay-operational.sqlite3",
+    "database_sha256": "6bcef5dc6383a75772948fd82bdbc881b05b169f22fb107720f2a3dc53a14a5e",
+    "database_size_bytes": 491520,
+    "existing_project_slices": [
+      {
+        "definition_revision": 2,
+        "slice_id": "slc_01a15754-1123-7535-9ded-6a564518e347",
+        "title": "Slice 2.2 — Role Contracts"
+      }
+    ],
+    "matching_current_slice_found": false,
+    "project_definition_revision": 1,
+    "project_epoch_digest": "sha256:2bfdc0cbfb90a34f53608d77c3d6d94cbf79d3ed1aa178671c93d97bf7e4a3fc",
+    "project_epoch_id": "ohe_01a15754-1123-7535-9ded-6a587338a7b1",
+    "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+    "project_origin_record_digest": "sha256:2dad68251bfb66fad3113553a92306f6e3ef024fd5f5cee8e35aac0b168d24c1",
+    "project_origin_record_id": "oor_01a15759-f0ff-765d-a7b4-82cbd2f4358f",
+    "shm_size_bytes": 32768,
+    "wal_size_bytes": 0
+  },
+  "record_id": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-RESULT-001",
+  "repository_basis": {
+    "branch": "docs/3.1-governance-operational-slice-gap",
+    "commit_before_materialization": "603d3f38e7dcf7022d604049eaf231b0c7683d4f",
+    "worktree_clean_before_materialization": true
+  },
+  "schema_version": 1,
+  "slice": {
+    "definition_digest": "sha256:1659a313cf123983b8a003d2804141ddeca69e4b83f96c272e96030a9cebf8be",
+    "definition_revision": 1,
+    "payload": {
+      "acceptance_criteria": [
+        {
+          "key": "A01",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Fresh `READY` compilation and exact Human grant for its AuthorityCandidate digest Required result: Atomically reserve applicable consumables at grant; materialize the authority-linked WorkPacket, establish conformance and exact WorkPacketRef, then resolve WorkspacePlan from that exact WorkPacketRef before runtime admission."
+        },
+        {
+          "key": "A02",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Compilation is `READY`, but no exact Human grant for the AuthorityCandidate digest exists Required result: Deny admission; preserve `READY != AUTHORIZED`; no WorkPacket materialization or runtime admission."
+        },
+        {
+          "key": "A03",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Packet, baseline, role, workspace, runtime, provider or model differs from the authorized subject Required result: Deny or return indeterminate; no runtime admission."
+        },
+        {
+          "key": "A04",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Qualification becomes stale or provider/model/runtime/workspace changes after authorization Required result: Revalidate and stop; require fresh authority where the subject changed."
+        },
+        {
+          "key": "A05",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Unresolved prohibition, responsibility collision, unavailable/consumed namespace, or concurrent attempt reservation Required result: Deny admission or fail closed; reservation is atomic at Human grant, bound to the exact candidate digest and intended attempt, and cannot be replayed."
+        },
+        {
+          "key": "A06",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: One cohesive WorkPacket needs multiple internal steps Required result: Permit internal decomposition without creating Relay work units or Human gates."
+        },
+        {
+          "key": "A07",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: An internal milestone completes Required result: Record non-authoritative progress only; no acceptance/evaluation event."
+        },
+        {
+          "key": "A08",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Required work exceeds authorized scope Required result: Record a non-authoritative `ProposedWorkObservation` in execution evidence, then stop under the exact applicable WorkPacket hard-stop/blocking disposition; do not mutate backlog or invent a successor. `PROPOSED_WORK` is not a terminal status."
+        },
+        {
+          "key": "A09",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: RoleContract establishes no authorized successor Required result: Record `BACKLOG_EXHAUSTED` and successful STOP; create no successor."
+        },
+        {
+          "key": "A10",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Protected verification mutation lacks separate exact authority Required result: Deny/fail closed; preserve protected asset and evidence."
+        },
+        {
+          "key": "A11",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Effective runtime exposes a denied tool or shell Required result: Nonconformant, even without observed invocation; use runtime-attestation evidence, not provider capability claims."
+        },
+        {
+          "key": "A12",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Runtime tool identity or required exposure/use identity cannot be established Required result: Return indeterminate; never treat unknown identity as allowed."
+        },
+        {
+          "key": "A13",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Execution ends with dirty workspace and no commit Required result: Produce an exact reviewable result and evidence; do not report clean/committed."
+        },
+        {
+          "key": "A14",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Execution creates a local commit Required result: Bind commit and parent; do not imply push, merge or promotion authority."
+        },
+        {
+          "key": "A15",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Runtime failure leaves an external effect or prompt admission ambiguous Required result: Inspect/reconcile the exact runtime session bound to the pre-grant intended attempt/ExecutionId and effect; fail closed, no blind retry or replacement reservation."
+        },
+        {
+          "key": "A16",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Terminal evidence is submitted for evaluation Required result: Evaluator receives immutable exact subject/evidence; implementer cannot self-accept."
+        },
+        {
+          "key": "A17",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Evaluator requests correction within exact authority Required result: Bound the corrective candidate to recorded findings/scope and link both candidates; any genuinely new attempt has its own exact intended identity and grant-time reservation."
+        },
+        {
+          "key": "A18",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Correction requires new authority or crosses scope Required result: Stop; no automatic follow-on WorkPacket or continued mutation. A new attempt requires a new candidate, Human grant and reservation."
+        },
+        {
+          "key": "A19",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Human cancels an active attempt Required result: Preserve the pre-grant intended attempt identity, its ExecutionId mapping, grant-time reservation, cancel acknowledgement, partial changes and evidence; no silent resume or identity substitution."
+        },
+        {
+          "key": "A20",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Authorized budget is exhausted Required result: Record usage and stop; no silent limit/provider/model expansion."
+        },
+        {
+          "key": "A21",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: An accepted predecessor contract cannot express required evidence/behavior Required result: Create exact contract-gap analysis and stop; do not rewrite predecessor."
+        },
+        {
+          "key": "A22",
+          "required": true,
+          "schema_version": 1,
+          "statement": "Scenario: Only phase opening, slice opening, or design authority exists Required result: No execution; separate exact implementation/execution authority is required."
+        }
+      ],
+      "dependency_ids": [],
+      "id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+      "parent_slice_id": null,
+      "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+      "schema_version": 1,
+      "scope": {
+        "in_scope": [
+          "consume an already-compiled fresh Slice 2.5 `AuthorityCandidate`",
+          "verify an exact Human grant bound to that candidate digest",
+          "verify applicable consumable reservations that were created atomically by the existing Human Authority path against candidate digest + intended attempt identity",
+          "materialize/consume an exact authority-linked WorkPacket input and establish WorkPacket conformance",
+          "compute the exact `WorkPacketRef`",
+          "resolve the exact `WorkspacePlan` from that conformed WorkPacketRef using existing Slice 2.4 functions",
+          "bind exact workspace/runtime/provider/model identities and the one-to-one intended-attempt -> `ExecutionId` mapping",
+          "derive one immutable final `ExecutionSubject`",
+          "make a deterministic admit/deny/indeterminate decision before any runtime admission",
+          "drive one injected `AgentRuntime` through the accepted create-session/open/events/inspect/cancel boundary when and only when admission succeeds",
+          "derive one Relay-owned terminal result/evidence bundle from runtime/workspace observations",
+          "preserve independent-evaluator handoff data without evaluating or accepting its own result."
+        ],
+        "out_of_scope": [
+          "defining or replacing the underlying policy semantics owned by Slices 2.1–2.5",
+          "issuing Human grants or creating, releasing, or consuming grant-time reservations",
+          "independently evaluating or accepting the implementation result",
+          "granting canonical-source mutation, push, merge, or promotion authority",
+          "automatically creating successor WorkPackets or treating internal plans, milestones, retries, or subagents as Relay work units",
+          "replacing Relay governance with a second planner, requirement graph, lifecycle engine, task database, provider framework, or generic multi-agent scheduler"
+        ],
+        "schema_version": 1
+      },
+      "title": "Slice 3.1 — Coding Agent Execution"
+    },
+    "readback_equal_to_submitted_value": true,
+    "revision_record": {
+      "definition_revision": 1,
+      "mutation": {
+        "actor": {
+          "display_name": "interactive Human root authority",
+          "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+          "kind": "HUMAN",
+          "schema_version": 1
+        },
+        "occurred_at": "2026-10-27T02:43:49.988487Z",
+        "reason": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002; materialize Human-accepted Candidate 002 mapping",
+        "schema_version": 1
+      },
+      "operation": "CREATE",
+      "payload": {
+        "acceptance_criteria": [
+          {
+            "key": "A01",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Fresh `READY` compilation and exact Human grant for its AuthorityCandidate digest Required result: Atomically reserve applicable consumables at grant; materialize the authority-linked WorkPacket, establish conformance and exact WorkPacketRef, then resolve WorkspacePlan from that exact WorkPacketRef before runtime admission."
+          },
+          {
+            "key": "A02",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Compilation is `READY`, but no exact Human grant for the AuthorityCandidate digest exists Required result: Deny admission; preserve `READY != AUTHORIZED`; no WorkPacket materialization or runtime admission."
+          },
+          {
+            "key": "A03",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Packet, baseline, role, workspace, runtime, provider or model differs from the authorized subject Required result: Deny or return indeterminate; no runtime admission."
+          },
+          {
+            "key": "A04",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Qualification becomes stale or provider/model/runtime/workspace changes after authorization Required result: Revalidate and stop; require fresh authority where the subject changed."
+          },
+          {
+            "key": "A05",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Unresolved prohibition, responsibility collision, unavailable/consumed namespace, or concurrent attempt reservation Required result: Deny admission or fail closed; reservation is atomic at Human grant, bound to the exact candidate digest and intended attempt, and cannot be replayed."
+          },
+          {
+            "key": "A06",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: One cohesive WorkPacket needs multiple internal steps Required result: Permit internal decomposition without creating Relay work units or Human gates."
+          },
+          {
+            "key": "A07",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: An internal milestone completes Required result: Record non-authoritative progress only; no acceptance/evaluation event."
+          },
+          {
+            "key": "A08",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Required work exceeds authorized scope Required result: Record a non-authoritative `ProposedWorkObservation` in execution evidence, then stop under the exact applicable WorkPacket hard-stop/blocking disposition; do not mutate backlog or invent a successor. `PROPOSED_WORK` is not a terminal status."
+          },
+          {
+            "key": "A09",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: RoleContract establishes no authorized successor Required result: Record `BACKLOG_EXHAUSTED` and successful STOP; create no successor."
+          },
+          {
+            "key": "A10",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Protected verification mutation lacks separate exact authority Required result: Deny/fail closed; preserve protected asset and evidence."
+          },
+          {
+            "key": "A11",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Effective runtime exposes a denied tool or shell Required result: Nonconformant, even without observed invocation; use runtime-attestation evidence, not provider capability claims."
+          },
+          {
+            "key": "A12",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Runtime tool identity or required exposure/use identity cannot be established Required result: Return indeterminate; never treat unknown identity as allowed."
+          },
+          {
+            "key": "A13",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Execution ends with dirty workspace and no commit Required result: Produce an exact reviewable result and evidence; do not report clean/committed."
+          },
+          {
+            "key": "A14",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Execution creates a local commit Required result: Bind commit and parent; do not imply push, merge or promotion authority."
+          },
+          {
+            "key": "A15",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Runtime failure leaves an external effect or prompt admission ambiguous Required result: Inspect/reconcile the exact runtime session bound to the pre-grant intended attempt/ExecutionId and effect; fail closed, no blind retry or replacement reservation."
+          },
+          {
+            "key": "A16",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Terminal evidence is submitted for evaluation Required result: Evaluator receives immutable exact subject/evidence; implementer cannot self-accept."
+          },
+          {
+            "key": "A17",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Evaluator requests correction within exact authority Required result: Bound the corrective candidate to recorded findings/scope and link both candidates; any genuinely new attempt has its own exact intended identity and grant-time reservation."
+          },
+          {
+            "key": "A18",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Correction requires new authority or crosses scope Required result: Stop; no automatic follow-on WorkPacket or continued mutation. A new attempt requires a new candidate, Human grant and reservation."
+          },
+          {
+            "key": "A19",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Human cancels an active attempt Required result: Preserve the pre-grant intended attempt identity, its ExecutionId mapping, grant-time reservation, cancel acknowledgement, partial changes and evidence; no silent resume or identity substitution."
+          },
+          {
+            "key": "A20",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Authorized budget is exhausted Required result: Record usage and stop; no silent limit/provider/model expansion."
+          },
+          {
+            "key": "A21",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: An accepted predecessor contract cannot express required evidence/behavior Required result: Create exact contract-gap analysis and stop; do not rewrite predecessor."
+          },
+          {
+            "key": "A22",
+            "required": true,
+            "schema_version": 1,
+            "statement": "Scenario: Only phase opening, slice opening, or design authority exists Required result: No execution; separate exact implementation/execution authority is required."
+          }
+        ],
+        "dependency_ids": [],
+        "id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3",
+        "parent_slice_id": null,
+        "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+        "schema_version": 1,
+        "scope": {
+          "in_scope": [
+            "consume an already-compiled fresh Slice 2.5 `AuthorityCandidate`",
+            "verify an exact Human grant bound to that candidate digest",
+            "verify applicable consumable reservations that were created atomically by the existing Human Authority path against candidate digest + intended attempt identity",
+            "materialize/consume an exact authority-linked WorkPacket input and establish WorkPacket conformance",
+            "compute the exact `WorkPacketRef`",
+            "resolve the exact `WorkspacePlan` from that conformed WorkPacketRef using existing Slice 2.4 functions",
+            "bind exact workspace/runtime/provider/model identities and the one-to-one intended-attempt -> `ExecutionId` mapping",
+            "derive one immutable final `ExecutionSubject`",
+            "make a deterministic admit/deny/indeterminate decision before any runtime admission",
+            "drive one injected `AgentRuntime` through the accepted create-session/open/events/inspect/cancel boundary when and only when admission succeeds",
+            "derive one Relay-owned terminal result/evidence bundle from runtime/workspace observations",
+            "preserve independent-evaluator handoff data without evaluating or accepting its own result."
+          ],
+          "out_of_scope": [
+            "defining or replacing the underlying policy semantics owned by Slices 2.1–2.5",
+            "issuing Human grants or creating, releasing, or consuming grant-time reservations",
+            "independently evaluating or accepting the implementation result",
+            "granting canonical-source mutation, push, merge, or promotion authority",
+            "automatically creating successor WorkPackets or treating internal plans, milestones, retries, or subagents as Relay work units",
+            "replacing Relay governance with a second planner, requirement graph, lifecycle engine, task database, provider framework, or generic multi-agent scheduler"
+          ],
+          "schema_version": 1
+        },
+        "title": "Slice 3.1 — Coding Agent Execution"
+      },
+      "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+      "schema_version": 1,
+      "slice_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3"
+    },
+    "slice_definition_ref": {
+      "content_digest": "sha256:1659a313cf123983b8a003d2804141ddeca69e4b83f96c272e96030a9cebf8be",
+      "definition_revision": 1,
+      "schema_version": 1,
+      "slice_id": "slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3"
+    }
+  },
+  "terminal": "IDENTITY_MATERIALIZED",
+  "validation": {
+    "commands": [
+      "UV_CACHE_DIR=/tmp/relay-uv-cache uv run pytest tests/unit/test_repository_contract.py -q",
+      "UV_CACHE_DIR=/tmp/relay-uv-cache uv run pytest tests/unit/test_project_slice_service.py tests/unit/test_project_slice_origin.py -q"
+    ],
+    "operational_schema_verified_read_only": true,
+    "origin_creation_digest_matches_slice_digest": true,
+    "project_origin_and_epoch": "ESTABLISHED",
+    "project_slice_service_tests": "48 passed",
+    "repository_contract_tests": "43 passed",
+    "slice_native_relay_origin": "ESTABLISHED",
+    "slice_readback_and_revision": "PASS"
+  }
+}
