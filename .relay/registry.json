@@ -5282,6 +5282,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00008-7b2c-4a11-9e31-000000000008",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:939c5540f566ee5038ba3028827e282c5044d8e848364b3f15bae00a2eba4f60",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-EVAL-003",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_EVALUATION_003.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Final independent exact-subject re-review of Slice 3.1 operational mapping Candidate 002; disposition ACCEPT.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Definition Mapping Evaluation 003",
+      "updated_at": "2026-10-27T02:23:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_e721c64d-ef65-42aa-8a88-b7090800306b",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
