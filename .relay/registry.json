@@ -5090,6 +5090,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00018-7b2c-4a11-9e31-000000000018",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:544c1c143ea03f67936338886381649a2a00c320f99d1463c0bfc4c969ac5641",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-DESIGN-EVAL-002",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_DESIGN_EVALUATION_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent exact-subject re-review of Runtime Boundary Binding and Attestation Candidate 002; M001 closed; disposition REWORK / NARROW for authority provenance labels and RuntimePermissionAttestation immutable digest/ref semantics.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Binding & Attestation Design Evaluation 002",
+      "updated_at": "2026-10-27T15:12:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00017-7b2c-4a11-9e31-000000000017",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
