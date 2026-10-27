@@ -11,7 +11,7 @@
 
 ## 1. Terminal
 
-`HUMAN_SEMANTIC_DECISION_REQUIRED`
+`MAPPING_CANDIDATE_COMPLETE`
 
 The M001 semantic-scope correction is complete. M002 is resolved by the Human semantic decision recorded for this candidate: accepted Slices 2.1–2.5 are governance/contract prerequisites, not operational Slice dependency-graph edges, so `dependency_ids = ()`. This preserves their authority, applicability, accepted-contract status, and required evidence through the governance/state-resolution/WorkPacket path. No SliceId was allocated and no operational mutation occurred.
 
