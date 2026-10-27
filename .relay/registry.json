@@ -5058,6 +5058,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00015-7b2c-4a11-9e31-000000000015",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:d39804c26d39115004a16aacb4e84e300851389d9780712621ec72fc82047b6c",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-DESIGN-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_DESIGN_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for bounded runtime-boundary binding and attestation contract design closing the accepted Dogfood 001 RUNTIME_BOUNDARY_CONTRACT_GAP; no implementation or admission.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Binding & Attestation Contract Design Authority 001",
+      "updated_at": "2026-10-27T04:49:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
