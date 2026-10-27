@@ -5170,6 +5170,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00009-7b2c-4a11-9e31-000000000009",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:b1cb9603d9f584733b283965c85f5863d31467950af691abc7d8e0f61383e6c4",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-DEFINITION-MAPPING-ACCEPT-001",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_DEFINITION_MAPPING_ACCEPTANCE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human acceptance of exact independently accepted Slice 3.1 operational Slice-definition mapping Candidate 002; no materialization authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Definition Mapping Human Acceptance 001",
+      "updated_at": "2026-10-27T02:23:30Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00001-7b2c-4a11-9e31-000000000001",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
