@@ -5314,6 +5314,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00010-7b2c-4a11-9e31-000000000010",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:f2d40738d04bbeb9850318323243060e488bf4ee6f9eda1bcbc79b1ccdc9c363",
+      "human_version": "RLY-S31-OPERATIONAL-SLICE-IDENTITY-MATERIALIZATION-AUTH-002",
+      "path": "docs/reviews/SLICE_3_1_OPERATIONAL_SLICE_IDENTITY_MATERIALIZATION_AUTHORIZATION_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for one exact canonical materialization of the accepted Slice 3.1 operational definition; one SliceId allocation and at most one create_slice invocation.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Operational Slice Identity Materialization Authorization 002",
+      "updated_at": "2026-10-27T02:24:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_e721c64d-ef65-42aa-8a88-b7090800306b",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
