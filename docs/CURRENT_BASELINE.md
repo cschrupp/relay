@@ -3,7 +3,7 @@
 **Status:** Current living baseline — Slices 1.10, 2.4, and 2.5 COMPLETE / ACCEPTED / CLOSED; Phase 3 OPEN; Slice 3.1 OPEN / DESIGN ACCEPTED / IMPLEMENTATION ACCEPTED; live execution NOT AUTHORIZED
 **Document class:** Living canonical projection
 **Canonical key:** `current-baseline`
-**Date:** October 25, 2026
+**Date:** October 27, 2026
 
 ---
 
@@ -98,6 +98,19 @@ Production ProjectStateResolver / AuthorityCompiler wiring: NOT AUTHORIZED
 Production WorkPacket wiring: NOT AUTHORIZED
 AgentRuntime / provider / model execution: NOT AUTHORIZED
 Real-project agent execution: NOT AUTHORIZED
+
+Dogfood 001 operational Slice definition:
+MAPPING ACCEPTED / MATERIALIZED
+SliceDefinitionRef: slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3 / revision 1 / sha256:1659a313cf123983b8a003d2804141ddeca69e4b83f96c272e96030a9cebf8be
+Runtime-boundary design: Candidate 003 / HUMAN ACCEPTED
+Runtime-boundary implementation: e3b48c9c883d8e2983bbbca3e21f2bc0185f4a46 / RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-IMPL-EVAL-002 — ACCEPT / HUMAN ACCEPTED
+M001–M003: CLOSED
+I001–I003: CLOSED
+Concrete enforcing backend: NOT QUALIFIED; required before strong-boundary admission
+Fixture/source durable reachability: UNRESOLVED / separate admission condition
+Candidate/grant/source freshness: MUST BE RECOMPILED / REVALIDATED before WorkPacket materialization or admission
+Dogfood 001: AUTHORIZED / NOT ADMITTED / NOT CONSUMED
+Remote dogfood/3.1-execution-001 branch: EARLIER PREPARATION LINEAGE / NOT CURRENT
 
 Current product problem:
 Relay can govern state once it exists, but normal onboarding of an existing
