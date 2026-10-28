@@ -5058,6 +5058,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00028-7b2c-4a11-9e31-000000000028",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:1534c653eda8421433be391dbe2706a8836ebed4f629265ea354e965ee6ceb2c",
+      "human_version": "RLY-S31-DOGFOOD-001-CANONICAL-RECONCILIATION-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_CANONICAL_RECONCILIATION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for bounded reconciliation of the later Dogfood 001 request/grant lineage against canonical ca929313; permits fresh source coverage, ProjectState snapshot, resolver/compiler execution and comparison only; no WorkPacket/admission/execution authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Canonical Reconciliation Authority 001",
+      "updated_at": "2026-10-28T02:10:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00021-7b2c-4a11-9e31-000000000021",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
