@@ -5217,6 +5217,22 @@
       "updated_at": "2026-10-26T17:18:01Z"
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_01a1808f-2323-77bc-b71f-c80ea676258e",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:cddab04f843a58d55906917c148cf5119f50ce7c9e9669b606e6e726dff23197",
+      "human_version": "RLY-S31-DOGFOOD-001-RESOLUTION-SNAPSHOT-004",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RESOLUTION_SNAPSHOT_004.json",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Exact current canonical Dogfood 001 source snapshot pinned to the pre-snapshot registered source commit; pending reconciliation review.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Canonical Resolution Snapshot Candidate 004",
+      "updated_at": "2026-10-28T03:32:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_01a17900-23ea-7253-aeca-9fe17fffdccf",
       "artifact_state": "LOCKED",
