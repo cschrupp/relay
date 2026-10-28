@@ -18,6 +18,8 @@ The previously accepted strong-boundary path remains available as `RELAY_MANAGED
 
 This correction removes the accidental rule that every ordinary OpenCode execution must first acquire a Relay-owned sandbox backend. It does not weaken any execution whose accepted requirements explicitly demand `BOUNDARY_ENFORCED` control strength.
 
+The earlier strategic-authorization wording that described OpenCode/runtime-native controls as “the execution boundary” is **not** a containment claim under this corrected design. Under the later F01–F05 rework direction, that phrase is narrowed to the trusted execution substrate and mediated permission path only. `TRUSTED_LOCAL_EXECUTION` makes no sandbox/isolation guarantee; any authority-bearing requirement for containment still selects `RELAY_MANAGED_STRONG_BOUNDARY` or fails closed. Historical authority bytes remain unchanged.
+
 ## 2. Assurance vocabulary
 
 Relay must distinguish four different things and never report them as equivalent:
