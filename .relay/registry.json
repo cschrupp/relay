@@ -6847,6 +6847,38 @@
       "supersedes": null,
       "title": "Existing Project Adoption and Forward-Governance Strategy",
       "updated_at": "2026-10-17T03:51:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_bdf0b484-fb10-4d4b-b0a3-d3d0941f8ca6",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:c61c516d6a98a9ff12ae5eca2a7aff243ebd210ec3526b4897e8aafe07692be9",
+      "human_version": "RLY-S31-RUNTIME-NATIVE-PROFILE-STRATEGIC-AMEND-001",
+      "path": "docs/reviews/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_STRATEGIC_AMENDMENT_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human strategic authority to introduce a runtime-native OpenCode execution profile while retaining the existing Relay-managed strong-boundary profile; design/documentation only, no implementation or execution.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Runtime-Native Execution Profile Strategic Amendment Authorization 001",
+      "updated_at": "2026-10-28T10:00:00-04:00"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_9c520a3e-5f5d-4c77-98d0-275e34231f96",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:d46caac61a596497e3dcbc2a1ffe34d2acd893758745cbfdf97250976f3cfafe",
+      "human_version": "Amendment 001",
+      "path": "docs/slices/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_AMENDMENT_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Bounded Slice 3.1 design amendment introducing RUNTIME_NATIVE_CONTROLLED as the ordinary OpenCode profile and retaining RELAY_MANAGED_STRONG_BOUNDARY as an explicit higher-assurance profile; pending independent review and Human acceptance.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Runtime-Native Execution Profile Amendment 001",
+      "updated_at": "2026-10-28T10:00:00-04:00"
     }
   ],
   "canonical": [
