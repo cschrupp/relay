@@ -5170,6 +5170,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00026-7b2c-4a11-9e31-000000000026",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:60bd836ebcc643d067a20c8ed650a9aaf219c088b88497432d672a754db9a982",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-IMPL-ACCEPT-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_IMPLEMENTATION_ACCEPTANCE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human acceptance of corrected runtime-boundary implementation candidate e3b48c9 and EVAL-002; closes implementation gate only; no Dogfood admission/execution authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Binding & Attestation Implementation Acceptance 001",
+      "updated_at": "2026-10-27T22:10:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00022-7b2c-4a11-9e31-000000000022",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
