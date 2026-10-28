@@ -5202,6 +5202,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_01a18113-dd10-76fb-b591-5a67432e42b6",
+      "revision": 1,
+      "title": "Dogfood 001 One-Attempt Execution Authorization 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_EXECUTION_AUTHORIZATION_002.md",
+      "content_digest": "sha256:bde1d7ec40639a92fc8425dd0f0eb17f63d69daf204852f89a26fd3d85ad85ca",
+      "human_version": "RLY-S31-DOGFOOD-001-EXEC-AUTH-002",
+      "updated_at": "2026-10-28T05:55:25.073365Z",
+      "scope": "Human authorization for exact Dogfood 001 AuthorityCandidate 002; backend qualification, fixture reachability, and final admission remain mandatory",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
       "revision": 1,
       "title": "Dogfood 001 Post-Acceptance Reconciliation 002",
