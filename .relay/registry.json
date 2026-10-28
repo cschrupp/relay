@@ -5569,6 +5569,22 @@
       "updated_at": "2026-10-28T03:27:00Z"
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_01a180bf-86e3-7452-bc64-e7c352b732a7",
+      "revision": 1,
+      "title": "Dogfood 001 Source Coverage 004 Human Acceptance",
+      "artifact_type": "HUMAN_ACCEPTANCE",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_SOURCE_COVERAGE_ACCEPTANCE_001.md",
+      "content_digest": "sha256:9942a05616a2d96bfe732c86b50871fce6175b1959c6b2687c60a829c30c396b",
+      "human_version": "RLY-S31-DOGFOOD-001-SOURCE-COVERAGE-ACCEPT-001",
+      "updated_at": "2026-10-28T04:23:17.987998Z",
+      "scope": "Human acceptance of exact Dogfood 001 source-coverage declaration 004; no execution authority",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
