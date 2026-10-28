@@ -596,8 +596,9 @@ class OpenCodeRuntime:
         self,
         request: RuntimeExecutionRequest,
         descriptor: RuntimeDescriptor,
+        accepted_qualification_source_refs: tuple[tuple[str, str], ...],
     ) -> tuple[OpenCodeConfigurationBinding, RuntimeSessionBinding]:
-        """Verify exact effective configuration, then create one prompt-free session."""
+        """Verify snapshot-qualified effective configuration before session creation."""
 
         if (
             self._configuration_binding_reader is None
@@ -613,6 +614,21 @@ class OpenCodeRuntime:
             raise fail(
                 RuntimeFailureCategory.REQUEST_CONFLICT,
                 "OpenCode descriptor changed before configuration binding.",
+                execution_id=request.basis.execution_id,
+            )
+        qualification_identity = (
+            self._configuration_qualification_ref.qualification_id,
+            self._configuration_qualification_ref.content_digest,
+        )
+        if (
+            accepted_qualification_source_refs
+            != tuple(sorted(set(accepted_qualification_source_refs)))
+            or qualification_identity not in accepted_qualification_source_refs
+        ):
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode configuration qualification is absent from the exact accepted "
+                "source snapshot.",
                 execution_id=request.basis.execution_id,
             )
         self._validate_request_digest(request)

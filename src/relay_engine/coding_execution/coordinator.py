@@ -40,12 +40,14 @@ from relay_engine.agent_runtime.protocol import BoundaryManagedAgentRuntime
 from relay_engine.coding_execution.evaluation import (
     AdmissionInputs,
     apply_scope_and_successor_disposition,
+    candidate_execution_profile,
     evaluate_admission,
     evaluate_effective_tool_exposure,
     evaluate_grant_and_reservations,
     evaluate_packet_before_workspace,
     evaluate_runtime_payload_evidence,
     evaluate_runtime_tool_events,
+    evaluate_trusted_local_runtime_controls,
 )
 from relay_engine.coding_execution.models import (
     AdmissionStatus,
@@ -392,6 +394,7 @@ async def _prepare_trusted_local_runtime(
     runtime: AgentRuntime,
     request: RuntimeExecutionRequest,
     descriptor: RuntimeDescriptor,
+    accepted_qualification_source_refs: tuple[tuple[str, str], ...],
 ) -> TrustedLocalPreparation:
     """Resolve qualified OpenCode configuration, then prepare one prompt-free session."""
 
@@ -404,12 +407,14 @@ async def _prepare_trusted_local_runtime(
     try:
         prepare_typed = cast(
             Callable[
-                [RuntimeExecutionRequest, RuntimeDescriptor],
+                [RuntimeExecutionRequest, RuntimeDescriptor, tuple[tuple[str, str], ...]],
                 Awaitable[tuple[OpenCodeConfigurationBinding, RuntimeSessionBinding]],
             ],
             prepare,
         )
-        configuration, session = await prepare_typed(request, descriptor)
+        configuration, session = await prepare_typed(
+            request, descriptor, accepted_qualification_source_refs
+        )
     except AdmissionRejected:
         raise
     except Exception as error:
@@ -849,6 +854,9 @@ async def execute_governed_attempt(
             "grant-reservation:" + grant_check.status.value,
         )
     assert grant is not None
+    execution_profile = candidate_execution_profile(candidate)
+    if execution_profile is None:
+        return _blocked_result(inputs, execution_id, "execution-profile:authority-binding")
 
     if inputs.work_packet_materializer is None:
         return _blocked_result(inputs, execution_id, "work-packet:materializer-missing")
@@ -909,15 +917,13 @@ async def execute_governed_attempt(
         conformance=packet_result,
     )
     provider_descriptor = workspace_provider.describe()
-    trusted_local = not any(
+    boundary_required_by_policy = any(
         item.minimum_strength is ControlStrength.BOUNDARY_ENFORCED
         for item in inputs.workspace_policy.property_requirements
     )
-    execution_profile = (
-        ExecutionProfile.TRUSTED_LOCAL_EXECUTION
-        if trusted_local
-        else ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY
-    )
+    trusted_local = execution_profile is ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+    if boundary_required_by_policy and trusted_local:
+        return _blocked_result(inputs, execution_id, "execution-profile:boundary-required")
     plan_resolution = resolve_workspace_plan(
         packet,
         packet_ref,
@@ -933,6 +939,18 @@ async def execute_governed_attempt(
     if plan_resolution.status is not RequirementStatus.SATISFIED or plan_resolution.plan is None:
         return _blocked_result(inputs, execution_id, "workspace:plan-resolution")
     plan = plan_resolution.plan
+    if (
+        _requires_strong_boundary(plan)
+        and execution_profile is not ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY
+    ):
+        return _blocked_result(inputs, execution_id, "execution-profile:boundary-required")
+    runtime_control_evidence = evaluate_trusted_local_runtime_controls(plan)
+    if trusted_local and runtime_control_evidence.status is not AdmissionStatus.ADMIT:
+        return _blocked_result(
+            inputs,
+            execution_id,
+            "runtime-control:" + runtime_control_evidence.status.value.lower(),
+        )
     provider_ref = workspace_provider_ref(provider_descriptor)
     preflight = evaluate_workspace_preflight(plan, provider_descriptor, trusted_local=trusted_local)
     if preflight.status is not RequirementStatus.SATISFIED:
@@ -984,7 +1002,7 @@ async def execute_governed_attempt(
     boundary_preparation: BoundaryRuntimePreparation | None = None
     runtime_permission_evidence = inputs.runtime_permission_evidence
     trusted_preparation: TrustedLocalPreparation | None = None
-    if _requires_strong_boundary(plan):
+    if execution_profile is ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY:
         if inputs.boundary_runtime_launcher is None:
             return _blocked_result(inputs, execution_id, "runtime:boundary-launcher-missing")
         if RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION not in descriptor.capabilities:
@@ -1011,7 +1029,16 @@ async def execute_governed_attempt(
             raise
         runtime_permission_evidence = boundary_preparation.permission_evidence
     else:
-        trusted_preparation = await _prepare_trusted_local_runtime(runtime, request, descriptor)
+        accepted_qualification_source_refs = tuple(
+            (source.source_key, source.content_digest)
+            for source in candidate.resolution.snapshot.source_refs
+        )
+        trusted_preparation = await _prepare_trusted_local_runtime(
+            runtime,
+            request,
+            descriptor,
+            accepted_qualification_source_refs,
+        )
         runtime_permission_evidence = trusted_preparation.permission_evidence
     boundary_launcher = inputs.boundary_runtime_launcher
     if boundary_preparation is not None:

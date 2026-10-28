@@ -77,6 +77,26 @@ class ExecutionProfile(StrEnum):
     RELAY_MANAGED_STRONG_BOUNDARY = "RELAY_MANAGED_STRONG_BOUNDARY"
 
 
+_EXECUTION_PROFILE_AUTHORITY_CONSTRAINTS = {
+    ExecutionProfile.TRUSTED_LOCAL_EXECUTION: (
+        "execution-assurance-detective-mediated",
+        "execution-profile-trusted-local",
+        "execution-trust-host-user-runtime",
+    ),
+    ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY: (
+        "execution-assurance-boundary-enforced",
+        "execution-profile-relay-managed-strong-boundary",
+        "execution-trust-relay-managed-boundary",
+    ),
+}
+
+
+def execution_profile_authority_constraints(profile: ExecutionProfile) -> tuple[str, ...]:
+    """Return the exact candidate constraints that authorize one execution profile."""
+
+    return _EXECUTION_PROFILE_AUTHORITY_CONSTRAINTS[profile]
+
+
 class PermissionEvidenceProvenance(StrEnum):
     """How runtime permission exposure was established."""
 

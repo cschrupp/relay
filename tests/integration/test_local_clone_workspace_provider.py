@@ -202,6 +202,27 @@ def test_local_clone_exact_commit_independent_objects_changes_and_teardown(tmp_p
     assert not root.exists()
 
 
+def test_local_clone_capture_rejects_manifest_when_workspace_changes_after_extraction(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source-capture-race"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    plan = make_plan(source)
+    provider = LocalCloneWorkspaceProvider(source, workspace_parent=tmp_path / "workspaces")
+    result = provider.provision(plan)
+    root = Path(result.instance_ref.root)
+    target = root / "tracked.txt"
+    target.write_text("captured version\n", encoding="utf-8")
+    extracted = provider.extract_changes(result.instance_ref)
+
+    target.write_text("changed before capture\n", encoding="utf-8")
+    with pytest.raises(WorkspaceProviderError, match="changed between manifest extraction"):
+        provider.capture_candidate(result.instance_ref, extracted)
+
+    provider.teardown(result.instance_ref)
+
+
 def test_local_clone_retention_policy_is_observed(tmp_path: Path) -> None:
     source = tmp_path / "source-retained"
     source.mkdir()

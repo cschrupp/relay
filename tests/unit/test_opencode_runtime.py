@@ -101,7 +101,7 @@ def qualified_configuration_fixture():
     profile = permission_profile()
     version = "0.0.0-beta-test"
     qualification = OpenCodeConfigurationQualificationRef(
-        qualification_id="opencode-config-test",
+        qualification_id="opencode-config-qualification-test-v1",
         content_digest=DIGEST,
         runtime_version=version,
         runtime_api_generation=OPENCODE_API_GENERATION,
@@ -174,20 +174,40 @@ def qualified_configuration_fixture():
         api_generation=OPENCODE_API_GENERATION,
         capabilities=tuple(RuntimeCapability),
     )
-    response = httpx.Response(200, json={"healthy": True})
-    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _: response))
+    requests: list[tuple[str, str]] = []
+
+    def handle(request_value: httpx.Request) -> httpx.Response:
+        requests.append((request_value.method, request_value.url.path))
+        if request_value.url.path == "/api/health":
+            return httpx.Response(200, json={"healthy": True, "version": version})
+        if request_value.url.path == "/api/session":
+            return httpx.Response(
+                200,
+                json={
+                    "id": "session-qualified",
+                    "location": {"directory": request.basis.workspace.root},
+                    "model": {
+                        "providerID": request.basis.runtime_selection.requested_provider_id,
+                        "modelID": request.basis.runtime_selection.requested_model_id,
+                    },
+                },
+            )
+        return httpx.Response(404)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handle))
     runtime = OpenCodeRuntime(
         "http://127.0.0.1:4096",
         expected_runtime_version=version,
         permission_profile=profile,
         configuration_qualification_ref=qualification,
+        configuration_binding_reader=lambda _request, _descriptor: binding,
         client=client,
     )
-    return request, runtime, descriptor, binding
+    return request, runtime, descriptor, binding, requests
 
 
 def test_effective_configuration_binding_is_deterministic_and_content_bound() -> None:
-    _request, _runtime, _descriptor, binding = qualified_configuration_fixture()
+    _request, _runtime, _descriptor, binding, _requests = qualified_configuration_fixture()
 
     equivalent = type(binding).model_validate(binding.model_dump(mode="python"))
     changed = binding.model_copy(update={"agent_id": "other-agent"})
@@ -199,7 +219,7 @@ def test_effective_configuration_binding_is_deterministic_and_content_bound() ->
 
 
 def test_exact_qualified_configuration_binding_passes() -> None:
-    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    request, runtime, descriptor, binding, _requests = qualified_configuration_fixture()
     try:
         runtime._validate_configuration_binding(binding, request, descriptor)
     finally:
@@ -218,7 +238,7 @@ def test_exact_qualified_configuration_binding_passes() -> None:
     ),
 )
 def test_configuration_mismatch_or_ambiguity_fails_closed(change: dict[str, object]) -> None:
-    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    request, runtime, descriptor, binding, _requests = qualified_configuration_fixture()
     try:
         with pytest.raises(AgentRuntimeError):
             runtime._validate_configuration_binding(
@@ -231,7 +251,7 @@ def test_configuration_mismatch_or_ambiguity_fails_closed(change: dict[str, obje
 def test_configuration_binding_requires_exact_runtime_version_qualification() -> None:
     from relay_engine.agent_runtime.opencode import OpenCodeConfigurationQualificationRef
 
-    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    request, runtime, descriptor, binding, _requests = qualified_configuration_fixture()
     wrong_qualification = OpenCodeConfigurationQualificationRef(
         qualification_id="wrong-version-qualification",
         content_digest=DIGEST,
@@ -246,6 +266,30 @@ def test_configuration_binding_requires_exact_runtime_version_qualification() ->
                 request,
                 descriptor,
             )
+    finally:
+        asyncio.run(runtime.aclose())
+
+
+def test_configuration_qualification_must_be_in_accepted_source_snapshot_before_session() -> None:
+    request, runtime, descriptor, binding, requests = qualified_configuration_fixture()
+    descriptor = asyncio.run(runtime.describe())
+    requests.clear()
+    try:
+        with pytest.raises(AgentRuntimeError, match="accepted source snapshot"):
+            asyncio.run(runtime.prepare_trusted_local_session(request, descriptor, ()))
+        assert requests == [("GET", "/api/health")]
+
+        qualification = binding.integration_qualification_ref
+        prepared_binding, session = asyncio.run(
+            runtime.prepare_trusted_local_session(
+                request,
+                descriptor,
+                ((qualification.qualification_id, qualification.content_digest),),
+            )
+        )
+        assert prepared_binding == binding
+        assert session.runtime_session.session_id == "session-qualified"
+        assert requests.count(("POST", "/api/session")) == 1
     finally:
         asyncio.run(runtime.aclose())
 

@@ -16,6 +16,10 @@ from relay_engine.coding_execution.coordinator import (
     execute_governed_attempt,
 )
 from relay_engine.coding_execution.evaluation import AdmissionInputs, RuntimePermissionEvidence
+from relay_engine.coding_execution.models import (
+    ExecutionProfile,
+    execution_profile_authority_constraints,
+)
 from relay_engine.execution_workspace import WorkspaceProvider
 from relay_engine.role_contracts import RequirementStatus
 
@@ -74,14 +78,69 @@ class UntouchedRuntime:
         raise AssertionError("runtime must not be inspected")
 
 
+def _bind_profile(compilation, profile: ExecutionProfile):
+    candidate = compilation.candidate
+    assert candidate is not None
+    constraints = tuple(
+        sorted(
+            set(candidate.work_packet_constraints)
+            | set(execution_profile_authority_constraints(profile))
+        )
+    )
+    candidate = candidate.model_copy(update={"work_packet_constraints": constraints})
+    return compilation.model_copy(update={"candidate": candidate}), candidate
+
+
+def _bind_fake_configuration_qualification(candidate):
+    from relay_engine.project_state import (
+        ApplicabilityEnvelope,
+        ApplicabilityEvaluation,
+        ApplicabilityResult,
+        PredicateResult,
+        QualificationFact,
+        QualificationResult,
+        ResolvedQualification,
+        SourceIdentity,
+    )
+
+    source = SourceIdentity(
+        source_key="opencode-config-qualification-fake-version-qualified-config",
+        content_digest="sha256:" + "9" * 64,
+    )
+    snapshot = candidate.resolution.snapshot
+    source_refs = tuple(sorted((*snapshot.source_refs, source), key=lambda item: item.source_key))
+    snapshot = snapshot.model_copy(update={"source_refs": source_refs})
+    qualification = ResolvedQualification(
+        fact=QualificationFact(
+            qualification_key=source.source_key,
+            qualification_kind="opencode-configuration-observation",
+            result=QualificationResult.PASS,
+            scope_key=candidate.request.scope_key,
+            applicability=ApplicabilityEnvelope(),
+            provenance=(),
+        ),
+        applicability=ApplicabilityEvaluation(result=ApplicabilityResult.APPLICABLE),
+        accepted=PredicateResult.SATISFIED,
+    )
+    qualifications = tuple(
+        sorted(
+            (*candidate.resolution.qualifications, qualification),
+            key=lambda item: item.fact.qualification_key,
+        )
+    )
+    resolution = candidate.resolution.model_copy(
+        update={"snapshot": snapshot, "qualifications": qualifications}
+    )
+    return candidate.model_copy(update={"resolution": resolution})
+
+
 def test_ready_without_exact_human_grant_never_reaches_workspace_or_runtime() -> None:
     scenario = _scenario(
         scope="execution",
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
+    compilation, candidate = _bind_profile(compilation, ExecutionProfile.TRUSTED_LOCAL_EXECUTION)
     packet_value = packet()
     admission = AdmissionInputs.model_construct(
         compilation=compilation,
@@ -185,8 +244,7 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
+    compilation, candidate = _bind_profile(compilation, ExecutionProfile.TRUSTED_LOCAL_EXECUTION)
     packet_value, _, policy, role, descriptor = resolver_fixture()
     snapshot = candidate.resolution.snapshot.model_copy(
         update={"project_id": packet_value.project_id}
@@ -194,6 +252,8 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
     candidate = candidate.model_copy(
         update={"resolution": candidate.resolution.model_copy(update={"snapshot": snapshot})}
     )
+    candidate = _bind_fake_configuration_qualification(candidate)
+    snapshot = candidate.resolution.snapshot
     compilation = compilation.model_copy(update={"candidate": candidate})
     grant = HumanGrantBinding(
         grant_record_id="human-grant-exact",
@@ -436,10 +496,14 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
-    packet_value, _, policy, role, workspace_descriptor = resolver_fixture()
     boundary_mode = script.startswith("boundary-")
+    selected_profile = (
+        ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY
+        if boundary_mode
+        else ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+    )
+    compilation, candidate = _bind_profile(compilation, selected_profile)
+    packet_value, _, policy, role, workspace_descriptor = resolver_fixture()
     trace: list[str] = []
     if boundary_mode:
         policy = policy.model_copy(
@@ -472,6 +536,9 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     candidate = candidate.model_copy(
         update={"resolution": candidate.resolution.model_copy(update={"snapshot": snapshot})}
     )
+    if not boundary_mode:
+        candidate = _bind_fake_configuration_qualification(candidate)
+    snapshot = candidate.resolution.snapshot
     compilation = compilation.model_copy(update={"candidate": candidate})
     grant = HumanGrantBinding(
         grant_record_id="human-grant-exact",
@@ -681,7 +748,7 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 created_at=datetime(2026, 10, 25, tzinfo=UTC),
             )
 
-        async def prepare_trusted_local_session(self, request, descriptor):
+        async def prepare_trusted_local_session(self, request, descriptor, accepted_source_refs):
             import hashlib
             import json
 
@@ -713,12 +780,16 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 ).hexdigest()
             )
             qualification = OpenCodeConfigurationQualificationRef(
-                qualification_id="fake-version-qualified-config",
+                qualification_id="opencode-config-qualification-fake-version-qualified-config",
                 content_digest="sha256:" + "9" * 64,
                 runtime_version=descriptor.runtime_version,
                 runtime_api_generation=descriptor.api_generation,
                 adapter_version=descriptor.adapter_version,
             )
+            assert (
+                qualification.qualification_id,
+                qualification.content_digest,
+            ) in accepted_source_refs
             configuration = OpenCodeConfigurationBinding(
                 binding_id="fake-config-binding",
                 runtime_id=descriptor.runtime_id,
