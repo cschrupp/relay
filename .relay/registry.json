@@ -6891,11 +6891,7 @@
       "revision": 1,
       "schema_version": 1,
       "scope": "Bounded Slice 3.1 design amendment introducing RUNTIME_NATIVE_CONTROLLED as the ordinary OpenCode profile and retaining RELAY_MANAGED_STRONG_BOUNDARY as an explicit higher-assurance profile; pending independent review and Human acceptance.",
-      "superseded_by": {
-        "artifact_id": "art_b68ddf16-e55e-46ef-a5ff-cd2f031d9711",
-        "revision": 1,
-        "schema_version": 1
-      },
+      "superseded_by": null,
       "supersedes": null,
       "title": "Slice 3.1 Runtime-Native Execution Profile Amendment 001",
       "updated_at": "2026-10-28T10:00:00-04:00"
@@ -6911,16 +6907,8 @@
       "revision": 1,
       "schema_version": 1,
       "scope": "Corrected Slice 3.1 design amendment establishing TRUSTED_LOCAL_EXECUTION with explicit trust/assurance semantics and preserving RELAY_MANAGED_STRONG_BOUNDARY; addresses F01-F05 and awaits independent re-review.",
-      "superseded_by": {
-        "artifact_id": "art_a99e5208-5f8b-4acb-b773-6231544c3f4b",
-        "revision": 1,
-        "schema_version": 1
-      },
-      "supersedes": {
-        "artifact_id": "art_9c520a3e-5f5d-4c77-98d0-275e34231f96",
-        "revision": 1,
-        "schema_version": 1
-      },
+      "superseded_by": null,
+      "supersedes": null,
       "title": "Slice 3.1 Trusted Local Execution Profile Amendment 002",
       "updated_at": "2026-10-28T15:12:00-04:00"
     },
@@ -6936,11 +6924,7 @@
       "schema_version": 1,
       "scope": "Further bounded F01-F05 correction incorporating detailed adversarial/edge-case review: truthful provider/runtime ownership, prompt-free-session failure disposition, exact-version OpenCode config qualification including plugin/MCP/subagent exposure, stable candidate/quiescence semantics, and raw Python registry ordering; pending independent re-review.",
       "superseded_by": null,
-      "supersedes": {
-        "artifact_id": "art_b68ddf16-e55e-46ef-a5ff-cd2f031d9711",
-        "revision": 1,
-        "schema_version": 1
-      },
+      "supersedes": null,
       "title": "Slice 3.1 Trusted Local Execution Profile Amendment 003",
       "updated_at": "2026-10-28T15:20:00-04:00"
     },
