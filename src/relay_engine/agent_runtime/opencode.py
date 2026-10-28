@@ -142,6 +142,19 @@ class OpenCodePermissionProfile:
                 raise ValueError(f"allowed {label} identities must be unique and sorted")
 
 
+class OpenCodeConfigurationObserverRef(DomainModel):
+    """Stable identity of the mechanism qualified to observe OpenCode configuration."""
+
+    observer_id: str
+    content_digest: ContentDigest
+
+    @model_validator(mode="after")
+    def valid_observer_identity(self) -> OpenCodeConfigurationObserverRef:
+        if not self.observer_id.strip() or len(self.observer_id) > 160:
+            raise ValueError("OpenCode configuration observer ID must be nonblank and bounded")
+        return self
+
+
 class OpenCodeConfigurationQualificationRef(DomainModel):
     """Exact version-specific qualification of the configuration observation contract."""
 
@@ -150,6 +163,19 @@ class OpenCodeConfigurationQualificationRef(DomainModel):
     runtime_version: str
     runtime_api_generation: str
     adapter_version: str
+    observer_ref: OpenCodeConfigurationObserverRef
+
+
+@dataclass(frozen=True)
+class OpenCodeConfigurationBindingReader:
+    """Configuration reader whose identity is bound by an accepted qualification."""
+
+    observer_ref: OpenCodeConfigurationObserverRef
+    read: Callable[[RuntimeExecutionRequest, RuntimeDescriptor], OpenCodeConfigurationBinding]
+
+    def __post_init__(self) -> None:
+        if not callable(self.read):
+            raise ValueError("OpenCode configuration binding reader must be callable")
 
 
 class OpenCodeConfigurationBinding(DomainModel):
@@ -161,6 +187,7 @@ class OpenCodeConfigurationBinding(DomainModel):
     runtime_api_generation: str
     adapter_version: str
     integration_qualification_ref: OpenCodeConfigurationQualificationRef
+    observer_ref: OpenCodeConfigurationObserverRef
     permission_profile_ref: RuntimePermissionProfileRef
     agent_id: str
     configuration_source_refs: tuple[str, ...]
@@ -338,10 +365,7 @@ class OpenCodeRuntime:
         executable_digest: str | None = None,
         configuration_digest: str | None = None,
         configuration_qualification_ref: OpenCodeConfigurationQualificationRef | None = None,
-        configuration_binding_reader: Callable[
-            [RuntimeExecutionRequest, RuntimeDescriptor], OpenCodeConfigurationBinding
-        ]
-        | None = None,
+        configuration_binding_reader: OpenCodeConfigurationBindingReader | None = None,
         permission_attestation_reader: Callable[
             [RuntimeRequestV2, RuntimeSessionBinding], RuntimePermissionAttestation
         ]
@@ -621,14 +645,14 @@ class OpenCodeRuntime:
             self._configuration_qualification_ref.content_digest,
         )
         if (
-            accepted_qualification_source_refs
-            != tuple(sorted(set(accepted_qualification_source_refs)))
-            or qualification_identity not in accepted_qualification_source_refs
+            accepted_qualification_source_refs != (qualification_identity,)
+            or self._configuration_binding_reader.observer_ref
+            != self._configuration_qualification_ref.observer_ref
         ):
             raise fail(
                 RuntimeFailureCategory.CONFIGURATION,
-                "OpenCode configuration qualification is absent from the exact accepted "
-                "source snapshot.",
+                "OpenCode configuration qualification or observer does not exactly match "
+                "the accepted authority binding.",
                 execution_id=request.basis.execution_id,
             )
         self._validate_request_digest(request)
@@ -636,7 +660,7 @@ class OpenCodeRuntime:
             request.basis.permission_profile_ref, request.basis.execution_id
         )
         try:
-            binding = self._configuration_binding_reader(request, descriptor)
+            binding = self._configuration_binding_reader.read(request, descriptor)
         except Exception:
             raise fail(
                 RuntimeFailureCategory.CONFIGURATION,
@@ -710,6 +734,9 @@ class OpenCodeRuntime:
         if (
             qualification is None
             or binding.integration_qualification_ref != qualification
+            or binding.observer_ref != qualification.observer_ref
+            or self._configuration_binding_reader is None
+            or self._configuration_binding_reader.observer_ref != qualification.observer_ref
             or qualification.runtime_version != descriptor.runtime_version
             or qualification.runtime_api_generation != descriptor.api_generation
             or qualification.adapter_version != descriptor.adapter_version

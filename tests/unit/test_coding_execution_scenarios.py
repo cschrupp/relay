@@ -206,6 +206,7 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
     )
     from relay_engine.agent_runtime.opencode import (
         OpenCodeConfigurationBinding,
+        OpenCodeConfigurationObserverRef,
         OpenCodeConfigurationQualificationRef,
     )
     from relay_engine.coding_execution.evaluation import (
@@ -319,6 +320,10 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         credential_exposure_status="CLEAR",
         evidence_digest="sha256:" + "d" * 64,
     )
+    observer_ref = OpenCodeConfigurationObserverRef(
+        observer_id="deterministic-test-observer-v1",
+        content_digest="sha256:" + "5" * 64,
+    )
     configuration_binding = OpenCodeConfigurationBinding(
         binding_id="configuration-binding-exact",
         runtime_id=selection.runtime_id,
@@ -331,7 +336,9 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
             runtime_version="test-runtime-version",
             runtime_api_generation=descriptor.api_generation,
             adapter_version=descriptor.adapter_version,
+            observer_ref=observer_ref,
         ),
+        observer_ref=observer_ref,
         permission_profile_ref=permission_ref,
         agent_id="test-agent",
         configuration_source_refs=("test-agent-config",),

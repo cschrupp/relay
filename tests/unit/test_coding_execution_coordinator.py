@@ -107,8 +107,14 @@ def _bind_fake_configuration_qualification(candidate):
         source_key="opencode-config-qualification-fake-version-qualified-config",
         content_digest="sha256:" + "9" * 64,
     )
+    unrelated_source = SourceIdentity(
+        source_key="unrelated-runtime-observation",
+        content_digest="sha256:" + "8" * 64,
+    )
     snapshot = candidate.resolution.snapshot
-    source_refs = tuple(sorted((*snapshot.source_refs, source), key=lambda item: item.source_key))
+    source_refs = tuple(
+        sorted((*snapshot.source_refs, source, unrelated_source), key=lambda item: item.source_key)
+    )
     snapshot = snapshot.model_copy(update={"source_refs": source_refs})
     qualification = ResolvedQualification(
         fact=QualificationFact(
@@ -752,6 +758,8 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
             import hashlib
             import json
 
+            from relay_engine.agent_runtime.opencode import OpenCodeConfigurationObserverRef
+
             trace.append("configuration-binding")
             self.request = request
             exposure = ()
@@ -785,11 +793,14 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 runtime_version=descriptor.runtime_version,
                 runtime_api_generation=descriptor.api_generation,
                 adapter_version=descriptor.adapter_version,
+                observer_ref=OpenCodeConfigurationObserverRef(
+                    observer_id="test-config-observer-v1",
+                    content_digest="sha256:" + "6" * 64,
+                ),
             )
-            assert (
-                qualification.qualification_id,
-                qualification.content_digest,
-            ) in accepted_source_refs
+            assert accepted_source_refs == (
+                (qualification.qualification_id, qualification.content_digest),
+            )
             configuration = OpenCodeConfigurationBinding(
                 binding_id="fake-config-binding",
                 runtime_id=descriptor.runtime_id,
@@ -797,6 +808,7 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 runtime_api_generation=descriptor.api_generation,
                 adapter_version=descriptor.adapter_version,
                 integration_qualification_ref=qualification,
+                observer_ref=qualification.observer_ref,
                 permission_profile_ref=(
                     permission_ref.model_copy(update={"content_digest": "sha256:" + "7" * 64})
                     if script == "configuration-mismatch"

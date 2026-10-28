@@ -40,6 +40,7 @@ from relay_engine.agent_runtime.protocol import BoundaryManagedAgentRuntime
 from relay_engine.coding_execution.evaluation import (
     AdmissionInputs,
     apply_scope_and_successor_disposition,
+    candidate_configuration_qualification_ref,
     candidate_execution_profile,
     evaluate_admission,
     evaluate_effective_tool_exposure,
@@ -1029,15 +1030,16 @@ async def execute_governed_attempt(
             raise
         runtime_permission_evidence = boundary_preparation.permission_evidence
     else:
-        accepted_qualification_source_refs = tuple(
-            (source.source_key, source.content_digest)
-            for source in candidate.resolution.snapshot.source_refs
-        )
+        qualification_ref = candidate_configuration_qualification_ref(candidate)
+        if qualification_ref is None:
+            return _blocked_result(
+                inputs, execution_id, "runtime:accepted-configuration-qualification-invalid"
+            )
         trusted_preparation = await _prepare_trusted_local_runtime(
             runtime,
             request,
             descriptor,
-            accepted_qualification_source_refs,
+            (qualification_ref,),
         )
         runtime_permission_evidence = trusted_preparation.permission_evidence
     boundary_launcher = inputs.boundary_runtime_launcher

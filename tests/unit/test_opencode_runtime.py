@@ -93,6 +93,8 @@ def qualified_configuration_fixture():
         OPENCODE_ADAPTER_VERSION,
         OPENCODE_API_GENERATION,
         OpenCodeConfigurationBinding,
+        OpenCodeConfigurationBindingReader,
+        OpenCodeConfigurationObserverRef,
         OpenCodeConfigurationQualificationRef,
     )
     from relay_engine.role_contracts import RequirementStatus
@@ -100,12 +102,17 @@ def qualified_configuration_fixture():
     request = execution_request()
     profile = permission_profile()
     version = "0.0.0-beta-test"
+    observer_ref = OpenCodeConfigurationObserverRef(
+        observer_id="opencode-config-reader-test-v1",
+        content_digest="sha256:" + "a" * 64,
+    )
     qualification = OpenCodeConfigurationQualificationRef(
         qualification_id="opencode-config-qualification-test-v1",
         content_digest=DIGEST,
         runtime_version=version,
         runtime_api_generation=OPENCODE_API_GENERATION,
         adapter_version=OPENCODE_ADAPTER_VERSION,
+        observer_ref=observer_ref,
     )
     sources = ("user-config:test", "agent-config:relay-safe-agent")
     tools = tuple(
@@ -148,6 +155,7 @@ def qualified_configuration_fixture():
         runtime_api_generation=OPENCODE_API_GENERATION,
         adapter_version=OPENCODE_ADAPTER_VERSION,
         integration_qualification_ref=qualification,
+        observer_ref=observer_ref,
         permission_profile_ref=profile.reference,
         agent_id=profile.agent_id,
         configuration_source_refs=sources,
@@ -200,7 +208,10 @@ def qualified_configuration_fixture():
         expected_runtime_version=version,
         permission_profile=profile,
         configuration_qualification_ref=qualification,
-        configuration_binding_reader=lambda _request, _descriptor: binding,
+        configuration_binding_reader=OpenCodeConfigurationBindingReader(
+            observer_ref=observer_ref,
+            read=lambda _request, _descriptor: binding,
+        ),
         client=client,
     )
     return request, runtime, descriptor, binding, requests
@@ -232,6 +243,12 @@ def test_exact_qualified_configuration_binding_passes() -> None:
         {"agent_id": "unqualified-agent"},
         {"normalized_allow_rules": ("read",)},
         {"precedence_complete": False},
+        {
+            "observer_ref": {
+                "observer_id": "unqualified-observer",
+                "content_digest": "sha256:" + "c" * 64,
+            }
+        },
         {"plugin_exposure": ("unapproved-plugin",)},
         {"mcp_exposure": ("unapproved-server",)},
         {"subagent_exposure": ("unapproved-agent",)},
@@ -258,6 +275,7 @@ def test_configuration_binding_requires_exact_runtime_version_qualification() ->
         runtime_version="different-version",
         runtime_api_generation=descriptor.api_generation,
         adapter_version=descriptor.adapter_version,
+        observer_ref=binding.integration_qualification_ref.observer_ref,
     )
     try:
         with pytest.raises(AgentRuntimeError):
@@ -275,7 +293,7 @@ def test_configuration_qualification_must_be_in_accepted_source_snapshot_before_
     descriptor = asyncio.run(runtime.describe())
     requests.clear()
     try:
-        with pytest.raises(AgentRuntimeError, match="accepted source snapshot"):
+        with pytest.raises(AgentRuntimeError, match="accepted authority binding"):
             asyncio.run(runtime.prepare_trusted_local_session(request, descriptor, ()))
         assert requests == [("GET", "/api/health")]
 
@@ -292,6 +310,111 @@ def test_configuration_qualification_must_be_in_accepted_source_snapshot_before_
         assert requests.count(("POST", "/api/session")) == 1
     finally:
         asyncio.run(runtime.aclose())
+
+
+def test_unrelated_snapshot_source_cannot_qualify_configured_observer() -> None:
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationBindingReader,
+        OpenCodeConfigurationQualificationRef,
+    )
+
+    request, original_runtime, descriptor, binding, requests = qualified_configuration_fixture()
+    original_qualification = binding.integration_qualification_ref
+    unrelated_qualification = OpenCodeConfigurationQualificationRef(
+        qualification_id="opencode-config-qualification-unrelated",
+        content_digest="sha256:" + "b" * 64,
+        runtime_version=original_qualification.runtime_version,
+        runtime_api_generation=original_qualification.runtime_api_generation,
+        adapter_version=original_qualification.adapter_version,
+        observer_ref=original_qualification.observer_ref,
+    )
+    observer_calls = 0
+
+    def read_configuration(_request, _descriptor):
+        nonlocal observer_calls
+        observer_calls += 1
+        return binding
+
+    runtime = OpenCodeRuntime(
+        "http://127.0.0.1:4096",
+        expected_runtime_version=original_qualification.runtime_version,
+        permission_profile=permission_profile(),
+        configuration_qualification_ref=unrelated_qualification,
+        configuration_binding_reader=OpenCodeConfigurationBindingReader(
+            observer_ref=original_qualification.observer_ref,
+            read=read_configuration,
+        ),
+        client=original_runtime._client,
+    )
+    descriptor = asyncio.run(runtime.describe())
+    requests.clear()
+    try:
+        with pytest.raises(AgentRuntimeError, match="accepted authority binding"):
+            asyncio.run(
+                runtime.prepare_trusted_local_session(
+                    request,
+                    descriptor,
+                    (
+                        (
+                            original_qualification.qualification_id,
+                            original_qualification.content_digest,
+                        ),
+                    ),
+                )
+            )
+        assert observer_calls == 0
+        assert not any(method == "POST" and path == "/api/session" for method, path in requests)
+    finally:
+        asyncio.run(runtime.aclose())
+        asyncio.run(original_runtime.aclose())
+
+
+def test_unqualified_observer_identity_fails_before_observation_or_session() -> None:
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationBindingReader,
+        OpenCodeConfigurationObserverRef,
+    )
+
+    request, original_runtime, descriptor, binding, requests = qualified_configuration_fixture()
+    qualification = binding.integration_qualification_ref
+    unqualified_observer = OpenCodeConfigurationObserverRef(
+        observer_id="unqualified-injected-reader",
+        content_digest="sha256:" + "c" * 64,
+    )
+    observer_calls = 0
+
+    def read_configuration(_request, _descriptor):
+        nonlocal observer_calls
+        observer_calls += 1
+        return binding
+
+    runtime = OpenCodeRuntime(
+        "http://127.0.0.1:4096",
+        expected_runtime_version=qualification.runtime_version,
+        permission_profile=permission_profile(),
+        configuration_qualification_ref=qualification,
+        configuration_binding_reader=OpenCodeConfigurationBindingReader(
+            observer_ref=unqualified_observer,
+            read=read_configuration,
+        ),
+        client=original_runtime._client,
+    )
+    descriptor = asyncio.run(runtime.describe())
+    requests.clear()
+    try:
+        with pytest.raises(AgentRuntimeError, match="accepted authority binding"):
+            asyncio.run(
+                runtime.prepare_trusted_local_session(
+                    request,
+                    descriptor,
+                    ((qualification.qualification_id, qualification.content_digest),),
+                )
+            )
+        assert observer_calls == 0
+        assert not any(method == "POST" and path == "/api/session" for method, path in requests)
+    finally:
+        asyncio.run(runtime.aclose())
+        asyncio.run(original_runtime.aclose())
 
 
 class QueueEventStream(httpx.AsyncByteStream):
