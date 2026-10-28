@@ -6082,6 +6082,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_89ba8c0e-cc12-4a35-b11b-2bfd01b18269",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:1a9fc92befcad8bdbead2886739b6b743897f5571c1bf7c1777ab88140e9a0fe",
+      "human_version": "RLY-S31-RUNTIME-NATIVE-PROFILE-DESIGN-ACCEPT-001",
+      "path": "docs/reviews/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_DESIGN_ACCEPTANCE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human acceptance of exact trusted-local execution profile Candidate 003 at 08b0c46b with digest sha256:3e0e1e05… after independent ACCEPT and exact-head CI success; design only, no implementation or Dogfood authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Trusted Local Execution Profile Design Acceptance 001",
+      "updated_at": "2026-10-28T16:18:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_34a4f949-d59a-4f4d-820a-154b3f313e3a",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
@@ -6111,6 +6127,22 @@
       "supersedes": null,
       "title": "Slice 3.1 Runtime-Native Execution Profile Design Rework Authorization 001",
       "updated_at": "2026-10-28T15:12:00-04:00"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_f1696dd7-296e-4b2d-915d-7efeb2f1bc86",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:14bef3287386da29203f4f66117c9191a1981001c192267ddecece0cb3a2a558",
+      "human_version": "RLY-S31-RUNTIME-NATIVE-PROFILE-IMPL-AUTH-PROPOSAL-001",
+      "path": "docs/reviews/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_IMPLEMENTATION_AUTHORITY_PROPOSAL_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposed bounded implementation authority for the Human-accepted trusted-local profile delta only; preserves strong-boundary path, prohibits new sandbox backend, Dogfood execution, and canonical promotion; awaiting Human authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Trusted Local Execution Profile Implementation Authority Proposal 001",
+      "updated_at": "2026-10-28T16:18:00-04:00"
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
