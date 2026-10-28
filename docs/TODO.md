@@ -136,13 +136,18 @@ Real-project agent execution: NOT AUTHORIZED
 - [ ] Confirm the Human can identify CURRENT / NEXT / LATER / BLOCKED from Relay.
 - [x] Confirm through B4 cold-start dogfood that Relay—not prior conversation context—is sufficient to recover governed continuation state.
 
-# PHASE 3 DOGFOOD — GOVERNANCE → OPERATIONAL SLICE DEFINITION GAP
+# PHASE 3 DOGFOOD — OPERATIONALIZATION / ADMISSION GATES
 
-- [x] Record the Dogfood 001 observation that accepted Slice governance does not currently compile canonically into the operational `Slice` payload required by `create_slice`.
-- [ ] Complete the bounded Human-reviewed mapping for Slice 3.1 operational scope, acceptance criteria, parent relationship, dependencies, and every other required `create_slice` field; do not infer semantic values from roadmap position or implementation convenience.
-- [ ] After exact mapping acceptance, materialize Slice 3.1 only through the existing canonical service under separate authority; no direct database patch or manually invented `SliceId`.
-- [ ] After the Dogfood 001 mapping/materialization exercise, determine whether the governance-record → operational Slice-definition gap is systematic. If systematic, open a separate design workstream for a canonical compiler/materializer; this backlog item is not implementation authority.
-- [ ] Keep the workspace-provider capability gap and fixture/source reachability as separate Dogfood 001 admission conditions; do not weaken workspace policy to bypass them.
+- [x] Record the Dogfood 001 governance → operational Slice-definition gap.
+- [x] Complete and Human-accept the bounded Slice 3.1 operational mapping.
+- [x] Materialize exact Slice 3.1 identity through the canonical service: `slc_01a17b3e-1a64-7614-92d0-b2d6f79664b3`, revision 1, definition digest `sha256:1659a313cf123983b8a003d2804141ddeca69e4b83f96c272e96030a9cebf8be`.
+- [x] Close the runtime-boundary contract gap at design level with Human-accepted Candidate 003.
+- [x] Implement, independently accept, and Human-accept corrected runtime-boundary implementation `e3b48c9c883d8e2983bbbca3e21f2bc0185f4a46`; M001–M003 and I001–I003 are closed.
+- [ ] Qualify a concrete enforcing boundary launcher / placement-attester path for the actual Dogfood execution venue; do not weaken boundary requirements if the host cannot provide one.
+- [ ] Establish durable reachability of the exact Dogfood fixture/source basis.
+- [ ] Reconcile the later recovered Dogfood attempt lineage before treating the older remote `dogfood/3.1-execution-001` preparation branch as current.
+- [ ] Recompile/revalidate ProjectState, source coverage, exact Human grant applicability, and freshness after canonical promotion before WorkPacket materialization or admission.
+- [ ] After the bounded mapping/materialization exercise, determine whether the governance-record → operational Slice-definition gap is systematic. If systematic, open a separate design workstream for a canonical compiler/materializer; this backlog item is not implementation authority.
 
 # PROJECT TOOLING POLICY — DURABLE BACKLOG
 
