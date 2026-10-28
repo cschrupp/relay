@@ -5,32 +5,32 @@
       "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:2b45ff2cdd96406ed36cc8694412901d240d96e9c59783cf9e4710023133d852",
+      "content_digest": "sha256:46c4428676305b487fa70e92c084deef0de1fe2e4534278d5a7c9f6962f12a3f",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 156,
+      "revision": 157,
       "schema_version": 1,
-      "scope": "Current canonical build plan; includes Dogfood 001 operational Slice-definition gap and planned project ToolingPolicy direction without implementation authority.",
+      "scope": "Current canonical build plan; bounded Slice 3.1 operational mapping/materialization and runtime-boundary contract are accepted; concrete backend, fixture reachability, freshness and systemic compiler work remain open.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-26T19:30:00Z"
+      "updated_at": "2026-10-28T02:10:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:83a2a00425023f726440545f697fc41cbf181ed677f55de03f1e39d9c00459a4",
+      "content_digest": "sha256:96c4c9b893c915f5ce28b17e2d7b62788cd04be719fc7266140a7b642e00526f",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 171,
+      "revision": 172,
       "schema_version": 1,
-      "scope": "Current canonical baseline; Slice 3.1 design and implementation are Human-accepted; live execution and real-project execution remain unauthorized.",
+      "scope": "Current canonical baseline; Slice 3.1 operational identity is materialized and runtime-boundary design/implementation are Human-accepted; concrete backend, fixture reachability, freshness and live admission remain unresolved.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-26T05:00:00Z"
+      "updated_at": "2026-10-28T02:10:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -53,16 +53,16 @@
       "artifact_id": "art_405e8bcd-1e83-4560-9c1e-5163d3dc6710",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:bb8ed5404ca8727bf105da6863760552dc9994f7b14d290a002a539eeaa84339",
+      "content_digest": "sha256:96818bf659de45f4f9cad19bfcf3938381b1d81011336167c339ce4a346644f8",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 63,
+      "revision": 64,
       "schema_version": 1,
-      "scope": "Current development checklist; includes Dogfood 001 identity work and project ToolingPolicy durable backlog without implementation authority.",
+      "scope": "Current development checklist; operational Slice identity and runtime-boundary implementation are accepted; next Dogfood gates are concrete backend qualification, fixture reachability, lineage reconciliation and freshness revalidation.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-26T19:30:00Z"
+      "updated_at": "2026-10-28T02:10:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -5250,6 +5250,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00027-7b2c-4a11-9e31-000000000027",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:94d2efe3658e4f6baae6cce6a6990a0d5591ef7938a2851e53a5d46a330f5fc4",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-PROMOTE-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_PROMOTION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authority for bounded governance-bookkeeping and non-force fast-forward canonical promotion of the Human-accepted runtime-boundary implementation; stale remote Dogfood preparation branch explicitly excluded from current-state reconciliation.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Accepted Implementation Canonical Promotion Authority 001",
+      "updated_at": "2026-10-28T02:10:00Z"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
@@ -6439,7 +6455,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
-        "revision": 156,
+        "revision": 157,
         "schema_version": 1
       }
     },
@@ -6448,7 +6464,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
-        "revision": 171,
+        "revision": 172,
         "schema_version": 1
       }
     },
