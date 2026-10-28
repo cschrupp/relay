@@ -5073,6 +5073,22 @@
       "updated_at": "2026-10-26T18:54:18Z"
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_01a180c1-0dc3-72a3-be9a-f17914e1cb67",
+      "revision": 1,
+      "title": "Dogfood 001 AuthorityCandidate 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_AUTHORITY_CANDIDATE_002.json",
+      "content_digest": "sha256:f1614170dfc5df4c421f68a8552c98a5d7f9bac30e29b402b7523cd471b605fa",
+      "human_version": "RLY-S31-DOGFOOD-001-AUTHORITY-CANDIDATE-002",
+      "updated_at": "2026-10-28T04:24:58.051293Z",
+      "scope": "Fresh READY AuthorityCandidate payload; no execution grant or admission.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00028-7b2c-4a11-9e31-000000000028",
       "artifact_state": "IMMUTABLE",
@@ -5137,6 +5153,22 @@
       "updated_at": "2026-10-28T03:33:00Z"
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a273853776f",
+      "revision": 1,
+      "title": "Dogfood 001 Canonical Reconciliation Result 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "WORKING",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_CANONICAL_RECONCILIATION_RESULT_002.json",
+      "content_digest": "sha256:ab506084fbb3ead532ac3b7692e71d1bd8a6b0bb52b82141a332be0749f40001",
+      "human_version": "RLY-S31-DOGFOOD-001-CANONICAL-RECONCILIATION-RESULT-002",
+      "updated_at": "2026-10-28T04:24:58.051293Z",
+      "scope": "Exact post-acceptance resolver/compiler inputs and outputs; no execution authority.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_01a1798f-b3b4-7194-a49d-c8375502be82",
       "artifact_state": "REVIEW",
@@ -5167,6 +5199,22 @@
       "supersedes": null,
       "title": "Dogfood 001 One-Attempt Execution Authorization 001",
       "updated_at": "2026-10-26T18:56:00Z"
+    },
+    {
+      "schema_version": 1,
+      "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
+      "revision": 1,
+      "title": "Dogfood 001 Post-Acceptance Reconciliation 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "WORKING",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_POST_ACCEPTANCE_RECONCILIATION_002.md",
+      "content_digest": "sha256:9a5e23c1ca33d608bd84804064146cf52fc4b326e1a72ef149e7066bc36bd103",
+      "human_version": "RLY-S31-DOGFOOD-001-POST-ACCEPTANCE-RECONCILIATION-002",
+      "updated_at": "2026-10-28T04:24:58.051293Z",
+      "scope": "Human-readable READY reconciliation candidate; new execution authority required.",
+      "supersedes": null,
+      "superseded_by": null
     },
     {
       "artifact_class": "LOCKABLE_RECORD",
@@ -5279,6 +5327,22 @@
       "supersedes": null,
       "title": "Dogfood 001 Canonical Resolution Snapshot Candidate 004",
       "updated_at": "2026-10-28T03:32:00Z"
+    },
+    {
+      "schema_version": 1,
+      "artifact_id": "art_01a180c1-0dc3-72a3-be9a-f178b0238e15",
+      "revision": 1,
+      "title": "Dogfood 001 Canonical Resolution Snapshot Candidate 005",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "WORKING",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RESOLUTION_SNAPSHOT_005.json",
+      "content_digest": "sha256:1feadfe976e4ae1d99fd9231df8235adba8cd7d770e38f900b36f159af150086",
+      "human_version": "RLY-S31-DOGFOOD-001-RESOLUTION-SNAPSHOT-005",
+      "updated_at": "2026-10-28T04:24:58.051293Z",
+      "scope": "Exact post-acceptance source snapshot for Dogfood 001; candidate only.",
+      "supersedes": null,
+      "superseded_by": null
     },
     {
       "artifact_class": "LOCKABLE_RECORD",

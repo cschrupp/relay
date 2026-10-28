@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "snapshot_key": "dogfood-001-canonical-source-snapshot-005",
+  "project_id": "prj_018f47c1-7b2c-7abc-8def-123456789001",
+  "source_commit": {
+    "schema_version": 1,
+    "repository": {
+      "schema_version": 1,
+      "id": "repo_018f47c1-7b2c-7abc-8def-123456789002",
+      "host": "github.com",
+      "path": "cschrupp/relay"
+    },
+    "sha": "d909f9165a23f8f58f51284d83c9537966b27c4a"
+  },
+  "registry_digest": "sha256:1f0b867504628c75c64360f7949839b16f9efb5dfc2e7a851621e76469343774",
+  "request_key": "dogfood-001-01a17935-8a1a-77cd-b015-c2d65e07496b",
+  "scope_key": "dogfood-001",
+  "canonical_pointers": [
+    {
+      "schema_version": 1,
+      "canonical_key": "build-plan",
+      "target": {
+        "schema_version": 1,
+        "source_key": "build-plan",
+        "content_digest": "sha256:46c4428676305b487fa70e92c084deef0de1fe2e4534278d5a7c9f6962f12a3f"
+      }
+    },
+    {
+      "schema_version": 1,
+      "canonical_key": "current-baseline",
+      "target": {
+        "schema_version": 1,
+        "source_key": "current-baseline",
+        "content_digest": "sha256:96c4c9b893c915f5ce28b17e2d7b62788cd04be719fc7266140a7b642e00526f"
+      }
+    },
+    {
+      "schema_version": 1,
+      "canonical_key": "documentation-governance",
+      "target": {
+        "schema_version": 1,
+        "source_key": "documentation-governance",
+        "content_digest": "sha256:9ff4bf6333ba5386b8faa1be9fcd9ea019c0ed0305f72e9a2cb9c43047fa22c5"
+      }
+    },
+    {
+      "schema_version": 1,
+      "canonical_key": "engineering-simplicity-quality",
+      "target": {
+        "schema_version": 1,
+        "source_key": "engineering-simplicity-quality",
+        "content_digest": "sha256:b9f295c82ab7eb1376bb4ee4c70d3ddc975ad021d6e7948f02a13cf7efe09e0b"
+      }
+    },
+    {
+      "schema_version": 1,
+      "canonical_key": "product-proposal",
+      "target": {
+        "schema_version": 1,
+        "source_key": "product-proposal",
+        "content_digest": "sha256:948d4ac64d5f5f9ce10939e46a721a9c7de3bc4d37217188e5f0d9c940427496"
+      }
+    }
+  ],
+  "source_refs": [
+    {
+      "schema_version": 1,
+      "source_key": "build-plan",
+      "content_digest": "sha256:46c4428676305b487fa70e92c084deef0de1fe2e4534278d5a7c9f6962f12a3f"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "current-baseline",
+      "content_digest": "sha256:96c4c9b893c915f5ce28b17e2d7b62788cd04be719fc7266140a7b642e00526f"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "documentation-governance",
+      "content_digest": "sha256:9ff4bf6333ba5386b8faa1be9fcd9ea019c0ed0305f72e9a2cb9c43047fa22c5"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-project-state-request",
+      "content_digest": "sha256:06b5caddaafcce9322c136e3606d7afffc3d6a5ba9c0bec73e4a8b0e147344ec"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-request-recovery",
+      "content_digest": "sha256:b86bf86acbab1b9ec4a1fca007f1ab901d06e2b7a82cc6c7073faabdf659de0f"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-role-contract",
+      "content_digest": "sha256:db82b0b641e50a9682c12e6fd9406835bcea1d3b87ee815874e563adbf54128b"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-role-selection",
+      "content_digest": "sha256:91c4d052edccc0a06eac11ba5c534a3ec33102d2ad019a7e2666fa2a7f31a344"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-source-basis",
+      "content_digest": "sha256:ff7ab8497d81573178a1f65773435b99c209ea68a5e91fd142844884dc6f61d3"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-source-coverage-003",
+      "content_digest": "sha256:1b1b96eb1e85334301ea5a0de07471a21521271a1e4b32d5193fe7747cfcb950"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "dogfood-001-source-coverage-004",
+      "content_digest": "sha256:3974a5c6516ef2d26cd0b6a13f9331712751ca719b911e29499fcd6f7cfd1a9d"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "engineering-simplicity-quality",
+      "content_digest": "sha256:b9f295c82ab7eb1376bb4ee4c70d3ddc975ad021d6e7948f02a13cf7efe09e0b"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "product-proposal",
+      "content_digest": "sha256:948d4ac64d5f5f9ce10939e46a721a9c7de3bc4d37217188e5f0d9c940427496"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s110-dogfood-b3-stageb-materialization-auth-002",
+      "content_digest": "sha256:1cde97cde77e390529f687b6d990e92b42cae84f5644e0b048c7132c252bf4dc"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s21-close-eval-002",
+      "content_digest": "sha256:dbf20c2346843a3ccb294d1ea3a146bf5dab8649cde3f301fe319ccd73feb1c4"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s22-close-eval-001",
+      "content_digest": "sha256:796675ed212cbc4cde81aca3bf9edbab787e643a533fb7fd0e5655df89031914"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s23-close-auth-001",
+      "content_digest": "sha256:43ef066a1b1248a4580e215660581931a9662fe4e85daf991ba19b1135f95d90"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s23-human-accept-001",
+      "content_digest": "sha256:719c86db97e7886b5af452dfc71922cdfdf336a63f2e02f92588e85bad1f046a"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s24-close-eval-001",
+      "content_digest": "sha256:6f5d5fa7c0b70891cc667e5400ac7a92373bfddb3b7b35e0bb0c6a980bef10d1"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s25-close-eval-001",
+      "content_digest": "sha256:fa9170bee1a6dd10b0ae84890671a9cc452b366beaed7cd42e3db40a8c7aba5e"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-design-accept-001",
+      "content_digest": "sha256:ab4bc970a536b921376d3866fc555df1afe593858ca21e86109e644bff2044c0"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-canonical-reconciliation-auth-001",
+      "content_digest": "sha256:1534c653eda8421433be391dbe2706a8836ebed4f629265ea354e965ee6ceb2c"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-runtime-boundary-design-accept-001",
+      "content_digest": "sha256:d6bbb910431e6b083f1d4b30e2af0e9d09f6d4d14462a00a6f10eaaecd1070c2"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-runtime-boundary-design-eval-003",
+      "content_digest": "sha256:827a49952cb753f1df5766931c8d369614b7e4462e9eadae3339509a182f31d1"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-runtime-boundary-impl-accept-001",
+      "content_digest": "sha256:60bd836ebcc643d067a20c8ed650a9aaf219c088b88497432d672a754db9a982"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-runtime-boundary-impl-eval-002",
+      "content_digest": "sha256:a77acb044ad1486683e89412b4ed45eaf475f95a896e772a95d69433c0e08af4"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-runtime-boundary-promotion-auth-001",
+      "content_digest": "sha256:94d2efe3658e4f6baae6cce6a6990a0d5591ef7938a2851e53a5d46a330f5fc4"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-source-coverage-accept-001",
+      "content_digest": "sha256:9942a05616a2d96bfe732c86b50871fce6175b1959c6b2687c60a829c30c396b"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-dogfood-001-workspace-provider-gap-eval-001",
+      "content_digest": "sha256:1a3895447d2a6f78b5121f4537f841115b9a49abb9bb598d8801793e36fadca3"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-impl-accept-001",
+      "content_digest": "sha256:01a95e3d8a9667751d3f3ec1d59a212d5eaa324e3f122353c80f7252f13a4598"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-impl-eval-003",
+      "content_digest": "sha256:cde43578c5f20a9c806e2003fadafbf84f9b1353f62259c484844011eb229d17"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-operational-slice-definition-mapping-accept-001",
+      "content_digest": "sha256:b1cb9603d9f584733b283965c85f5863d31467950af691abc7d8e0f61383e6c4"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-operational-slice-identity-materialization-auth-002",
+      "content_digest": "sha256:f2d40738d04bbeb9850318323243060e488bf4ee6f9eda1bcbc79b1ccdc9c363"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-operational-slice-identity-materialization-eval-001",
+      "content_digest": "sha256:ab929635b6584e27a3c7c0adcac4c275f5fc055e4c64c22adf1301cb5d912fe1"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-operational-slice-identity-materialization-result-001",
+      "content_digest": "sha256:91ae9fe00ebee348a87e4390a3dd7fcaedeb92cdcfb2e3cbb00e55722cf8567f"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "rly-s31-promote-auth-001",
+      "content_digest": "sha256:2bb5afe3759a006e148606714961e5100031f19b1c51d8fc414b69e376f56fcb"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "slice-2-3-work-packet-design",
+      "content_digest": "sha256:001610f258bfe7fdb5c78fb52c0c991aa5d6d877f1c086cdc23c75a81765669d"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "slice-2-3-work-packet-rev2",
+      "content_digest": "sha256:9e31721f00a11674ebc7ecf6f2d8577c5967a4b1c6d478dfdd8785d87e49025e"
+    },
+    {
+      "schema_version": 1,
+      "source_key": "slice-3-1-design",
+      "content_digest": "sha256:f988c859de6b2127efde63436a81a89e5aa4a37f1104e859fa58c829e1258f78"
+    }
+  ],
+  "authorized_observation_refs": [],
+  "source_collection_complete": true
+}
