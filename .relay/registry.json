@@ -5186,6 +5186,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00023-7b2c-4a11-9e31-000000000023",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:d289f2cad05dd219c32e6fe0f33b1a060b2c1c72be4380086be3ffc089158c5e",
+      "human_version": "RLY-S31-DOGFOOD-001-RUNTIME-BOUNDARY-IMPL-EVAL-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_RUNTIME_BOUNDARY_IMPLEMENTATION_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent exact-subject implementation review of runtime-boundary candidate f1a2068; disposition REWORK / NARROW for launch-ownership composability, provider-neutral endpoint semantics, and missing positive coordinator-path validation.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Runtime Boundary Binding & Attestation Implementation Evaluation 001",
+      "updated_at": "2026-10-27T20:04:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
