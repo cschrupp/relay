@@ -6146,6 +6146,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_d43785dd-37a8-4c1c-82af-cd510142d685",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:34d289a155ed3fe3726847fdca1e9aa37d3a3dd490e691ab8fbc35e5eb339248",
+      "human_version": "RLY-S31-RUNTIME-NATIVE-PROFILE-IMPL-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_IMPLEMENTATION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authorization for the bounded I01-I07 implementation of the accepted trusted-local execution profile; preserves strong-boundary behavior and prohibits new sandbox infrastructure, Dogfood execution, dependency additions, and canonical promotion.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Trusted Local Execution Profile Implementation Authorization 001",
+      "updated_at": "2026-10-28T16:30:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_bdf0b484-fb10-4d4b-b0a3-d3d0941f8ca6",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
