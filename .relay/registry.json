@@ -5089,6 +5089,38 @@
       "updated_at": "2026-10-28T02:10:00Z"
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_01a18091-879a-7203-842b-5151f047e494",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:30b151b74fb6f96aaca7f678f1ab5cc62af6ec7d48e1f83cfecfbf5183dc4336",
+      "human_version": "RLY-S31-DOGFOOD-001-CANONICAL-RECONCILIATION-CANDIDATE-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_CANONICAL_RECONCILIATION_CANDIDATE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Exact canonical Dogfood 001 reconciliation result; INDETERMINATE pending accepted current source-coverage owner; no execution authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Canonical Reconciliation Candidate 001",
+      "updated_at": "2026-10-28T03:33:00Z"
+    },
+    {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_01a18091-016b-7250-ac5b-549942a40e1b",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:6d8ad473037a3a1b19fea03c60e96a56e52e1c911bb304206eb4a0839b52e8da",
+      "human_version": "RLY-S31-DOGFOOD-001-CANONICAL-RECONCILIATION-RESULT-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_CANONICAL_RECONCILIATION_RESULT_001.json",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Exact deterministic resolver/compiler inputs and outputs for current Dogfood 001 reconciliation; no execution authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Canonical Reconciliation Result 001",
+      "updated_at": "2026-10-28T03:33:00Z"
+    },
+    {
       "artifact_class": "LOCKABLE_RECORD",
       "artifact_id": "art_01a1798f-b3b4-7194-a49d-c8375502be82",
       "artifact_state": "REVIEW",
