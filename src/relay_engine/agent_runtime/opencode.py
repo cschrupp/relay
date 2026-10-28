@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import ipaddress
 import json
 import re
 from collections.abc import AsyncIterator, Callable
@@ -12,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, cast
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import httpx
 
@@ -242,16 +243,28 @@ class OpenCodeRuntime:
         permission_attestation_id_factory: Callable[[], str] | None = None,
     ) -> None:
         endpoint_url = httpx.URL(endpoint)
+        endpoint_parts = urlsplit(endpoint)
+        endpoint_host = endpoint_parts.hostname
+        try:
+            endpoint_is_loopback = (
+                endpoint_host is not None and ipaddress.ip_address(endpoint_host).is_loopback
+            )
+        except ValueError:
+            endpoint_is_loopback = (
+                endpoint_host is not None and endpoint_host.lower() == "localhost"
+            )
         if (
             endpoint_url.scheme not in {"http", "https"}
             or not endpoint_url.host
+            or not endpoint_is_loopback
+            or endpoint_parts.port is None
             or bool(endpoint_url.username)
             or bool(endpoint_url.password)
             or endpoint_url.query
             or endpoint_url.fragment
         ):
             raise ValueError(
-                "OpenCode endpoint must be an explicit HTTP(S) URL without credentials"
+                "OpenCode endpoint must be explicit loopback HTTP(S) without credentials"
             )
         if not expected_runtime_version.strip() or len(expected_runtime_version) > 128:
             raise ValueError("expected OpenCode runtime version must be nonblank and bounded")
@@ -469,12 +482,6 @@ class OpenCodeRuntime:
                 execution_id=request.request.basis.execution_id,
             )
         descriptor = await self.describe()
-        if RuntimeCapability.BOUNDARY_MANAGED_LAUNCH not in descriptor.capabilities:
-            raise fail(
-                RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,
-                "OpenCode is not qualified for boundary-managed launch.",
-                execution_id=request.request.basis.execution_id,
-            )
         if RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION not in descriptor.capabilities:
             raise fail(
                 RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,

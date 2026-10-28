@@ -337,6 +337,11 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
         ("incomplete-evidence", "BLOCKED_BY_CONTRACT"),
         ("provider-model-mismatch", "PRE_ADMISSION_DENY"),
         ("runtime-identity-mismatch", "PRE_ADMISSION_DENY"),
+        ("boundary-success", "DONE"),
+        ("boundary-permission-missing", "PRE_ADMISSION_DENY"),
+        ("boundary-permission-incomplete", "PRE_ADMISSION_DENY"),
+        ("boundary-permission-stale", "PRE_ADMISSION_DENY"),
+        ("boundary-permission-mismatch", "PRE_ADMISSION_DENY"),
     ),
 )
 def test_scripted_fake_runtime_reaches_exact_terminal_result(
@@ -371,6 +376,11 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         RuntimeStatus,
         RuntimeUsage,
     )
+    from relay_engine.agent_runtime.boundary import (
+        RuntimeEvidenceCompleteness,
+        RuntimePermissionAttestation,
+        RuntimeRequestV2,
+    )
     from relay_engine.coding_execution import coordinator as coordinator_module
     from relay_engine.coding_execution.coordinator import (
         MaterializedRuntimePayload,
@@ -391,9 +401,24 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     from relay_engine.execution_workspace import (
         derive_runtime_workspace_attachment,
     )
+    from relay_engine.execution_workspace.boundary import (
+        PlacementAttesterRef,
+        RuntimePlacementAttestation,
+        RuntimePlacementContinuityEvidence,
+        RuntimeProcessTeardownEvidence,
+        WorkspaceBoundaryRef,
+    )
+    from relay_engine.execution_workspace.evaluation import (
+        workspace_policy_ref,
+        workspace_provider_ref,
+    )
     from relay_engine.execution_workspace.models import (
+        ControlStrength,
+        WorkspaceBackendKind,
+        WorkspaceBoundaryClass,
         WorkspaceChangeManifest,
         WorkspaceConformance,
+        WorkspaceProviderPropertyCapability,
         WorkspaceProvisionResult,
     )
     from relay_engine.project_state import AuthorityCandidate
@@ -407,6 +432,33 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     candidate = compilation.candidate
     assert candidate is not None
     packet_value, _, policy, role, workspace_descriptor = resolver_fixture()
+    boundary_mode = script.startswith("boundary-")
+    trace: list[str] = []
+    if boundary_mode:
+        policy = policy.model_copy(
+            update={
+                "property_requirements": tuple(
+                    item.model_copy(update={"minimum_strength": ControlStrength.BOUNDARY_ENFORCED})
+                    for item in policy.property_requirements
+                )
+            }
+        )
+        workspace_descriptor = workspace_descriptor.model_copy(
+            update={
+                "backend_kind": WorkspaceBackendKind.CONTAINER,
+                "boundary_class": WorkspaceBoundaryClass.CONTAINER_BOUNDARY,
+                "property_capabilities": tuple(
+                    WorkspaceProviderPropertyCapability(
+                        property=item.property,
+                        maximum_strength=ControlStrength.BOUNDARY_ENFORCED,
+                    )
+                    for item in workspace_descriptor.property_capabilities
+                ),
+            }
+        )
+        packet_fields = packet_value.model_dump(mode="python")
+        packet_fields["workspace_policy_ref"] = workspace_policy_ref(policy)
+        packet_value = type(packet_value).model_validate(packet_fields)
     snapshot = candidate.resolution.snapshot.model_copy(
         update={"project_id": packet_value.project_id}
     )
@@ -450,6 +502,8 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         runtime_version="fake-runtime-1",
         api_generation="fake-v1",
         capabilities=tuple(RuntimeCapability),
+        executable_digest="sha256:" + "b" * 64 if boundary_mode else None,
+        configuration_digest="sha256:" + "c" * 64 if boundary_mode else None,
     )
 
     class ScriptedWorkspace:
@@ -457,6 +511,7 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
             self.calls: list[str] = []
             self.provision_result = None
             self.workspace_facts = None
+            self.boundary = None
 
         def describe(self):
             self.calls.append("describe")
@@ -493,6 +548,81 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         def teardown(self, instance_ref):
             self.calls.append("teardown")
 
+        def boundary_ref(self, instance_ref):
+            assert boundary_mode and self.provision_result is not None
+            expected_attester = PlacementAttesterRef(
+                provider_ref=workspace_provider_ref(workspace_descriptor),
+                attester_id="fake-boundary-attester",
+                attester_version="v1",
+                trust_anchor_digest="sha256:" + "f" * 64,
+            )
+            self.boundary = WorkspaceBoundaryRef(
+                plan_ref=instance_ref.plan_ref,
+                instance_ref=instance_ref,
+                provider_ref=instance_ref.provider_ref,
+                boundary_instance_key="fake-boundary-instance",
+                boundary_policy_digest="sha256:" + "1" * 64,
+                boundary_mechanism_key="deterministic-container-fake",
+                boundary_evidence_digest="sha256:" + "2" * 64,
+                expected_placement_attester_ref=expected_attester,
+            )
+            return self.boundary
+
+        async def launch_runtime(self, boundary, subject):
+            trace.append("launch_runtime")
+            assert boundary == self.boundary
+            return RuntimePlacementAttestation(
+                attestation_id="fake-placement-attestation",
+                launch_subject_digest=subject.content_digest,
+                workspace_boundary_ref_digest=boundary.content_digest,
+                runtime_descriptor_digest=subject.runtime_descriptor_digest,
+                process_tree_identity="fake-process-tree",
+                runtime_server_identity="fake-runtime-server",
+                endpoint_identity="https://executor.example:8443/runtime/control",
+                observed_boundary_membership=RequirementStatus.SATISFIED,
+                enforcement_evidence_digest="sha256:" + "3" * 64,
+                credential_separation_status=RequirementStatus.SATISFIED,
+                credential_separation_evidence_digest="sha256:" + "4" * 64,
+                attester_id="fake-boundary-attester",
+                attester_version="v1",
+                trust_anchor_digest="sha256:" + "f" * 64,
+                trust_evidence_digest="sha256:" + "5" * 64,
+                challenge_or_launch_nonce=subject.challenge_or_launch_nonce,
+                observed_from=datetime(2026, 10, 25, tzinfo=UTC),
+                observed_until=datetime(2026, 10, 25, tzinfo=UTC),
+                completeness=RequirementStatus.SATISFIED,
+            )
+
+        def inspect_runtime_continuity(
+            self, boundary, placement, *, execution_id, request_digest_v2
+        ):
+            trace.append("inspect-boundary-continuity")
+            return RuntimePlacementContinuityEvidence(
+                workspace_boundary_ref_digest=boundary.content_digest,
+                placement_attestation_ref=placement.ref,
+                execution_id=execution_id,
+                request_digest_v2=request_digest_v2,
+                process_tree_identity=placement.process_tree_identity,
+                observer_id="fake-boundary-observer",
+                observed_from=datetime(2026, 10, 25, tzinfo=UTC),
+                observed_until=datetime(2026, 10, 25, tzinfo=UTC),
+                status=RequirementStatus.SATISFIED,
+                evidence_digest="sha256:" + "6" * 64,
+            )
+
+        async def teardown_runtime(self, boundary, placement, *, execution_id):
+            self.calls.append("teardown-runtime")
+            trace.append("teardown-runtime")
+            return RuntimeProcessTeardownEvidence(
+                workspace_boundary_ref_digest=boundary.content_digest,
+                placement_attestation_ref=placement.ref,
+                execution_id=execution_id,
+                process_tree_identity=placement.process_tree_identity,
+                process_tree_terminated=RequirementStatus.SATISFIED,
+                credential_cleanup=RequirementStatus.SATISFIED,
+                evidence_digest="sha256:" + "7" * 64,
+            )
+
     class ScriptedRuntime:
         def __init__(self) -> None:
             self.calls: list[str] = []
@@ -517,12 +647,79 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 created_at=datetime(2026, 10, 25, tzinfo=UTC),
             )
 
+        async def create_session_v2(self, request: RuntimeRequestV2):
+            self.calls.append("create_session_v2")
+            trace.append("create_session_v2")
+            self.request = request.request
+            return RuntimeSessionBinding(
+                execution_id=request.request.basis.execution_id,
+                runtime_session=self.session,
+                request_digest=request.request.request_digest,
+                request_digest_v2=request.request_digest_v2,
+                workspace_id=request.request.basis.workspace.workspace_id,
+                created_at=datetime(2026, 10, 25, tzinfo=UTC),
+            )
+
+        async def attest_permissions_v2(self, request: RuntimeRequestV2, binding):
+            self.calls.append("attest_permissions_v2")
+            trace.append("attest_permissions_v2")
+            if script == "boundary-permission-missing":
+                raise RuntimeError("fake permission observation unavailable")
+            attestation = RuntimePermissionAttestation(
+                attestation_id="fake-permission-attestation",
+                execution_id=binding.execution_id,
+                request_digest_v2=request.request_digest_v2,
+                session_binding=binding,
+                runtime_descriptor_digest=request.launch_subject.runtime_descriptor_digest,
+                launch_subject_digest=request.launch_subject.content_digest,
+                placement_attestation_digest=request.placement_attestation_digest,
+                expected_permission_profile_ref=permission_ref,
+                observed_effective_profile_digest=permission_ref.content_digest,
+                effective_tool_exposure=(),
+                unknown_tool_identity=False,
+                effective_shell_exposure=False,
+                actual_provider_id=runtime_selection.requested_provider_id,
+                actual_model_id=runtime_selection.requested_model_id,
+                completeness=(
+                    RuntimeEvidenceCompleteness.INDETERMINATE
+                    if script == "boundary-permission-incomplete"
+                    else RuntimeEvidenceCompleteness.SATISFIED
+                ),
+                observation_provenance_digest="sha256:" + "8" * 64,
+                adapter_identity="fake-runtime-adapter",
+                adapter_version="fake-1",
+                observed_from=(
+                    datetime(2026, 10, 24, tzinfo=UTC)
+                    if script == "boundary-permission-stale"
+                    else datetime(2026, 10, 25, tzinfo=UTC)
+                ),
+                observed_until=datetime(2026, 10, 25, tzinfo=UTC),
+            )
+            if script == "boundary-permission-mismatch":
+                attestation = attestation.model_copy(
+                    update={"request_digest_v2": "sha256:" + "9" * 64}
+                )
+            return attestation
+
         async def open_execution(self, request, binding):
             self.calls.append("open-execution")
             return RuntimeExecutionHandle(
                 execution_id=request.basis.execution_id,
                 runtime_session=binding.runtime_session,
                 request_digest=request.request_digest,
+                opened_at=datetime(2026, 10, 25, tzinfo=UTC),
+            )
+
+        async def open_execution_v2(self, request, binding, permission_attestation):
+            self.calls.append("open_execution_v2")
+            trace.append("open_execution_v2")
+            assert binding.request_digest_v2 == request.request_digest_v2
+            assert permission_attestation.request_digest_v2 == request.request_digest_v2
+            return RuntimeExecutionHandle(
+                execution_id=request.request.basis.execution_id,
+                runtime_session=binding.runtime_session,
+                request_digest=request.request.request_digest,
+                request_digest_v2=request.request_digest_v2,
                 opened_at=datetime(2026, 10, 25, tzinfo=UTC),
             )
 
@@ -561,6 +758,10 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                     RuntimeEventType.EXECUTION_COMPLETED,
                 ),
                 "runtime-identity-mismatch": (
+                    RuntimeEventType.EXECUTION_STARTED,
+                    RuntimeEventType.EXECUTION_COMPLETED,
+                ),
+                "boundary-success": (
                     RuntimeEventType.EXECUTION_STARTED,
                     RuntimeEventType.EXECUTION_COMPLETED,
                 ),
@@ -624,11 +825,20 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     workspace = ScriptedWorkspace()
     runtime = ScriptedRuntime()
 
-    monkeypatch.setattr(
-        coordinator_module,
-        "evaluate_admission",
-        lambda *_args: AdmissionEvidence(status=CodingAdmissionStatus.ADMIT),
-    )
+    def evaluate_final_admission(*_args):
+        if boundary_mode:
+            trace.append("final-admission")
+        return AdmissionEvidence(status=CodingAdmissionStatus.ADMIT)
+
+    actual_freshness_check = coordinator_module.check_candidate_freshness
+
+    def check_final_freshness(*args):
+        if boundary_mode:
+            trace.append("final-freshness")
+        return actual_freshness_check(*args)
+
+    monkeypatch.setattr(coordinator_module, "evaluate_admission", evaluate_final_admission)
+    monkeypatch.setattr(coordinator_module, "check_candidate_freshness", check_final_freshness)
     monkeypatch.setattr(
         coordinator_module,
         "evaluate_workspace_conformance",
@@ -741,11 +951,13 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         terminal_workspace_facts_factory=lambda *_args: workspace.workspace_facts,
         current_snapshot_reader=lambda: snapshot,
         grant_reservation_reader=lambda: (grant, ()),
+        boundary_nonce_factory=(lambda: "fake-launch-nonce") if boundary_mode else None,
+        boundary_runtime_launcher=workspace if boundary_mode else None,
         cancellation_requested=(lambda: True) if script == "cancellation" else None,
     )
 
     if expected_outcome == "PRE_ADMISSION_DENY":
-        with pytest.raises(AdmissionRejected):
+        with pytest.raises(AdmissionRejected) as rejection:
             asyncio.run(
                 execute_governed_attempt(
                     inputs,
@@ -755,6 +967,14 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
             )
         assert "create-session" not in runtime.calls
         assert "open-execution" not in runtime.calls
+        if boundary_mode:
+            assert runtime.calls.count("create_session_v2") == 1
+            assert "open_execution_v2" not in runtime.calls
+            assert "open-execution" not in runtime.calls
+            assert workspace.calls.count("teardown-runtime") == 1
+            assert rejection.value.boundary_failure is not None
+            assert rejection.value.boundary_failure.session is not None
+            assert rejection.value.boundary_failure.teardown is not None
         return
 
     result = asyncio.run(
@@ -771,9 +991,32 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     assert result.evidence.runtime_handle is not None
     assert result.evidence.runtime_inspection is not None
     assert result.outcome.value == expected_outcome
-    assert runtime.calls.count("open-execution") == 1
+    if boundary_mode:
+        assert "open-execution" not in runtime.calls
+    else:
+        assert runtime.calls.count("open-execution") == 1
     assert "opencode" not in runtime.calls
     assert result.evidence.execution_subject_digest == result.subject.content_digest
     if script == "cancellation":
         assert runtime.calls.count("cancel") == 1
         assert result.evidence.cancellation_ack is not None
+    if script == "boundary-success":
+        assert runtime.calls.count("create_session_v2") == 1
+        assert runtime.calls.count("attest_permissions_v2") == 1
+        assert runtime.calls.count("open_execution_v2") == 1
+        expected_order = (
+            "launch_runtime",
+            "create_session_v2",
+            "attest_permissions_v2",
+            "final-admission",
+            "final-freshness",
+            "open_execution_v2",
+        )
+        assert tuple(item for item in trace if item in expected_order) == expected_order
+        assert result.subject.runtime_request_v2 is not None
+        assert result.subject.runtime_placement_attestation is not None
+        assert result.subject.runtime_permission_attestation_ref is not None
+        assert result.evidence.runtime_placement_continuity is not None
+        assert result.evidence.runtime_process_teardown is not None
+        assert result.subject.runtime_request_v2.endpoint_identity.startswith("https://executor.")
+        assert RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION in runtime_descriptor.capabilities

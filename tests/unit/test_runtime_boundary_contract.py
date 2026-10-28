@@ -172,13 +172,14 @@ def test_v2_request_digest_binds_launch_and_placement_without_changing_v1() -> N
 @pytest.mark.parametrize(
     "endpoint",
     (
-        "http://example.test:4096",
         "http://127.0.0.1",
         "http://user:password@127.0.0.1:4096",
         "http://127.0.0.1:4096/?token=secret",
+        "relative/control/path",
+        "https://executor.example/control#fragment",
     ),
 )
-def test_v2_request_rejects_non_loopback_or_ambiguous_endpoint(endpoint: str) -> None:
+def test_v2_request_rejects_non_exact_or_credentialed_endpoint(endpoint: str) -> None:
     request = request_v2()
     changed = request.model_dump(mode="python")
     changed["endpoint_identity"] = endpoint
@@ -187,7 +188,23 @@ def test_v2_request_rejects_non_loopback_or_ambiguous_endpoint(endpoint: str) ->
         RuntimeRequestV2.model_validate(changed)
 
 
-def test_open_code_does_not_create_session_without_managed_launch_capability() -> None:
+def test_v2_request_accepts_exact_remote_executor_endpoint() -> None:
+    request = runtime_request()
+    subject = launch_subject(request)
+    placement_ref = RuntimePlacementAttestationRef(
+        attestation_id="placement-remote",
+        content_digest=_DIGEST,
+    )
+    remote_request = build_runtime_request_v2(
+        request=request,
+        launch_subject=subject,
+        placement_attestation_ref=placement_ref,
+        endpoint_identity="https://executor.example:8443/runtime/control",
+    )
+    assert remote_request.endpoint_identity == "https://executor.example:8443/runtime/control"
+
+
+def test_open_code_does_not_create_session_without_permission_attestation() -> None:
     paths: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -212,13 +229,31 @@ def test_open_code_does_not_create_session_without_managed_launch_capability() -
 
     async def exercise() -> None:
         try:
-            with pytest.raises(AgentRuntimeError, match="boundary-managed launch"):
+            with pytest.raises(AgentRuntimeError, match="permission inspection"):
                 await runtime.create_session_v2(request)
             assert paths == ["/api/health"]
         finally:
             await client.aclose()
 
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("endpoint", ("http://192.0.2.10:4096", "https://runtime.example:443"))
+def test_open_code_endpoint_policy_remains_loopback_only(endpoint: str) -> None:
+    with pytest.raises(ValueError, match="loopback"):
+        OpenCodeRuntime(
+            endpoint,
+            expected_runtime_version="1.2.3",
+            permission_profile=OpenCodePermissionProfile(
+                reference=RuntimePermissionProfileRef(
+                    profile_id="profile-a",
+                    content_digest=_DIGEST,
+                ),
+                agent_id="relay-test-agent",
+                allow=("read",),
+                deny=("bash",),
+            ),
+        )
 
 
 def test_open_code_permission_attestation_uses_relay_id_and_is_idempotent() -> None:

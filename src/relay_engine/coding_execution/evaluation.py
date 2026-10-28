@@ -970,6 +970,8 @@ def evaluate_runtime_boundary_evidence(
             deny.append("runtime-boundary:permissions-unsatisfied")
         elif permission.completeness is RuntimeEvidenceCompleteness.INDETERMINATE:
             unknown.append("runtime-boundary:permissions-incomplete")
+        if permission.observed_from < session.created_at:
+            unknown.append("runtime-boundary:permission-observation-stale")
         if (
             permission.actual_provider_id
             != request_v2.request.basis.runtime_selection.requested_provider_id

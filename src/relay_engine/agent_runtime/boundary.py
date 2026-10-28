@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import ipaddress
 import json
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -107,28 +106,23 @@ class RuntimeRequestV2(DomainModel):
     @field_validator("endpoint_identity")
     @classmethod
     def endpoint_is_explicit_and_credential_free(cls, value: str) -> str:
+        if any(character.isspace() for character in value):
+            raise ValueError("endpoint identity must not contain whitespace")
         parsed = urlsplit(value)
         if (
-            parsed.scheme not in {"http", "https", "unix"}
-            or not parsed.netloc
-            and parsed.scheme != "unix"
+            not parsed.scheme
             or parsed.username is not None
             or parsed.password is not None
             or parsed.query
             or parsed.fragment
         ):
-            raise ValueError("endpoint identity must be explicit and contain no credentials")
+            raise ValueError("endpoint identity must be absolute, exact, and credential-free")
         if parsed.scheme == "unix":
             if parsed.netloc or not parsed.path.startswith("/"):
                 raise ValueError("Unix control endpoint must use an absolute socket path")
             return value
-        hostname = parsed.hostname
-        try:
-            is_loopback = hostname is not None and ipaddress.ip_address(hostname).is_loopback
-        except ValueError:
-            is_loopback = hostname == "localhost"
-        if not is_loopback or parsed.port is None:
-            raise ValueError("HTTP runtime endpoint must be explicit loopback with a port")
+        if not parsed.netloc or parsed.hostname is None:
+            raise ValueError("endpoint identity must name an exact control authority")
         return value
 
     @model_validator(mode="after")

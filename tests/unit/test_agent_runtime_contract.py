@@ -87,7 +87,7 @@ def runtime_for(
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(recording_handler))
     runtime = OpenCodeRuntime(
-        "http://opencode.test:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(ask=ask),
         client=client,

@@ -259,7 +259,7 @@ def setup_runtime(
         headers=headers,
     )
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,
@@ -407,7 +407,7 @@ def test_resume_false_models_admission_without_execution_wake() -> None:
     }
     request = httpx.Request(
         "POST",
-        f"http://opencode.mock:4096/api/session/{SESSION_ID}/prompt",
+        f"http://127.0.0.1:4096/api/session/{SESSION_ID}/prompt",
         json=prompt_body,
     )
 
@@ -558,7 +558,7 @@ def test_event_observer_failure_prevents_prompt_admission() -> None:
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(no_event_stream))
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,
@@ -599,7 +599,7 @@ def test_uncertain_prompt_admission_returns_recoverable_exact_handle(
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,
@@ -892,7 +892,7 @@ def test_cancel_rejects_undeclared_success_status(status_code: int) -> None:
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,
@@ -934,7 +934,7 @@ def test_cancel_preserves_timeout_and_transport_failures(
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,
@@ -978,7 +978,7 @@ def test_concurrent_cancel_serializes_interrupt_and_returns_cached_ack() -> None
 
         client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
         runtime = OpenCodeRuntime(
-            "http://opencode.mock:4096",
+            "http://127.0.0.1:4096",
             expected_runtime_version="1.2.3",
             permission_profile=permission_profile(),
             client=client,
@@ -1252,7 +1252,7 @@ def test_transport_failure_does_not_retry_session_creation() -> None:
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     runtime = OpenCodeRuntime(
-        "http://opencode.mock:4096",
+        "http://127.0.0.1:4096",
         expected_runtime_version="1.2.3",
         permission_profile=permission_profile(),
         client=client,

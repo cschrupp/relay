@@ -525,6 +525,7 @@ async def _prepare_boundary_runtime(
         or permission.placement_attestation_digest != placement.content_digest
         or permission.expected_permission_profile_ref != permission_profile_ref
         or permission.completeness is not RuntimeEvidenceCompleteness.SATISFIED
+        or permission.observed_from < session.created_at
     ):
         await _stop_with_boundary_evidence(
             launcher=launcher,
@@ -784,8 +785,6 @@ async def execute_governed_attempt(
     if _requires_strong_boundary(plan):
         if inputs.boundary_runtime_launcher is None:
             return _blocked_result(inputs, execution_id, "runtime:boundary-launcher-missing")
-        if RuntimeCapability.BOUNDARY_MANAGED_LAUNCH not in descriptor.capabilities:
-            return _blocked_result(inputs, execution_id, "runtime:managed-launch-unsupported")
         if RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION not in descriptor.capabilities:
             return _blocked_result(
                 inputs, execution_id, "runtime:permission-attestation-unsupported"
