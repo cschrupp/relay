@@ -5105,6 +5105,22 @@
       "updated_at": "2026-10-28T03:33:00Z"
     },
     {
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_31a00029-7b2c-4a11-9e31-000000000029",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:c537e1f223fc790e59a30e03dd2b267a92997bfcd23c6b664d5a27c0f4b763fb",
+      "human_version": "RLY-S31-DOGFOOD-001-CANONICAL-RECONCILIATION-EVAL-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_CANONICAL_RECONCILIATION_EVALUATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Independent exact-subject review of Dogfood 001 canonical reconciliation candidate 4d2a87f; ACCEPT as correct fail-closed INDETERMINATE result due solely to missing exact Human-accepted Coverage 004 owner.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Dogfood 001 Canonical Reconciliation Evaluation 001",
+      "updated_at": "2026-10-28T03:37:00Z"
+    },
+    {
       "artifact_class": "WORKING",
       "artifact_id": "art_01a18091-016b-7250-ac5b-549942a40e1b",
       "artifact_state": "REVIEW",
