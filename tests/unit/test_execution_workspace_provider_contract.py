@@ -54,6 +54,45 @@ def test_local_provider_claims_same_user_boundary_and_no_strong_controls() -> No
     descriptor_value = LocalCloneWorkspaceProvider(".").describe()
     assert descriptor_value.backend_kind is WorkspaceBackendKind.LOCAL_CLONE
     assert descriptor_value.boundary_class is WorkspaceBoundaryClass.SAME_USER_NO_SECURITY_BOUNDARY
+    assert descriptor_value.supported_shell_modes == ()
+    assert descriptor_value.supported_network_modes == ()
+    assert descriptor_value.supported_external_side_effect_modes == ()
+    assert descriptor_value.supported_credential_exposure_modes == ()
+    assert descriptor_value.supported_resource_dimensions == ()
+
+
+def test_local_clone_cannot_satisfy_boundary_enforced_workspace_requirement() -> None:
+    from test_execution_workspace_evaluation import make_plan
+
+    from relay_engine.execution_workspace.evaluation import (
+        evaluate_workspace_preflight,
+        workspace_provider_ref,
+    )
+    from relay_engine.execution_workspace.local_clone import LocalCloneWorkspaceProvider
+    from relay_engine.execution_workspace.models import WorkspacePropertyRequirement
+    from relay_engine.role_contracts import RequirementStatus
+
+    plan, _ = make_plan()
+    descriptor_value = LocalCloneWorkspaceProvider(".").describe()
+    requirement = WorkspacePropertyRequirement(
+        key="filesystem-boundary",
+        property=WorkspaceProperty.FILESYSTEM_SCOPE,
+        minimum_strength=ControlStrength.BOUNDARY_ENFORCED,
+    )
+    exact_plan = plan.model_copy(
+        update={
+            "provider_ref": workspace_provider_ref(descriptor_value),
+            "property_requirements": (*plan.property_requirements, requirement),
+        }
+    )
+
+    result = evaluate_workspace_preflight(
+        exact_plan,
+        descriptor_value,
+        trusted_local=True,
+    )
+
+    assert result.status is RequirementStatus.UNSATISFIED
     assert all(
         item.maximum_strength is not ControlStrength.BOUNDARY_ENFORCED
         for item in descriptor_value.property_capabilities

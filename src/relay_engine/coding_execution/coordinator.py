@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import secrets
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import NoReturn, cast
 
@@ -35,6 +35,7 @@ from relay_engine.agent_runtime.boundary import (
     RuntimeRequestV2,
     build_runtime_request_v2,
 )
+from relay_engine.agent_runtime.opencode import OpenCodeConfigurationBinding
 from relay_engine.agent_runtime.protocol import BoundaryManagedAgentRuntime
 from relay_engine.coding_execution.evaluation import (
     AdmissionInputs,
@@ -48,19 +49,26 @@ from relay_engine.coding_execution.evaluation import (
 )
 from relay_engine.coding_execution.models import (
     AdmissionStatus,
+    CleanupStatus,
     ConsumableReservationBinding,
     ContractGapAnalysis,
     ExecutionEvidenceBundle,
+    ExecutionProfile,
     ExecutionSubject,
     ExecutionTerminalOutcome,
     HumanGrantBinding,
     InternalProgressObservation,
+    PermissionEvidenceProvenance,
+    PromptFreeSessionCleanupEvidence,
     ProposedWorkObservation,
+    RuntimeEvidenceBindingRef,
     RuntimePayloadEvidence,
     RuntimePermissionEvidence,
     StableExecutionKey,
     TerminalExecutionResult,
     digest_evaluator_handoff,
+    digest_execution_profile_binding,
+    digest_runtime_permission_evidence,
     execution_id_for_attempt,
 )
 from relay_engine.domain import ContentDigest, SliceId
@@ -82,8 +90,11 @@ from relay_engine.execution_workspace.boundary import (
 )
 from relay_engine.execution_workspace.evaluation import workspace_plan_ref, workspace_provider_ref
 from relay_engine.execution_workspace.models import (
+    ControlStrength,
     ProtectedVerificationAuthorityFact,
     WorkPacketConformanceFact,
+    WorkspaceCandidateCapture,
+    WorkspaceChangeManifest,
     WorkspaceConformanceFacts,
     WorkspaceInspection,
     WorkspaceInstanceRef,
@@ -154,11 +165,13 @@ class AdmissionRejected(RuntimeError):
         reason: str,
         *,
         boundary_failure: BoundaryPreparationFailure | None = None,
+        trusted_local_failure: TrustedLocalPreparationFailure | None = None,
     ) -> None:
         super().__init__(reason)
         self.outcome = outcome
         self.reason = reason
         self.boundary_failure = boundary_failure
+        self.trusted_local_failure = trusted_local_failure
 
 
 @dataclass(frozen=True)
@@ -221,6 +234,26 @@ class BoundaryPreparationFailure:
     teardown: RuntimeProcessTeardownEvidence | None
     failure_reason: str
     cleanup_error_type: str | None = None
+
+
+@dataclass(frozen=True)
+class TrustedLocalPreparation:
+    """Exact prompt-free OpenCode session and configuration before admission."""
+
+    configuration_binding: OpenCodeConfigurationBinding
+    session: RuntimeSessionBinding
+    permission_evidence: RuntimePermissionEvidence
+
+
+@dataclass(frozen=True)
+class TrustedLocalPreparationFailure:
+    """Retained exact preparation and cleanup evidence after admission rejection."""
+
+    configuration_binding: OpenCodeConfigurationBinding
+    session: RuntimeSessionBinding
+    permission_evidence: RuntimePermissionEvidence
+    cleanup: PromptFreeSessionCleanupEvidence
+    failure_reason: str
 
 
 async def _stop_with_boundary_evidence(
@@ -287,7 +320,8 @@ def _canonical_model_digest(value: DomainModel) -> ContentDigest:
 
 def _requires_strong_boundary(plan: WorkspacePlan) -> bool:
     return any(
-        item.minimum_strength.value == "BOUNDARY_ENFORCED" for item in plan.property_requirements
+        item.minimum_strength is ControlStrength.BOUNDARY_ENFORCED
+        for item in plan.property_requirements
     )
 
 
@@ -308,6 +342,159 @@ def _permission_evidence_from_attestation(
         actual_provider_id=attestation.actual_provider_id,
         actual_model_id=attestation.actual_model_id,
         provenance_status=completeness,
+        provenance=PermissionEvidenceProvenance.RUNTIME_OBSERVED,
+        session_binding=attestation.session_binding,
+    )
+
+
+def _permission_evidence_from_configuration(
+    binding: OpenCodeConfigurationBinding,
+    session: RuntimeSessionBinding,
+    *,
+    execution_id: str,
+    runtime_id: str,
+) -> RuntimePermissionEvidence:
+    """Bind configuration-derived exposure to the exact prompt-free session."""
+
+    completeness = (
+        RequirementStatus.SATISFIED
+        if binding.status is RequirementStatus.SATISFIED
+        and binding.precedence_complete
+        and session.actual_identity_status.value == "FULL"
+        else RequirementStatus.INDETERMINATE
+    )
+    evidence = RuntimePermissionEvidence(
+        execution_id=execution_id,
+        runtime_id=runtime_id,
+        attestation_id=binding.binding_id,
+        evidence_digest="sha256:" + "0" * 64,
+        effective_profile_ref=binding.permission_profile_ref,
+        completeness=completeness,
+        exposed_tools=binding.effective_tool_exposure,
+        unknown_tool_identity=not binding.precedence_complete,
+        shell_exposed=binding.shell_exposed,
+        actual_provider_id=session.actual_provider_id,
+        actual_model_id=session.actual_model_id,
+        provenance_status=completeness,
+        provenance=PermissionEvidenceProvenance.CONFIGURATION_DERIVED,
+        configuration_binding_ref=RuntimeEvidenceBindingRef(
+            evidence_id=binding.binding_id,
+            content_digest=binding.content_digest,
+        ),
+        session_binding=session,
+    )
+    return evidence.model_copy(
+        update={"evidence_digest": digest_runtime_permission_evidence(evidence)}
+    )
+
+
+async def _prepare_trusted_local_runtime(
+    runtime: AgentRuntime,
+    request: RuntimeExecutionRequest,
+    descriptor: RuntimeDescriptor,
+) -> TrustedLocalPreparation:
+    """Resolve qualified OpenCode configuration, then prepare one prompt-free session."""
+
+    prepare = getattr(runtime, "prepare_trusted_local_session", None)
+    if not callable(prepare):
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            "runtime:version-qualified-configuration-observer-missing",
+        )
+    try:
+        prepare_typed = cast(
+            Callable[
+                [RuntimeExecutionRequest, RuntimeDescriptor],
+                Awaitable[tuple[OpenCodeConfigurationBinding, RuntimeSessionBinding]],
+            ],
+            prepare,
+        )
+        configuration, session = await prepare_typed(request, descriptor)
+    except AdmissionRejected:
+        raise
+    except Exception as error:
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            "runtime:trusted-local-configuration-or-session-preparation-failed",
+        ) from error
+    if type(configuration) is not OpenCodeConfigurationBinding:
+        raise AdmissionRejected(
+            ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            "runtime:configuration-binding-untyped",
+        )
+    permission = _permission_evidence_from_configuration(
+        configuration,
+        session,
+        execution_id=request.basis.execution_id,
+        runtime_id=descriptor.runtime_id,
+    )
+    preparation = TrustedLocalPreparation(
+        configuration_binding=configuration,
+        session=session,
+        permission_evidence=permission,
+    )
+    if (
+        session.execution_id != request.basis.execution_id
+        or session.request_digest != request.request_digest
+        or session.runtime_session.runtime_id != descriptor.runtime_id
+        or session.workspace_id != request.basis.workspace.workspace_id
+    ):
+        await _reject_prepared_trusted_local(
+            runtime,
+            preparation,
+            "runtime:trusted-local-session-binding-mismatch",
+            ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+        )
+    return preparation
+
+
+async def _reject_prepared_trusted_local(
+    runtime: AgentRuntime,
+    preparation: TrustedLocalPreparation,
+    reason: str,
+    outcome: ExecutionTerminalOutcome,
+) -> NoReturn:
+    """Clean up a rejected prepared session and retain exact failure evidence."""
+
+    cleanup_method = getattr(runtime, "close_prepared_session", None)
+    cleanup_status = RequirementStatus.INDETERMINATE
+    cleanup_digest = None
+    cleanup_error_type = None
+    if callable(cleanup_method):
+        try:
+            cleanup_typed = cast(
+                Callable[[RuntimeSessionBinding], Awaitable[RequirementStatus]],
+                cleanup_method,
+            )
+            cleanup_result = await cleanup_typed(preparation.session)
+            cleanup_status = (
+                cleanup_result
+                if type(cleanup_result) is RequirementStatus
+                else RequirementStatus.INDETERMINATE
+            )
+        except Exception as error:
+            cleanup_error_type = type(error).__name__
+    cleanup = PromptFreeSessionCleanupEvidence(
+        session_binding=preparation.session,
+        status=CleanupStatus(cleanup_status.value),
+        reason=reason,
+        cleanup_acknowledgement_digest=cleanup_digest,
+    )
+    failure = TrustedLocalPreparationFailure(
+        configuration_binding=preparation.configuration_binding,
+        session=preparation.session,
+        permission_evidence=preparation.permission_evidence,
+        cleanup=cleanup,
+        failure_reason=(
+            reason
+            if cleanup_error_type is None
+            else reason + ":cleanup-error:" + cleanup_error_type
+        ),
+    )
+    raise AdmissionRejected(
+        outcome,
+        reason,
+        trusted_local_failure=failure,
     )
 
 
@@ -722,6 +909,15 @@ async def execute_governed_attempt(
         conformance=packet_result,
     )
     provider_descriptor = workspace_provider.describe()
+    trusted_local = not any(
+        item.minimum_strength is ControlStrength.BOUNDARY_ENFORCED
+        for item in inputs.workspace_policy.property_requirements
+    )
+    execution_profile = (
+        ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+        if trusted_local
+        else ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY
+    )
     plan_resolution = resolve_workspace_plan(
         packet,
         packet_ref,
@@ -732,12 +928,13 @@ async def execute_governed_attempt(
         provider_descriptor,
         plan_key=inputs.plan_key,
         revision=inputs.plan_revision,
+        trusted_local=trusted_local,
     )
     if plan_resolution.status is not RequirementStatus.SATISFIED or plan_resolution.plan is None:
         return _blocked_result(inputs, execution_id, "workspace:plan-resolution")
     plan = plan_resolution.plan
     provider_ref = workspace_provider_ref(provider_descriptor)
-    preflight = evaluate_workspace_preflight(plan, provider_descriptor)
+    preflight = evaluate_workspace_preflight(plan, provider_descriptor, trusted_local=trusted_local)
     if preflight.status is not RequirementStatus.SATISFIED:
         return _blocked_result(inputs, execution_id, "workspace:preflight")
 
@@ -751,7 +948,11 @@ async def execute_governed_attempt(
         plan_resolution, provision, provider_descriptor
     )
     workspace_result = evaluate_workspace_conformance(
-        plan, provision.instance_ref, provider_ref, workspace_facts
+        plan,
+        provision.instance_ref,
+        provider_ref,
+        workspace_facts,
+        trusted_local=trusted_local,
     )
     if workspace_result.status is not RequirementStatus.SATISFIED:
         return _blocked_result(inputs, execution_id, "workspace:conformance")
@@ -782,6 +983,7 @@ async def execute_governed_attempt(
 
     boundary_preparation: BoundaryRuntimePreparation | None = None
     runtime_permission_evidence = inputs.runtime_permission_evidence
+    trusted_preparation: TrustedLocalPreparation | None = None
     if _requires_strong_boundary(plan):
         if inputs.boundary_runtime_launcher is None:
             return _blocked_result(inputs, execution_id, "runtime:boundary-launcher-missing")
@@ -808,17 +1010,32 @@ async def execute_governed_attempt(
         except AdmissionRejected:
             raise
         runtime_permission_evidence = boundary_preparation.permission_evidence
+    else:
+        trusted_preparation = await _prepare_trusted_local_runtime(runtime, request, descriptor)
+        runtime_permission_evidence = trusted_preparation.permission_evidence
     boundary_launcher = inputs.boundary_runtime_launcher
     if boundary_preparation is not None:
         assert boundary_launcher is not None, (
             "prepared runtime boundary requires its exact launcher"
         )
     if boundary_preparation is None and (
-        runtime_permission_evidence.actual_provider_id != selection.requested_provider_id
-        or runtime_permission_evidence.actual_model_id != selection.requested_model_id
+        (
+            runtime_permission_evidence.actual_provider_id is not None
+            and runtime_permission_evidence.actual_provider_id != selection.requested_provider_id
+        )
+        or (
+            runtime_permission_evidence.actual_model_id is not None
+            and runtime_permission_evidence.actual_model_id != selection.requested_model_id
+        )
     ):
-        return _blocked_result(inputs, execution_id, "runtime:provider-model-identity-unbound")
-
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "runtime:provider-model-identity-mismatch",
+                ExecutionTerminalOutcome.BLOCKED_BY_AUTHORITY,
+            )
+        return _blocked_result(inputs, execution_id, "runtime:provider-model-identity-mismatch")
     exposure = evaluate_effective_tool_exposure(
         plan,
         runtime_permission_evidence,
@@ -840,6 +1057,13 @@ async def execute_governed_attempt(
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
             )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "runtime:effective-permission-unproven",
+                ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            )
         return _blocked_result(inputs, execution_id, "runtime:effective-permission-unproven")
     if runtime_permission_evidence.effective_profile_ref != inputs.permission_profile_ref:
         if boundary_preparation is not None:
@@ -855,6 +1079,13 @@ async def execute_governed_attempt(
                 session=boundary_preparation.session,
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
+            )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "runtime:effective-profile-mismatch",
+                ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
             )
         return _blocked_result(inputs, execution_id, "runtime:effective-profile-mismatch")
 
@@ -876,6 +1107,13 @@ async def execute_governed_attempt(
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
             )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "workspace:changed-before-admission",
+                ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+            )
         return _blocked_result(inputs, execution_id, "workspace:changed-before-admission")
     if inputs.current_snapshot_reader is None or inputs.grant_reservation_reader is None:
         if boundary_preparation is not None:
@@ -892,6 +1130,13 @@ async def execute_governed_attempt(
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
             )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "admission:final-revalidation-unavailable",
+                ExecutionTerminalOutcome.BLOCKED_BY_ENVIRONMENT,
+            )
         return _blocked_result(inputs, execution_id, "admission:final-revalidation-unavailable")
     latest_snapshot = inputs.current_snapshot_reader()
     latest_grant, latest_reservations = inputs.grant_reservation_reader()
@@ -901,6 +1146,16 @@ async def execute_governed_attempt(
             "workspace_status": RequirementStatus.SATISFIED,
             "runtime_descriptor": descriptor,
             "permission_evidence": runtime_permission_evidence,
+            "runtime_request": request,
+            "execution_profile": execution_profile,
+            "runtime_configuration_binding_ref": (
+                RuntimeEvidenceBindingRef(
+                    evidence_id=trusted_preparation.configuration_binding.binding_id,
+                    content_digest=trusted_preparation.configuration_binding.content_digest,
+                )
+                if trusted_preparation is not None
+                else None
+            ),
             "workspace_plan": plan,
             "current_snapshot": latest_snapshot,
             "grant": latest_grant,
@@ -915,7 +1170,11 @@ async def execute_governed_attempt(
                 boundary_preparation.placement if boundary_preparation is not None else None
             ),
             "runtime_session_binding": (
-                boundary_preparation.session if boundary_preparation is not None else None
+                boundary_preparation.session
+                if boundary_preparation is not None
+                else trusted_preparation.session
+                if trusted_preparation is not None
+                else None
             ),
             "runtime_permission_attestation": (
                 boundary_preparation.permission_attestation
@@ -947,6 +1206,17 @@ async def execute_governed_attempt(
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
             )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "admission:" + final_admission.status.value,
+                (
+                    ExecutionTerminalOutcome.BLOCKED_BY_AUTHORITY
+                    if final_admission.status is AdmissionStatus.DENY
+                    else ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT
+                ),
+            )
         return _blocked_result(inputs, execution_id, "admission:" + final_admission.status.value)
     freshness = check_candidate_freshness(candidate, latest_snapshot)
     if freshness.status is not CandidateFreshnessStatus.CURRENT:
@@ -963,6 +1233,13 @@ async def execute_governed_attempt(
                 session=boundary_preparation.session,
                 permission=boundary_preparation.permission_attestation,
                 continuity=boundary_preparation.continuity,
+            )
+        if trusted_preparation is not None:
+            await _reject_prepared_trusted_local(
+                runtime,
+                trusted_preparation,
+                "candidate:final-freshness-failed",
+                ExecutionTerminalOutcome.BLOCKED_BY_AUTHORITY,
             )
         return _blocked_result(inputs, execution_id, "candidate:final-freshness-failed")
 
@@ -983,7 +1260,23 @@ async def execute_governed_attempt(
         workspace_instance=provision.instance_ref,
         runtime_workspace_attachment=attachment,
         workspace_provider_ref=provider_ref,
+        execution_profile=execution_profile,
+        execution_profile_binding_digest=digest_execution_profile_binding(
+            execution_profile,
+            candidate.content_digest,
+            packet_ref,
+            workspace_plan_ref(plan),
+            provider_ref,
+        ),
         runtime_descriptor=descriptor,
+        runtime_configuration_binding_ref=(
+            RuntimeEvidenceBindingRef(
+                evidence_id=trusted_preparation.configuration_binding.binding_id,
+                content_digest=trusted_preparation.configuration_binding.content_digest,
+            )
+            if trusted_preparation is not None
+            else None
+        ),
         runtime_request=request,
         runtime_request_v2=(
             boundary_preparation.request_v2 if boundary_preparation is not None else None
@@ -1005,7 +1298,11 @@ async def execute_governed_attempt(
             else None
         ),
         runtime_session_binding=(
-            boundary_preparation.session if boundary_preparation is not None else None
+            boundary_preparation.session
+            if boundary_preparation is not None
+            else None
+            if trusted_preparation is None
+            else trusted_preparation.session
         ),
         runtime_payload_evidence=materialized_payload.evidence,
         runtime_permission_evidence=runtime_permission_evidence,
@@ -1023,8 +1320,19 @@ async def execute_governed_attempt(
     )
 
     if boundary_preparation is None:
-        session = await runtime.create_session(request)
+        session = (
+            trusted_preparation.session
+            if trusted_preparation is not None
+            else await runtime.create_session(request)
+        )
         if session.execution_id != execution_id or session.request_digest != request.request_digest:
+            if trusted_preparation is not None:
+                await _reject_prepared_trusted_local(
+                    runtime,
+                    trusted_preparation,
+                    "runtime:session-binding-mismatch",
+                    ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT,
+                )
             return _blocked_result(inputs, execution_id, "runtime:session-binding-mismatch")
         handle = await runtime.open_execution(request, session)
     else:
@@ -1080,33 +1388,6 @@ async def execute_governed_attempt(
         execution_id,
         session.runtime_session,
     )
-    changes = workspace_provider.extract_changes(provision.instance_ref)
-    terminal_inspection = workspace_provider.inspect(provision.instance_ref)
-    if terminal_inspection.instance_ref != provision.instance_ref:
-        return _blocked_result(inputs, execution_id, "workspace:terminal-inspection-mismatch")
-
-    terminal_facts = (
-        inputs.terminal_workspace_facts_factory(
-            plan_resolution,
-            provision,
-            provider_descriptor,
-            terminal_inspection,
-            changes,
-        )
-        if inputs.terminal_workspace_facts_factory is not None
-        else None
-    )
-    terminal_status = (
-        evaluate_workspace_conformance(
-            plan,
-            provision.instance_ref,
-            provider_ref,
-            terminal_facts,
-            terminal=True,
-        ).status
-        if terminal_facts is not None
-        else RequirementStatus.INDETERMINATE
-    )
     terminal_boundary_continuity: RuntimePlacementContinuityEvidence | None = None
     runtime_process_teardown: RuntimeProcessTeardownEvidence | None = None
     boundary_terminal_ok = True
@@ -1146,6 +1427,48 @@ async def execute_governed_attempt(
                 runtime_process_teardown.credential_cleanup is RequirementStatus.SATISFIED,
             )
         )
+    changes = workspace_provider.extract_changes(provision.instance_ref)
+    capture_method = getattr(workspace_provider, "capture_candidate", None)
+    stable_capture: WorkspaceCandidateCapture | None = None
+    if callable(capture_method):
+        try:
+            capture_typed = cast(
+                Callable[
+                    [WorkspaceInstanceRef, WorkspaceChangeManifest],
+                    WorkspaceCandidateCapture,
+                ],
+                capture_method,
+            )
+            stable_capture = capture_typed(provision.instance_ref, changes)
+        except Exception:
+            stable_capture = None
+    terminal_inspection = workspace_provider.inspect(provision.instance_ref)
+    if terminal_inspection.instance_ref != provision.instance_ref:
+        return _blocked_result(inputs, execution_id, "workspace:terminal-inspection-mismatch")
+
+    terminal_facts = (
+        inputs.terminal_workspace_facts_factory(
+            plan_resolution,
+            provision,
+            provider_descriptor,
+            terminal_inspection,
+            changes,
+        )
+        if inputs.terminal_workspace_facts_factory is not None
+        else None
+    )
+    terminal_status = (
+        evaluate_workspace_conformance(
+            plan,
+            provision.instance_ref,
+            provider_ref,
+            terminal_facts,
+            terminal=True,
+            trusted_local=trusted_local,
+        ).status
+        if terminal_facts is not None
+        else RequirementStatus.INDETERMINATE
+    )
     identity_matches = (
         inspection.execution_id == execution_id
         and inspection.runtime_session == session.runtime_session
@@ -1178,6 +1501,10 @@ async def execute_governed_attempt(
         not identity_matches
         or terminal_status is not RequirementStatus.SATISFIED
         or event_conformance.status is not AdmissionStatus.ADMIT
+        or (
+            stable_capture is None
+            and not (boundary_preparation is not None and boundary_terminal_ok)
+        )
     ):
         outcome = ExecutionTerminalOutcome.BLOCKED_BY_CONTRACT
     elif inspection.runtime_status is not RuntimeStatus.SUCCEEDED:
@@ -1210,7 +1537,7 @@ async def execute_governed_attempt(
             "actual_provider_id": inspection.provenance.actual_provider_id,
             "actual_model_id": inspection.provenance.actual_model_id,
             "runtime_session": session.runtime_session,
-            "runtime_session_binding": (session if boundary_preparation is not None else None),
+            "runtime_session_binding": session,
             "runtime_handle": handle,
         }
     )
@@ -1248,6 +1575,24 @@ async def execute_governed_attempt(
         ),
         runtime_payload_evidence=materialized_payload.evidence,
         runtime_permission_evidence=runtime_permission_evidence,
+        runtime_configuration_binding=(
+            trusted_preparation.configuration_binding if trusted_preparation is not None else None
+        ),
+        runtime_configuration_binding_ref=(
+            RuntimeEvidenceBindingRef(
+                evidence_id=trusted_preparation.configuration_binding.binding_id,
+                content_digest=trusted_preparation.configuration_binding.content_digest,
+            )
+            if trusted_preparation is not None
+            else None
+        ),
+        stable_candidate_capture=stable_capture,
+        stable_candidate_status=(
+            RequirementStatus.SATISFIED
+            if stable_capture is not None
+            or (boundary_preparation is not None and boundary_terminal_ok)
+            else RequirementStatus.INDETERMINATE
+        ),
         runtime_session=session,
         runtime_handle=handle,
         runtime_inspection=inspection,

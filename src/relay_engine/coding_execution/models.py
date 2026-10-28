@@ -28,6 +28,7 @@ from relay_engine.agent_runtime.boundary import (
     RuntimePermissionAttestationRef,
     RuntimeRequestV2,
 )
+from relay_engine.agent_runtime.opencode import OpenCodeConfigurationBinding
 from relay_engine.domain import ActorRef, ContentDigest, ExecutionId, ProjectId, SliceId
 from relay_engine.domain._base import DomainModel, require_nonblank
 from relay_engine.execution_workspace.boundary import (
@@ -38,6 +39,7 @@ from relay_engine.execution_workspace.boundary import (
     placement_attestation_matches_boundary,
 )
 from relay_engine.execution_workspace.models import (
+    WorkspaceCandidateCapture,
     WorkspaceChangeManifest,
     WorkspaceInspection,
     WorkspaceInstanceRef,
@@ -66,6 +68,49 @@ class AdmissionStatus(StrEnum):
     ADMIT = "ADMIT"
     DENY = "DENY"
     INDETERMINATE = "INDETERMINATE"
+
+
+class ExecutionProfile(StrEnum):
+    """One of the two accepted Slice 3.1 assurance routes."""
+
+    TRUSTED_LOCAL_EXECUTION = "TRUSTED_LOCAL_EXECUTION"
+    RELAY_MANAGED_STRONG_BOUNDARY = "RELAY_MANAGED_STRONG_BOUNDARY"
+
+
+class PermissionEvidenceProvenance(StrEnum):
+    """How runtime permission exposure was established."""
+
+    CONFIGURATION_DERIVED = "CONFIGURATION_DERIVED"
+    RUNTIME_OBSERVED = "RUNTIME_OBSERVED"
+
+
+class CleanupStatus(StrEnum):
+    """Outcome of cleaning up a prompt-free session rejected before admission."""
+
+    SATISFIED = "SATISFIED"
+    UNSATISFIED = "UNSATISFIED"
+    INDETERMINATE = "INDETERMINATE"
+
+
+class RuntimeEvidenceBindingRef(DomainModel):
+    """Exact immutable reference to runtime-integration evidence."""
+
+    evidence_id: StableExecutionKey
+    content_digest: ContentDigest
+
+
+class PromptFreeSessionCleanupEvidence(DomainModel):
+    """Retained evidence for one session closed after prompt-free preparation."""
+
+    session_binding: RuntimeSessionBinding
+    status: CleanupStatus
+    reason: str
+    cleanup_acknowledgement_digest: ContentDigest | None = None
+
+    @field_validator("reason")
+    @classmethod
+    def reason_is_nonblank(cls, value: str) -> str:
+        return require_nonblank(value)
 
 
 class ExecutionTerminalOutcome(StrEnum):
@@ -336,6 +381,9 @@ class RuntimePermissionEvidence(DomainModel):
     actual_provider_id: str | None = None
     actual_model_id: str | None = None
     provenance_status: RequirementStatus
+    provenance: PermissionEvidenceProvenance = PermissionEvidenceProvenance.RUNTIME_OBSERVED
+    configuration_binding_ref: RuntimeEvidenceBindingRef | None = None
+    session_binding: RuntimeSessionBinding | None = None
 
     @field_validator("exposed_tools")
     @classmethod
@@ -343,6 +391,22 @@ class RuntimePermissionEvidence(DomainModel):
         if value is not None and value != tuple(sorted(set(value))):
             raise ValueError("exposed tool identities must be unique and sorted")
         return value
+
+    @model_validator(mode="after")
+    def provenance_is_bound(self) -> RuntimePermissionEvidence:
+        if self.provenance is PermissionEvidenceProvenance.CONFIGURATION_DERIVED and (
+            self.configuration_binding_ref is None or self.session_binding is None
+        ):
+            raise ValueError(
+                "configuration-derived permission evidence requires exact configuration "
+                "and session refs"
+            )
+        if self.session_binding is not None and (
+            self.session_binding.execution_id != self.execution_id
+            or self.session_binding.runtime_session.runtime_id != self.runtime_id
+        ):
+            raise ValueError("permission evidence must bind its exact runtime session")
+        return self
 
 
 class ExecutionSubject(DomainModel):
@@ -363,7 +427,10 @@ class ExecutionSubject(DomainModel):
     workspace_instance: WorkspaceInstanceRef
     runtime_workspace_attachment: RuntimeWorkspaceAttachment
     workspace_provider_ref: WorkspaceProviderRef
+    execution_profile: ExecutionProfile
+    execution_profile_binding_digest: ContentDigest
     runtime_descriptor: RuntimeDescriptor
+    runtime_configuration_binding_ref: RuntimeEvidenceBindingRef | None = None
     runtime_request: RuntimeExecutionRequest
     runtime_request_v2: RuntimeRequestV2 | None = None
     workspace_boundary_ref: WorkspaceBoundaryRef | None = None
@@ -423,12 +490,25 @@ class ExecutionSubject(DomainModel):
             self.runtime_placement_attestation,
             self.runtime_permission_attestation,
             self.runtime_permission_attestation_ref,
-            self.runtime_session_binding,
         )
         if self.runtime_request_v2 is None:
             if any(value is not None for value in boundary_values[1:]):
                 raise ValueError("boundary evidence requires an exact V2 runtime request")
+            if self.execution_profile is ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY:
+                raise ValueError("strong-boundary profile requires a V2 runtime request")
+            if (
+                self.runtime_configuration_binding_ref is None
+                or self.runtime_session_binding is None
+                or self.runtime_session_binding.execution_id != self.execution_id
+                or self.runtime_session_binding.request_digest
+                != self.runtime_request.request_digest
+            ):
+                raise ValueError(
+                    "trusted-local profile requires exact OpenCode configuration binding"
+                )
         else:
+            if self.execution_profile is not ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY:
+                raise ValueError("V2 placement evidence is reserved for strong-boundary profile")
             request_v2 = self.runtime_request_v2
             placement = self.runtime_placement_attestation
             permission_attestation = self.runtime_permission_attestation
@@ -571,8 +651,22 @@ class ExecutionSubject(DomainModel):
             or self.actual_model_id != permission.actual_model_id
             or permission.completeness is not RequirementStatus.SATISFIED
             or permission.provenance_status is not RequirementStatus.SATISFIED
+            or permission.configuration_binding_ref != self.runtime_configuration_binding_ref
+            or (
+                permission.provenance is PermissionEvidenceProvenance.CONFIGURATION_DERIVED
+                and permission.session_binding != self.runtime_session_binding
+            )
         ):
             raise ValueError("subject must bind complete effective runtime permission evidence")
+        expected_profile_binding = digest_execution_profile_binding(
+            self.execution_profile,
+            self.candidate_digest,
+            self.work_packet_ref,
+            self.workspace_plan_ref,
+            self.workspace_provider_ref,
+        )
+        if self.execution_profile_binding_digest != expected_profile_binding:
+            raise ValueError("execution profile must bind the exact candidate and workspace plan")
         if self.work_packet_ref != self.workspace_plan_ref.work_packet_ref:
             raise ValueError("workspace plan must derive from exact WorkPacketRef")
         if self.workspace_instance.plan_ref != self.workspace_plan_ref:
@@ -677,6 +771,11 @@ class ExecutionEvidenceBundle(DomainModel):
     runtime_permission_attestation_ref: RuntimePermissionAttestationRef | None = None
     runtime_payload_evidence: RuntimePayloadEvidence
     runtime_permission_evidence: RuntimePermissionEvidence
+    runtime_configuration_binding: OpenCodeConfigurationBinding | None = None
+    runtime_configuration_binding_ref: RuntimeEvidenceBindingRef | None = None
+    prompt_free_session_cleanup: PromptFreeSessionCleanupEvidence | None = None
+    stable_candidate_capture: WorkspaceCandidateCapture | None = None
+    stable_candidate_status: RequirementStatus = RequirementStatus.INDETERMINATE
     runtime_session: RuntimeSessionBinding | None
     runtime_handle: RuntimeExecutionHandle | None
     runtime_inspection: RuntimeExecutionInspection | None
@@ -881,6 +980,19 @@ class ExecutionEvidenceBundle(DomainModel):
                 raise ValueError("change manifest must bind exact workspace and source commit")
             if self.terminal_workspace_inspection is None:
                 raise ValueError("change manifest requires terminal workspace inspection")
+        if self.stable_candidate_capture is not None and (
+            self.stable_candidate_capture.instance_ref != self.workspace_instance
+            or self.changes is None
+            or self.stable_candidate_capture.change_manifest_digest
+            != _digest_canonical_model(self.changes)
+        ):
+            raise ValueError("stable candidate capture must bind exact workspace changes")
+        if self.prompt_free_session_cleanup is not None and (
+            self.prompt_free_session_cleanup.session_binding.execution_id
+            != self.runtime_request.basis.execution_id
+            or self.runtime_session != self.prompt_free_session_cleanup.session_binding
+        ):
+            raise ValueError("cleanup evidence must bind the exact prepared runtime session")
         if self.local_commit is not None and (
             self.local_commit == self.workspace_instance.source_commit.sha
             or self.commit_parent != self.workspace_instance.source_commit.sha
@@ -921,6 +1033,20 @@ class TerminalExecutionResult(DomainModel):
             raise ValueError("evidence must bind exact subject digest")
         if self.evidence.runtime_permission_evidence != self.subject.runtime_permission_evidence:
             raise ValueError("evidence must preserve the subject's exact permission attestation")
+        if self.subject.execution_profile is ExecutionProfile.TRUSTED_LOCAL_EXECUTION:
+            configuration = self.evidence.runtime_configuration_binding
+            configuration_ref = self.subject.runtime_configuration_binding_ref
+            if (
+                configuration is None
+                or configuration_ref is None
+                or configuration.ref.binding_id != configuration_ref.evidence_id
+                or configuration.ref.content_digest != configuration_ref.content_digest
+                or configuration.permission_profile_ref
+                != self.subject.runtime_permission_evidence.effective_profile_ref
+            ):
+                raise ValueError(
+                    "trusted-local result must retain the exact runtime configuration binding"
+                )
         if self.evaluator_handoff_digest != digest_evaluator_handoff(
             self.subject, self.outcome, self.evidence
         ):
@@ -949,6 +1075,11 @@ class TerminalExecutionResult(DomainModel):
             is not RequirementStatus.SATISFIED
             or self.subject.runtime_permission_evidence.provenance_status
             is not RequirementStatus.SATISFIED
+            or self.evidence.stable_candidate_status is not RequirementStatus.SATISFIED
+            or (
+                self.evidence.stable_candidate_capture is None
+                and self.evidence.runtime_process_teardown is None
+            )
             or self.subject.runtime_request_v2 is not None
             and (
                 self.evidence.runtime_placement_continuity is None
@@ -1030,6 +1161,48 @@ def _digest_canonical_model(model: DomainModel) -> ContentDigest:
 
     canonical = json.dumps(
         model.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def digest_runtime_permission_evidence(
+    evidence: RuntimePermissionEvidence,
+) -> ContentDigest:
+    """Digest exact permission evidence without its self-referential digest field."""
+
+    payload = evidence.model_dump(mode="json", exclude={"evidence_digest"})
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def digest_execution_profile_binding(
+    profile: ExecutionProfile,
+    candidate_digest: ContentDigest,
+    packet_ref: WorkPacketRef,
+    plan_ref: WorkspacePlanRef,
+    provider_ref: WorkspaceProviderRef,
+) -> ContentDigest:
+    """Bind the derived profile to the exact authority and downstream plan refs."""
+
+    payload = {
+        "execution_profile": profile.value,
+        "candidate_digest": candidate_digest,
+        "work_packet_ref": packet_ref.model_dump(mode="json"),
+        "workspace_plan_ref": plan_ref.model_dump(mode="json"),
+        "workspace_provider_ref": provider_ref.model_dump(mode="json"),
+    }
+    canonical = json.dumps(
+        payload,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -1123,6 +1296,11 @@ def digest_terminal_candidate(result: TerminalExecutionResult) -> ContentDigest 
         "local_commit": result.evidence.local_commit,
         "commit_parent": result.evidence.commit_parent,
         "dirty": result.evidence.dirty,
+        "stable_candidate_capture": (
+            None
+            if result.evidence.stable_candidate_capture is None
+            else result.evidence.stable_candidate_capture.content_digest
+        ),
     }
     canonical = json.dumps(
         payload,

@@ -85,6 +85,171 @@ def permission_profile(*, ask: tuple[str, ...] = ()) -> OpenCodePermissionProfil
     )
 
 
+def qualified_configuration_fixture():
+    import hashlib
+
+    from relay_engine.agent_runtime.models import RuntimeCapability, RuntimeDescriptor
+    from relay_engine.agent_runtime.opencode import (
+        OPENCODE_ADAPTER_VERSION,
+        OPENCODE_API_GENERATION,
+        OpenCodeConfigurationBinding,
+        OpenCodeConfigurationQualificationRef,
+    )
+    from relay_engine.role_contracts import RequirementStatus
+
+    request = execution_request()
+    profile = permission_profile()
+    version = "0.0.0-beta-test"
+    qualification = OpenCodeConfigurationQualificationRef(
+        qualification_id="opencode-config-test",
+        content_digest=DIGEST,
+        runtime_version=version,
+        runtime_api_generation=OPENCODE_API_GENERATION,
+        adapter_version=OPENCODE_ADAPTER_VERSION,
+    )
+    sources = ("user-config:test", "agent-config:relay-safe-agent")
+    tools = tuple(
+        sorted(
+            (
+                *profile.allow,
+                *profile.allowed_plugins,
+                *profile.allowed_mcp_servers,
+                *profile.allowed_subagents,
+            )
+        )
+    )
+    config_payload = {
+        "agent_id": profile.agent_id,
+        "configuration_source_refs": sources,
+        "normalized_allow_rules": tuple(sorted(profile.allow)),
+        "normalized_deny_rules": tuple(sorted(profile.deny)),
+        "normalized_ask_rules": tuple(sorted(profile.ask)),
+        "effective_tool_exposure": tools,
+        "plugin_exposure": profile.allowed_plugins,
+        "mcp_exposure": profile.allowed_mcp_servers,
+        "subagent_exposure": profile.allowed_subagents,
+    }
+    effective_digest = (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(
+                config_payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+                allow_nan=False,
+            ).encode("utf-8")
+        ).hexdigest()
+    )
+    binding = OpenCodeConfigurationBinding(
+        binding_id="opencode-config-binding-test",
+        runtime_id="opencode",
+        runtime_version=version,
+        runtime_api_generation=OPENCODE_API_GENERATION,
+        adapter_version=OPENCODE_ADAPTER_VERSION,
+        integration_qualification_ref=qualification,
+        permission_profile_ref=profile.reference,
+        agent_id=profile.agent_id,
+        configuration_source_refs=sources,
+        effective_configuration_digest=effective_digest,
+        normalized_allow_rules=tuple(sorted(profile.allow)),
+        normalized_deny_rules=tuple(sorted(profile.deny)),
+        normalized_ask_rules=tuple(sorted(profile.ask)),
+        effective_tool_exposure=tools,
+        shell_exposed="bash" in tools,
+        plugin_exposure=profile.allowed_plugins,
+        mcp_exposure=profile.allowed_mcp_servers,
+        subagent_exposure=profile.allowed_subagents,
+        precedence_complete=True,
+        observation_source="fixture-reader",
+        trust_basis="version-qualified-fixture",
+        provenance_digest=DIGEST,
+        observed_at=datetime(2026, 10, 28, tzinfo=UTC),
+        status=RequirementStatus.SATISFIED,
+    )
+    descriptor = RuntimeDescriptor(
+        runtime_id="opencode",
+        adapter_version=OPENCODE_ADAPTER_VERSION,
+        runtime_version=version,
+        api_generation=OPENCODE_API_GENERATION,
+        capabilities=tuple(RuntimeCapability),
+    )
+    response = httpx.Response(200, json={"healthy": True})
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _: response))
+    runtime = OpenCodeRuntime(
+        "http://127.0.0.1:4096",
+        expected_runtime_version=version,
+        permission_profile=profile,
+        configuration_qualification_ref=qualification,
+        client=client,
+    )
+    return request, runtime, descriptor, binding
+
+
+def test_effective_configuration_binding_is_deterministic_and_content_bound() -> None:
+    _request, _runtime, _descriptor, binding = qualified_configuration_fixture()
+
+    equivalent = type(binding).model_validate(binding.model_dump(mode="python"))
+    changed = binding.model_copy(update={"agent_id": "other-agent"})
+
+    assert binding.content_digest == equivalent.content_digest
+    assert binding.ref == equivalent.ref
+    assert binding.content_digest != changed.content_digest
+    assert binding.ref != changed.ref
+
+
+def test_exact_qualified_configuration_binding_passes() -> None:
+    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    try:
+        runtime._validate_configuration_binding(binding, request, descriptor)
+    finally:
+        asyncio.run(runtime.aclose())
+
+
+@pytest.mark.parametrize(
+    "change",
+    (
+        {"agent_id": "unqualified-agent"},
+        {"normalized_allow_rules": ("read",)},
+        {"precedence_complete": False},
+        {"plugin_exposure": ("unapproved-plugin",)},
+        {"mcp_exposure": ("unapproved-server",)},
+        {"subagent_exposure": ("unapproved-agent",)},
+    ),
+)
+def test_configuration_mismatch_or_ambiguity_fails_closed(change: dict[str, object]) -> None:
+    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    try:
+        with pytest.raises(AgentRuntimeError):
+            runtime._validate_configuration_binding(
+                binding.model_copy(update=change), request, descriptor
+            )
+    finally:
+        asyncio.run(runtime.aclose())
+
+
+def test_configuration_binding_requires_exact_runtime_version_qualification() -> None:
+    from relay_engine.agent_runtime.opencode import OpenCodeConfigurationQualificationRef
+
+    request, runtime, descriptor, binding = qualified_configuration_fixture()
+    wrong_qualification = OpenCodeConfigurationQualificationRef(
+        qualification_id="wrong-version-qualification",
+        content_digest=DIGEST,
+        runtime_version="different-version",
+        runtime_api_generation=descriptor.api_generation,
+        adapter_version=descriptor.adapter_version,
+    )
+    try:
+        with pytest.raises(AgentRuntimeError):
+            runtime._validate_configuration_binding(
+                binding.model_copy(update={"integration_qualification_ref": wrong_qualification}),
+                request,
+                descriptor,
+            )
+    finally:
+        asyncio.run(runtime.aclose())
+
+
 class QueueEventStream(httpx.AsyncByteStream):
     """In-process event stream controlled by the deterministic test."""
 

@@ -201,6 +201,63 @@ def test_preflight_compares_maximum_strength_to_full_plan_requirements() -> None
     assert result.unsupported_property_keys == ("exact-source",)
 
 
+def test_trusted_local_preflight_leaves_runtime_controls_with_runtime() -> None:
+    plan, descriptor = make_plan()
+    runtime_properties = (
+        WorkspaceProperty.TOOL_EXPOSURE_CONTROL,
+        WorkspaceProperty.NETWORK_REACHABILITY_CONTROL,
+        WorkspaceProperty.CREDENTIAL_EXPOSURE_CONTROL,
+        WorkspaceProperty.RESOURCE_LIMIT_CONTROL,
+    )
+    requirements = plan.property_requirements + tuple(
+        WorkspacePropertyRequirement(
+            key=f"runtime-control-{index}",
+            property=property_key,
+            minimum_strength=ControlStrength.MEDIATED,
+        )
+        for index, property_key in enumerate(runtime_properties, start=1)
+    )
+    runtime_descriptor = descriptor.model_copy(
+        update={
+            "supported_shell_modes": (),
+            "supported_network_modes": (),
+            "supported_external_side_effect_modes": (),
+            "supported_credential_exposure_modes": (),
+            "supported_resource_dimensions": (),
+        }
+    )
+    runtime_controls_plan = plan.model_copy(
+        update={
+            "property_requirements": requirements,
+            "provider_ref": workspace_provider_ref(runtime_descriptor),
+        }
+    )
+
+    assert (
+        evaluate_workspace_preflight(
+            runtime_controls_plan, runtime_descriptor, trusted_local=True
+        ).status
+        is RequirementStatus.SATISFIED
+    )
+    assert (
+        evaluate_workspace_preflight(runtime_controls_plan, runtime_descriptor).status
+        is RequirementStatus.UNSATISFIED
+    )
+
+    boundary_requirement = WorkspacePropertyRequirement(
+        key="runtime-control-boundary",
+        property=WorkspaceProperty.TOOL_EXPOSURE_CONTROL,
+        minimum_strength=ControlStrength.BOUNDARY_ENFORCED,
+    )
+    boundary_plan = runtime_controls_plan.model_copy(
+        update={"property_requirements": (*requirements, boundary_requirement)}
+    )
+    assert (
+        evaluate_workspace_preflight(boundary_plan, runtime_descriptor, trusted_local=True).status
+        is RequirementStatus.UNSATISFIED
+    )
+
+
 def test_stale_provider_descriptor_is_indeterminate() -> None:
     plan, descriptor = make_plan()
     stale = descriptor.model_copy(update={"provider_version": "2"})

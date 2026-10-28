@@ -7,6 +7,7 @@ It never uses remote Git operations, credential material, or AgentRuntime.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import shutil
 import stat
@@ -23,15 +24,12 @@ from relay_engine.execution_workspace.evaluation import (
 )
 from relay_engine.execution_workspace.models import (
     ControlStrength,
-    CredentialExposureMode,
-    ExternalSideEffectMode,
-    NetworkMode,
     ProtectedAssetObservation,
     ProviderInjectedFileCapability,
     RepositoryMetadataAccess,
-    ShellMode,
     WorkspaceBackendKind,
     WorkspaceBoundaryClass,
+    WorkspaceCandidateCapture,
     WorkspaceChangeEntry,
     WorkspaceChangeManifest,
     WorkspaceEntryKind,
@@ -116,10 +114,10 @@ class LocalCloneWorkspaceProvider:
             backend_kind=WorkspaceBackendKind.LOCAL_CLONE,
             boundary_class=WorkspaceBoundaryClass.SAME_USER_NO_SECURITY_BOUNDARY,
             property_capabilities=capabilities,
-            supported_shell_modes=(ShellMode.DENY,),
-            supported_network_modes=(NetworkMode.DENY_ALL,),
-            supported_external_side_effect_modes=(ExternalSideEffectMode.DENY_MUTATING_EFFECTS,),
-            supported_credential_exposure_modes=(CredentialExposureMode.NONE,),
+            supported_shell_modes=(),
+            supported_network_modes=(),
+            supported_external_side_effect_modes=(),
+            supported_credential_exposure_modes=(),
             supported_resource_dimensions=(),
             supported_repository_metadata_modes=(RepositoryMetadataAccess.READ_ONLY,),
             path_control_capabilities=(),
@@ -424,6 +422,63 @@ class LocalCloneWorkspaceProvider:
                 WorkspaceProviderErrorCode.CHANGESET_FAILED, "workspace change extraction failed"
             ) from exc
 
+    def capture_candidate(
+        self,
+        instance_ref: WorkspaceInstanceRef,
+        changes: WorkspaceChangeManifest,
+    ) -> WorkspaceCandidateCapture:
+        """Write a content-addressed tree object without changing the worktree or real index."""
+
+        self._require_instance(instance_ref)
+        if changes.instance_ref != instance_ref:
+            raise WorkspaceProviderError(
+                WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                "candidate changes do not bind the exact workspace",
+            )
+        root = Path(instance_ref.root)
+        git_dir = Path(self._git(root, "rev-parse", "--absolute-git-dir").strip())
+        descriptor, index_path = tempfile.mkstemp(prefix="relay-candidate-index-", dir=git_dir)
+        os.close(descriptor)
+        temporary_index = Path(index_path)
+        temporary_index.unlink()
+        environment = {"GIT_INDEX_FILE": str(temporary_index)}
+        try:
+            self._git_bytes(root, "read-tree", "HEAD", extra_env=environment)
+            self._git_bytes(
+                root,
+                "add",
+                "--all",
+                extra_env=environment,
+            )
+            tree_object_id = (
+                self._git_bytes(root, "write-tree", extra_env=environment).decode("ascii").strip()
+            )
+            object_format = self._git(root, "rev-parse", "--show-object-format").strip()
+            return WorkspaceCandidateCapture(
+                instance_ref=instance_ref,
+                source_commit=instance_ref.source_commit,
+                git_object_format=object_format,
+                tree_object_id=tree_object_id,
+                change_manifest_digest=_sha256(
+                    json.dumps(
+                        changes.model_dump(mode="json"),
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                        allow_nan=False,
+                    ).encode("utf-8")
+                ),
+                captured_at=datetime.now(UTC).isoformat(),
+            )
+        except (OSError, subprocess.CalledProcessError, UnicodeError) as exc:
+            raise WorkspaceProviderError(
+                WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                "immutable candidate tree capture failed",
+            ) from exc
+        finally:
+            temporary_index.unlink(missing_ok=True)
+            temporary_index.with_suffix(temporary_index.suffix + ".lock").unlink(missing_ok=True)
+
     def teardown(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceTeardownEvidence:
         self._require_instance(instance_ref)
         plan_ref = instance_ref.plan_ref
@@ -532,7 +587,7 @@ class LocalCloneWorkspaceProvider:
         return states
 
     @staticmethod
-    def _git_bytes(cwd: Path, *args: str) -> bytes:
+    def _git_bytes(cwd: Path, *args: str, extra_env: dict[str, str] | None = None) -> bytes:
         env = {
             "PATH": os.environ.get("PATH", ""),
             "GIT_CONFIG_NOSYSTEM": "1",
@@ -540,6 +595,8 @@ class LocalCloneWorkspaceProvider:
             "GIT_TERMINAL_PROMPT": "0",
             "GIT_OPTIONAL_LOCKS": "0",
         }
+        if extra_env is not None:
+            env.update(extra_env)
         try:
             result = subprocess.run(
                 ["git", *args],

@@ -162,6 +162,30 @@ def test_local_clone_exact_commit_independent_objects_changes_and_teardown(tmp_p
         "symlink.txt",
         "tracked.txt",
     )
+    capture = provider.capture_candidate(result.instance_ref, manifest)
+    captured_tree = capture.tree_object_id
+    assert capture.change_manifest_digest == workspace_change_manifest_ref(manifest).content_digest
+    assert git(root, "cat-file", "-t", captured_tree) == "tree"
+    assert (
+        subprocess.run(
+            ["git", "show", f"{captured_tree}:tracked.txt"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        ).stdout
+        == b"after\n"
+    )
+    git(root, "diff", "--cached", "--quiet")
+    (root / "tracked.txt").write_text("later mutation\n", encoding="utf-8")
+    assert (
+        subprocess.run(
+            ["git", "show", f"{captured_tree}:tracked.txt"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        ).stdout
+        == b"after\n"
+    )
     entries = {entry.path: entry for entry in manifest.entries}
     assert entries["deleted.txt"].before is not None
     assert entries["deleted.txt"].after is None
