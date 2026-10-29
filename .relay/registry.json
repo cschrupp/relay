@@ -6001,6 +6001,22 @@
       "superseded_by": null
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_d74a9f16-e3a3-4f11-b223-c1b614e7f7f4",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Independent Implementation Review 001",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_REVIEW_001.md",
+      "content_digest": "sha256:1676a2ae63cbe2108fd80fe8e23d55a7440dc93415dfbe07c0882236e508d39a",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-REVIEW-001",
+      "updated_at": "2026-10-29T15:43:00Z",
+      "scope": "Independent REWORK/NARROW review of exact implementation candidate e7acf774f9c346ea9e22df184da28a93cfc7be92; F001-F008 accepted, permission-profile-reference mismatch finding rejected; grants no implementation authority.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
