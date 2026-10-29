@@ -5249,6 +5249,22 @@
       "updated_at": "2026-10-29T02:23:53.449689Z"
     },
     {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_9dec8260-55c8-448b-b231-f9446fd70133",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:2e6d287e86b7c6a5856170d534b6b0214d0dc4a3b42a927f144879295e68b089",
+      "human_version": "RLY-S31-DOGFOOD-001-OPENCODE-CONFIG-OBSERVER-IR-003",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_OPENCODE_CONFIG_OBSERVER_IR_003.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Version-specific observer IR succeeding IR-002; excludes the secret-exposing provider endpoint, adds credential-safe OpenCode model-catalog observation and complete source-census requirements; no implementation or execution.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 OpenCode 1.18.23 Configuration Observer IR-003",
+      "updated_at": "2026-10-29T05:23:47.351780Z"
+    },
+    {
       "schema_version": 1,
       "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
       "revision": 1,
@@ -5903,6 +5919,22 @@
       "supersedes": null,
       "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 002",
       "updated_at": "2026-10-29T02:23:53.450024Z"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_e8c38561-8c0e-4d0d-b0ae-9df80a136407",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:95712f5b0c9896cdd7a950079192958a4a605aa229800925de84ffcda4d4a71d",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-PROPOSAL-003",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORITY_PROPOSAL_003.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Bounded successor proposal addressing credential-safe model listing and complete source provenance/precedence census; lifecycle links remain unset while review candidates are immature; implementation and Dogfood execution not authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 003",
+      "updated_at": "2026-10-29T05:23:47.352053Z"
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
