@@ -6033,6 +6033,22 @@
       "superseded_by": null
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_68c12c4c-c2fc-4496-8710-4f579cb16dd3",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Corrective Implementation Authorization 001",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_REWORK_AUTHORIZATION_001.md",
+      "content_digest": "sha256:5a43186b8fc1bc1131f65e5b4373650cb83ad054c8a6251826e6ba8e10022adb",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-REWORK-AUTH-001",
+      "updated_at": "2026-10-29T15:57:35Z",
+      "scope": "Human authorization for Proposal-005 F001-F008 corrective implementation only; no Dogfood execution, credential access, inference, merge, or promotion.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
