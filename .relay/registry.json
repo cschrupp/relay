@@ -6082,6 +6082,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_1f3ed8e0-2da2-4dc8-b1ae-9aac18365123",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:88200a1ac06c20e6d9d79f426d7e3f84262f659ca2a46aaa899a08f8fb511d45",
+      "human_version": "RLY-S31-RUNTIME-NATIVE-PROFILE-PROMOTION-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_RUNTIME_NATIVE_EXECUTION_PROFILE_CANONICAL_PROMOTION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authorization to merge PR #3 and canonically promote accepted implementation candidate 3f6ab5d02ae7cc8e8698e6d99457b72934772fc2 plus accepted governance tail; excludes Dogfood execution/admission and new implementation changes.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Trusted Local Execution Profile Canonical Promotion Authorization 001",
+      "updated_at": "2026-10-28T21:20:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_89ba8c0e-cc12-4a35-b11b-2bfd01b18269",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
