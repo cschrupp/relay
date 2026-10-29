@@ -116,9 +116,12 @@ class OpenCodePermissionProfile:
 
     reference: RuntimePermissionProfileRef
     agent_id: str
+    expected_agent_mode: str
+    expected_agent_hidden: bool
     allow: tuple[str, ...]
     deny: tuple[str, ...]
     ask: tuple[str, ...] = ()
+    allowed_tools: tuple[str, ...] = ()
     allowed_plugins: tuple[str, ...] = ()
     allowed_mcp_servers: tuple[str, ...] = ()
     allowed_subagents: tuple[str, ...] = ()
@@ -126,6 +129,8 @@ class OpenCodePermissionProfile:
     def __post_init__(self) -> None:
         if not self.agent_id.strip() or len(self.agent_id) > 128:
             raise ValueError("OpenCode permission agent ID must be nonblank and bounded")
+        if not self.expected_agent_mode.strip() or len(self.expected_agent_mode) > 64:
+            raise ValueError("OpenCode agent mode must be explicit and bounded")
         all_rules = (*self.allow, *self.deny, *self.ask)
         if not self.allow or not self.deny:
             raise ValueError("OpenCode permission profile requires explicit allow and deny rules")
@@ -134,6 +139,7 @@ class OpenCodePermissionProfile:
         if len(set(all_rules)) != len(all_rules):
             raise ValueError("OpenCode permission rules must not overlap or repeat")
         for label, values in (
+            ("tool", self.allowed_tools),
             ("plugin", self.allowed_plugins),
             ("MCP server", self.allowed_mcp_servers),
             ("subagent", self.allowed_subagents),
@@ -817,7 +823,7 @@ class OpenCodeRuntime:
             != tuple(
                 sorted(
                     (
-                        *profile.allow,
+                        *(profile.allowed_tools or profile.allow),
                         *profile.allowed_plugins,
                         *profile.allowed_mcp_servers,
                         *profile.allowed_subagents,
