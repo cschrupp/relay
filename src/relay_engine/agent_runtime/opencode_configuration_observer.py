@@ -573,9 +573,7 @@ class OpenCodeV11823ConfigurationObserver:
                 params={"directory": directory},
             )
         except httpx.RequestError as exc:
-            raise OpenCodeObserverError(
-                f"OpenCode observation request failed for {route}"
-            ) from exc
+            raise OpenCodeObserverError(f"OpenCode observation request failed for {route}") from exc
         if response.status_code != 200:
             raise OpenCodeObserverError(f"OpenCode observation request rejected for {route}")
         try:
@@ -597,7 +595,9 @@ class OpenCodeV11823ConfigurationObserver:
             "directory": self._startup.workspace_root,
         }
         if value != expected:
-            raise OpenCodeObserverError("OpenCode server path identity does not match startup context")
+            raise OpenCodeObserverError(
+                "OpenCode server path identity does not match startup context"
+            )
 
     def _validate_catalog_cli(self, directory: str) -> None:
         self._require_cli_version(directory)
@@ -675,7 +675,7 @@ class OpenCodeV11823ConfigurationObserver:
             normalized = (
                 rule["permission"]
                 if rule["pattern"] == "*"
-                else f'{rule["permission"]}:{rule["pattern"]}'
+                else f"{rule['permission']}:{rule['pattern']}"
             )
             buckets[rule["action"]].append(normalized)
         result = (
@@ -715,9 +715,7 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError("resolved plugin exposure does not match accepted profile")
         return result
 
-    def _mcp_exposure(
-        self, config: _ProjectedConfig, status: dict[str, str]
-    ) -> tuple[str, ...]:
+    def _mcp_exposure(self, config: _ProjectedConfig, status: dict[str, str]) -> tuple[str, ...]:
         result = tuple(sorted(set(config["mcp_names"]) | set(status)))
         if result != self._profile.allowed_mcp_servers:
             raise OpenCodeObserverError("resolved MCP exposure does not match accepted profile")
