@@ -5969,6 +5969,22 @@
       "superseded_by": null
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_9d3de2a7-8b36-49ee-83bb-5e2871bd8552",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authorization 001",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_state": "IMMUTABLE",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORIZATION_001.md",
+      "content_digest": "sha256:7bb8ccb34eff43928b090f3a659097e010a00572e9f4220098bb4fd0c19c999e",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-001",
+      "updated_at": "2026-10-29T05:45:00Z",
+      "scope": "Human authorization for Proposal-004 I01-I10 only: implement and test the OpenCode 1.18.23 trusted-local configuration observer; excludes Dogfood session/prompt/inference, fresh candidate authority, merge, and canonical promotion.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
