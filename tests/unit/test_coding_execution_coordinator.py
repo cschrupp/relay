@@ -92,6 +92,10 @@ def _bind_profile(compilation, profile: ExecutionProfile):
 
 
 def _bind_fake_configuration_qualification(candidate):
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationObserverRef,
+        OpenCodeConfigurationQualificationRef,
+    )
     from relay_engine.project_state import (
         ApplicabilityEnvelope,
         ApplicabilityEvaluation,
@@ -103,9 +107,20 @@ def _bind_fake_configuration_qualification(candidate):
         SourceIdentity,
     )
 
+    observer_ref = OpenCodeConfigurationObserverRef(
+        observer_id="test-config-observer-v1",
+        content_digest="sha256:" + "6" * 64,
+    )
+    qualification_ref = OpenCodeConfigurationQualificationRef.create(
+        qualification_id="opencode-config-qualification-fake-version-qualified-config",
+        runtime_version="fake-runtime-1",
+        runtime_api_generation="fake-v1",
+        adapter_version="fake-1",
+        observer_ref=observer_ref,
+    )
     source = SourceIdentity(
-        source_key="opencode-config-qualification-fake-version-qualified-config",
-        content_digest="sha256:" + "9" * 64,
+        source_key=qualification_ref.qualification_id,
+        content_digest=qualification_ref.content_digest,
     )
     unrelated_source = SourceIdentity(
         source_key="unrelated-runtime-observation",
@@ -787,9 +802,8 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                     ).encode("utf-8")
                 ).hexdigest()
             )
-            qualification = OpenCodeConfigurationQualificationRef(
+            qualification = OpenCodeConfigurationQualificationRef.create(
                 qualification_id="opencode-config-qualification-fake-version-qualified-config",
-                content_digest="sha256:" + "9" * 64,
                 runtime_version=descriptor.runtime_version,
                 runtime_api_generation=descriptor.api_generation,
                 adapter_version=descriptor.adapter_version,

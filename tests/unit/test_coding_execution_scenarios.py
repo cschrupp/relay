@@ -330,9 +330,8 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         runtime_version="test-runtime-version",
         runtime_api_generation=descriptor.api_generation,
         adapter_version=descriptor.adapter_version,
-        integration_qualification_ref=OpenCodeConfigurationQualificationRef(
+        integration_qualification_ref=OpenCodeConfigurationQualificationRef.create(
             qualification_id="configuration-qualification",
-            content_digest="sha256:" + "8" * 64,
             runtime_version="test-runtime-version",
             runtime_api_generation=descriptor.api_generation,
             adapter_version=descriptor.adapter_version,

@@ -165,6 +165,62 @@ class OpenCodeConfigurationQualificationRef(DomainModel):
     adapter_version: str
     observer_ref: OpenCodeConfigurationObserverRef
 
+    @model_validator(mode="after")
+    def content_digest_matches_payload(self) -> OpenCodeConfigurationQualificationRef:
+        self.verify_content_digest()
+        return self
+
+    def verify_content_digest(self) -> None:
+        """Require the source digest to commit to the complete qualification payload."""
+
+        payload = self.model_dump(mode="json", exclude={"content_digest"})
+        canonical_payload = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        expected = "sha256:" + hashlib.sha256(canonical_payload).hexdigest()
+        if self.content_digest != expected:
+            raise ValueError("OpenCode configuration qualification digest does not match payload")
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        qualification_id: str,
+        runtime_version: str,
+        runtime_api_generation: str,
+        adapter_version: str,
+        observer_ref: OpenCodeConfigurationObserverRef,
+    ) -> OpenCodeConfigurationQualificationRef:
+        """Build a qualification ref using its canonical content digest."""
+
+        payload = {
+            "schema_version": 1,
+            "qualification_id": qualification_id,
+            "runtime_version": runtime_version,
+            "runtime_api_generation": runtime_api_generation,
+            "adapter_version": adapter_version,
+            "observer_ref": observer_ref.model_dump(mode="json"),
+        }
+        canonical_payload = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        return cls(
+            qualification_id=qualification_id,
+            content_digest="sha256:" + hashlib.sha256(canonical_payload).hexdigest(),
+            runtime_version=runtime_version,
+            runtime_api_generation=runtime_api_generation,
+            adapter_version=adapter_version,
+            observer_ref=observer_ref,
+        )
+
 
 @dataclass(frozen=True)
 class OpenCodeConfigurationBindingReader:
@@ -633,6 +689,14 @@ class OpenCodeRuntime:
                 "Version-qualified OpenCode configuration evidence is unavailable.",
                 execution_id=request.basis.execution_id,
             )
+        try:
+            self._configuration_qualification_ref.verify_content_digest()
+        except ValueError:
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode configuration qualification digest does not bind its payload.",
+                execution_id=request.basis.execution_id,
+            ) from None
         current_descriptor = await self.describe()
         if current_descriptor != descriptor:
             raise fail(
