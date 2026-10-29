@@ -6018,6 +6018,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_8a4586cd-0cb0-45dc-9f4d-94a5e81e4723",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Candidate 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_CANDIDATE_002.md",
+      "content_digest": "sha256:b8208e3630173cc3519ff4aa422120775efc9e0e60dca67f4a4c8d9c490506e1",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-CANDIDATE-002",
+      "updated_at": "2026-10-29T16:10:08Z",
+      "scope": "Exact corrective implementation-review candidate for Proposal-005 findings F001-F008 at commit 9635189; Dogfood execution and acceptance are not authorized.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_d74a9f16-e3a3-4f11-b223-c1b614e7f7f4",
       "revision": 1,
       "title": "Slice 3.1 OpenCode Configuration Observer Independent Implementation Review 001",
