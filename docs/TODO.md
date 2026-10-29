@@ -236,6 +236,26 @@ These items are durable Phase-2 commitments. Slice 2.5 is COMPLETE / ACCEPTED / 
 
 The items below are the durable implementation commitments from the October 2026 granularity/autonomy exercise. They are not optional research notes.
 
+## Human Authority phase-gate simplification — HIGH PRIORITY PHASE 3
+
+This is the direct workflow companion to authorized-work granularity. Implement it before broad autonomous-execution expansion so Relay does not preserve the current approval-fatigue pattern as product behavior.
+
+- [x] Adopt the Human-approved **2 + 1 Human Authority model** in `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`: HA-1 Design Authorization, HA-2 Implementation Acceptance, and exceptional HA-X operational authorization.
+- [ ] Add an exact `AuthorityEnvelope` / equivalent policy-bound representation binding final design subject, scope/non-scope, allowed activity classes, GovernanceProfile/risk, constraints, budgets, evaluation requirements, promotion intent, material-deviation triggers, and invalidation conditions.
+- [ ] Make HA-1 consume the final design package after required independent design review and authorize implementation, CI correction, independent review, and evaluator-driven bounded rework inside the envelope without additional Human permission prompts.
+- [ ] Implement deterministic material-deviation detection for changed objective/scope, architecture/trust boundary, provider/runtime/model/dependency/network/credential class, risk/profile, destructive/irreversible action, unapproved external effect, budget threshold, or genuine Human trade-off.
+- [ ] Make `REWORK -> correction -> re-review` autonomous while inside the HA-1 envelope.
+- [ ] Make HA-2 present one final implementation report and support `ACCEPT_AND_PROMOTE`, `ACCEPT_AND_HOLD`, `REWORK`, and `REJECT`.
+- [ ] Allow HA-2 to issue conditional promotion authority; do not require a redundant Human promotion approval when exact mechanical predicates remain satisfied.
+- [ ] Add HA-X only for distinct consequential operational effects not validly pre-authorized by HA-1/HA-2.
+- [ ] Separate the semantic Human decision event from Git persistence; repository anchoring may remain an implementation detail but must not create another Human gate.
+- [ ] Implement semantic staleness based on authority-relevant change, not later governance/evidence/registry commits.
+- [ ] Extend Decision Cards for HA-1 / HA-2 / HA-X.
+- [ ] Integrate risk-sensitive defaults through GovernanceProfile; R0–R4 remain design shorthand until separately designed.
+- [ ] Preserve historical authority records without rewrite; apply the simplified model prospectively.
+- [ ] Dogfood target: a normal R1 engineering change requires **two meaningful Human decisions** end-to-end unless material deviation or HA-X occurs.
+- [ ] Add telemetry for meaningful Human decisions, avoidable prompts, material-deviation escalations, autonomous review/rework depth, and redundant-gate rate.
+
 ## Already incorporated
 
 - [x] Adopt the Human-approved **Authorized Work Decomposition and Execution Granularity** policy under `RLY-GOV-AUTHWORK-GRANULARITY-001`.

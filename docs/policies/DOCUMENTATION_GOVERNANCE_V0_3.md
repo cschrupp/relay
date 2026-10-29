@@ -218,6 +218,22 @@ The caller is responsible for supplying a byte-exact snapshot corresponding to t
 
 ---
 
+## 8.1 Human decision event versus Git persistence
+
+A Human governance decision is a semantic authority event, not inherently a source-code commit. It should bind the Human actor, decision kind, exact governed subject, applicable authority envelope/conditions, timestamp, and invalidation conditions.
+
+Current repository-backed implementations may persist or mirror that event through Git, but:
+
+```text
+Human decision != Git commit that stores/mirrors the decision
+```
+
+Creating a governance-only anchoring commit must not require another Human decision merely because a new commit exists. A later governance-tail/evidence/CI-record commit also does not automatically stale the underlying reviewed or accepted engineering subject; staleness follows authority-relevant semantic change and applicable freshness policy.
+
+Source-code commits remain essential for exact engineered-artifact identity. This rule prevents Git persistence from becoming a recursive Human-approval mechanism.
+
+See `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`.
+
 # 9. Repository / runtime authority split
 
 Repository-authoritative:
@@ -280,6 +296,6 @@ A living plan may describe future slices without opening them.
 
 A completed review may recommend a next phase without authorizing it.
 
-Authorization remains an explicit Human Authority decision.
+Authorization remains an explicit Human Authority decision. Under the Human Authority Phase-Gate Model, that decision should occur at meaningful phase/risk boundaries rather than at every internal workflow segment. HA-1 may authorize an implementation envelope; HA-2 may conditionally authorize promotion; HA-X is reserved for a distinct consequential action or material deviation.
 
 > **Unblocked ≠ authorized.**

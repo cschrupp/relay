@@ -21,9 +21,12 @@ Key architecture references include:
 
 - [Agent Runtime Boundary](AGENT_RUNTIME.md)
 - [Governance Assurance Reference Model](GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md)
+- [Human Authority Phase-Gate Model](HUMAN_AUTHORITY_PHASE_GATES.md)
 - [Project State Resolution and Authority Compilation](PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md)
 
 The Project State Resolution / Authority Compilation capability is Human-directed strategic architecture under `RLY-P2-STATE-AUTHORITY-COMPILATION-STRATEGIC-AMEND-001`. Slice 2.5 implementation `88dcb97110665a60b21b5d36f82f0d82b015b098` is independently accepted under `RLY-S25-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S25-ACCEPT-001 — ACCEPTED`. Closure authority `RLY-S25-CLOSE-AUTH-001 — AUTHORIZED` is in force; independent closure evaluation `RLY-S25-CLOSE-EVAL-001 — ACCEPT` accepted closure-ready candidate `f0cb9927c16d78a927e7645465a6eda543f5d727`. Phase 3 is open under `RLY-P3-OPEN-001`; Slice 1.10 is COMPLETE / ACCEPTED / CLOSED under `RLY-S110-CLOSE-EVAL-001 — ACCEPT`. Slice 3.1 is OPEN under `RLY-S31-OPEN-001`; design is Human-accepted under `RLY-S31-DESIGN-ACCEPT-001`, and implementation `6dd4296440196b63078b13855b70dff60a386325` is independently accepted under `RLY-S31-IMPL-EVAL-003 — ACCEPT` and Human-accepted under `RLY-S31-IMPL-ACCEPT-001 — ACCEPTED`. Production/live AgentRuntime-provider-model execution and real-project execution remain NOT AUTHORIZED.
+
+The Human Authority Phase-Gate Model is a Human-approved strategic governance direction; its Relay workflow implementation remains backlog work and does not bypass current deterministic enforcement.
 
 Future architecture documents may be present as planning artifacts; their presence does not authorize implementation.
 

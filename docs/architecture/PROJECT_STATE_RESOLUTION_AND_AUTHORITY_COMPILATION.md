@@ -402,6 +402,32 @@ Only `READY` is eligible to proceed toward Human authorization.
 
 `READY` is not itself authorization.
 
+### Authority envelopes and material deviation
+
+The target Human Authority model changes ordinary engineering from repeated micro-grants toward a phase-level `AuthorityEnvelope`.
+
+```text
+final design + applicable project state
+      ↓
+resolver/compiler
+      ↓
+HA-1 decision basis
+      ↓
+Human Design Authorization
+      ↓
+AuthorityEnvelope
+      ↓
+one or more WorkPackets / implementation-review-rework cycles
+```
+
+The resolver/compiler must determine whether successor work is inside the current envelope, outside it, or INDETERMINATE. Routine corrective rework inside the envelope does not require a new Human grant.
+
+A material deviation—scope/objective, architecture/trust boundary, consequential dependency/provider/runtime/model/network/credential, risk/profile, destructive/irreversible action, unapproved external effect, budget exceedance, or Human trade-off—must block consequential continuation until Human Authority amends/replaces the envelope.
+
+HA-2 may include conditional promotion authority. The compiler should eventually distinguish implementation envelope, acceptance decision, conditional promotion authority, and promotion predicates without treating each as necessarily requiring a separate Human interaction.
+
+The semantic Human decision is an authority event; Git persistence/registry anchoring must not become an extra Human gate.
+
 ## 13. Relationship to WorkPacket
 
 Slice 2.3 remains correct.
@@ -423,11 +449,13 @@ canonical project state
       ↓
 resolver/compiler
       ↓
-authority candidate
+HA-1 decision basis / authority candidate
       ↓
-Human authorization
+Human Design Authorization
       ↓
-WorkPacket
+AuthorityEnvelope
+      ↓
+WorkPacket(s) + bounded review/rework
 ```
 
 ## 14. Operational prerequisites

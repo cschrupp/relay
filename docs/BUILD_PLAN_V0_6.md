@@ -230,6 +230,16 @@ These are provisional sizing heuristics, not schema enums, lifecycle states, or 
 
 Phase 3 must operationalize this policy through the existing Relay architecture rather than introducing a private authoritative task graph. Runtime-local plans/subagents may be observed as execution provenance, but they do not become WorkPackets or Relay authority.
 
+## Human Authority phase-gate simplification
+
+Human-approved strategic target: `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`.
+
+Normal bounded reversible engineering should converge on HA-1 Design Authorization -> one AuthorityEnvelope -> implementation/tests/CI/independent review/bounded rework -> HA-2 Implementation Acceptance -> mechanical promotion when conditionally authorized. HA-X is exceptional and reserved for distinct consequential operational effects or material deviations.
+
+This simplifies Human interaction without weakening exact-subject checks, independent evaluation, protected assets, hard stops, or promotion predicates. Phase 3 should implement this alongside `DECOMPOSE_AUTHORIZED_WORK`, including AuthorityEnvelope, material-deviation detection, autonomous in-envelope rework, conditional promotion, semantic staleness, and Human-decision-event separation from Git persistence.
+
+Until implementation lands, current enforced record requirements remain controlling and historical records are not rewritten.
+
 ## Documentation synchronization rule
 
 Every accepted increment that changes current project state, roadmap/frontier, planned slice sequence, product direction, major architecture, blockers, or the next Human action must update the corresponding living documents in the same increment. At minimum, closeout checks `docs/CURRENT_BASELINE.md`, `docs/BUILD_PLAN_V0_6.md`, and `docs/TODO.md`. Strategy/architecture documents are updated when their underlying direction changes. Immutable historical records are preserved rather than rewritten. Documentation freshness is part of increment closeout, not a separate governance phase.
