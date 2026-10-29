@@ -5857,6 +5857,22 @@
       "updated_at": "2026-10-26T05:00:00Z"
     },
     {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_1de648c0-53ea-42f0-b20b-e4182f525ec7",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:c0932321b6f35af1ceca4c385801dcf2ab48649d07c0957f7e4d5eb3d2f1c779",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-PROPOSAL-001",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORITY_PROPOSAL_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposal for bounded production implementation of a concrete OpenCode 1.18.23 configuration observer using running-server state plus exact debug-agent tool resolution; no Dogfood execution or provider/model call authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 001",
+      "updated_at": "2026-10-28T21:52:00-04:00"
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
