@@ -5666,6 +5666,22 @@
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
+      "artifact_id": "art_5f9f5383-2c3d-4f3e-b4c4-6e43e72c44a1",
+      "artifact_state": "IMMUTABLE",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:1d6f9e53d0a90415f337a551083a45243e037a094abe8ffd658ffda8c3969642",
+      "human_version": "RLY-S31-DOGFOOD-001-TRUSTED-LOCAL-RECON-AUTH-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_TRUSTED_LOCAL_RECONCILIATION_AUTHORIZATION_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Human authorization for one bounded Dogfood 001 trusted-local canonical reconciliation/recompilation campaign from main 375b599c; permits evidence collection and fresh AuthorityCandidate compilation only, with live execution explicitly unauthorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 Trusted-Local Canonical Reconciliation Authorization 001",
+      "updated_at": "2026-10-28T21:30:00-04:00"
+    },
+    {
+      "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
       "artifact_type": "DOCUMENT",
