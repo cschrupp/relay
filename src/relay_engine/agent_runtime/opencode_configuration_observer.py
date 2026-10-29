@@ -659,3 +659,165 @@ class OpenCodeV11823ConfigurationObserver:
     def _mcp_exposure(self, config: Mapping[str, Any], status: Mapping[str, Any]) -> tuple[str, ...]:
         configured = config.get("mcp_names")
         if not isinstance(configured, tuple) or any(not isinstance(item, str) for item in configured):
+
+            raise OpenCodeObserverError("resolved MCP configuration is malformed")
+        if any(not isinstance(key, str) for key in status):
+            raise OpenCodeObserverError("resolved MCP exposure is malformed")
+        result = tuple(sorted(set(configured) | set(status)))
+        if result != self._profile.allowed_mcp_servers:
+            raise OpenCodeObserverError("resolved MCP exposure does not match accepted profile")
+        return result
+
+    def _subagent_exposure(
+        self,
+        agents: list[Any],
+        selected: Mapping[str, Any],
+    ) -> tuple[str, ...]:
+        rules = selected.get("permission")
+        if not isinstance(rules, list):
+            raise OpenCodeObserverError("selected agent permission rules are unavailable")
+        exposed: list[str] = []
+        for agent in agents:
+            if not isinstance(agent, dict) or agent.get("mode") != "subagent":
+                continue
+            name = agent.get("name")
+            if not isinstance(name, str):
+                raise OpenCodeObserverError("subagent identity is malformed")
+            action = _permission_action("task", name, rules)
+            if action == "allow":
+                exposed.append(name)
+            elif action == "ask":
+                raise OpenCodeObserverError("subagent exposure remains interactive/ambiguous")
+        result = tuple(sorted(set(exposed)))
+        if result != self._profile.allowed_subagents:
+            raise OpenCodeObserverError("resolved subagent exposure does not match accepted profile")
+        return result
+
+
+def _permission_action(permission: str, pattern: str, rules: list[Any]) -> str:
+    result = "ask"
+    matched = False
+    for rule in rules:
+        if not isinstance(rule, dict):
+            raise OpenCodeObserverError("permission rule is malformed")
+        rule_permission = rule.get("permission")
+        rule_pattern = rule.get("pattern")
+        action = rule.get("action")
+        if not isinstance(rule_permission, str) or not isinstance(rule_pattern, str):
+            raise OpenCodeObserverError("permission rule is malformed")
+        if action not in {"allow", "deny", "ask"}:
+            raise OpenCodeObserverError("permission rule action is malformed")
+        if rule_permission not in {"*", permission}:
+            continue
+        if fnmatch.fnmatchcase(pattern, rule_pattern):
+            result = action
+            matched = True
+    return result if matched else "ask"
+
+
+def _project_config(config: Mapping[str, Any]) -> dict[str, Any]:
+    plugin_value = config.get("plugin", [])
+    if plugin_value is None:
+        plugin_value = []
+    if not isinstance(plugin_value, list):
+        raise OpenCodeObserverError("resolved plugin configuration is malformed")
+    plugins: list[str] = []
+    for item in plugin_value:
+        if isinstance(item, str):
+            plugins.append(item)
+            continue
+        if isinstance(item, list) and item and isinstance(item[0], str):
+            plugins.append(item[0])
+            continue
+        raise OpenCodeObserverError("resolved plugin configuration is malformed")
+
+    mcp_value = config.get("mcp", {})
+    if mcp_value is None:
+        mcp_value = {}
+    if not isinstance(mcp_value, dict) or any(not isinstance(key, str) for key in mcp_value):
+        raise OpenCodeObserverError("resolved MCP configuration is malformed")
+
+    agent_value = config.get("agent", {})
+    if agent_value is None:
+        agent_value = {}
+    if not isinstance(agent_value, dict) or any(not isinstance(key, str) for key in agent_value):
+        raise OpenCodeObserverError("resolved agent configuration is malformed")
+
+    return {
+        "plugins": tuple(sorted(set(plugins))),
+        "mcp_names": tuple(sorted(mcp_value)),
+        "agent_names": tuple(sorted(agent_value)),
+        "legacy_tools_present": bool(config.get("tools")),
+        "permission_present": bool(config.get("permission")),
+    }
+
+
+def _project_agents(agents: list[Any]) -> list[dict[str, Any]]:
+    projected: list[dict[str, Any]] = []
+    for value in agents:
+        if not isinstance(value, dict):
+            raise OpenCodeObserverError("resolved agent entry is malformed")
+        projected.append(
+            {
+                "name": value.get("name"),
+                "mode": value.get("mode"),
+                "hidden": value.get("hidden"),
+                "permission": _sanitize(value.get("permission")),
+                "model": _sanitize(value.get("model")),
+            }
+        )
+    return projected
+
+
+def _project_mcp_status(status: Mapping[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for name, value in status.items():
+        if not isinstance(name, str):
+            raise OpenCodeObserverError("resolved MCP status name is malformed")
+        if isinstance(value, str):
+            result[name] = value
+        elif isinstance(value, dict):
+            result[name] = {
+                key: item
+                for key, item in value.items()
+                if key in {"status", "state", "type"} and isinstance(item, (str, bool, int))
+            }
+        else:
+            raise OpenCodeObserverError("resolved MCP status is malformed")
+    return result
+
+
+def _sanitize(value: Any) -> Any:
+    if isinstance(value, dict):
+        result: dict[str, Any] = {}
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise OpenCodeObserverError("configuration object has non-string key")
+            lower = key.lower()
+            if lower in _SECRET_FIELD_NAMES or lower.endswith(
+                ("_key", "_token", "_secret", "_password")
+            ):
+                result[key] = "<redacted>"
+            else:
+                result[key] = _sanitize(item)
+        return result
+    if isinstance(value, list):
+        return [_sanitize(item) for item in value]
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    raise OpenCodeObserverError("configuration contains unsupported value type")
+
+
+def _digest_bytes(value: bytes) -> ContentDigest:
+    return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def _digest_json(value: Any) -> ContentDigest:
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return _digest_bytes(payload)
