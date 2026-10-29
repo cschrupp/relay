@@ -876,6 +876,7 @@ def test_wrong_qualification_observer_is_rejected_before_observation(
                 permission_profile=profile,
                 qualification_ref=qualification,
                 startup_context=startup,
+                executable=str(observer._executable),
                 client=client,
             )
     finally:
