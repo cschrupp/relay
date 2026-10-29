@@ -5970,6 +5970,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_f55e37b8-fc2e-4f45-9b47-ecacdb2937ea",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Corrective Implementation Authority Proposal 005",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORITY_PROPOSAL_005.md",
+      "content_digest": "sha256:2eff71ec7dbe75e1cdee4682e5d6086aacb1e8f288bdbc49cda6a3cfba274de4",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-PROPOSAL-005",
+      "updated_at": "2026-10-29T15:43:00Z",
+      "scope": "Narrow proposed corrective implementation authority for independent review findings F001-F008 on OpenCode observer candidate e7acf774f9c346ea9e22df184da28a93cfc7be92; not authorized.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_9d3de2a7-8b36-49ee-83bb-5e2871bd8552",
       "revision": 1,
       "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authorization 001",
