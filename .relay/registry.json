@@ -5217,6 +5217,22 @@
       "superseded_by": null
     },
     {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_f3dbb3c3-f2d7-40dd-97a9-f6887d9afc12",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:3d317f2a050ac1a1aa330ca96ede301b8c9ec11ccd552b9dd3b6029be9b63861",
+      "human_version": "RLY-S31-DOGFOOD-001-OPENCODE-CONFIG-OBSERVER-IR-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_OPENCODE_CONFIG_OBSERVER_IR_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Version-specific IR for a concrete OpenCode 1.18.23 trusted-local configuration observer; establishes runtime-anchored observation surfaces and recommends a controlled OpenRouter/DeepSeek V4.1 Flash 1017 Dogfood profile; no implementation or execution.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 OpenCode 1.18.23 Configuration Observer IR-001",
+      "updated_at": "2026-10-28T21:48:00-04:00"
+    },
+    {
       "schema_version": 1,
       "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
       "revision": 1,
