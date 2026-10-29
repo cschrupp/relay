@@ -116,8 +116,33 @@ Conceptual external references identify framework/version/publication status, re
 
 ## Human-gate necessity
 
-A Human gate exists when a distinct discretionary authority decision is required. Exact SHA, registry/schema validity, CI, required tests/evidence, current parent, and artifact digest should increasingly be deterministic checks. Decisions about whether work may begin, an architecture is acceptable, implementation may be performed, an exact result should be accepted, a candidate may become canonical, or an exception should be granted remain discretionary Human decisions. DORA supports peer review, automation, continuous testing, fast feedback, and risk-based scrutiny over heavyweight approval bureaucracy; its guidance is not Relay lifecycle authority [SRC-DORA-CHANGE-APPROVAL]. The Principal AI Engineer Handbook describes Human approval as a human-scale latency stage and recommends routing only consequential actions through it [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
+A Human gate exists when a **distinct discretionary authority decision** is required. Exact SHA, registry/schema validity, CI, required tests/evidence, current parent, artifact digest, and other machine-evaluable predicates should increasingly be deterministic checks.
 
+For ordinary bounded reversible engineering, Decision Support should implement:
+
+```text
+HA-1 DESIGN AUTHORIZATION
+    -> final design + AuthorityEnvelope
+
+HA-2 IMPLEMENTATION ACCEPTANCE
+    -> final implementation report + independent technical disposition
+    -> ACCEPT_AND_PROMOTE / ACCEPT_AND_HOLD / REWORK / REJECT
+
+HA-X EXCEPTIONAL OPERATIONAL AUTHORIZATION
+    -> only a distinct consequential external/irreversible action or material deviation
+```
+
+Decision Cards should not ask the Human to re-approve routine internal sequencing, commits, CI correction, evaluator-driven in-scope rework, evidence-registration commits, or mechanical promotion already conditionally authorized by HA-2.
+
+Human re-engagement during implementation is driven by material deviation: changed objective/scope, architecture/trust boundary, consequential provider/runtime/model/dependency/network/credential class, risk/profile, destructive/irreversible action, unapproved external effect, budget threshold, or genuine Human trade-off.
+
+Independent evaluation remains separate from Human Authority. `REWORK` inside HA-1 does not create a new Human gate.
+
+DORA supports peer review, automation, continuous testing, fast feedback, and risk-based scrutiny over heavyweight approval bureaucracy [SRC-DORA-CHANGE-APPROVAL]. Policy-gated agent references likewise reserve Human approval for consequential actions [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
+
+See [Human Authority Phase-Gate Model](HUMAN_AUTHORITY_PHASE_GATES.md).
+
+## Assurance, external standards, and roles
 ## Assurance, external standards, and roles
 
 Relay's existing statement classes and one-way external mapping remain in force. Relay semantics map outward to external representation or compliance proof; external standards never define Relay semantics. Relay is not a SLSA wrapper. In particular, a Sol review or Sol/Luna separation does not satisfy `SLSA_SOURCE_TWO_PARTY_REVIEWED`, which is defined in terms of review by two trusted persons [SRC-SLSA-VERIFIED-PROPERTIES]. SLSA's informed-review direction—show reviewers a clear representation of change effects—supports legibility but does not define Relay Human Authority [SRC-SLSA-SOURCE-REQUIREMENTS].

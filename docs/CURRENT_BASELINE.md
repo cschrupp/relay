@@ -155,6 +155,23 @@ Initial operational target: prefer cohesive STANDARD/EXTENDED implementation out
 
 The active Slice 2.4 implementation was authorized before this documentation re-baseline and remains governed by its exact existing scope. This policy does not retroactively alter `RLY-S24-CODEX-SCOPE-001`.
 
+## Human Authority phase-gate simplification
+
+Human-approved strategic direction: `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`.
+
+```text
+final design + required independent design review
+    -> HA-1 Design Authorization / AuthorityEnvelope
+    -> implementation + CI + independent review/rework inside envelope
+    -> final implementation report + independent ACCEPT
+    -> HA-2 Implementation Acceptance
+    -> mechanical promotion when HA-2 conditionally authorizes it
+```
+
+HA-X is reserved for distinct consequential operational actions or material deviations requiring separate Human judgment.
+
+This direction is not yet fully implemented in Relay's workflow engine. Historical authority remains valid and current deterministic enforcement remains controlling until the Phase-3 backlog item is implemented. Future Human decision semantics are separated from Git persistence: a governance-only anchoring/tail commit must not itself create a new Human gate or stale an unchanged technical subject.
+
 ## Slice 2.4 implementation review and corrective authority
 
 The exact implementation candidate `8bb3534ac0803e56e411105233c294eaa1c4586a` was independently reviewed under `RLY-S24-IMPL-EVAL-001 — REWORK`, recorded at governance commit `41d819e96b619dcb10a16cd2815a105ead418827`.

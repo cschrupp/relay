@@ -10,8 +10,9 @@ Before making substantive changes, read:
 2. the currently authorized slice under `docs/slices/`, if one exists
 3. `docs/policies/ENGINEERING_SIMPLICITY_SCOPE_AND_QUALITY.md`
 4. `docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md`
-5. `docs/policies/DOCUMENTATION_GOVERNANCE_V0_3.md`
-6. relevant ADRs under `docs/decisions/`
+5. `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`
+6. `docs/policies/DOCUMENTATION_GOVERNANCE_V0_3.md`
+7. relevant ADRs under `docs/decisions/`
 
 Read `docs/PRODUCT_PROPOSAL.md` and `docs/BUILD_PLAN.md` when broader product context is needed, but resolve current canonical document identity through `.relay/registry.json`.
 
@@ -92,6 +93,34 @@ If correct completion requires work outside exact authority, record/report `PROP
 Surgical externally governed tasks are the exception. Prefer them only when narrowness itself reduces material risk, such as migrations, protected assets, irreversible operations, exact identity/digest contracts, delicate scientific/numerical certificates, or narrow independent-review corrections.
 
 Runtime-local plans/subagents do not create Relay authority and do not replace independently governed evaluation or Human acceptance.
+
+## Human Authority phase-gate model
+
+Human Authority is a scarce decision resource. Do not create a Human gate merely because a segment, commit, review cycle, or internal milestone ended.
+
+For normal bounded reversible engineering, use the Human-approved phase-gate direction in `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`:
+
+```text
+DESIGN FINAL + required independent design review
+        ↓
+HA-1 DESIGN AUTHORIZATION
+        ↓
+bounded implementation / CI / independent review / rework
+        ↓
+FINAL IMPLEMENTATION REPORT + independent ACCEPT
+        ↓
+HA-2 IMPLEMENTATION ACCEPTANCE
+        ↓
+mechanical promotion when HA-2 conditionally authorizes it
+```
+
+Request a new Human decision during implementation only for a material deviation: scope/objective change, architecture or trust-boundary change, new consequential dependency/provider/runtime/model/network/credential class, higher risk/profile, destructive/irreversible action, unapproved production/external effect, exceeded budget, or a genuine Human trade-off.
+
+Independent `REWORK` inside the HA-1 envelope does not create a new Human authorization gate. Governance-tail/evidence/CI-record commits do not by themselves stale the reviewed engineering subject or require another Human decision.
+
+HA-X is reserved for distinct consequential operational actions when policy requires a separate Human decision.
+
+Until Relay's workflow implementation catches up, obey current deterministic enforcement that still requires legacy record shapes, but do not invent additional Human gates beyond current policy.
 
 ## Required quality checks
 

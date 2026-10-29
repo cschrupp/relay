@@ -1,6 +1,6 @@
 # Relay — Authorized-Work Decomposition and Execution Granularity
 
-**Policy version:** 0.1  
+**Policy version:** 0.2  
 **Status:** HUMAN-APPROVED CROSS-CUTTING POLICY DIRECTION  
 **Document class:** Detailed living policy companion — registered; canonical entry point is `engineering-simplicity-quality`  
 **Applies to:** Relay planning, WorkPacket construction, RoleContract execution semantics, AgentRuntime use, implementation handoffs, independent evaluation, rework, future Phase 3 orchestration, and execution telemetry  
@@ -682,49 +682,60 @@ If review returns REWORK, the next authorized corrective scope may be narrower t
 
 ---
 
-# 21. Human Authority behavior
+# 21. Human Authority phase-gate behavior
 
-Human involvement should remain strongest at real governance boundaries:
+Human involvement is required for a **distinct discretionary authority decision**, not merely because execution crossed another internal segment.
 
-- work authorization;
-- design acceptance where required;
-- materially expanded scope;
-- protected/irreversible operations;
-- technical/result acceptance;
-- closure/promotion authority.
+For normal bounded reversible engineering:
 
-Human involvement should normally be absent from routine internal sequencing.
+```text
+final design + required independent design review
+        ↓
+HA-1 DESIGN AUTHORIZATION
+        ↓
+AuthorityEnvelope
+        ↓
+implementation / tests / CI / independent review / bounded rework
+        ↓
+final implementation report + independent ACCEPT
+        ↓
+HA-2 IMPLEMENTATION ACCEPTANCE
+```
 
-The goal is not "less Human control."
+HA-1 normally combines design acceptance with implementation authority for the accepted envelope. Routine sequencing, CI correction, independent-review cycles, and corrective rework remain autonomous while inside it.
 
-The goal is:
+A new Human decision is required during implementation only for a material deviation or an explicit policy-required consequential action. Material deviations include objective/scope change, architecture/trust-boundary change, consequential dependency/provider/runtime/model/network/credential class, changed risk/profile, destructive/irreversible action, unapproved production/external effect, exceeded budget, or a genuine Human trade-off.
 
-> **Human control at authority boundaries instead of Human micromanagement inside already-authorized work.**
+Independent evaluator `REWORK` is not itself a Human gate. HA-X is reserved for distinct consequential operational actions requiring separate Human judgment.
+
+> **Fewer Human transactions, stronger Human decisions, deterministic enforcement between them.**
+
+See `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`.
 
 ---
 
-# 22. Promotion remains separate
+# 22. Promotion remains mechanically separate, not necessarily a separate Human gate
 
-Even a perfect autonomous implementation run cannot promote itself.
-
-The existing separation remains:
+Relay preserves:
 
 ```text
 implementation complete
-    !=
-independent acceptance
-    !=
-Human acceptance
-    !=
-promotion authority
-    !=
-promotion execution
+    != independent acceptance
+    != Human acceptance
+    != promotion execution
 ```
 
-Task-size policy does not weaken this chain.
+But HA-2 may include **conditional promotion authority**. If the Human selects `ACCEPT_AND_PROMOTE` and exact candidate, policy, parent freshness, CI/evidence, evaluation, and other promotion predicates remain satisfied, the Promotion Executor may proceed mechanically without another Human decision.
+
+A separate Human promotion decision is needed only when promotion itself presents a distinct discretionary choice, the Human selected HOLD, the authority/policy envelope changed, or the accepted subject became materially stale.
+
+Governance/evidence-registration commits do not by themselves stale the accepted engineering subject. Human decision persistence is also conceptually separate from Git persistence: a repository commit may mirror or anchor the decision, but is not the decision itself.
+
+Task-size policy does not weaken any promotion predicate or canonical-source protection.
 
 ---
 
+# 23. Specialized agent mapping
 # 23. Specialized agent mapping
 
 Relay's existing specialized-agent structure should be interpreted as follows.

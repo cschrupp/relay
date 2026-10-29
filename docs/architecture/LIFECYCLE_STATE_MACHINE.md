@@ -63,6 +63,30 @@ The matrix is data in `engine.py`; enum ordering has no meaning. `READY` is the 
 
 Blocked or stale snapshots cannot enter `IMPLEMENTING` or `ACCEPTED`; blocked snapshots also cannot enter `EVALUATING`. Blocked work may move to a legal remediation phase while retaining its blockers. Cancelling blocked work produces `CANCELLED / CLEAR` in one phase event. Staleness and revalidation preserve phase and blockage. Accepted work may become stale. Supersession stores the supplied successor ID in the resulting snapshot.
 
+## Human Authority overlay
+
+Lifecycle phase movement is not equivalent to Human approval.
+
+```text
+DESIGNING / CONTRACTING / PLANNING
+    -> final design package
+    -> HA-1 Design Authorization
+    -> READY / IMPLEMENTING under one AuthorityEnvelope
+
+IMPLEMENTING <-> EVALUATING / REWORK
+    -> may iterate without new Human Authority while inside the envelope
+
+independent ACCEPT
+    -> HA-2 Implementation Acceptance
+    -> ACCEPTED when acceptance predicates are satisfied
+```
+
+A transition into `REWORK` or back into `EVALUATING` does not itself require Human Authority. Human re-engagement occurs when policy requires HA-X or a material deviation invalidates/exceeds the current AuthorityEnvelope.
+
+Promotion to a canonical repository reference is outside this lifecycle state machine; when HA-2 conditionally authorizes promotion, promotion remains a deterministic downstream operation subject to its own predicates.
+
+The current lifecycle implementation does not yet model AuthorityEnvelope, HA-1/HA-2/HA-X, or material-deviation detection. This is integration direction only.
+
 ## Operations and determinism
 
 The public operations are:

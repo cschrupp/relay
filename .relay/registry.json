@@ -5,64 +5,64 @@
       "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:46c4428676305b487fa70e92c084deef0de1fe2e4534278d5a7c9f6962f12a3f",
+      "content_digest": "sha256:dfd8bc8e80843a0e641b494fdb09a78cc77dc1c5601177e9afbce7b0fcd7039b",
       "human_version": "0.6",
       "path": "docs/BUILD_PLAN_V0_6.md",
-      "revision": 157,
+      "revision": 158,
       "schema_version": 1,
       "scope": "Current canonical build plan; bounded Slice 3.1 operational mapping/materialization and runtime-boundary contract are accepted; concrete backend, fixture reachability, freshness and systemic compiler work remain open.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Build Plan",
-      "updated_at": "2026-10-28T02:10:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:96c4c9b893c915f5ce28b17e2d7b62788cd04be719fc7266140a7b642e00526f",
+      "content_digest": "sha256:809e05f5179e7af3b1c5974d6c7ccc553bc4430da722b735a51946c443c03bb7",
       "human_version": null,
       "path": "docs/CURRENT_BASELINE.md",
-      "revision": 172,
+      "revision": 173,
       "schema_version": 1,
       "scope": "Current canonical baseline; Slice 3.1 operational identity is materialized and runtime-boundary design/implementation are Human-accepted; concrete backend, fixture reachability, freshness and live admission remain unresolved.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Current Baseline",
-      "updated_at": "2026-10-28T02:10:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_7d143b4c-f0b7-4aaf-89ee-9c02cdae7f3e",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:948d4ac64d5f5f9ce10939e46a721a9c7de3bc4d37217188e5f0d9c940427496",
+      "content_digest": "sha256:88def035add61371b08d54c597bc3d1db1626c04020c9f5c0e0245da1fe537a4",
       "human_version": "0.5",
       "path": "docs/PRODUCT_PROPOSAL_V0_5.md",
-      "revision": 69,
+      "revision": 70,
       "schema_version": 1,
       "scope": "Current canonical product proposal; Slice 3.1 design and implementation are accepted; live execution remains separately unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Product Proposal",
-      "updated_at": "2026-10-26T05:00:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_405e8bcd-1e83-4560-9c1e-5163d3dc6710",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:96818bf659de45f4f9cad19bfcf3938381b1d81011336167c339ce4a346644f8",
+      "content_digest": "sha256:f6aa598a41a1816b91b74e5c71e21cddad563444b9c5c88f981f52a65680078e",
       "human_version": null,
       "path": "docs/TODO.md",
-      "revision": 64,
+      "revision": 65,
       "schema_version": 1,
       "scope": "Current development checklist; operational Slice identity and runtime-boundary implementation are accepted; next Dogfood gates are concrete backend qualification, fixture reachability, lineage reconciliation and freshness revalidation.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Development TODO",
-      "updated_at": "2026-10-28T02:10:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -85,32 +85,48 @@
       "artifact_id": "art_54e4a2fe-b5a2-5da8-88d3-af472920d8ec",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:54e4a2feb5a24da8c8d3af472920d8ec9f52630bdc2c36e9f087e32cb08faffc",
+      "content_digest": "sha256:be1ca60799282cc28ef84204e8b0dd51e311eecfd7d8b7538555f85f406c28f5",
       "human_version": null,
       "path": "docs/architecture/GOVERNANCE_ASSURANCE_REFERENCE_MODEL.md",
-      "revision": 2,
+      "revision": 3,
       "schema_version": 1,
       "scope": "Consolidated accepted Slice 1.8 assurance semantics; implementation candidate awaiting independent evaluation.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Governance Assurance Reference Model",
-      "updated_at": "2026-10-22T05:00:57Z"
+      "updated_at": "2026-10-29T19:00:00Z"
+    },
+    {
+      "schema_version": 1,
+      "artifact_id": "art_6b2e8c3a-3b0f-4f3f-bf2e-6d2a4b73cf77",
+      "revision": 1,
+      "title": "Human Authority Phase-Gate Model",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LIVING_PROJECTION",
+      "artifact_state": "CURRENT",
+      "path": "docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md",
+      "content_digest": "sha256:7b05db7b41829bd4cc7a0f7f7fa8ac7e9dda1313e7e849b83b6ba059504821bf",
+      "human_version": "0.1.0",
+      "updated_at": "2026-10-29T19:00:00Z",
+      "scope": "Human-approved strategic governance direction for HA-1 Design Authorization, HA-2 Implementation Acceptance, exceptional HA-X operational authorization, AuthorityEnvelope semantics, material-deviation triggers, conditional promotion, semantic staleness, and separation of Human decision events from Git persistence; workflow implementation pending.",
+      "supersedes": null,
+      "superseded_by": null
     },
     {
       "artifact_class": "WORKING",
       "artifact_id": "art_33fa8ba6-9d58-4486-b601-35d1d2766210",
       "artifact_state": "REVIEW",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:3b95facc2bd7164e55a557fd83fae500708519b721d4755abc537ff171c822d3",
+      "content_digest": "sha256:94949f17c81f1ffe4ac0d14f48f22945c9c006a36d9558e34d3e6fb009c702eb",
       "human_version": null,
       "path": "docs/architecture/PROJECT_STATE_RESOLUTION_AND_AUTHORITY_COMPILATION.md",
-      "revision": 6,
+      "revision": 7,
       "schema_version": 1,
       "scope": "Human-directed strategic architecture; Slice 2.5 is complete and closed; production wiring remains unauthorized.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Project State Resolution and Authority Compilation",
-      "updated_at": "2026-10-25T04:14:21Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "WORKING",
@@ -133,32 +149,32 @@
       "artifact_id": "art_71480f1b-c868-41bb-aa85-0e86d60c8170",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:373287daf55e5056563d02aa00fe834f5d353b3ceea0caa0f450de8a5d97cb00",
-      "human_version": "0.1.1",
+      "content_digest": "sha256:b13cac6a2925c15372e7d45b3d5e2bc65621ad07deea15c9bb097e6789f9c4c3",
+      "human_version": "0.2",
       "path": "docs/policies/AUTHORIZED_WORK_DECOMPOSITION_AND_EXECUTION_GRANULARITY.md",
-      "revision": 2,
+      "revision": 3,
       "schema_version": 1,
       "scope": "Detailed living policy companion for WorkPacket sizing, bounded internal decomposition, agent autonomy, stop conditions, and execution-granularity calibration; canonical entry point remains engineering-simplicity-quality.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Authorized-Work Decomposition and Execution Granularity",
-      "updated_at": "2026-10-23T17:56:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
       "artifact_id": "art_018f47c1-7b2c-7abc-8def-123456789108",
       "artifact_state": "CURRENT",
       "artifact_type": "DOCUMENT",
-      "content_digest": "sha256:9ff4bf6333ba5386b8faa1be9fcd9ea019c0ed0305f72e9a2cb9c43047fa22c5",
+      "content_digest": "sha256:6b43b892f027047defea3520370f3a46a363e6745b84dd092d70b6a981e159b8",
       "human_version": "0.3",
       "path": "docs/policies/DOCUMENTATION_GOVERNANCE_V0_3.md",
-      "revision": 2,
+      "revision": 3,
       "schema_version": 1,
       "scope": "Current canonical documentation governance policy.",
       "superseded_by": null,
       "supersedes": null,
       "title": "Documentation and Canonical Artifact Governance",
-      "updated_at": "2026-09-26T19:28:00Z"
+      "updated_at": "2026-10-29T19:00:00Z"
     },
     {
       "artifact_class": "LIVING_PROJECTION",
@@ -7031,7 +7047,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_0601b8ea-0bc7-458a-9bc5-6bcc68bc15f3",
-        "revision": 157,
+        "revision": 158,
         "schema_version": 1
       }
     },
@@ -7040,7 +7056,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_61c0c336-e2fc-41f4-9588-7d10cef70048",
-        "revision": 172,
+        "revision": 173,
         "schema_version": 1
       }
     },
@@ -7049,7 +7065,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_018f47c1-7b2c-7abc-8def-123456789108",
-        "revision": 2,
+        "revision": 3,
         "schema_version": 1
       }
     },
@@ -7067,7 +7083,7 @@
       "schema_version": 1,
       "target": {
         "artifact_id": "art_7d143b4c-f0b7-4aaf-89ee-9c02cdae7f3e",
-        "revision": 69,
+        "revision": 70,
         "schema_version": 1
       }
     }

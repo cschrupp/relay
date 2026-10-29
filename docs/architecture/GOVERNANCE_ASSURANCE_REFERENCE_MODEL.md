@@ -296,21 +296,38 @@ Practitioner, research, and product references—including Google, Geoffrey Litt
 
 ## 13. Human-gate necessity and telemetry — D24–D25, D50, D59
 
-A Human gate exists only when a distinct discretionary authority decision is required. Hashes/digests, CI, registry/schema validity, parent freshness, required evidence presence, and property evaluability are mechanical candidates. “May work begin?”, “Is this design acceptable?”, “May implementation proceed?”, “Is this exact result accepted?”, “May it become canonical?”, and “Is this exception allowed?” protect distinct Human decisions.
+A Human gate exists only when a distinct discretionary authority decision is required. Hashes/digests, CI, registry/schema validity, parent freshness, required evidence presence, property evaluability, and other machine-checkable facts are mechanical candidates.
 
-Reduce duplicate ceremony, not authority. Machine-checkable facts should not require repeated Human approval without a separate authority reason. DORA informs peer/independent review close to the change, automation, early feedback, and risk-sensitive scrutiny rather than unrelated heavyweight approval boards [SRC-DORA-CHANGE-APPROVAL]. Policy-gated reference designs inform separation of model requests from authorization [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
-
-`GovernanceEffectivenessTelemetry` is future, observational, and non-authoritative. Keep assurance value (blocked unauthorized operations, scope violations/defects detected, recovery) separate from governance cost (Human decision latency/interaction time, evaluation duration, Human/mechanical gate counts, rework, avoidable escalations, promotion latency, execution duration, token/monetary cost). Work completed without Human intervention, deterministic-check automation rates, and duplicate manual verification can inform observation without granting authority.
+For normal bounded reversible engineering, Relay's Human-approved target is the **2 + 1 phase-gate model**:
 
 ```text
-telemetry != authority
-telemetry != evaluation
-low cost != permission to weaken controls
-historical success != waiver of current policy
+HA-1 Design Authorization
+    -> accepts final design and creates/binds the implementation AuthorityEnvelope
+
+HA-2 Implementation Acceptance
+    -> decides the final independently reviewed implementation result
+    -> may conditionally authorize mechanical promotion
+
+HA-X Exceptional Operational Authorization
+    -> only when policy requires a separate decision for a consequential action
+       or material deviation not covered by the current envelope
 ```
 
-No composite governance score, collection, dashboard, or automatic policy relaxation is implemented. Any future automatic relaxation requires separately accepted policy and authority. The competitive validation plan remains non-authoritative research planning; the experiment has not been executed.
+Independent review is not Human Authority. `REWORK` may loop autonomously inside the current envelope. Human re-engagement is driven by material scope/risk/architecture/external-effect change or an explicit HA-X policy requirement.
 
+Under this model HA-2 may be valid conditional promotion authority. If the Human selects `ACCEPT_AND_PROMOTE` and exact promotion predicates remain satisfied, a mechanical Promotion Executor should not ask again.
+
+Human authority binds semantic subjects, not raw commit count. Governance-tail, evidence-registration, and CI-record commits do not by themselves stale technical review or Human Authority. Authority-relevant semantic change does.
+
+The semantic Human decision event is distinct from Git persistence. A repository commit may anchor the event, but creating that commit is not a new Human decision and must not create a recursive approval requirement.
+
+Reduce duplicate ceremony, not authority. DORA informs peer/independent review close to the change, automation, early feedback, and risk-sensitive scrutiny rather than heavyweight approval boards [SRC-DORA-CHANGE-APPROVAL]. Policy-gated reference designs inform separation of model requests from authorization [SRC-PAIE-POLICY-GATED-TOOL-EXECUTION-2026].
+
+`GovernanceEffectivenessTelemetry` should measure both assurance value and governance cost, including meaningful Human decisions per accepted outcome, avoidable Human prompts, material-deviation escalations, autonomous review/rework depth, redundant-gate rate, HA-1-to-candidate latency, independent-ACCEPT-to-HA-2 latency, and promotion latency after conditionally authorized HA-2.
+
+Telemetry remains observational and non-authoritative. Low governance cost never permits weakening controls outside accepted policy.
+
+## 14. Downstream ownership and implementation limit — D33–D35, D39–D42, D62, D66–D69
 ## 14. Downstream ownership and implementation limit — D33–D35, D39–D42, D62, D66–D69
 
 | Slice | Ownership consuming this model |

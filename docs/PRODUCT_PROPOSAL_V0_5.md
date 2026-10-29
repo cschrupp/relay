@@ -71,6 +71,16 @@ When an Implementer discovers required work outside the exact WorkPacket, it mus
 
 This preserves the accepted specialized-agent separation while allowing capable coding agents to work at PR-sized/cohesive-outcome scale instead of being reduced to one-edit-at-a-time natural-language terminals.
 
+## Human Authority as phase gates, not transaction logging
+
+Relay's target Human-control model is `docs/architecture/HUMAN_AUTHORITY_PHASE_GATES.md`.
+
+Ordinary bounded reversible engineering should require two meaningful Human decisions: **HA-1 Design Authorization**, which accepts the final design and creates a bounded authority envelope, and **HA-2 Implementation Acceptance**, which decides the independently reviewed final result and may conditionally authorize mechanical promotion. **HA-X** exists only for a distinct consequential operational action or material deviation that policy requires the Human to decide.
+
+Independent review is not Human Authority. Rework remains automatic while it stays inside HA-1. The product should avoid approval prompts for routine internal task boundaries, commits, CI correction, evaluator-driven in-scope rework, governance-tail commits, and canonical promotion already conditionally authorized by HA-2.
+
+Human decisions remain exact, durable, auditable, and content-bound; the semantic authority event is distinct from the Git commit used to persist or mirror it.
+
 # 2. Accepted technical foundation
 
 ```text
