@@ -5681,6 +5681,22 @@
       "updated_at": "2026-10-28T21:30:00-04:00"
     },
     {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_8ad7032a-e3a3-48d7-a49b-61ee4e41bf5f",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:6b0fd9e7179dfcee3e3b708ad87eff89928eaced18b306f23938103914eb8109",
+      "human_version": "RLY-S31-DOGFOOD-001-TRUSTED-LOCAL-RECON-PRECHECK-001",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_TRUSTED_LOCAL_RECONCILIATION_PRECHECK_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Fresh Dogfood 001 trusted-local reconciliation precheck from canonical main 375b599c; records exact fixture reachability failure and missing fresh runtime/provider/model plus trusted-local OpenCode qualification; no candidate or execution produced.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 Trusted-Local Reconciliation Precheck 001",
+      "updated_at": "2026-10-28T21:34:00-04:00"
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_31a00013-7b2c-4a11-9e31-000000000013",
       "artifact_state": "IMMUTABLE",
