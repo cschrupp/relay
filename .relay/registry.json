@@ -5809,6 +5809,22 @@
       "updated_at": "2026-10-26T05:00:00Z"
     },
     {
+      "artifact_class": "WORKING",
+      "artifact_id": "art_d4b07484-021b-47da-97af-39ea697b847d",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:0a7774a30ff9acbe039aa141cf4395df60fa9f0d7d254bc256533294b1917b43",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-PROMOTION-CANDIDATE-001",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_CANONICAL_PROMOTION_CANDIDATE_001.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Exact canonical-promotion candidate for the Human-accepted OpenCode 1.18.23 configuration observer; no merge or Dogfood execution authority.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 OpenCode Configuration Observer Canonical Promotion Candidate 001",
+      "updated_at": "2026-10-29T17:58:21Z"
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
