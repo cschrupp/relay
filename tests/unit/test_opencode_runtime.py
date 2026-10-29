@@ -79,6 +79,8 @@ def permission_profile(*, ask: tuple[str, ...] = ()) -> OpenCodePermissionProfil
     return OpenCodePermissionProfile(
         reference=request.basis.permission_profile_ref,
         agent_id="relay-safe-agent",
+        expected_agent_mode="primary",
+        expected_agent_hidden=False,
         allow=("read", "edit"),
         deny=("external_directory", "git_push"),
         ask=ask,
