@@ -6082,6 +6082,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_69a2ab72-91dc-4fac-8ca8-b4a501bb0115",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Independent Implementation Re-Review 002",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_REVIEW_002.md",
+      "content_digest": "sha256:a5c5bcf6cdde2bea9e2f0a43d46e6970ef05bdc8c2d93116d1d81dfaf6199575",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-REVIEW-002",
+      "updated_at": "2026-10-29T16:25:00Z",
+      "scope": "Independent ACCEPT re-review of Candidate 004 at d9b76925a67c139dbc88e91fc5fd12946aa82ea8; F001-F007 closed; F008 retained as low nonblocking test debt; no execution or promotion authority.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_68c12c4c-c2fc-4496-8710-4f579cb16dd3",
       "revision": 1,
       "title": "Slice 3.1 OpenCode Configuration Observer Corrective Implementation Authorization 001",
