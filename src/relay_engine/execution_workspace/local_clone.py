@@ -23,15 +23,12 @@ from relay_engine.execution_workspace.evaluation import (
 )
 from relay_engine.execution_workspace.models import (
     ControlStrength,
-    CredentialExposureMode,
-    ExternalSideEffectMode,
-    NetworkMode,
     ProtectedAssetObservation,
     ProviderInjectedFileCapability,
     RepositoryMetadataAccess,
-    ShellMode,
     WorkspaceBackendKind,
     WorkspaceBoundaryClass,
+    WorkspaceCandidateCapture,
     WorkspaceChangeEntry,
     WorkspaceChangeManifest,
     WorkspaceEntryKind,
@@ -49,6 +46,7 @@ from relay_engine.execution_workspace.models import (
     WorkspaceRetentionMode,
     WorkspaceTeardownEvidence,
     WorkspaceTerminalDisposition,
+    digest_workspace_change_manifest,
 )
 from relay_engine.execution_workspace.provider import (
     WorkspaceProviderError,
@@ -116,10 +114,10 @@ class LocalCloneWorkspaceProvider:
             backend_kind=WorkspaceBackendKind.LOCAL_CLONE,
             boundary_class=WorkspaceBoundaryClass.SAME_USER_NO_SECURITY_BOUNDARY,
             property_capabilities=capabilities,
-            supported_shell_modes=(ShellMode.DENY,),
-            supported_network_modes=(NetworkMode.DENY_ALL,),
-            supported_external_side_effect_modes=(ExternalSideEffectMode.DENY_MUTATING_EFFECTS,),
-            supported_credential_exposure_modes=(CredentialExposureMode.NONE,),
+            supported_shell_modes=(),
+            supported_network_modes=(),
+            supported_external_side_effect_modes=(),
+            supported_credential_exposure_modes=(),
             supported_resource_dimensions=(),
             supported_repository_metadata_modes=(RepositoryMetadataAccess.READ_ONLY,),
             path_control_capabilities=(),
@@ -376,53 +374,122 @@ class LocalCloneWorkspaceProvider:
     def extract_changes(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceChangeManifest:
         self._require_instance(instance_ref)
         try:
-            baseline = self._git_tree_states(
-                instance_ref.root,
-                instance_ref.source_commit.sha,
-                failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
-            )
             current = self._worktree_states(
                 Path(instance_ref.root),
                 failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
             )
-            plan = self._plans[instance_ref.workspace_id]
-            injected = {item.path: item for item in plan.provider_injected_files}
-            for path, requirement in injected.items():
-                baseline[path] = WorkspaceEntryState(
-                    kind=WorkspaceEntryKind.REGULAR_FILE,
-                    content_digest=requirement.content_digest,
-                    symlink_target_digest=None,
-                    executable=False,
-                )
-                state = current.get(path)
-                if (
-                    state is not None
-                    and state.kind is WorkspaceEntryKind.REGULAR_FILE
-                    and state.content_digest == requirement.content_digest
-                    and state.executable is False
-                ):
-                    baseline.pop(path)
-                    current.pop(path)
-            paths = sorted(set(baseline) | set(current))
-            entries = tuple(
-                WorkspaceChangeEntry(path=path, before=baseline.get(path), after=current.get(path))
-                for path in paths
-                if baseline.get(path) != current.get(path)
-            )
-            if self._source_snapshot() != self._source_snapshots[instance_ref.workspace_id]:
-                raise WorkspaceProviderError(
-                    WorkspaceProviderErrorCode.CHANGESET_FAILED,
-                    "source repository changed after provisioning",
-                )
-            return WorkspaceChangeManifest(
-                instance_ref=instance_ref, source_commit=instance_ref.source_commit, entries=entries
-            )
+            return self._change_manifest_from_states(instance_ref, current)
         except WorkspaceProviderError:
             raise
         except Exception as exc:
             raise WorkspaceProviderError(
                 WorkspaceProviderErrorCode.CHANGESET_FAILED, "workspace change extraction failed"
             ) from exc
+
+    def capture_candidate(
+        self,
+        instance_ref: WorkspaceInstanceRef,
+        changes: WorkspaceChangeManifest,
+    ) -> WorkspaceCandidateCapture:
+        """Write a content-addressed tree object without changing the worktree or real index."""
+
+        self._require_instance(instance_ref)
+        if changes.instance_ref != instance_ref:
+            raise WorkspaceProviderError(
+                WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                "candidate changes do not bind the exact workspace",
+            )
+        root = Path(instance_ref.root)
+        git_dir = Path(self._git(root, "rev-parse", "--absolute-git-dir").strip())
+        descriptor, index_path = tempfile.mkstemp(prefix="relay-candidate-index-", dir=git_dir)
+        os.close(descriptor)
+        temporary_index = Path(index_path)
+        temporary_index.unlink()
+        environment = {"GIT_INDEX_FILE": str(temporary_index)}
+        try:
+            self._git_bytes(root, "read-tree", "HEAD", extra_env=environment)
+            self._git_bytes(
+                root,
+                "add",
+                "--all",
+                extra_env=environment,
+            )
+            tree_object_id = (
+                self._git_bytes(root, "write-tree", extra_env=environment).decode("ascii").strip()
+            )
+            captured_states = self._git_tree_states(
+                instance_ref.root,
+                tree_object_id,
+                failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
+            )
+            captured_manifest = self._change_manifest_from_states(instance_ref, captured_states)
+            captured_manifest_digest = digest_workspace_change_manifest(captured_manifest)
+            if captured_manifest_digest != digest_workspace_change_manifest(changes):
+                raise WorkspaceProviderError(
+                    WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                    "workspace changed between manifest extraction and candidate capture",
+                )
+            object_format = self._git(root, "rev-parse", "--show-object-format").strip()
+            return WorkspaceCandidateCapture(
+                instance_ref=instance_ref,
+                source_commit=instance_ref.source_commit,
+                git_object_format=object_format,
+                tree_object_id=tree_object_id,
+                change_manifest_digest=captured_manifest_digest,
+                captured_at=datetime.now(UTC).isoformat(),
+            )
+        except (OSError, subprocess.CalledProcessError, UnicodeError) as exc:
+            raise WorkspaceProviderError(
+                WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                "immutable candidate tree capture failed",
+            ) from exc
+        finally:
+            temporary_index.unlink(missing_ok=True)
+            temporary_index.with_suffix(temporary_index.suffix + ".lock").unlink(missing_ok=True)
+
+    def _change_manifest_from_states(
+        self,
+        instance_ref: WorkspaceInstanceRef,
+        current: dict[str, WorkspaceEntryState],
+    ) -> WorkspaceChangeManifest:
+        baseline = self._git_tree_states(
+            instance_ref.root,
+            instance_ref.source_commit.sha,
+            failure_code=WorkspaceProviderErrorCode.CHANGESET_FAILED,
+        )
+        plan = self._plans[instance_ref.workspace_id]
+        for requirement in plan.provider_injected_files:
+            baseline[requirement.path] = WorkspaceEntryState(
+                kind=WorkspaceEntryKind.REGULAR_FILE,
+                content_digest=requirement.content_digest,
+                symlink_target_digest=None,
+                executable=False,
+            )
+            state = current.get(requirement.path)
+            if (
+                state is not None
+                and state.kind is WorkspaceEntryKind.REGULAR_FILE
+                and state.content_digest == requirement.content_digest
+                and state.executable is False
+            ):
+                baseline.pop(requirement.path)
+                current.pop(requirement.path)
+        paths = sorted(set(baseline) | set(current))
+        entries = tuple(
+            WorkspaceChangeEntry(path=path, before=baseline.get(path), after=current.get(path))
+            for path in paths
+            if baseline.get(path) != current.get(path)
+        )
+        if self._source_snapshot() != self._source_snapshots[instance_ref.workspace_id]:
+            raise WorkspaceProviderError(
+                WorkspaceProviderErrorCode.CHANGESET_FAILED,
+                "source repository changed after provisioning",
+            )
+        return WorkspaceChangeManifest(
+            instance_ref=instance_ref,
+            source_commit=instance_ref.source_commit,
+            entries=entries,
+        )
 
     def teardown(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceTeardownEvidence:
         self._require_instance(instance_ref)
@@ -532,7 +599,7 @@ class LocalCloneWorkspaceProvider:
         return states
 
     @staticmethod
-    def _git_bytes(cwd: Path, *args: str) -> bytes:
+    def _git_bytes(cwd: Path, *args: str, extra_env: dict[str, str] | None = None) -> bytes:
         env = {
             "PATH": os.environ.get("PATH", ""),
             "GIT_CONFIG_NOSYSTEM": "1",
@@ -540,6 +607,8 @@ class LocalCloneWorkspaceProvider:
             "GIT_TERMINAL_PROMPT": "0",
             "GIT_OPTIONAL_LOCKS": "0",
         }
+        if extra_env is not None:
+            env.update(extra_env)
         try:
             result = subprocess.run(
                 ["git", *args],

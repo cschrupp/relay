@@ -16,6 +16,7 @@ from typing import Any, cast
 from urllib.parse import quote, urlsplit
 
 import httpx
+from pydantic import model_validator
 
 from relay_engine.agent_runtime.boundary import (
     RuntimeEvidenceCompleteness,
@@ -47,7 +48,9 @@ from relay_engine.agent_runtime.models import (
     RuntimeStatus,
     RuntimeUsage,
 )
-from relay_engine.domain import new_id
+from relay_engine.domain import ContentDigest, new_id
+from relay_engine.domain._base import DomainModel
+from relay_engine.role_contracts import RequirementStatus
 
 OPENCODE_RUNTIME_ID = "opencode"
 OPENCODE_API_GENERATION = "v2"
@@ -116,6 +119,9 @@ class OpenCodePermissionProfile:
     allow: tuple[str, ...]
     deny: tuple[str, ...]
     ask: tuple[str, ...] = ()
+    allowed_plugins: tuple[str, ...] = ()
+    allowed_mcp_servers: tuple[str, ...] = ()
+    allowed_subagents: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.agent_id.strip() or len(self.agent_id) > 128:
@@ -127,6 +133,184 @@ class OpenCodePermissionProfile:
             raise ValueError("OpenCode permission rules must be nonblank and bounded")
         if len(set(all_rules)) != len(all_rules):
             raise ValueError("OpenCode permission rules must not overlap or repeat")
+        for label, values in (
+            ("plugin", self.allowed_plugins),
+            ("MCP server", self.allowed_mcp_servers),
+            ("subagent", self.allowed_subagents),
+        ):
+            if values != tuple(sorted(set(values))) or any(not value.strip() for value in values):
+                raise ValueError(f"allowed {label} identities must be unique and sorted")
+
+
+class OpenCodeConfigurationObserverRef(DomainModel):
+    """Stable identity of the mechanism qualified to observe OpenCode configuration."""
+
+    observer_id: str
+    content_digest: ContentDigest
+
+    @model_validator(mode="after")
+    def valid_observer_identity(self) -> OpenCodeConfigurationObserverRef:
+        if not self.observer_id.strip() or len(self.observer_id) > 160:
+            raise ValueError("OpenCode configuration observer ID must be nonblank and bounded")
+        return self
+
+
+class OpenCodeConfigurationQualificationRef(DomainModel):
+    """Exact version-specific qualification of the configuration observation contract."""
+
+    qualification_id: str
+    content_digest: ContentDigest
+    runtime_version: str
+    runtime_api_generation: str
+    adapter_version: str
+    observer_ref: OpenCodeConfigurationObserverRef
+
+    @model_validator(mode="after")
+    def content_digest_matches_payload(self) -> OpenCodeConfigurationQualificationRef:
+        self.verify_content_digest()
+        return self
+
+    def verify_content_digest(self) -> None:
+        """Require the source digest to commit to the complete qualification payload."""
+
+        payload = self.model_dump(mode="json", exclude={"content_digest"})
+        canonical_payload = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        expected = "sha256:" + hashlib.sha256(canonical_payload).hexdigest()
+        if self.content_digest != expected:
+            raise ValueError("OpenCode configuration qualification digest does not match payload")
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        qualification_id: str,
+        runtime_version: str,
+        runtime_api_generation: str,
+        adapter_version: str,
+        observer_ref: OpenCodeConfigurationObserverRef,
+    ) -> OpenCodeConfigurationQualificationRef:
+        """Build a qualification ref using its canonical content digest."""
+
+        payload = {
+            "schema_version": 1,
+            "qualification_id": qualification_id,
+            "runtime_version": runtime_version,
+            "runtime_api_generation": runtime_api_generation,
+            "adapter_version": adapter_version,
+            "observer_ref": observer_ref.model_dump(mode="json"),
+        }
+        canonical_payload = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        return cls(
+            qualification_id=qualification_id,
+            content_digest="sha256:" + hashlib.sha256(canonical_payload).hexdigest(),
+            runtime_version=runtime_version,
+            runtime_api_generation=runtime_api_generation,
+            adapter_version=adapter_version,
+            observer_ref=observer_ref,
+        )
+
+
+@dataclass(frozen=True)
+class OpenCodeConfigurationBindingReader:
+    """Configuration reader whose identity is bound by an accepted qualification."""
+
+    observer_ref: OpenCodeConfigurationObserverRef
+    read: Callable[[RuntimeExecutionRequest, RuntimeDescriptor], OpenCodeConfigurationBinding]
+
+    def __post_init__(self) -> None:
+        if not callable(self.read):
+            raise ValueError("OpenCode configuration binding reader must be callable")
+
+
+class OpenCodeConfigurationBinding(DomainModel):
+    """Immutable observation of the effective configuration for one OpenCode agent."""
+
+    binding_id: str
+    runtime_id: str
+    runtime_version: str
+    runtime_api_generation: str
+    adapter_version: str
+    integration_qualification_ref: OpenCodeConfigurationQualificationRef
+    observer_ref: OpenCodeConfigurationObserverRef
+    permission_profile_ref: RuntimePermissionProfileRef
+    agent_id: str
+    configuration_source_refs: tuple[str, ...]
+    effective_configuration_digest: ContentDigest
+    normalized_allow_rules: tuple[str, ...]
+    normalized_deny_rules: tuple[str, ...]
+    normalized_ask_rules: tuple[str, ...]
+    effective_tool_exposure: tuple[str, ...]
+    shell_exposed: bool
+    plugin_exposure: tuple[str, ...]
+    mcp_exposure: tuple[str, ...]
+    subagent_exposure: tuple[str, ...]
+    precedence_complete: bool
+    observation_source: str
+    trust_basis: str
+    provenance_digest: ContentDigest
+    observed_at: datetime
+    status: RequirementStatus
+
+    @model_validator(mode="after")
+    def canonical_binding(self) -> OpenCodeConfigurationBinding:
+        for name in (
+            "normalized_allow_rules",
+            "normalized_deny_rules",
+            "normalized_ask_rules",
+            "effective_tool_exposure",
+            "plugin_exposure",
+            "mcp_exposure",
+            "subagent_exposure",
+        ):
+            values = getattr(self, name)
+            if values != tuple(sorted(set(values))):
+                raise ValueError(f"{name} must be unique and canonically ordered")
+        if len(self.configuration_source_refs) != len(set(self.configuration_source_refs)):
+            raise ValueError("configuration source refs must be unique in precedence order")
+        if (
+            not self.agent_id.strip()
+            or not self.observation_source.strip()
+            or not self.trust_basis.strip()
+        ):
+            raise ValueError("configuration binding identity and provenance must be explicit")
+        return self
+
+    @property
+    def content_digest(self) -> ContentDigest:
+        payload = json.dumps(
+            self.model_dump(mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+        return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+    @property
+    def ref(self) -> OpenCodeConfigurationBindingRef:
+        return OpenCodeConfigurationBindingRef(
+            binding_id=self.binding_id,
+            content_digest=self.content_digest,
+        )
+
+
+class OpenCodeConfigurationBindingRef(DomainModel):
+    """Immutable reference to one exact effective OpenCode configuration."""
+
+    binding_id: str
+    content_digest: ContentDigest
 
 
 @dataclass(slots=True)
@@ -236,6 +420,8 @@ class OpenCodeRuntime:
         event_buffer_size: int = 256,
         executable_digest: str | None = None,
         configuration_digest: str | None = None,
+        configuration_qualification_ref: OpenCodeConfigurationQualificationRef | None = None,
+        configuration_binding_reader: OpenCodeConfigurationBindingReader | None = None,
         permission_attestation_reader: Callable[
             [RuntimeRequestV2, RuntimeSessionBinding], RuntimePermissionAttestation
         ]
@@ -277,6 +463,8 @@ class OpenCodeRuntime:
         self._event_buffer_size = event_buffer_size
         self._executable_digest = executable_digest
         self._configuration_digest = configuration_digest
+        self._configuration_qualification_ref = configuration_qualification_ref
+        self._configuration_binding_reader = configuration_binding_reader
         self._permission_attestation_reader = permission_attestation_reader
         self._permission_attestation_id_factory = permission_attestation_id_factory or (
             lambda: new_id("evd_")
@@ -287,6 +475,7 @@ class OpenCodeRuntime:
             follow_redirects=False,
         )
         self._bindings: dict[str, RuntimeSessionBinding] = {}
+        self._configuration_bindings: dict[str, tuple[str, OpenCodeConfigurationBinding]] = {}
         self._v2_bindings: dict[str, tuple[str, RuntimeSessionBinding]] = {}
         self._permission_attestations: dict[
             str, tuple[str, RuntimeSessionBinding, RuntimePermissionAttestation]
@@ -462,15 +651,193 @@ class OpenCodeRuntime:
                 runtime_id=OPENCODE_RUNTIME_ID,
                 session_id=session_id,
             )
+            actual_provider, actual_model = self._actual_model_identity(session_data)
+            identity_status = (
+                RuntimeIdentityCompleteness.FULL
+                if actual_provider is not None and actual_model is not None
+                else RuntimeIdentityCompleteness.PARTIAL
+                if actual_provider is not None or actual_model is not None
+                else RuntimeIdentityCompleteness.UNKNOWN
+            )
             binding = RuntimeSessionBinding(
                 execution_id=execution_id,
                 runtime_session=runtime_session,
                 request_digest=request.request_digest,
                 workspace_id=request.basis.workspace.workspace_id,
                 created_at=datetime.now(UTC),
+                actual_provider_id=actual_provider,
+                actual_model_id=actual_model,
+                actual_identity_status=identity_status,
             )
             self._bindings[execution_id] = binding
             return binding
+
+    async def prepare_trusted_local_session(
+        self,
+        request: RuntimeExecutionRequest,
+        descriptor: RuntimeDescriptor,
+        accepted_qualification_source_refs: tuple[tuple[str, str], ...],
+    ) -> tuple[OpenCodeConfigurationBinding, RuntimeSessionBinding]:
+        """Verify snapshot-qualified effective configuration before session creation."""
+
+        if (
+            self._configuration_binding_reader is None
+            or self._configuration_qualification_ref is None
+        ):
+            raise fail(
+                RuntimeFailureCategory.UNSUPPORTED_CAPABILITY,
+                "Version-qualified OpenCode configuration evidence is unavailable.",
+                execution_id=request.basis.execution_id,
+            )
+        try:
+            self._configuration_qualification_ref.verify_content_digest()
+        except ValueError:
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode configuration qualification digest does not bind its payload.",
+                execution_id=request.basis.execution_id,
+            ) from None
+        current_descriptor = await self.describe()
+        if current_descriptor != descriptor:
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "OpenCode descriptor changed before configuration binding.",
+                execution_id=request.basis.execution_id,
+            )
+        qualification_identity = (
+            self._configuration_qualification_ref.qualification_id,
+            self._configuration_qualification_ref.content_digest,
+        )
+        if (
+            accepted_qualification_source_refs != (qualification_identity,)
+            or self._configuration_binding_reader.observer_ref
+            != self._configuration_qualification_ref.observer_ref
+        ):
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode configuration qualification or observer does not exactly match "
+                "the accepted authority binding.",
+                execution_id=request.basis.execution_id,
+            )
+        self._validate_request_digest(request)
+        self._validate_permission_profile(
+            request.basis.permission_profile_ref, request.basis.execution_id
+        )
+        try:
+            binding = self._configuration_binding_reader.read(request, descriptor)
+        except Exception:
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode effective configuration could not be resolved exactly.",
+                execution_id=request.basis.execution_id,
+            ) from None
+        self._validate_configuration_binding(binding, request, descriptor)
+        existing = self._configuration_bindings.get(request.basis.execution_id)
+        if existing is not None and existing != (request.request_digest, binding):
+            raise fail(
+                RuntimeFailureCategory.REQUEST_CONFLICT,
+                "Execution ID is already bound to a different OpenCode configuration.",
+                execution_id=request.basis.execution_id,
+            )
+        self._configuration_bindings[request.basis.execution_id] = (
+            request.request_digest,
+            binding,
+        )
+        session = await self.create_session(request)
+        return binding, session
+
+    async def close_prepared_session(self, binding: RuntimeSessionBinding) -> RequirementStatus:
+        """Close one exact prompt-free session; unsupported cleanup stays indeterminate."""
+
+        known = self._bindings.get(binding.execution_id)
+        if known != binding:
+            return RequirementStatus.INDETERMINATE
+        try:
+            response = await self._client.delete(
+                self._url("/api/session/" + quote(binding.runtime_session.session_id, safe=""))
+            )
+        except httpx.RequestError:
+            return RequirementStatus.INDETERMINATE
+        if response.status_code in {200, 204}:
+            return RequirementStatus.SATISFIED
+        if response.status_code in {401, 403, 409}:
+            return RequirementStatus.UNSATISFIED
+        return RequirementStatus.INDETERMINATE
+
+    def _validate_configuration_binding(
+        self,
+        binding: OpenCodeConfigurationBinding,
+        request: RuntimeExecutionRequest,
+        descriptor: RuntimeDescriptor,
+    ) -> None:
+        qualification = self._configuration_qualification_ref
+        profile = self._permission_profile
+        expected_configuration_payload = {
+            "agent_id": binding.agent_id,
+            "configuration_source_refs": binding.configuration_source_refs,
+            "normalized_allow_rules": binding.normalized_allow_rules,
+            "normalized_deny_rules": binding.normalized_deny_rules,
+            "normalized_ask_rules": binding.normalized_ask_rules,
+            "effective_tool_exposure": binding.effective_tool_exposure,
+            "plugin_exposure": binding.plugin_exposure,
+            "mcp_exposure": binding.mcp_exposure,
+            "subagent_exposure": binding.subagent_exposure,
+        }
+        expected_configuration_digest = (
+            "sha256:"
+            + hashlib.sha256(
+                json.dumps(
+                    expected_configuration_payload,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    allow_nan=False,
+                ).encode("utf-8")
+            ).hexdigest()
+        )
+        if (
+            qualification is None
+            or binding.integration_qualification_ref != qualification
+            or binding.observer_ref != qualification.observer_ref
+            or self._configuration_binding_reader is None
+            or self._configuration_binding_reader.observer_ref != qualification.observer_ref
+            or qualification.runtime_version != descriptor.runtime_version
+            or qualification.runtime_api_generation != descriptor.api_generation
+            or qualification.adapter_version != descriptor.adapter_version
+            or binding.runtime_id != descriptor.runtime_id
+            or binding.runtime_version != descriptor.runtime_version
+            or binding.runtime_api_generation != descriptor.api_generation
+            or binding.adapter_version != descriptor.adapter_version
+            or binding.permission_profile_ref != request.basis.permission_profile_ref
+            or binding.agent_id != profile.agent_id
+            or binding.normalized_allow_rules != tuple(sorted(profile.allow))
+            or binding.normalized_deny_rules != tuple(sorted(profile.deny))
+            or binding.normalized_ask_rules != tuple(sorted(profile.ask))
+            or binding.effective_tool_exposure
+            != tuple(
+                sorted(
+                    (
+                        *profile.allow,
+                        *profile.allowed_plugins,
+                        *profile.allowed_mcp_servers,
+                        *profile.allowed_subagents,
+                    )
+                )
+            )
+            or binding.shell_exposed != ("bash" in binding.effective_tool_exposure)
+            or binding.plugin_exposure != profile.allowed_plugins
+            or binding.mcp_exposure != profile.allowed_mcp_servers
+            or binding.subagent_exposure != profile.allowed_subagents
+            or not binding.precedence_complete
+            or not binding.configuration_source_refs
+            or binding.status is not RequirementStatus.SATISFIED
+            or binding.effective_configuration_digest != expected_configuration_digest
+        ):
+            raise fail(
+                RuntimeFailureCategory.CONFIGURATION,
+                "OpenCode configuration binding does not match exact qualified policy.",
+                execution_id=request.basis.execution_id,
+            )
 
     async def create_session_v2(self, request: RuntimeRequestV2) -> RuntimeSessionBinding:
         """Create one prompt-free session for a placement-bound V2 request."""

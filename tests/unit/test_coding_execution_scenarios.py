@@ -189,6 +189,8 @@ def test_unobservable_output_byte_limit_yields_exact_predecessor_contract_gap() 
 
 def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
 
+    from datetime import UTC, datetime
+
     from test_execution_workspace_evaluation import conformance_fixture, resolver_fixture
     from test_work_packet_models import manifest
 
@@ -196,8 +198,16 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         RuntimeDescriptor,
         RuntimeExecutionBasis,
         RuntimeExecutionRequest,
+        RuntimeIdentityCompleteness,
         RuntimeInputPayload,
+        RuntimeSessionBinding,
+        RuntimeSessionRef,
         digest_execution_basis,
+    )
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationBinding,
+        OpenCodeConfigurationObserverRef,
+        OpenCodeConfigurationQualificationRef,
     )
     from relay_engine.coding_execution.evaluation import (
         digest_runtime_payload_content,
@@ -206,13 +216,17 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
     from relay_engine.coding_execution.models import (
         ConsumableReservationBinding,
         ExecutionEvidenceBundle,
+        ExecutionProfile,
         ExecutionSubject,
         HumanGrantBinding,
+        PermissionEvidenceProvenance,
+        RuntimeEvidenceBindingRef,
         RuntimePayloadEvidence,
         RuntimePermissionEvidence,
         TerminalExecutionResult,
         _digest_canonical_model,
         digest_evaluator_handoff,
+        digest_execution_profile_binding,
     )
     from relay_engine.domain import ActorKind, ActorRef
     from relay_engine.execution_workspace import derive_runtime_workspace_attachment
@@ -306,6 +320,57 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         credential_exposure_status="CLEAR",
         evidence_digest="sha256:" + "d" * 64,
     )
+    observer_ref = OpenCodeConfigurationObserverRef(
+        observer_id="deterministic-test-observer-v1",
+        content_digest="sha256:" + "5" * 64,
+    )
+    configuration_binding = OpenCodeConfigurationBinding(
+        binding_id="configuration-binding-exact",
+        runtime_id=selection.runtime_id,
+        runtime_version="test-runtime-version",
+        runtime_api_generation=descriptor.api_generation,
+        adapter_version=descriptor.adapter_version,
+        integration_qualification_ref=OpenCodeConfigurationQualificationRef.create(
+            qualification_id="configuration-qualification",
+            runtime_version="test-runtime-version",
+            runtime_api_generation=descriptor.api_generation,
+            adapter_version=descriptor.adapter_version,
+            observer_ref=observer_ref,
+        ),
+        observer_ref=observer_ref,
+        permission_profile_ref=permission_ref,
+        agent_id="test-agent",
+        configuration_source_refs=("test-agent-config",),
+        effective_configuration_digest="sha256:" + "7" * 64,
+        normalized_allow_rules=(),
+        normalized_deny_rules=(),
+        normalized_ask_rules=(),
+        effective_tool_exposure=(),
+        shell_exposed=False,
+        plugin_exposure=(),
+        mcp_exposure=(),
+        subagent_exposure=(),
+        precedence_complete=True,
+        observation_source="deterministic-test-evidence",
+        trust_basis="test-only",
+        provenance_digest="sha256:" + "6" * 64,
+        observed_at=datetime(2026, 10, 25, tzinfo=UTC),
+        status=RequirementStatus.SATISFIED,
+    )
+    configuration_ref = RuntimeEvidenceBindingRef(
+        evidence_id=configuration_binding.ref.binding_id,
+        content_digest=configuration_binding.ref.content_digest,
+    )
+    runtime_session_binding = RuntimeSessionBinding(
+        execution_id=execution_id,
+        runtime_session=RuntimeSessionRef(runtime_id=selection.runtime_id, session_id="session-1"),
+        request_digest=request.request_digest,
+        workspace_id=attachment.workspace_id,
+        created_at=datetime(2026, 10, 25, tzinfo=UTC),
+        actual_provider_id=selection.requested_provider_id,
+        actual_model_id=selection.requested_model_id,
+        actual_identity_status=RuntimeIdentityCompleteness.FULL,
+    )
     runtime_permission_evidence = RuntimePermissionEvidence(
         execution_id=execution_id,
         runtime_id=selection.runtime_id,
@@ -318,6 +383,9 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         actual_provider_id=selection.requested_provider_id,
         actual_model_id=selection.requested_model_id,
         provenance_status=RequirementStatus.SATISFIED,
+        provenance=PermissionEvidenceProvenance.CONFIGURATION_DERIVED,
+        configuration_binding_ref=configuration_ref,
+        session_binding=runtime_session_binding,
     )
     subject = ExecutionSubject(
         project_id=packet.project_id,
@@ -338,8 +406,19 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         workspace_instance=workspace_instance,
         runtime_workspace_attachment=attachment,
         workspace_provider_ref=workspace_provider_ref(provider),
+        execution_profile=ExecutionProfile.TRUSTED_LOCAL_EXECUTION,
+        execution_profile_binding_digest=digest_execution_profile_binding(
+            ExecutionProfile.TRUSTED_LOCAL_EXECUTION,
+            candidate_digest,
+            packet_ref,
+            workspace_plan_ref(plan),
+            workspace_provider_ref(provider),
+        ),
         runtime_descriptor=descriptor,
+        runtime_configuration_binding_ref=configuration_ref,
         runtime_request=request,
+        runtime_session=runtime_session_binding.runtime_session,
+        runtime_session_binding=runtime_session_binding,
         runtime_payload_evidence=runtime_payload_evidence,
         runtime_permission_evidence=runtime_permission_evidence,
         actual_provider_id=selection.requested_provider_id,
@@ -380,7 +459,8 @@ def test_implementer_cannot_self_accept_exact_terminal_handoff() -> None:
         runtime_request=request,
         runtime_payload_evidence=runtime_payload_evidence,
         runtime_permission_evidence=runtime_permission_evidence,
-        runtime_session=None,
+        runtime_configuration_binding=configuration_binding,
+        runtime_session=runtime_session_binding,
         runtime_handle=None,
         runtime_inspection=None,
         workspace_instance=workspace_instance,

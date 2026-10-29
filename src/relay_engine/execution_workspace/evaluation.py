@@ -57,6 +57,26 @@ _STRENGTH_RANK = {
     ControlStrength.BOUNDARY_ENFORCED: 2,
 }
 
+_RUNTIME_OWNED_PROPERTIES = {
+    WorkspaceProperty.TOOL_EXPOSURE_CONTROL,
+    WorkspaceProperty.NETWORK_REACHABILITY_CONTROL,
+    WorkspaceProperty.EXTERNAL_SIDE_EFFECT_CONTROL,
+    WorkspaceProperty.CREDENTIAL_EXPOSURE_CONTROL,
+    WorkspaceProperty.RESOURCE_LIMIT_CONTROL,
+}
+
+
+def _provider_requirements(plan: WorkspacePlan, *, trusted_local: bool):
+    return tuple(
+        requirement
+        for requirement in plan.property_requirements
+        if not (
+            trusted_local
+            and requirement.property in _RUNTIME_OWNED_PROPERTIES
+            and requirement.minimum_strength is not ControlStrength.BOUNDARY_ENFORCED
+        )
+    )
+
 
 def canonical_workspace_policy_json(policy: WorkspacePolicyDefinition) -> str:
     validated = type(policy).model_validate(policy.model_dump(mode="python"))
@@ -135,23 +155,31 @@ def _provider_capability(descriptor: WorkspaceProviderDescriptor, property_key: 
 def _semantic_compatibility(
     plan: WorkspacePlan,
     descriptor: WorkspaceProviderDescriptor,
+    *,
+    trusted_local: bool = False,
 ) -> tuple[list[WorkspaceReason], list[WorkspaceReason]]:
     failures: list[WorkspaceReason] = []
     unknown: list[WorkspaceReason] = []
-    if plan.shell_policy.mode not in descriptor.supported_shell_modes:
+    if not trusted_local and plan.shell_policy.mode not in descriptor.supported_shell_modes:
         failures.append(WorkspaceReason.SHELL_POLICY_UNSUPPORTED)
-    if plan.network_policy.mode not in descriptor.supported_network_modes:
+    if not trusted_local and plan.network_policy.mode not in descriptor.supported_network_modes:
         failures.append(WorkspaceReason.NETWORK_POLICY_UNSUPPORTED)
-    if plan.external_side_effect_policy.mode not in descriptor.supported_external_side_effect_modes:
+    if (
+        not trusted_local
+        and plan.external_side_effect_policy.mode
+        not in descriptor.supported_external_side_effect_modes
+    ):
         failures.append(WorkspaceReason.EXTERNAL_SIDE_EFFECT_POLICY_UNSUPPORTED)
-    for grant in plan.workspace_credential_grants:
-        if grant.exposure_mode not in descriptor.supported_credential_exposure_modes:
-            failures.append(WorkspaceReason.CREDENTIAL_EXPOSURE_UNSUPPORTED)
+    if not trusted_local:
+        for grant in plan.workspace_credential_grants:
+            if grant.exposure_mode not in descriptor.supported_credential_exposure_modes:
+                failures.append(WorkspaceReason.CREDENTIAL_EXPOSURE_UNSUPPORTED)
     if plan.repository_metadata_policy.access not in descriptor.supported_repository_metadata_modes:
         failures.append(WorkspaceReason.PROVIDER_CAPABILITY_INSUFFICIENT)
-    for dimension in _required_resource_dimensions_from_plan(plan):
-        if dimension not in descriptor.supported_resource_dimensions:
-            failures.append(WorkspaceReason.RESOURCE_LIMIT_UNSUPPORTED)
+    if not trusted_local:
+        for dimension in _required_resource_dimensions_from_plan(plan):
+            if dimension not in descriptor.supported_resource_dimensions:
+                failures.append(WorkspaceReason.RESOURCE_LIMIT_UNSUPPORTED)
     capabilities = {
         item.file_key: item.content_digest
         for item in descriptor.provider_injected_file_capabilities
@@ -160,7 +188,7 @@ def _semantic_compatibility(
         if capabilities.get(requirement.provider_file_key) != requirement.content_digest:
             failures.append(WorkspaceReason.PROVIDER_CAPABILITY_INSUFFICIENT)
     path_capabilities = set(descriptor.path_control_capabilities)
-    for requirement in plan.property_requirements:
+    for requirement in _provider_requirements(plan, trusted_local=trusted_local):
         if requirement.property not in {
             WorkspaceProperty.FILESYSTEM_SCOPE,
             WorkspaceProperty.PATH_ESCAPE_CONTROL,
@@ -214,6 +242,8 @@ def _required_resource_dimensions_from_plan(
 def evaluate_workspace_preflight(
     plan: WorkspacePlan,
     provider_descriptor: WorkspaceProviderDescriptor | None,
+    *,
+    trusted_local: bool = False,
 ) -> WorkspacePreflight:
     """Evaluate exact plan requirements against declared provider capability."""
 
@@ -231,7 +261,7 @@ def evaluate_workspace_preflight(
         )
     reasons: list[WorkspaceReason] = []
     unsupported: list[str] = []
-    for requirement in plan.property_requirements:
+    for requirement in _provider_requirements(plan, trusted_local=trusted_local):
         capability = _provider_capability(provider_descriptor, requirement.property)
         if capability is None:
             reasons.append(WorkspaceReason.REQUIRED_WORKSPACE_PROPERTY_UNSUPPORTED)
@@ -242,7 +272,9 @@ def evaluate_workspace_preflight(
         ):
             reasons.append(WorkspaceReason.CONTROL_STRENGTH_INSUFFICIENT)
             unsupported.append(requirement.key)
-    semantic_failures, _ = _semantic_compatibility(plan, provider_descriptor)
+    semantic_failures, _ = _semantic_compatibility(
+        plan, provider_descriptor, trusted_local=trusted_local
+    )
     reasons.extend(semantic_failures)
     reasons_tuple = tuple(dict.fromkeys(reasons))
     status = RequirementStatus.UNSATISFIED if reasons_tuple else RequirementStatus.SATISFIED
@@ -274,6 +306,7 @@ def resolve_workspace_plan(
     *,
     plan_key: str,
     revision: int,
+    trusted_local: bool = False,
 ) -> WorkspacePlanResolution:
     """Resolve an exact self-contained plan from already-materialized inputs."""
 
@@ -407,7 +440,7 @@ def resolve_workspace_plan(
         resource_limits=workspace_policy.resource_limits,
         retention_policy=workspace_policy.retention_policy,
     )
-    preflight = evaluate_workspace_preflight(plan, provider_descriptor)
+    preflight = evaluate_workspace_preflight(plan, provider_descriptor, trusted_local=trusted_local)
     reasons.extend(preflight.reasons)
     if preflight.status is RequirementStatus.UNSATISFIED:
         return WorkspacePlanResolution(
@@ -492,6 +525,7 @@ def evaluate_workspace_conformance(
     facts: WorkspaceConformanceFacts,
     *,
     terminal: bool = False,
+    trusted_local: bool = False,
 ) -> WorkspaceConformance:
     """Evaluate exact-subject workspace evidence with UNSATISFIED precedence."""
 
@@ -554,7 +588,8 @@ def evaluate_workspace_conformance(
         else:
             known_failure = True
 
-    expected_keys = tuple(item.key for item in plan.property_requirements)
+    provider_requirements = _provider_requirements(plan, trusted_local=trusted_local)
+    expected_keys = tuple(item.key for item in provider_requirements)
     supplied_keys = tuple(item.property_key for item in facts.property_evidence)
     if len(supplied_keys) != len(set(supplied_keys)):
         reasons.append(WorkspaceReason.PROPERTY_EVIDENCE_UNEXPECTED)
@@ -567,7 +602,7 @@ def evaluate_workspace_conformance(
             reasons.append(WorkspaceReason.PROPERTY_EVIDENCE_UNEXPECTED)
             known_failure = True
     evidence_by_key = {item.property_key: item for item in facts.property_evidence}
-    for requirement in plan.property_requirements:
+    for requirement in provider_requirements:
         evidence = evidence_by_key.get(requirement.key)
         if evidence is None:
             indeterminate.append(requirement.key)

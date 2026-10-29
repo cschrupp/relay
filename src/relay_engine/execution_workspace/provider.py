@@ -14,6 +14,7 @@ from relay_engine.execution_workspace.boundary import (
     WorkspaceBoundaryRef,
 )
 from relay_engine.execution_workspace.models import (
+    WorkspaceCandidateCapture,
     WorkspaceChangeManifest,
     WorkspaceInspection,
     WorkspaceInstanceRef,
@@ -54,6 +55,10 @@ class WorkspaceProvider(Protocol):
     def inspect(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceInspection: ...
 
     def extract_changes(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceChangeManifest: ...
+
+    def capture_candidate(
+        self, instance_ref: WorkspaceInstanceRef, changes: WorkspaceChangeManifest
+    ) -> WorkspaceCandidateCapture: ...
 
     def teardown(self, instance_ref: WorkspaceInstanceRef) -> WorkspaceTeardownEvidence: ...
 

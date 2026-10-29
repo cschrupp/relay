@@ -10,6 +10,8 @@ from relay_engine.coding_execution.coordinator import (
 from relay_engine.coding_execution.evaluation import (
     AdmissionInputs,
     RuntimePermissionEvidence,
+    candidate_configuration_qualification_ref,
+    candidate_execution_profile,
     evaluate_admission,
     evaluate_corrective_subject_binding,
     evaluate_effective_tool_exposure,
@@ -41,6 +43,7 @@ from relay_engine.coding_execution.models import (
     digest_terminal_candidate,
     digest_terminal_result,
     execution_id_for_attempt,
+    execution_profile_authority_constraints,
 )
 
 __all__ = [
@@ -64,6 +67,8 @@ __all__ = [
     "ReworkDisposition",
     "RuntimePayloadEvidence",
     "RuntimePermissionEvidence",
+    "candidate_configuration_qualification_ref",
+    "candidate_execution_profile",
     "TerminalExecutionResult",
     "attempt_id_for_execution",
     "canonical_subject_json",
@@ -80,4 +85,5 @@ __all__ = [
     "execute_governed_attempt",
     "prior_execution_binding",
     "execution_id_for_attempt",
+    "execution_profile_authority_constraints",
 ]

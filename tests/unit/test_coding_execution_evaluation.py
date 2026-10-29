@@ -17,6 +17,7 @@ from relay_engine.agent_runtime import (
 from relay_engine.coding_execution.evaluation import (
     RuntimePermissionEvidence,
     _reservation_reasons,
+    candidate_execution_profile,
     digest_runtime_payload_content,
     evaluate_corrective_subject_binding,
     evaluate_effective_tool_exposure,
@@ -24,20 +25,29 @@ from relay_engine.coding_execution.evaluation import (
     evaluate_grant_and_reservations,
     evaluate_runtime_payload_evidence,
     evaluate_runtime_tool_events,
+    evaluate_trusted_local_runtime_controls,
 )
 from relay_engine.coding_execution.models import (
     AdmissionStatus,
     ConsumableReservationBinding,
     CorrectiveSubjectBinding,
     EvaluatorReworkBinding,
+    ExecutionProfile,
     HumanGrantBinding,
     PriorExecutionBinding,
     ReworkDisposition,
     RuntimePayloadEvidence,
     digest_evaluator_rework_record,
     execution_id_for_attempt,
+    execution_profile_authority_constraints,
 )
 from relay_engine.execution_workspace import resolve_workspace_plan
+from relay_engine.execution_workspace.models import (
+    ControlStrength,
+    WorkspacePlan,
+    WorkspaceProperty,
+    WorkspacePropertyRequirement,
+)
 from relay_engine.project_state import ConsumableRef, ConsumableState, ConsumptionRequirement
 from relay_engine.role_contracts import RequirementStatus
 from relay_engine.work_packets import (
@@ -54,8 +64,68 @@ def ready_candidate():
     scenario = _scenario(scope="execution", attempt=_ATTEMPT)
     resolution = _resolve(scenario)
     compilation = _compile(scenario, resolution)
-    assert compilation.candidate is not None
-    return scenario, compilation, compilation.candidate
+    compilation, candidate = _bind_trusted_local_profile(compilation)
+    scenario = scenario.__class__(
+        request=scenario.request,
+        snapshot=candidate.resolution.snapshot,
+        coverage=scenario.coverage,
+        records=scenario.records,
+    )
+    return scenario, compilation, candidate
+
+
+def _bind_trusted_local_profile(compilation):
+    from relay_engine.project_state import (
+        ApplicabilityEnvelope,
+        ApplicabilityEvaluation,
+        ApplicabilityResult,
+        PredicateResult,
+        QualificationFact,
+        QualificationResult,
+        ResolvedQualification,
+        SourceIdentity,
+    )
+
+    candidate = compilation.candidate
+    assert candidate is not None
+    qualification = SourceIdentity(
+        source_key="opencode-config-qualification-test-v1",
+        content_digest=_A,
+    )
+    snapshot = candidate.resolution.snapshot
+    refs = tuple(sorted((*snapshot.source_refs, qualification), key=lambda item: item.source_key))
+    snapshot = snapshot.model_copy(update={"source_refs": refs})
+    qualification_result = ResolvedQualification(
+        fact=QualificationFact(
+            qualification_key=qualification.source_key,
+            qualification_kind="opencode-configuration-observation",
+            result=QualificationResult.PASS,
+            scope_key=candidate.request.scope_key,
+            applicability=ApplicabilityEnvelope(),
+            provenance=(),
+        ),
+        applicability=ApplicabilityEvaluation(result=ApplicabilityResult.APPLICABLE),
+        accepted=PredicateResult.SATISFIED,
+    )
+    qualifications = tuple(
+        sorted(
+            (*candidate.resolution.qualifications, qualification_result),
+            key=lambda item: item.fact.qualification_key,
+        )
+    )
+    resolution = candidate.resolution.model_copy(
+        update={"snapshot": snapshot, "qualifications": qualifications}
+    )
+    constraints = tuple(
+        sorted(
+            set(candidate.work_packet_constraints)
+            | set(execution_profile_authority_constraints(ExecutionProfile.TRUSTED_LOCAL_EXECUTION))
+        )
+    )
+    candidate = candidate.model_copy(
+        update={"resolution": resolution, "work_packet_constraints": constraints}
+    )
+    return compilation.model_copy(update={"candidate": candidate}), candidate
 
 
 def rework_fixture(*, with_consumable: bool = False):
@@ -88,8 +158,13 @@ def rework_fixture(*, with_consumable: bool = False):
             "requirement_edges": (edge,),
         }
     compilation = _compile(scenario, _resolve(scenario, **facts))
-    candidate = compilation.candidate
-    assert candidate is not None
+    compilation, candidate = _bind_trusted_local_profile(compilation)
+    scenario = scenario.__class__(
+        request=scenario.request,
+        snapshot=candidate.resolution.snapshot,
+        coverage=scenario.coverage,
+        records=scenario.records,
+    )
     prior_attempt = "exec-018f47c1-7b2c-7abc-8def-123456789007"
     prior = PriorExecutionBinding(
         authority_candidate_digest="sha256:" + "b" * 64,
@@ -171,6 +246,117 @@ def test_exact_candidate_grant_and_zero_reservations_are_admissible() -> None:
         slice_id=grant.slice_id,
     )
     assert result.status is AdmissionStatus.ADMIT
+
+
+def test_execution_profile_must_be_bound_in_authority_candidate() -> None:
+    scenario, compilation, candidate = ready_candidate()
+    unbound_candidate = candidate.model_copy(update={"work_packet_constraints": ()})
+    unbound_compilation = compilation.model_copy(update={"candidate": unbound_candidate})
+    grant = HumanGrantBinding(
+        grant_record_id="human-grant-unbound-profile",
+        grant_record_digest=_A,
+        authority_candidate_digest=unbound_candidate.content_digest,
+        intended_attempt_id=_ATTEMPT,
+        project_id=scenario.snapshot.project_id,
+        slice_id="slc_018f47c1-7b2c-7abc-8def-123456789008",
+        valid=True,
+        applicable=True,
+    )
+
+    result = evaluate_grant_and_reservations(
+        unbound_compilation,
+        unbound_candidate,
+        scenario.snapshot,
+        grant,
+        (),
+        project_id=scenario.snapshot.project_id,
+        slice_id=grant.slice_id,
+    )
+
+    assert candidate_execution_profile(candidate) is ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+    assert result.status is AdmissionStatus.INDETERMINATE
+    assert "execution-profile:authority-binding-missing" in result.reasons
+
+
+def test_trusted_local_candidate_must_bind_exact_configuration_qualification_source() -> None:
+    scenario, compilation, candidate = ready_candidate()
+    snapshot = candidate.resolution.snapshot.model_copy(update={"source_refs": ()})
+    resolution = candidate.resolution.model_copy(update={"snapshot": snapshot})
+    unqualified = candidate.model_copy(update={"resolution": resolution})
+    compilation = compilation.model_copy(update={"candidate": unqualified})
+    grant = HumanGrantBinding(
+        grant_record_id="human-grant-missing-qualification",
+        grant_record_digest=_A,
+        authority_candidate_digest=unqualified.content_digest,
+        intended_attempt_id=_ATTEMPT,
+        project_id=scenario.snapshot.project_id,
+        slice_id="slc_018f47c1-7b2c-7abc-8def-123456789008",
+        valid=True,
+        applicable=True,
+    )
+
+    result = evaluate_grant_and_reservations(
+        compilation,
+        unqualified,
+        snapshot,
+        grant,
+        (),
+        project_id=scenario.snapshot.project_id,
+        slice_id=grant.slice_id,
+    )
+
+    assert result.status is AdmissionStatus.INDETERMINATE
+    assert (
+        "runtime-configuration:accepted-qualification-source-missing-or-conflicting"
+        in result.reasons
+    )
+
+
+@pytest.mark.parametrize(
+    "property_value",
+    (
+        WorkspaceProperty.NETWORK_REACHABILITY_CONTROL,
+        WorkspaceProperty.EXTERNAL_SIDE_EFFECT_CONTROL,
+    ),
+)
+@pytest.mark.parametrize(
+    "strength",
+    (ControlStrength.DETECTIVE, ControlStrength.MEDIATED),
+)
+def test_trusted_local_does_not_satisfy_unobserved_network_or_external_controls(
+    property_value: WorkspaceProperty,
+    strength: ControlStrength,
+) -> None:
+    plan = WorkspacePlan.model_construct(
+        property_requirements=(
+            WorkspacePropertyRequirement(
+                key="runtime-control",
+                property=property_value,
+                minimum_strength=strength,
+            ),
+        )
+    )
+
+    result = evaluate_trusted_local_runtime_controls(plan)
+
+    assert result.status is AdmissionStatus.INDETERMINATE
+    assert result.reasons == ("runtime-control:runtime-control:evidence-unavailable",)
+
+
+def test_boundary_enforced_network_control_cannot_use_trusted_local() -> None:
+    plan = WorkspacePlan.model_construct(
+        property_requirements=(
+            WorkspacePropertyRequirement(
+                key="network-boundary",
+                property=WorkspaceProperty.NETWORK_REACHABILITY_CONTROL,
+                minimum_strength=ControlStrength.BOUNDARY_ENFORCED,
+            ),
+        )
+    )
+
+    result = evaluate_trusted_local_runtime_controls(plan)
+
+    assert result.status is AdmissionStatus.DENY
 
 
 def test_in_scope_evaluator_rework_links_both_candidates_and_requires_fresh_grant() -> None:

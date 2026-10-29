@@ -403,11 +403,27 @@ class RuntimeSessionBinding(DomainModel):
     request_digest_v2: ContentDigest | None = None
     workspace_id: RuntimeIdentifier
     created_at: datetime
+    actual_provider_id: RuntimeIdentifier | None = None
+    actual_model_id: RuntimeIdentifier | None = None
+    actual_identity_status: RuntimeIdentityCompleteness = RuntimeIdentityCompleteness.UNKNOWN
 
     @field_validator("created_at")
     @classmethod
     def created_at_is_utc(cls, value: datetime) -> datetime:
         return _normalize_timestamp(value)
+
+    @model_validator(mode="after")
+    def actual_identity_matches_status(self) -> RuntimeSessionBinding:
+        actual_count = sum(
+            value is not None for value in (self.actual_provider_id, self.actual_model_id)
+        )
+        if (self.actual_identity_status is RuntimeIdentityCompleteness.FULL) != (actual_count == 2):
+            raise ValueError("full session identity requires exact provider and model values")
+        if self.actual_identity_status is RuntimeIdentityCompleteness.PARTIAL and actual_count != 1:
+            raise ValueError("partial session identity requires exactly one actual value")
+        if self.actual_identity_status is RuntimeIdentityCompleteness.UNKNOWN and actual_count != 0:
+            raise ValueError("unknown session identity cannot carry actual values")
+        return self
 
 
 class RuntimeExecutionHandle(DomainModel):

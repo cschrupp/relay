@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "request_key": "dogfood-001-01a17935-8a1a-77cd-b015-c2d65e07496b",
+  "outcome_key": "deterministic-dependency-resolution",
+  "scope_key": "dogfood-001",
+  "action_key": "implement-workpacket",
+  "actor": {
+    "schema_version": 1,
+    "id": "act_01a15759-f08f-75d3-a5b2-2363eaf71e4c",
+    "kind": "HUMAN",
+    "display_name": "interactive Human root authority"
+  },
+  "subject": [
+    {
+      "schema_version": 1,
+      "dimension": "fixture-source-commit",
+      "value": "0e23a593eba96ba55bdb4edaf88867dd0e0fd199"
+    },
+    {
+      "schema_version": 1,
+      "dimension": "model-id",
+      "value": "google/gemini-3.8-flash"
+    },
+    {
+      "schema_version": 1,
+      "dimension": "provider-id",
+      "value": "openrouter"
+    },
+    {
+      "schema_version": 1,
+      "dimension": "runtime-api-generation",
+      "value": "v2"
+    },
+    {
+      "schema_version": 1,
+      "dimension": "runtime-id",
+      "value": "opencode"
+    },
+    {
+      "schema_version": 1,
+      "dimension": "runtime-version",
+      "value": "0.0.0-beta-17823"
+    }
+  ],
+  "requested_predicate_keys": [],
+  "requested_subject_keys": [
+    "deterministic-dependency-resolution"
+  ],
+  "responsibility_keys": [],
+  "proposed_owner_key": null,
+  "intended_attempt_id": "exec-01a17935-8a1a-77cd-b015-c2d65e07496b"
+}

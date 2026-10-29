@@ -162,6 +162,30 @@ def test_local_clone_exact_commit_independent_objects_changes_and_teardown(tmp_p
         "symlink.txt",
         "tracked.txt",
     )
+    capture = provider.capture_candidate(result.instance_ref, manifest)
+    captured_tree = capture.tree_object_id
+    assert capture.change_manifest_digest == workspace_change_manifest_ref(manifest).content_digest
+    assert git(root, "cat-file", "-t", captured_tree) == "tree"
+    assert (
+        subprocess.run(
+            ["git", "show", f"{captured_tree}:tracked.txt"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        ).stdout
+        == b"after\n"
+    )
+    git(root, "diff", "--cached", "--quiet")
+    (root / "tracked.txt").write_text("later mutation\n", encoding="utf-8")
+    assert (
+        subprocess.run(
+            ["git", "show", f"{captured_tree}:tracked.txt"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        ).stdout
+        == b"after\n"
+    )
     entries = {entry.path: entry for entry in manifest.entries}
     assert entries["deleted.txt"].before is not None
     assert entries["deleted.txt"].after is None
@@ -176,6 +200,27 @@ def test_local_clone_exact_commit_independent_objects_changes_and_teardown(tmp_p
     teardown = provider.teardown(result.instance_ref)
     assert teardown.disposition.value == "DELETED"
     assert not root.exists()
+
+
+def test_local_clone_capture_rejects_manifest_when_workspace_changes_after_extraction(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source-capture-race"
+    source.mkdir()
+    git(source, "init", "-b", "main")
+    plan = make_plan(source)
+    provider = LocalCloneWorkspaceProvider(source, workspace_parent=tmp_path / "workspaces")
+    result = provider.provision(plan)
+    root = Path(result.instance_ref.root)
+    target = root / "tracked.txt"
+    target.write_text("captured version\n", encoding="utf-8")
+    extracted = provider.extract_changes(result.instance_ref)
+
+    target.write_text("changed before capture\n", encoding="utf-8")
+    with pytest.raises(WorkspaceProviderError, match="changed between manifest extraction"):
+        provider.capture_candidate(result.instance_ref, extracted)
+
+    provider.teardown(result.instance_ref)
 
 
 def test_local_clone_retention_policy_is_observed(tmp_path: Path) -> None:

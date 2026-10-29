@@ -1,0 +1,51 @@
+{
+  "allowed_actions": [
+    "CONTEXT_READ",
+    "IMPLEMENTATION_MUTATE",
+    "VERIFICATION_EXECUTE",
+    "DECOMPOSE_AUTHORIZED_WORK",
+    "PROPOSE_FUTURE_WORK"
+  ],
+  "allowed_actor_kinds": ["AGENT"],
+  "prohibited_actions": [
+    "IMPLEMENTATION_TEST_MUTATE",
+    "EVALUATE_RESULT",
+    "AUTHORIZE_WORK",
+    "ACCEPT_RESULT",
+    "PROMOTE_RESULT"
+  ],
+  "required_assurance_properties": [
+    "EXACT_RUNTIME_IDENTITY_REQUIRED",
+    "PROTECTED_VERIFICATION_READ_ONLY",
+    "RELAY_ACTOR_IDENTITY_BOUND"
+  ],
+  "required_inputs": [
+    "ACTOR_IDENTITY_BINDING",
+    "APPLICABLE_ROLE_CONTRACT_BINDING",
+    "AUTHORIZED_WORK_BASIS",
+    "SOURCE_BASELINE",
+    "ACCEPTED_DESIGN_BASIS",
+    "RUNTIME_EXECUTION_BASIS"
+  ],
+  "required_outputs": [
+    "ENGINEERING_RESULT",
+    "EXECUTION_EVIDENCE",
+    "WORK_DISPOSITION"
+  ],
+  "required_runtime_capabilities": [
+    "SESSION_CREATE",
+    "EXECUTE",
+    "EVENT_STREAM",
+    "CANCEL",
+    "RESULT_INSPECTION",
+    "DIFF_INSPECTION",
+    "USAGE_REPORTING",
+    "ACTUAL_PROVIDER_IDENTITY",
+    "ACTUAL_MODEL_IDENTITY"
+  ],
+  "revision": 1,
+  "role_class": "IMPLEMENTER",
+  "role_key": "dogfood-implementer",
+  "schema_version": 1,
+  "verification_asset_permissions": ["READ", "EXECUTE"]
+}

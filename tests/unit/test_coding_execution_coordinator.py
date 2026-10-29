@@ -16,6 +16,10 @@ from relay_engine.coding_execution.coordinator import (
     execute_governed_attempt,
 )
 from relay_engine.coding_execution.evaluation import AdmissionInputs, RuntimePermissionEvidence
+from relay_engine.coding_execution.models import (
+    ExecutionProfile,
+    execution_profile_authority_constraints,
+)
 from relay_engine.execution_workspace import WorkspaceProvider
 from relay_engine.role_contracts import RequirementStatus
 
@@ -74,14 +78,90 @@ class UntouchedRuntime:
         raise AssertionError("runtime must not be inspected")
 
 
+def _bind_profile(compilation, profile: ExecutionProfile):
+    candidate = compilation.candidate
+    assert candidate is not None
+    constraints = tuple(
+        sorted(
+            set(candidate.work_packet_constraints)
+            | set(execution_profile_authority_constraints(profile))
+        )
+    )
+    candidate = candidate.model_copy(update={"work_packet_constraints": constraints})
+    return compilation.model_copy(update={"candidate": candidate}), candidate
+
+
+def _bind_fake_configuration_qualification(candidate):
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationObserverRef,
+        OpenCodeConfigurationQualificationRef,
+    )
+    from relay_engine.project_state import (
+        ApplicabilityEnvelope,
+        ApplicabilityEvaluation,
+        ApplicabilityResult,
+        PredicateResult,
+        QualificationFact,
+        QualificationResult,
+        ResolvedQualification,
+        SourceIdentity,
+    )
+
+    observer_ref = OpenCodeConfigurationObserverRef(
+        observer_id="test-config-observer-v1",
+        content_digest="sha256:" + "6" * 64,
+    )
+    qualification_ref = OpenCodeConfigurationQualificationRef.create(
+        qualification_id="opencode-config-qualification-fake-version-qualified-config",
+        runtime_version="fake-runtime-1",
+        runtime_api_generation="fake-v1",
+        adapter_version="fake-1",
+        observer_ref=observer_ref,
+    )
+    source = SourceIdentity(
+        source_key=qualification_ref.qualification_id,
+        content_digest=qualification_ref.content_digest,
+    )
+    unrelated_source = SourceIdentity(
+        source_key="unrelated-runtime-observation",
+        content_digest="sha256:" + "8" * 64,
+    )
+    snapshot = candidate.resolution.snapshot
+    source_refs = tuple(
+        sorted((*snapshot.source_refs, source, unrelated_source), key=lambda item: item.source_key)
+    )
+    snapshot = snapshot.model_copy(update={"source_refs": source_refs})
+    qualification = ResolvedQualification(
+        fact=QualificationFact(
+            qualification_key=source.source_key,
+            qualification_kind="opencode-configuration-observation",
+            result=QualificationResult.PASS,
+            scope_key=candidate.request.scope_key,
+            applicability=ApplicabilityEnvelope(),
+            provenance=(),
+        ),
+        applicability=ApplicabilityEvaluation(result=ApplicabilityResult.APPLICABLE),
+        accepted=PredicateResult.SATISFIED,
+    )
+    qualifications = tuple(
+        sorted(
+            (*candidate.resolution.qualifications, qualification),
+            key=lambda item: item.fact.qualification_key,
+        )
+    )
+    resolution = candidate.resolution.model_copy(
+        update={"snapshot": snapshot, "qualifications": qualifications}
+    )
+    return candidate.model_copy(update={"resolution": resolution})
+
+
 def test_ready_without_exact_human_grant_never_reaches_workspace_or_runtime() -> None:
     scenario = _scenario(
         scope="execution",
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
+    compilation, candidate = _bind_profile(compilation, ExecutionProfile.TRUSTED_LOCAL_EXECUTION)
     packet_value = packet()
     admission = AdmissionInputs.model_construct(
         compilation=compilation,
@@ -185,8 +265,7 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
+    compilation, candidate = _bind_profile(compilation, ExecutionProfile.TRUSTED_LOCAL_EXECUTION)
     packet_value, _, policy, role, descriptor = resolver_fixture()
     snapshot = candidate.resolution.snapshot.model_copy(
         update={"project_id": packet_value.project_id}
@@ -194,6 +273,8 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
     candidate = candidate.model_copy(
         update={"resolution": candidate.resolution.model_copy(update={"snapshot": snapshot})}
     )
+    candidate = _bind_fake_configuration_qualification(candidate)
+    snapshot = candidate.resolution.snapshot
     compilation = compilation.model_copy(update={"candidate": candidate})
     grant = HumanGrantBinding(
         grant_record_id="human-grant-exact",
@@ -335,7 +416,9 @@ def test_grant_precedes_materialization_and_exact_packet_ref_precedes_workspace_
         ("uncertain-admission", "INTERRUPTED"),
         ("usage-exhausted", "BUDGET_EXHAUSTED"),
         ("incomplete-evidence", "BLOCKED_BY_CONTRACT"),
+        ("capture-unavailable", "BLOCKED_BY_CONTRACT"),
         ("provider-model-mismatch", "PRE_ADMISSION_DENY"),
+        ("configuration-mismatch", "PRE_ADMISSION_DENY"),
         ("runtime-identity-mismatch", "PRE_ADMISSION_DENY"),
         ("boundary-success", "DONE"),
         ("boundary-permission-missing", "PRE_ADMISSION_DENY"),
@@ -381,6 +464,10 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         RuntimePermissionAttestation,
         RuntimeRequestV2,
     )
+    from relay_engine.agent_runtime.opencode import (
+        OpenCodeConfigurationBinding,
+        OpenCodeConfigurationQualificationRef,
+    )
     from relay_engine.coding_execution import coordinator as coordinator_module
     from relay_engine.coding_execution.coordinator import (
         MaterializedRuntimePayload,
@@ -416,6 +503,7 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         ControlStrength,
         WorkspaceBackendKind,
         WorkspaceBoundaryClass,
+        WorkspaceCandidateCapture,
         WorkspaceChangeManifest,
         WorkspaceConformance,
         WorkspaceProviderPropertyCapability,
@@ -429,10 +517,14 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         attempt="exec-018f47c1-7b2c-7abc-8def-123456789008",
     )
     compilation = _compile(scenario, _resolve(scenario))
-    candidate = compilation.candidate
-    assert candidate is not None
-    packet_value, _, policy, role, workspace_descriptor = resolver_fixture()
     boundary_mode = script.startswith("boundary-")
+    selected_profile = (
+        ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY
+        if boundary_mode
+        else ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+    )
+    compilation, candidate = _bind_profile(compilation, selected_profile)
+    packet_value, _, policy, role, workspace_descriptor = resolver_fixture()
     trace: list[str] = []
     if boundary_mode:
         policy = policy.model_copy(
@@ -465,6 +557,9 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     candidate = candidate.model_copy(
         update={"resolution": candidate.resolution.model_copy(update={"snapshot": snapshot})}
     )
+    if not boundary_mode:
+        candidate = _bind_fake_configuration_qualification(candidate)
+    snapshot = candidate.resolution.snapshot
     compilation = compilation.model_copy(update={"candidate": candidate})
     grant = HumanGrantBinding(
         grant_record_id="human-grant-exact",
@@ -543,6 +638,33 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 instance_ref=instance_ref,
                 source_commit=instance_ref.source_commit,
                 entries=(),
+            )
+
+        def capture_candidate(self, instance_ref, changes):
+            import hashlib
+            import json
+
+            if script == "capture-unavailable":
+                raise RuntimeError("candidate capture unavailable")
+            digest = (
+                "sha256:"
+                + hashlib.sha256(
+                    json.dumps(
+                        changes.model_dump(mode="json"),
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                        allow_nan=False,
+                    ).encode("utf-8")
+                ).hexdigest()
+            )
+            return WorkspaceCandidateCapture(
+                instance_ref=instance_ref,
+                source_commit=instance_ref.source_commit,
+                git_object_format="sha1",
+                tree_object_id="0" * 40,
+                change_manifest_digest=digest,
+                captured_at="2026-10-25T00:00:00Z",
             )
 
         def teardown(self, instance_ref):
@@ -647,6 +769,104 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                 created_at=datetime(2026, 10, 25, tzinfo=UTC),
             )
 
+        async def prepare_trusted_local_session(self, request, descriptor, accepted_source_refs):
+            import hashlib
+            import json
+
+            from relay_engine.agent_runtime.opencode import OpenCodeConfigurationObserverRef
+
+            trace.append("configuration-binding")
+            self.request = request
+            exposure = ()
+            source_refs = ("fake-agent-config",)
+            config_payload = {
+                "agent_id": "fixture-agent",
+                "configuration_source_refs": source_refs,
+                "normalized_allow_rules": (),
+                "normalized_deny_rules": (),
+                "normalized_ask_rules": (),
+                "effective_tool_exposure": exposure,
+                "plugin_exposure": (),
+                "mcp_exposure": (),
+                "subagent_exposure": (),
+            }
+            config_digest = (
+                "sha256:"
+                + hashlib.sha256(
+                    json.dumps(
+                        config_payload,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                        allow_nan=False,
+                    ).encode("utf-8")
+                ).hexdigest()
+            )
+            qualification = OpenCodeConfigurationQualificationRef.create(
+                qualification_id="opencode-config-qualification-fake-version-qualified-config",
+                runtime_version=descriptor.runtime_version,
+                runtime_api_generation=descriptor.api_generation,
+                adapter_version=descriptor.adapter_version,
+                observer_ref=OpenCodeConfigurationObserverRef(
+                    observer_id="test-config-observer-v1",
+                    content_digest="sha256:" + "6" * 64,
+                ),
+            )
+            assert accepted_source_refs == (
+                (qualification.qualification_id, qualification.content_digest),
+            )
+            configuration = OpenCodeConfigurationBinding(
+                binding_id="fake-config-binding",
+                runtime_id=descriptor.runtime_id,
+                runtime_version=descriptor.runtime_version,
+                runtime_api_generation=descriptor.api_generation,
+                adapter_version=descriptor.adapter_version,
+                integration_qualification_ref=qualification,
+                observer_ref=qualification.observer_ref,
+                permission_profile_ref=(
+                    permission_ref.model_copy(update={"content_digest": "sha256:" + "7" * 64})
+                    if script == "configuration-mismatch"
+                    else permission_ref
+                ),
+                agent_id="fixture-agent",
+                configuration_source_refs=source_refs,
+                effective_configuration_digest=config_digest,
+                normalized_allow_rules=(),
+                normalized_deny_rules=(),
+                normalized_ask_rules=(),
+                effective_tool_exposure=exposure,
+                shell_exposed=False,
+                plugin_exposure=(),
+                mcp_exposure=(),
+                subagent_exposure=(),
+                precedence_complete=True,
+                observation_source="deterministic-test-reader",
+                trust_basis="test-injected-only",
+                provenance_digest="sha256:" + "8" * 64,
+                observed_at=datetime(2026, 10, 25, tzinfo=UTC),
+                status=RequirementStatus.SATISFIED,
+            )
+            session = await self.create_session(request)
+            session = session.model_copy(
+                update={
+                    "actual_provider_id": (
+                        "different-provider"
+                        if script == "provider-model-mismatch"
+                        else runtime_selection.requested_provider_id
+                    ),
+                    "actual_model_id": runtime_selection.requested_model_id,
+                    "actual_identity_status": RuntimeIdentityCompleteness.FULL,
+                }
+            )
+            self.session = session.runtime_session
+            trace.append("create_session_prompt_free")
+            return configuration, session
+
+        async def close_prepared_session(self, binding):
+            self.calls.append("close-prepared-session")
+            assert binding.runtime_session == self.session
+            return RequirementStatus.SATISFIED
+
         async def create_session_v2(self, request: RuntimeRequestV2):
             self.calls.append("create_session_v2")
             trace.append("create_session_v2")
@@ -703,6 +923,7 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
 
         async def open_execution(self, request, binding):
             self.calls.append("open-execution")
+            trace.append("open_execution")
             return RuntimeExecutionHandle(
                 execution_id=request.basis.execution_id,
                 runtime_session=binding.runtime_session,
@@ -750,6 +971,10 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                     RuntimeEventType.EXECUTION_COMPLETED,
                 ),
                 "incomplete-evidence": (
+                    RuntimeEventType.EXECUTION_STARTED,
+                    RuntimeEventType.EXECUTION_COMPLETED,
+                ),
+                "capture-unavailable": (
                     RuntimeEventType.EXECUTION_STARTED,
                     RuntimeEventType.EXECUTION_COMPLETED,
                 ),
@@ -826,15 +1051,13 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
     runtime = ScriptedRuntime()
 
     def evaluate_final_admission(*_args):
-        if boundary_mode:
-            trace.append("final-admission")
+        trace.append("final-admission")
         return AdmissionEvidence(status=CodingAdmissionStatus.ADMIT)
 
     actual_freshness_check = coordinator_module.check_candidate_freshness
 
     def check_final_freshness(*args):
-        if boundary_mode:
-            trace.append("final-freshness")
+        trace.append("final-freshness")
         return actual_freshness_check(*args)
 
     monkeypatch.setattr(coordinator_module, "evaluate_admission", evaluate_final_admission)
@@ -965,7 +1188,13 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
                     cast(AgentRuntime, runtime),
                 )
             )
-        assert "create-session" not in runtime.calls
+        if script in {"provider-model-mismatch", "configuration-mismatch"}:
+            assert runtime.calls.count("create-session") == 1
+            assert runtime.calls.count("close-prepared-session") == 1
+            assert rejection.value.trusted_local_failure is not None
+            assert rejection.value.trusted_local_failure.cleanup.status.value == "SATISFIED"
+        else:
+            assert "create-session" not in runtime.calls
         assert "open-execution" not in runtime.calls
         if boundary_mode:
             assert runtime.calls.count("create_session_v2") == 1
@@ -997,10 +1226,19 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         assert runtime.calls.count("open-execution") == 1
     assert "opencode" not in runtime.calls
     assert result.evidence.execution_subject_digest == result.subject.content_digest
+    if script == "capture-unavailable":
+        assert result.outcome.value == "BLOCKED_BY_CONTRACT"
+        assert result.evidence.stable_candidate_capture is None
+        assert result.evidence.stable_candidate_status is RequirementStatus.INDETERMINATE
+    else:
+        assert result.evidence.stable_candidate_capture is not None
+        assert result.evidence.stable_candidate_status is RequirementStatus.SATISFIED
     if script == "cancellation":
         assert runtime.calls.count("cancel") == 1
         assert result.evidence.cancellation_ack is not None
     if script == "boundary-success":
+        assert result.subject.execution_profile.value == "RELAY_MANAGED_STRONG_BOUNDARY"
+        assert result.subject.runtime_configuration_binding_ref is None
         assert runtime.calls.count("create_session_v2") == 1
         assert runtime.calls.count("attest_permissions_v2") == 1
         assert runtime.calls.count("open_execution_v2") == 1
@@ -1020,3 +1258,14 @@ def test_scripted_fake_runtime_reaches_exact_terminal_result(
         assert result.evidence.runtime_process_teardown is not None
         assert result.subject.runtime_request_v2.endpoint_identity.startswith("https://executor.")
         assert RuntimeCapability.EFFECTIVE_PERMISSION_ATTESTATION in runtime_descriptor.capabilities
+    elif not boundary_mode:
+        assert result.subject.execution_profile.value == "TRUSTED_LOCAL_EXECUTION"
+        assert result.subject.runtime_request_v2 is None
+        assert result.subject.workspace_boundary_ref is None
+        assert result.subject.runtime_placement_attestation is None
+        assert result.subject.runtime_permission_attestation is None
+        assert result.subject.runtime_configuration_binding_ref is not None
+        assert trace.index("configuration-binding") < trace.index("create_session_prompt_free")
+        assert trace.index("create_session_prompt_free") < trace.index("final-admission")
+        assert trace.index("final-admission") < trace.index("final-freshness")
+        assert trace.index("final-freshness") < trace.index("open_execution")

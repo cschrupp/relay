@@ -9,6 +9,7 @@ from relay_engine.agent_runtime import (
     RuntimeDescriptor,
     RuntimeEventEnvelope,
     RuntimeEventType,
+    RuntimeExecutionRequest,
     RuntimeInputPayload,
 )
 from relay_engine.agent_runtime.boundary import (
@@ -25,11 +26,14 @@ from relay_engine.coding_execution.models import (
     CorrectiveSubjectBinding,
     EvaluatorReworkBinding,
     EvaluatorReworkEvaluation,
+    ExecutionProfile,
     ExecutionTerminalOutcome,
     HumanGrantBinding,
+    PermissionEvidenceProvenance,
     PriorExecutionBinding,
     ProposedWorkObservation,
     ReworkDisposition,
+    RuntimeEvidenceBindingRef,
     RuntimePayloadEvidence,
     RuntimePermissionEvidence,
     TerminalExecutionResult,
@@ -37,6 +41,7 @@ from relay_engine.coding_execution.models import (
     digest_terminal_candidate,
     digest_terminal_result,
     execution_id_for_attempt,
+    execution_profile_authority_constraints,
 )
 from relay_engine.domain import ActorRef, ContentDigest, ExecutionId
 from relay_engine.domain._base import DomainModel
@@ -47,7 +52,13 @@ from relay_engine.execution_workspace.boundary import (
     placement_attestation_matches_boundary,
 )
 from relay_engine.execution_workspace.evaluation import workspace_plan_ref
-from relay_engine.execution_workspace.models import ShellMode, ToolDecision, WorkspacePlan
+from relay_engine.execution_workspace.models import (
+    ControlStrength,
+    ShellMode,
+    ToolDecision,
+    WorkspacePlan,
+    WorkspaceProperty,
+)
 from relay_engine.project_state import (
     AuthorityCandidate,
     AuthorityCompilation,
@@ -119,6 +130,9 @@ class AdmissionInputs(DomainModel):
     resource_limit_status: RequirementStatus = RequirementStatus.INDETERMINATE
     runtime_descriptor: RuntimeDescriptor
     permission_evidence: RuntimePermissionEvidence
+    runtime_request: RuntimeExecutionRequest | None = None
+    execution_profile: ExecutionProfile | None = None
+    runtime_configuration_binding_ref: RuntimeEvidenceBindingRef | None = None
     workspace_plan: WorkspacePlan | None = None
     runtime_request_v2: RuntimeRequestV2 | None = None
     workspace_boundary_ref: WorkspaceBoundaryRef | None = None
@@ -148,6 +162,22 @@ def evaluate_grant_and_reservations(
         reasons.append("authority:not-ready")
     elif compilation.candidate is None or compilation.candidate.content_digest != digest:
         reasons.append("authority:candidate-mismatch")
+    if candidate_execution_profile(candidate) is None:
+        markers = set(candidate.work_packet_constraints)
+        has_profile_marker = any(
+            value.startswith(("execution-profile-", "execution-assurance-", "execution-trust-"))
+            for value in markers
+        )
+        reasons.append(
+            "execution-profile:authority-binding-conflicting"
+            if has_profile_marker
+            else "execution-profile:authority-binding-missing"
+        )
+    elif (
+        candidate_execution_profile(candidate) is ExecutionProfile.TRUSTED_LOCAL_EXECUTION
+        and candidate_configuration_qualification_ref(candidate) is None
+    ):
+        reasons.append("runtime-configuration:accepted-qualification-source-missing-or-conflicting")
     if attempt_id is None:
         reasons.append("attempt:missing")
     else:
@@ -184,7 +214,13 @@ def evaluate_grant_and_reservations(
         if bad or missing:
             reasons.extend(reservation_reasons)
     if any(
-        reason not in {"candidate:freshness-indeterminate", "reservation:missing"}
+        reason
+        not in {
+            "candidate:freshness-indeterminate",
+            "reservation:missing",
+            "execution-profile:authority-binding-missing",
+            "runtime-configuration:accepted-qualification-source-missing-or-conflicting",
+        }
         for reason in reasons
     ):
         status = AdmissionStatus.DENY
@@ -198,6 +234,85 @@ def evaluate_grant_and_reservations(
         checked_candidate_digest=digest,
         checked_attempt_id=attempt_id,
     )
+
+
+def candidate_execution_profile(candidate: AuthorityCandidate) -> ExecutionProfile | None:
+    """Resolve the profile and trust policy already bound in candidate constraints."""
+
+    constraints = set(candidate.work_packet_constraints)
+    known = {
+        frozenset(execution_profile_authority_constraints(profile)): profile
+        for profile in ExecutionProfile
+    }
+    for binding, profile in known.items():
+        if binding.issubset(constraints):
+            profile_keys = {
+                value for value in constraints if value.startswith("execution-profile-")
+            }
+            assurance_keys = {
+                value for value in constraints if value.startswith("execution-assurance-")
+            }
+            trust_keys = {value for value in constraints if value.startswith("execution-trust-")}
+            expected = execution_profile_authority_constraints(profile)
+            if (
+                profile_keys == {expected[1]}
+                and assurance_keys == {expected[0]}
+                and trust_keys == {expected[2]}
+            ):
+                return profile
+            return None
+    if any(
+        value.startswith(("execution-profile-", "execution-assurance-", "execution-trust-"))
+        for value in constraints
+    ):
+        return None
+    return None
+
+
+def candidate_configuration_qualification_ref(
+    candidate: AuthorityCandidate,
+) -> tuple[str, str] | None:
+    """Return the one exact OpenCode qualification source bound in the candidate snapshot."""
+
+    refs = tuple(
+        (item.source_key, item.content_digest)
+        for item in candidate.resolution.snapshot.source_refs
+        if item.source_key.startswith("opencode-config-qualification-")
+    )
+    if len(refs) != 1:
+        return None
+    source_key, _digest = refs[0]
+    qualifications = tuple(
+        item
+        for item in candidate.resolution.qualifications
+        if item.fact.qualification_key == source_key
+        and item.fact.result.value == "PASS"
+        and item.accepted.value == "SATISFIED"
+        and item.applicability.result.value == "APPLICABLE"
+    )
+    return refs[0] if len(qualifications) == 1 else None
+
+
+def evaluate_trusted_local_runtime_controls(plan: WorkspacePlan) -> AdmissionEvidence:
+    """Fail closed when trusted-local lacks evidence for runtime-owned controls."""
+
+    unsupported = tuple(
+        requirement
+        for requirement in plan.property_requirements
+        if requirement.property
+        in {
+            WorkspaceProperty.NETWORK_REACHABILITY_CONTROL,
+            WorkspaceProperty.EXTERNAL_SIDE_EFFECT_CONTROL,
+        }
+    )
+    if not unsupported:
+        return AdmissionEvidence(status=AdmissionStatus.ADMIT)
+    reasons = tuple(
+        sorted(f"runtime-control:{item.key}:evidence-unavailable" for item in unsupported)
+    )
+    if any(item.minimum_strength is ControlStrength.BOUNDARY_ENFORCED for item in unsupported):
+        return AdmissionEvidence(status=AdmissionStatus.DENY, reasons=reasons)
+    return AdmissionEvidence(status=AdmissionStatus.INDETERMINATE, reasons=reasons)
 
 
 def evaluate_evaluator_rework(
@@ -776,6 +891,50 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
             )
         except ValueError:
             expected_execution_id = None
+        boundary_required = _requires_boundary_enforcement(inputs.workspace_plan)
+        if inputs.execution_profile is None:
+            indeterminate.append("execution-profile:unbound")
+        elif boundary_required:
+            if inputs.execution_profile is not ExecutionProfile.RELAY_MANAGED_STRONG_BOUNDARY:
+                deny.append("execution-profile:boundary-required")
+            if inputs.runtime_request_v2 is None:
+                indeterminate.append("runtime-boundary:request-v2-missing")
+        else:
+            if inputs.execution_profile is not ExecutionProfile.TRUSTED_LOCAL_EXECUTION:
+                deny.append("execution-profile:unexpected-strong-boundary")
+            if any(
+                value is not None
+                for value in (
+                    inputs.runtime_request_v2,
+                    inputs.workspace_boundary_ref,
+                    inputs.runtime_placement_attestation,
+                    inputs.runtime_permission_attestation,
+                    inputs.runtime_placement_continuity,
+                )
+            ):
+                deny.append("execution-profile:trusted-local-has-boundary-evidence")
+            permission = inputs.permission_evidence
+            if (
+                inputs.runtime_configuration_binding_ref is None
+                or permission.configuration_binding_ref != inputs.runtime_configuration_binding_ref
+                or permission.provenance is not PermissionEvidenceProvenance.CONFIGURATION_DERIVED
+                or inputs.runtime_session_binding is None
+                or permission.session_binding != inputs.runtime_session_binding
+                or inputs.runtime_session_binding.execution_id != expected_execution_id
+                or inputs.runtime_request is None
+                or inputs.runtime_session_binding.request_digest
+                != inputs.runtime_request.request_digest
+                or inputs.runtime_session_binding.actual_identity_status.value != "FULL"
+                or inputs.runtime_session_binding.actual_provider_id
+                != permission.actual_provider_id
+                or inputs.runtime_session_binding.actual_model_id != permission.actual_model_id
+            ):
+                indeterminate.append("runtime-configuration:session-binding-incomplete")
+            runtime_control_result = evaluate_trusted_local_runtime_controls(inputs.workspace_plan)
+            if runtime_control_result.status is AdmissionStatus.DENY:
+                deny.extend(runtime_control_result.reasons)
+            elif runtime_control_result.status is AdmissionStatus.INDETERMINATE:
+                indeterminate.extend(runtime_control_result.reasons)
         exposure_result = evaluate_effective_tool_exposure(
             inputs.workspace_plan,
             permission,
@@ -786,11 +945,17 @@ def evaluate_admission(inputs: AdmissionInputs) -> AdmissionEvidence:
             deny.extend(exposure_result.reasons)
         elif exposure_result.status is AdmissionStatus.INDETERMINATE:
             indeterminate.extend(exposure_result.reasons)
-    if selection is not None and (
-        permission.actual_provider_id != selection.requested_provider_id
-        or permission.actual_model_id != selection.requested_model_id
-    ):
-        indeterminate.append("runtime-permissions:provider-model-identity-unbound")
+    if selection is not None:
+        if (
+            permission.actual_provider_id is not None
+            and permission.actual_provider_id != selection.requested_provider_id
+        ) or (
+            permission.actual_model_id is not None
+            and permission.actual_model_id != selection.requested_model_id
+        ):
+            deny.append("runtime-permissions:provider-model-mismatch")
+        elif permission.actual_provider_id is None or permission.actual_model_id is None:
+            indeterminate.append("runtime-permissions:provider-model-identity-unbound")
     if inputs.workspace_plan is not None and _requires_boundary_enforcement(inputs.workspace_plan):
         boundary_check = evaluate_runtime_boundary_evidence(
             inputs.workspace_plan,
@@ -1102,6 +1267,11 @@ def evaluate_effective_tool_exposure(
     ):
         status = AdmissionStatus.INDETERMINATE
         reasons.append("runtime-permissions:provenance-incomplete")
+    if evidence.provenance is PermissionEvidenceProvenance.CONFIGURATION_DERIVED and (
+        evidence.configuration_binding_ref is None or evidence.session_binding is None
+    ):
+        status = AdmissionStatus.INDETERMINATE
+        reasons.append("runtime-permissions:configuration-provenance-unbound")
     if any(
         reason
         in {

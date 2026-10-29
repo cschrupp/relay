@@ -862,6 +862,41 @@ class WorkspaceChangeManifestRef(DomainModel):
     content_digest: ContentDigest
 
 
+class WorkspaceCandidateCapture(DomainModel):
+    """Immutable Git tree identity captured for independent candidate evaluation."""
+
+    instance_ref: WorkspaceInstanceRef
+    source_commit: CommitRef
+    git_object_format: str
+    tree_object_id: str
+    change_manifest_digest: ContentDigest
+    captured_at: BoundedText
+
+    @model_validator(mode="after")
+    def capture_binds_exact_tree(self) -> WorkspaceCandidateCapture:
+        if self.source_commit != self.instance_ref.source_commit:
+            raise ValueError("candidate capture must bind the exact workspace source commit")
+        if self.git_object_format not in {"sha1", "sha256"}:
+            raise ValueError("candidate capture has an unsupported Git object format")
+        expected_length = 40 if self.git_object_format == "sha1" else 64
+        if len(self.tree_object_id) != expected_length or any(
+            char not in "0123456789abcdef" for char in self.tree_object_id
+        ):
+            raise ValueError("candidate capture tree object ID is not canonical")
+        return self
+
+    @property
+    def content_digest(self) -> ContentDigest:
+        payload = json.dumps(
+            self.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+        return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
 class WorkspaceEnvironmentProvenance(DomainModel):
     subject: WorkspaceEvidenceSubject
     boundary_class: WorkspaceBoundaryClass
@@ -1066,6 +1101,7 @@ __all__ = [
     "WorkspaceChangeEntry",
     "WorkspaceChangeManifest",
     "WorkspaceChangeManifestRef",
+    "WorkspaceCandidateCapture",
     "WorkspaceConformance",
     "WorkspaceConformanceFacts",
     "WorkspaceCredentialEvidence",
