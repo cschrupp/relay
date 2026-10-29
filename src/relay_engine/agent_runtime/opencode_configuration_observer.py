@@ -450,8 +450,7 @@ class OpenCodeV11823ConfigurationObserver:
             for item in observation.files:
                 path = Path(item.path)
                 if observation.state == "PRESENT" and (
-                    not path.is_file()
-                    or _digest_bytes(path.read_bytes()) != item.content_digest
+                    not path.is_file() or _digest_bytes(path.read_bytes()) != item.content_digest
                 ):
                     raise OpenCodeObserverError(
                         f"configuration source changed or disappeared: {item.path}"
