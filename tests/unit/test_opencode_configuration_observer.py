@@ -161,7 +161,9 @@ def _environment(
     return tuple(sorted(values.items()))
 
 
-def _sources(config_file: Path, catalog: Path) -> tuple[OpenCodeConfigurationSourceObservation, ...]:
+def _sources(
+    config_file: Path, catalog: Path
+) -> tuple[OpenCodeConfigurationSourceObservation, ...]:
     layers = (
         "remote-well-known",
         "global-config-json",
@@ -218,7 +220,6 @@ def _sources(config_file: Path, catalog: Path) -> tuple[OpenCodeConfigurationSou
                     state="PRESENT",
                     identity="OPENCODE_DISABLE_MODELS_FETCH",
                     observation_method="relay-launch-environment",
-
                     sanitized_content_digest=_sha256(b"1"),
                 )
             )
@@ -388,9 +389,7 @@ def test_exact_observer_produces_satisfied_content_bound_binding(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
     try:
         binding = observer.read(request, descriptor)
     finally:
@@ -417,9 +416,7 @@ def test_missing_alias_fails_closed_without_session(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
 
     def no_alias(
         args: tuple[str, ...],
@@ -447,9 +444,7 @@ def test_catalog_mutation_during_diagnostic_is_indeterminate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, catalog, _config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, catalog, _config_file = _fixture(tmp_path, monkeypatch)
 
     def mutate_catalog(
         args: tuple[str, ...],
@@ -482,9 +477,7 @@ def test_diagnostic_config_tree_mutation_is_indeterminate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, _catalog, config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, _catalog, config_file = _fixture(tmp_path, monkeypatch)
 
     def mutate_config(
         args: tuple[str, ...],
@@ -517,9 +510,7 @@ def test_observer_environment_mismatch_fails_before_cli_or_session(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
     monkeypatch.setenv("OPENCODE_DISABLE_MODELS_FETCH", "0")
     try:
         with pytest.raises(OpenCodeObserverError, match="environment mismatch|fetch-disable"):
@@ -534,9 +525,7 @@ def test_runtime_state_mutation_between_a_and_b_is_indeterminate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
-        tmp_path, monkeypatch
-    )
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
     original_client = observer._client
     calls = 0
 
