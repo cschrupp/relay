@@ -169,6 +169,7 @@ class OpenCodeServerStartupContext(DomainModel):
     source_observations: tuple[OpenCodeConfigurationSourceObservation, ...]
     catalog_path: str
     catalog_digest: ContentDigest
+    credential_environment_names: tuple[str, ...] = ()
     context_source: str
 
     @model_validator(mode="after")
@@ -191,6 +192,15 @@ class OpenCodeServerStartupContext(DomainModel):
                 raise ValueError("startup context paths must be absolute")
         if not self.context_source.strip():
             raise ValueError("startup context source must be explicit")
+        if self.credential_environment_names != tuple(
+            sorted(set(self.credential_environment_names))
+        ):
+            raise ValueError("credential environment names must be unique and sorted")
+        if any(
+            not name.strip() or any(ord(char) < 32 for char in name)
+            for name in self.credential_environment_names
+        ):
+            raise ValueError("credential environment names must be explicit")
 
         env_keys = tuple(key for key, _value in self.environment)
         if env_keys != tuple(sorted(_RELEVANT_ENV_KEYS)):
@@ -402,6 +412,9 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError("observer models.dev fetch-disable flag is not active")
         if os.environ.get("OPENCODE_MODELS_PATH") != self._startup.catalog_path:
             raise OpenCodeObserverError("observer model catalog path does not match startup context")
+        for name in self._startup.credential_environment_names:
+            if name not in os.environ:
+                raise OpenCodeObserverError(f"required credential environment presence missing: {name}")
 
     def _source_refs(self) -> tuple[str, ...]:
         refs: list[str] = []
