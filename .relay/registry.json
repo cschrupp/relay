@@ -5266,6 +5266,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_2019918a-2a87-4ee4-8d91-8632c9b11d09",
+      "revision": 1,
+      "title": "Slice 3.1 Dogfood 001 OpenCode 1.18.23 Configuration Observer IR-004",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_OPENCODE_CONFIG_OBSERVER_IR_004.md",
+      "content_digest": "sha256:fd822d65232b42cda7b099d1179e2daf39d48f101fa481c23fe9b2d9ed473e0f",
+      "human_version": "RLY-S31-DOGFOOD-001-OPENCODE-CONFIG-OBSERVER-IR-004",
+      "updated_at": "2026-10-29T05:37:16Z",
+      "scope": "Narrow successor IR addressing OpenCode 1.18.23 models.dev automatic catalog refresh and cache mutation; requires fetch-disable binding and frozen catalog evidence; no implementation or execution.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
       "revision": 1,
       "title": "Dogfood 001 Post-Acceptance Reconciliation 002",
@@ -5935,6 +5951,22 @@
       "supersedes": null,
       "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 003",
       "updated_at": "2026-10-29T05:23:47.352053Z"
+    },
+    {
+      "schema_version": 1,
+      "artifact_id": "art_7d3f5db0-68b4-4089-a4a8-d8b21488c2bc",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 004",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORITY_PROPOSAL_004.md",
+      "content_digest": "sha256:b0ab5f8b02669c49965e9bdc26444ac5ffa82d001d32f67c6ffae266bf2e8d8f",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-PROPOSAL-004",
+      "updated_at": "2026-10-29T05:37:16Z",
+      "scope": "Narrow F004 successor proposal requiring fetch-disabled OpenCode 1.18.23 and a frozen models.dev catalog source; implementation and Dogfood execution remain unauthorized.",
+      "supersedes": null,
+      "superseded_by": null
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
