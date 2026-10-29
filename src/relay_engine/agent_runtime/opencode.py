@@ -119,6 +119,7 @@ class OpenCodePermissionProfile:
     allow: tuple[str, ...]
     deny: tuple[str, ...]
     ask: tuple[str, ...] = ()
+    allowed_tools: tuple[str, ...] = ()
     allowed_plugins: tuple[str, ...] = ()
     allowed_mcp_servers: tuple[str, ...] = ()
     allowed_subagents: tuple[str, ...] = ()
@@ -134,6 +135,7 @@ class OpenCodePermissionProfile:
         if len(set(all_rules)) != len(all_rules):
             raise ValueError("OpenCode permission rules must not overlap or repeat")
         for label, values in (
+            ("tool", self.allowed_tools),
             ("plugin", self.allowed_plugins),
             ("MCP server", self.allowed_mcp_servers),
             ("subagent", self.allowed_subagents),
@@ -817,7 +819,7 @@ class OpenCodeRuntime:
             != tuple(
                 sorted(
                     (
-                        *profile.allow,
+                        *(profile.allowed_tools or profile.allow),
                         *profile.allowed_plugins,
                         *profile.allowed_mcp_servers,
                         *profile.allowed_subagents,
