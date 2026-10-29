@@ -133,7 +133,11 @@ class OpenCodeConfigurationSourceObservation(DomainModel):
     def valid_source_observation(self) -> OpenCodeConfigurationSourceObservation:
         if self.precedence_index < 1:
             raise ValueError("source precedence index must be positive")
-        if not self.layer.strip() or not self.identity.strip() or not self.observation_method.strip():
+        if (
+            not self.layer.strip()
+            or not self.identity.strip()
+            or not self.observation_method.strip()
+        ):
             raise ValueError("source observation identity must be explicit")
         if self.state == "ABSENT" and self.files:
             raise ValueError("absent source observation cannot bind files")
@@ -213,11 +217,18 @@ class OpenCodeServerStartupContext(DomainModel):
         if env.get("OPENCODE_DISABLE_PROJECT_CONFIG") != "1":
             raise ValueError("qualified profile requires project config discovery disabled")
         if env.get("OPENCODE_PURE") != "1":
-            raise ValueError("qualified profile requires external plugins disabled with OPENCODE_PURE=1")
+            raise ValueError(
+                "qualified profile requires external plugins disabled with OPENCODE_PURE=1"
+            )
         if env.get("OPENCODE_MODELS_PATH") != self.catalog_path:
             raise ValueError("startup context must bind OPENCODE_MODELS_PATH to catalog_path")
-        if env.get("OPENCODE_CONFIG_CONTENT") is not None or env.get("OPENCODE_PERMISSION") is not None:
-            raise ValueError("minimal qualified profile requires inline config and permission env to be absent")
+        if (
+            env.get("OPENCODE_CONFIG_CONTENT") is not None
+            or env.get("OPENCODE_PERMISSION") is not None
+        ):
+            raise ValueError(
+                "minimal qualified profile requires inline config and permission env to be absent"
+            )
 
         expected_layers = tuple(_SOURCE_LAYER_ORDER)
         observed_layers = tuple(item.layer for item in self.source_observations)
@@ -227,7 +238,6 @@ class OpenCodeServerStartupContext(DomainModel):
         ):
             raise ValueError("startup source census must cover exact layers in precedence order")
         return self
-
 
     @property
     def content_digest(self) -> ContentDigest:
@@ -263,7 +273,9 @@ class OpenCodeV11823ConfigurationObserver:
         }:
             raise ValueError("observer endpoint must be explicit loopback HTTP(S)")
         if parts.port is None or parts.username or parts.password or parts.query or parts.fragment:
-            raise ValueError("observer endpoint must bind explicit loopback port without credentials")
+            raise ValueError(
+                "observer endpoint must bind explicit loopback port without credentials"
+            )
         if qualification_ref.runtime_version != OPENCODE_V11823:
             raise ValueError("observer requires an OpenCode 1.18.23 qualification")
         if qualification_ref.runtime_api_generation != OPENCODE_API_GENERATION:
@@ -309,7 +321,9 @@ class OpenCodeV11823ConfigurationObserver:
     ) -> OpenCodeConfigurationBinding:
         self._validate_descriptor(descriptor)
         if request.basis.workspace.root != self._startup.workspace_root:
-            raise OpenCodeObserverError("request workspace does not match bound server startup context")
+            raise OpenCodeObserverError(
+                "request workspace does not match bound server startup context"
+            )
         self._validate_observer_environment()
 
         sources_a = self._source_refs()
@@ -325,18 +339,26 @@ class OpenCodeV11823ConfigurationObserver:
         catalog_b = self._catalog_state()
 
         if sources_a != sources_b:
-            raise OpenCodeObserverError("OpenCode configuration source census changed during observation")
+            raise OpenCodeObserverError(
+                "OpenCode configuration source census changed during observation"
+            )
         if catalog_a != catalog_b:
             raise OpenCodeObserverError("OpenCode model catalog changed during observation")
         if diagnostic_tree_a != diagnostic_tree_b:
-            raise OpenCodeObserverError("OpenCode diagnostic mutated a bound configuration directory")
+            raise OpenCodeObserverError(
+                "OpenCode diagnostic mutated a bound configuration directory"
+            )
         if snapshot_a["digest"] != snapshot_b["digest"]:
-            raise OpenCodeObserverError("OpenCode effective configuration changed during observation")
+            raise OpenCodeObserverError(
+                "OpenCode effective configuration changed during observation"
+            )
 
         agent = self._selected_agent(snapshot_b["agents"])
         debug_agent = self._normalize_debug_agent(debug)
         if self._agent_identity(agent) != self._agent_identity(debug_agent):
-            raise OpenCodeObserverError("debug-agent identity differs from running-server agent state")
+            raise OpenCodeObserverError(
+                "debug-agent identity differs from running-server agent state"
+            )
 
         allow, deny, ask = self._normalize_permissions(agent)
         tools = self._enabled_tools(debug_agent)
@@ -401,7 +423,9 @@ class OpenCodeV11823ConfigurationObserver:
             or descriptor.api_generation != OPENCODE_API_GENERATION
             or descriptor.adapter_version != OPENCODE_ADAPTER_VERSION
         ):
-            raise OpenCodeObserverError("runtime descriptor does not match qualified OpenCode 1.18.23")
+            raise OpenCodeObserverError(
+                "runtime descriptor does not match qualified OpenCode 1.18.23"
+            )
 
     def _validate_observer_environment(self) -> None:
         for key, expected in self._startup.environment:
@@ -411,10 +435,14 @@ class OpenCodeV11823ConfigurationObserver:
         if os.environ.get("OPENCODE_DISABLE_MODELS_FETCH") != "1":
             raise OpenCodeObserverError("observer models.dev fetch-disable flag is not active")
         if os.environ.get("OPENCODE_MODELS_PATH") != self._startup.catalog_path:
-            raise OpenCodeObserverError("observer model catalog path does not match startup context")
+            raise OpenCodeObserverError(
+                "observer model catalog path does not match startup context"
+            )
         for name in self._startup.credential_environment_names:
             if name not in os.environ:
-                raise OpenCodeObserverError(f"required credential environment presence missing: {name}")
+                raise OpenCodeObserverError(
+                    f"required credential environment presence missing: {name}"
+                )
 
     def _source_refs(self) -> tuple[str, ...]:
         refs: list[str] = []
@@ -422,7 +450,10 @@ class OpenCodeV11823ConfigurationObserver:
             for item in observation.files:
                 path = Path(item.path)
                 if observation.state == "PRESENT":
-                    if not path.is_file() or _digest_bytes(path.read_bytes()) != item.content_digest:
+                    if (
+                        not path.is_file()
+                        or _digest_bytes(path.read_bytes()) != item.content_digest
+                    ):
                         raise OpenCodeObserverError(
                             f"configuration source changed or disappeared: {item.path}"
                         )
@@ -451,7 +482,6 @@ class OpenCodeV11823ConfigurationObserver:
         stop = Path(self._startup.worktree_root)
         current = workspace
         while True:
-
             roots.add(current / ".opencode")
             if current == stop or current.parent == current:
                 break
@@ -466,7 +496,9 @@ class OpenCodeV11823ConfigurationObserver:
                 try:
                     stat = item.stat()
                 except OSError as exc:
-                    raise OpenCodeObserverError("cannot census diagnostic configuration tree") from exc
+                    raise OpenCodeObserverError(
+                        "cannot census diagnostic configuration tree"
+                    ) from exc
                 state.append((str(item), stat.st_size, stat.st_mtime_ns))
         return tuple(state)
 
@@ -502,7 +534,9 @@ class OpenCodeV11823ConfigurationObserver:
         try:
             payload = response.json()
         except ValueError as exc:
-            raise OpenCodeObserverError(f"OpenCode observation response is not JSON for {route}") from exc
+            raise OpenCodeObserverError(
+                f"OpenCode observation response is not JSON for {route}"
+            ) from exc
         if isinstance(payload, dict) and set(payload) == {"data"}:
             return payload["data"]
         return payload
@@ -575,7 +609,9 @@ class OpenCodeV11823ConfigurationObserver:
             if isinstance(agent, dict) and agent.get("name") == self._profile.agent_id
         ]
         if len(matches) != 1:
-            raise OpenCodeObserverError("exact configured Dogfood agent is unavailable or ambiguous")
+            raise OpenCodeObserverError(
+                "exact configured Dogfood agent is unavailable or ambiguous"
+            )
         return matches[0]
 
     def _normalize_debug_agent(self, value: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -597,7 +633,9 @@ class OpenCodeV11823ConfigurationObserver:
         provider = model.get("providerID")
         model_id = model.get("modelID")
         if provider != "openrouter" or model_id != "~deepseek/deepseek-flash-latest":
-            raise OpenCodeObserverError("configured agent does not bind the selected OpenRouter alias")
+            raise OpenCodeObserverError(
+                "configured agent does not bind the selected OpenRouter alias"
+            )
         permissions = agent.get("permission")
         if not isinstance(permissions, list):
             raise OpenCodeObserverError("configured agent permission rules are unavailable")
@@ -642,7 +680,9 @@ class OpenCodeV11823ConfigurationObserver:
         tools = debug_agent.get("tools")
         if not isinstance(tools, dict):
             raise OpenCodeObserverError("debug-agent tool exposure is unavailable")
-        if any(not isinstance(key, str) or not isinstance(value, bool) for key, value in tools.items()):
+        if any(
+            not isinstance(key, str) or not isinstance(value, bool) for key, value in tools.items()
+        ):
             raise OpenCodeObserverError("debug-agent tool exposure is malformed")
         enabled = tuple(sorted(key for key, value in tools.items() if value))
         policy_tools = self._profile.allowed_tools or self._profile.allow
@@ -669,10 +709,13 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError("resolved plugin exposure does not match accepted profile")
         return result
 
-    def _mcp_exposure(self, config: Mapping[str, Any], status: Mapping[str, Any]) -> tuple[str, ...]:
+    def _mcp_exposure(
+        self, config: Mapping[str, Any], status: Mapping[str, Any]
+    ) -> tuple[str, ...]:
         configured = config.get("mcp_names")
-        if not isinstance(configured, tuple) or any(not isinstance(item, str) for item in configured):
-
+        if not isinstance(configured, tuple) or any(
+            not isinstance(item, str) for item in configured
+        ):
             raise OpenCodeObserverError("resolved MCP configuration is malformed")
         if any(not isinstance(key, str) for key in status):
             raise OpenCodeObserverError("resolved MCP exposure is malformed")
@@ -703,7 +746,9 @@ class OpenCodeV11823ConfigurationObserver:
                 raise OpenCodeObserverError("subagent exposure remains interactive/ambiguous")
         result = tuple(sorted(set(exposed)))
         if result != self._profile.allowed_subagents:
-            raise OpenCodeObserverError("resolved subagent exposure does not match accepted profile")
+            raise OpenCodeObserverError(
+                "resolved subagent exposure does not match accepted profile"
+            )
         return result
 
 
