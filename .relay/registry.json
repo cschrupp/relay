@@ -5985,6 +5985,22 @@
       "superseded_by": null
     },
     {
+      "schema_version": 1,
+      "artifact_id": "art_6f36b946-1033-4aca-a4b9-645232ec1cb1",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Candidate 001",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_CANDIDATE_001.md",
+      "content_digest": "sha256:5b90c79c16173f240f8d55cd5bf04086728374187f527d4d18544a2da0b512c6",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-CANDIDATE-001",
+      "updated_at": "2026-10-29T06:35:00Z",
+      "scope": "Exact implementation-review candidate for the bounded OpenCode 1.18.23 trusted-local configuration observer; implementation candidate e7acf774f9c346ea9e22df184da28a93cfc7be92; Dogfood execution and canonical promotion remain unauthorized.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
       "artifact_class": "IMMUTABLE_RECORD",
       "artifact_id": "art_78041a68-e6f3-4558-8106-ed3e60098006",
       "artifact_state": "IMMUTABLE",
