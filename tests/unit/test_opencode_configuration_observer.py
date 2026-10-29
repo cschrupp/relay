@@ -441,3 +441,183 @@ def test_missing_alias_fails_closed_without_session(
     finally:
         observer.close()
     assert not any(method == "POST" for method, _path in paths)
+
+
+def test_catalog_mutation_during_diagnostic_is_indeterminate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+
+    def mutate_catalog(
+        args: tuple[str, ...],
+        **_kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        if args[-1] == "--version":
+            return subprocess.CompletedProcess(args, 0, OPENCODE_V11823 + "\n", "")
+        if args[-2:] == ("models", "openrouter"):
+            catalog.write_text('{"mutated":true}\n')
+            return subprocess.CompletedProcess(
+                args, 0, "openrouter/~deepseek/deepseek-flash-latest\n", ""
+            )
+        if len(args) >= 4 and args[-3:-1] == ("debug", "agent"):
+            return subprocess.CompletedProcess(args, 0, json.dumps(_debug_agent()), "")
+        raise AssertionError
+
+    monkeypatch.setattr(
+        "relay_engine.agent_runtime.opencode_configuration_observer.subprocess.run",
+        mutate_catalog,
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="catalog"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert not any(method == "POST" for method, _path in paths)
+
+
+def test_diagnostic_config_tree_mutation_is_indeterminate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, _catalog, config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+
+    def mutate_config(
+        args: tuple[str, ...],
+        **_kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        if args[-1] == "--version":
+            return subprocess.CompletedProcess(args, 0, OPENCODE_V11823 + "\n", "")
+        if args[-2:] == ("models", "openrouter"):
+            return subprocess.CompletedProcess(
+                args, 0, "openrouter/~deepseek/deepseek-flash-latest\n", ""
+            )
+        if len(args) >= 4 and args[-3:-1] == ("debug", "agent"):
+            config_file.write_text(config_file.read_text() + "\n")
+            return subprocess.CompletedProcess(args, 0, json.dumps(_debug_agent()), "")
+        raise AssertionError
+
+    monkeypatch.setattr(
+        "relay_engine.agent_runtime.opencode_configuration_observer.subprocess.run",
+        mutate_config,
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="configuration directory|source changed"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert not any(method == "POST" for method, _path in paths)
+
+
+def test_observer_environment_mismatch_fails_before_cli_or_session(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    monkeypatch.setenv("OPENCODE_DISABLE_MODELS_FETCH", "0")
+    try:
+        with pytest.raises(OpenCodeObserverError, match="environment mismatch|fetch-disable"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert paths == []
+    assert not any(method == "POST" for method, _path in paths)
+
+
+def test_runtime_state_mutation_between_a_and_b_is_indeterminate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    original_client = observer._client
+    calls = 0
+
+    def handle(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        if req.url.path == "/path":
+            startup = observer._startup
+            return httpx.Response(
+                200,
+                json={
+                    "home": startup.home,
+                    "state": startup.state_root,
+                    "config": startup.config_root,
+                    "worktree": startup.worktree_root,
+                    "directory": startup.workspace_root,
+                },
+            )
+        if req.url.path == "/config":
+            return httpx.Response(200, json={"plugin": [], "mcp": {}})
+        if req.url.path == "/mcp":
+            return httpx.Response(200, json={})
+        if req.url.path == "/agent":
+            calls += 1
+            data = _agents()
+            if calls > 1:
+                data[0]["model"] = {"providerID": "openrouter", "modelID": "changed"}
+            return httpx.Response(200, json=data)
+        return httpx.Response(404)
+
+    original_client.close()
+    observer._client = httpx.Client(transport=httpx.MockTransport(handle))
+    try:
+        with pytest.raises(OpenCodeObserverError, match="changed during observation|alias"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert not any(method == "POST" for method, _path in paths)
+
+
+def test_wrong_qualification_observer_is_rejected_before_observation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _request_value, _descriptor, observer, _paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    startup = observer._startup
+    profile = observer._profile
+    observer_ref = observer.observer_ref
+    observer.close()
+    wrong = observer_ref.model_copy(update={"content_digest": "sha256:" + "f" * 64})
+    qualification = OpenCodeConfigurationQualificationRef.create(
+        qualification_id="wrong-observer",
+        runtime_version=OPENCODE_V11823,
+        runtime_api_generation=OPENCODE_API_GENERATION,
+        adapter_version=OPENCODE_ADAPTER_VERSION,
+        observer_ref=wrong,
+    )
+    client = httpx.Client(transport=httpx.MockTransport(lambda _r: httpx.Response(500)))
+    try:
+        with pytest.raises(ValueError, match="exact observer"):
+            OpenCodeV11823ConfigurationObserver(
+                "http://127.0.0.1:4096",
+                permission_profile=profile,
+                qualification_ref=qualification,
+                startup_context=startup,
+                client=client,
+            )
+    finally:
+        client.close()
+
+
+def test_startup_context_requires_complete_ordered_source_census(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _request_value, _descriptor, observer, _paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    payload = observer._startup.model_dump(mode="python")
+    payload["source_observations"] = payload["source_observations"][:-1]
+    observer.close()
+    with pytest.raises(ValueError, match="exact layers"):
+        OpenCodeServerStartupContext.model_validate(payload)
