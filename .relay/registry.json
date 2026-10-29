@@ -5233,6 +5233,22 @@
       "updated_at": "2026-10-28T21:48:00-04:00"
     },
     {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_f584bc36-869b-4cda-9e3e-9526b31f061a",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:95ccf1407c607724e3cf72d3beb05564981cc8adaf02e0fb7b8a0e9226e3ff02",
+      "human_version": "RLY-S31-DOGFOOD-001-OPENCODE-CONFIG-OBSERVER-IR-002",
+      "path": "docs/reviews/SLICE_3_1_DOGFOOD_001_OPENCODE_CONFIG_OBSERVER_IR_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Version-specific IR for a concrete OpenCode 1.18.23 trusted-local configuration observer; binds the Human-selected OpenRouter DeepSeek Flash alias separately from its currently observed concrete target; no implementation or execution.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 Dogfood 001 OpenCode 1.18.23 Configuration Observer IR-002",
+      "updated_at": "2026-10-29T02:23:53.449689Z"
+    },
+    {
       "schema_version": 1,
       "artifact_id": "art_01a180c1-0dc4-72da-ada6-7a281866beb1",
       "revision": 1,
@@ -5871,6 +5887,22 @@
       "supersedes": null,
       "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 001",
       "updated_at": "2026-10-28T21:52:00-04:00"
+    },
+    {
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_id": "art_06defdcd-c6c6-4d5b-865f-e21abd89a62b",
+      "artifact_state": "REVIEW",
+      "artifact_type": "DOCUMENT",
+      "content_digest": "sha256:6caf3c91f2308fed1d02c3f02b7b8de02b00f9b058775bdc97190823c527fcd9",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-AUTH-PROPOSAL-002",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_AUTHORITY_PROPOSAL_002.md",
+      "revision": 1,
+      "schema_version": 1,
+      "scope": "Proposal for bounded production implementation of a concrete OpenCode 1.18.23 configuration observer; configures the OpenRouter DeepSeek Flash alias and requires separate exact target resolution; no Dogfood execution or provider/model inference call authorized.",
+      "superseded_by": null,
+      "supersedes": null,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Authority Proposal 002",
+      "updated_at": "2026-10-29T02:23:53.450024Z"
     },
     {
       "artifact_class": "IMMUTABLE_RECORD",
