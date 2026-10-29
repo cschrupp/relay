@@ -6034,6 +6034,22 @@
     },
     {
       "schema_version": 1,
+      "artifact_id": "art_f736b939-1379-4a8c-a4c5-4ef2d4f82bff",
+      "revision": 1,
+      "title": "Slice 3.1 OpenCode Configuration Observer Implementation Candidate 003",
+      "artifact_type": "DOCUMENT",
+      "artifact_class": "LOCKABLE_RECORD",
+      "artifact_state": "REVIEW",
+      "path": "docs/reviews/SLICE_3_1_OPENCODE_CONFIG_OBSERVER_IMPLEMENTATION_CANDIDATE_003.md",
+      "content_digest": "sha256:451b055ac5b3ebee8f37967b02730842570567683b6c530312bc3e2708e4a9a0",
+      "human_version": "RLY-S31-OPENCODE-CONFIG-OBSERVER-IMPL-CANDIDATE-003",
+      "updated_at": "2026-10-29T16:14:03Z",
+      "scope": "Exact corrective implementation-review candidate for Proposal-005 findings F001-F008 at implementation commit 942eec53896a9062d98b5a1c502ac8a905491b47; independent review and Human acceptance remain pending.",
+      "supersedes": null,
+      "superseded_by": null
+    },
+    {
+      "schema_version": 1,
       "artifact_id": "art_d74a9f16-e3a3-4f11-b223-c1b614e7f7f4",
       "revision": 1,
       "title": "Slice 3.1 OpenCode Configuration Observer Independent Implementation Review 001",
