@@ -316,7 +316,12 @@ def _install_environment(
             monkeypatch.setenv(key, value)
 
 
-def _fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def _fixture(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    executable: Path | None = None,
+):
     workspace = tmp_path / "workspace"
     home = tmp_path / "home"
     config = tmp_path / "xdg-config" / "opencode"
@@ -426,12 +431,17 @@ def _fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "relay_engine.agent_runtime.opencode_configuration_observer.subprocess.run",
         fake_run,
     )
+    if executable is None:
+        executable = tmp_path / "opencode-test"
+        executable.write_bytes(b"test-only OpenCode executable identity\n")
+        executable.chmod(0o755)
     client = httpx.Client(transport=httpx.MockTransport(handle))
     observer = OpenCodeV11823ConfigurationObserver(
         "http://127.0.0.1:4096",
         permission_profile=profile,
         qualification_ref=qualification,
         startup_context=startup,
+        executable=str(executable),
         client=client,
         clock=lambda: datetime(2026, 10, 29, tzinfo=UTC),
     )
@@ -619,7 +629,7 @@ def test_cli_executable_replacement_during_catalog_diagnostic_fails_closed(
         lambda _name: str(executable),
     )
     request, descriptor, observer, _paths, _catalog, _config_file = _fixture(
-        tmp_path / "fixture", monkeypatch
+        tmp_path / "fixture", monkeypatch, executable=executable
     )
     calls: list[tuple[str, ...]] = []
 
