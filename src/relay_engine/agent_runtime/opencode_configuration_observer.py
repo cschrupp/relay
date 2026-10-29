@@ -449,14 +449,13 @@ class OpenCodeV11823ConfigurationObserver:
         for observation in self._startup.source_observations:
             for item in observation.files:
                 path = Path(item.path)
-                if observation.state == "PRESENT":
-                    if (
-                        not path.is_file()
-                        or _digest_bytes(path.read_bytes()) != item.content_digest
-                    ):
-                        raise OpenCodeObserverError(
-                            f"configuration source changed or disappeared: {item.path}"
-                        )
+                if observation.state == "PRESENT" and (
+                    not path.is_file()
+                    or _digest_bytes(path.read_bytes()) != item.content_digest
+                ):
+                    raise OpenCodeObserverError(
+                        f"configuration source changed or disappeared: {item.path}"
+                    )
             refs.append(observation.canonical_ref())
         return tuple(refs)
 
