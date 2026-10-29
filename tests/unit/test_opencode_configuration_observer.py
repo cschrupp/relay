@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -88,9 +90,11 @@ def _profile(request: RuntimeExecutionRequest) -> OpenCodePermissionProfile:
     return OpenCodePermissionProfile(
         reference=request.basis.permission_profile_ref,
         agent_id=AGENT_ID,
+        expected_agent_mode="primary",
+        expected_agent_hidden=False,
         allow=("edit", "read"),
         deny=("bash", "task"),
-        allowed_tools=("edit", "read"),
+        allowed_tools=("read", "write"),
     )
 
 
@@ -107,6 +111,7 @@ def _selected_agent() -> dict[str, object]:
     return {
         "name": AGENT_ID,
         "mode": "primary",
+        "hidden": False,
         "permission": _rules(),
         "model": {"providerID": "openrouter", "modelID": ALIAS},
         "options": {},
@@ -128,7 +133,13 @@ def _agents() -> list[dict[str, object]]:
 def _debug_agent() -> dict[str, object]:
     return {
         **_selected_agent(),
-        "tools": {"read": True, "edit": True, "bash": False, "task": False},
+        "tools": {
+            "read": True,
+            "write": True,
+            "edit": False,
+            "bash": False,
+            "task": False,
+        },
     }
 
 
@@ -162,7 +173,7 @@ def _environment(
 
 
 def _sources(
-    config_file: Path, catalog: Path
+    config_file: Path, catalog: Path, home: Path, workspace: Path
 ) -> tuple[OpenCodeConfigurationSourceObservation, ...]:
     layers = (
         "remote-well-known",
@@ -202,6 +213,14 @@ def _sources(
                 )
             )
         elif layer == "config-directories":
+            files = tuple(
+                OpenCodeObservedFile(path=str(path), content_digest=_sha256(path.read_bytes()))
+                for path in sorted(config_file.parent.rglob("*"))
+                if path.is_file()
+            )
+            directories = tuple(
+                str(path) for path in sorted(config_file.parent.rglob("*")) if path.is_dir()
+            )
             result.append(
                 OpenCodeConfigurationSourceObservation(
                     precedence_index=index,
@@ -209,7 +228,8 @@ def _sources(
                     state="PRESENT",
                     identity=str(config_file.parent),
                     observation_method="relay-launch-directory-census",
-                    sanitized_content_digest=_sha256(str(config_file.parent).encode()),
+                    files=files,
+                    directory_members=directories,
                 )
             )
         elif layer == "opencode-disable-models-fetch":
@@ -239,7 +259,39 @@ def _sources(
                     ),
                 )
             )
+        elif layer in {
+            "remote-well-known",
+            "console-organization",
+            "system-managed-config",
+            "macos-managed-preferences",
+            "opencode-permission",
+            "opencode-config-content",
+            "legacy-tools-translation",
+            "plugin-origins",
+        }:
+            result.append(
+                OpenCodeConfigurationSourceObservation(
+                    precedence_index=index,
+                    layer=layer,
+                    state="UNOBSERVABLE",
+                    identity=f"{layer}:requires-independent-server-startup-evidence",
+                    observation_method="not-established-by-caller-context",
+                )
+            )
         else:
+            known_absent = {
+                "global-config-json": (home / ".config/opencode/config.json",),
+                "global-opencode-json": (home / ".config/opencode/opencode.json",),
+                "global-legacy-config": (home / ".config/opencode/config.jsonc",),
+                "opencode-config": (home / ".config/opencode.json",),
+                "project-config-files": (
+                    workspace / "opencode.json",
+                    workspace / "opencode.jsonc",
+                    workspace / ".opencode" / "opencode.json",
+                    workspace / ".opencode" / "opencode.jsonc",
+                ),
+            }
+            probe_paths = tuple(sorted(str(path) for path in known_absent.get(layer, ())))
             result.append(
                 OpenCodeConfigurationSourceObservation(
                     precedence_index=index,
@@ -247,6 +299,7 @@ def _sources(
                     state="ABSENT",
                     identity=f"{layer}:absent",
                     observation_method="relay-launch-source-census",
+                    probe_paths=probe_paths,
                 )
             )
     return tuple(result)
@@ -300,7 +353,7 @@ def _fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         config_root=str(config),
         worktree_root=str(workspace),
         environment=environment,
-        source_observations=_sources(config_file, catalog),
+        source_observations=_sources(config_file, catalog, home, workspace),
         catalog_path=str(catalog),
         catalog_digest=_sha256(catalog.read_bytes()),
         credential_environment_names=("OPENROUTER_API_KEY",),
@@ -385,7 +438,7 @@ def _fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     return request, descriptor, observer, paths, catalog, config_file
 
 
-def test_exact_observer_produces_satisfied_content_bound_binding(
+def test_unqualified_server_startup_context_remains_indeterminate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -395,13 +448,13 @@ def test_exact_observer_produces_satisfied_content_bound_binding(
     finally:
         observer.close()
 
-    assert binding.status is RequirementStatus.SATISFIED
-    assert binding.precedence_complete is True
+    assert binding.status is RequirementStatus.INDETERMINATE
+    assert binding.precedence_complete is False
     assert binding.agent_id == AGENT_ID
     assert binding.normalized_allow_rules == ("edit", "read")
     assert binding.normalized_deny_rules == ("bash", "task")
     assert binding.normalized_ask_rules == ()
-    assert binding.effective_tool_exposure == ("edit", "read")
+    assert binding.effective_tool_exposure == ("read", "write")
     assert binding.plugin_exposure == ()
     assert binding.mcp_exposure == ()
     assert binding.subagent_exposure == ()
@@ -410,6 +463,227 @@ def test_exact_observer_produces_satisfied_content_bound_binding(
     serialized = json.dumps(binding.model_dump(mode="json"))
     assert "never-retain-me" not in serialized
     assert "dummy-test-key-never-persisted" not in serialized
+
+
+def test_request_route_mismatch_fails_before_server_observation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
+    basis = request.basis.model_copy(
+        update={
+            "runtime_selection": RuntimeSelection(
+                runtime_id="opencode",
+                requested_provider_id="other-provider",
+                requested_model_id=ALIAS,
+            )
+        }
+    )
+    mismatched = RuntimeExecutionRequest(
+        basis=basis,
+        request_digest=digest_execution_basis(basis),
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="requested provider/model"):
+            observer.read(mismatched, descriptor)
+    finally:
+        observer.close()
+    assert paths == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("mode", "subagent", "mode"),
+        ("hidden", True, "hidden state"),
+    ),
+)
+def test_selected_agent_mode_and_hidden_are_exactly_bound(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    _request_value, _descriptor, observer, _paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    agent = {
+        "name": AGENT_ID,
+        "mode": "primary",
+        "hidden": False,
+        "permission": _rules(),
+        "model": {"providerID": "openrouter", "modelID": ALIAS},
+    }
+    agent[field] = value
+    try:
+        with pytest.raises(OpenCodeObserverError, match=message):
+            observer._agent_identity(cast_agent(agent))
+    finally:
+        observer.close()
+
+
+def cast_agent(value: dict[str, object]):
+    from relay_engine.agent_runtime.opencode_configuration_observer import _project_agent
+
+    return _project_agent(value)
+
+
+def test_allowed_tools_are_distinct_from_permission_rule_identities(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _request_value, _descriptor, observer, _paths, _catalog, _config_file = _fixture(
+        tmp_path, monkeypatch
+    )
+    try:
+        assert observer._normalize_permissions(cast_agent(_selected_agent())) == (
+            ("edit", "read"),
+            ("bash", "task"),
+            (),
+        )
+        assert observer._enabled_tools(_debug_agent()) == ("read", "write")
+        observer._profile = replace(observer._profile, allowed_tools=())
+        fallback = _debug_agent()
+        fallback["tools"] = {"edit": True, "read": True, "bash": False, "task": False}
+        assert observer._enabled_tools(fallback) == ("edit", "read")
+    finally:
+        observer.close()
+
+
+def test_claimed_absence_is_reprobed_before_server_observation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
+    absent_path = Path(observer._startup.source_observations[1].probe_paths[0])
+    absent_path.parent.mkdir(parents=True)
+    absent_path.write_text("{}\n")
+    try:
+        with pytest.raises(OpenCodeObserverError, match="previously absent is now present"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert paths == []
+
+
+def test_same_size_restored_mtime_diagnostic_mutation_is_detected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, _paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
+    diagnostic_file = Path(request.basis.workspace.root) / ".opencode" / "agent.json"
+    diagnostic_file.parent.mkdir()
+    diagnostic_file.write_bytes(b"{}\n")
+    previous_stat = diagnostic_file.stat()
+
+    def mutate_diagnostic(
+        args: tuple[str, ...],
+        **_kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        if args[-1] == "--version":
+            return subprocess.CompletedProcess(args, 0, OPENCODE_V11823 + "\n", "")
+        if args[-2:] == ("models", "openrouter"):
+            return subprocess.CompletedProcess(
+                args, 0, "openrouter/~deepseek/deepseek-flash-latest\n", ""
+            )
+        if args[-3:-1] == ("debug", "agent"):
+            diagnostic_file.write_bytes(b"[]\n")
+            os.utime(
+                diagnostic_file,
+                ns=(previous_stat.st_atime_ns, previous_stat.st_mtime_ns),
+            )
+            return subprocess.CompletedProcess(args, 0, json.dumps(_debug_agent()), "")
+        raise AssertionError(f"unexpected command: {args!r}")
+
+    monkeypatch.setattr(
+        "relay_engine.agent_runtime.opencode_configuration_observer.subprocess.run",
+        mutate_diagnostic,
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="directory|content changed"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+
+
+def test_cli_executable_replacement_during_catalog_diagnostic_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    executable = tmp_path / "opencode-test"
+    executable.write_bytes(b"#!/bin/sh\nexit 0\n")
+    executable.chmod(0o755)
+    monkeypatch.setattr(
+        "relay_engine.agent_runtime.opencode_configuration_observer.shutil.which",
+        lambda _name: str(executable),
+    )
+    request, descriptor, observer, _paths, _catalog, _config_file = _fixture(
+        tmp_path / "fixture", monkeypatch
+    )
+    calls: list[tuple[str, ...]] = []
+
+    def replace_after_models(
+        args: tuple[str, ...],
+        **_kwargs: object,
+    ) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        if args[-1] == "--version":
+            return subprocess.CompletedProcess(args, 0, OPENCODE_V11823 + "\n", "")
+        if args[-2:] == ("models", "openrouter"):
+            executable.write_bytes(b"#!/bin/sh\nexit 1\n")
+            return subprocess.CompletedProcess(
+                args, 0, "openrouter/~deepseek/deepseek-flash-latest\n", ""
+            )
+        raise AssertionError("debug-agent must not run after executable replacement")
+
+    monkeypatch.setattr(
+        "relay_engine.agent_runtime.opencode_configuration_observer.subprocess.run",
+        replace_after_models,
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="executable changed"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert [call[-1] for call in calls] == ["--version", "openrouter"]
+
+
+def test_redirect_following_injected_client_cannot_escape_exact_origin(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request, descriptor, observer, _paths, _catalog, _config_file = _fixture(tmp_path, monkeypatch)
+    observer._client.close()
+
+    request_hosts: list[str] = []
+
+    def redirect(req: httpx.Request) -> httpx.Response:
+        request_hosts.append(req.url.host)
+        if req.url.host == "127.0.0.1":
+            return httpx.Response(302, headers={"location": "https://outside.example/path"})
+        return httpx.Response(
+            200,
+            json={"home": observer._startup.home},
+        )
+
+    class RedirectFollowingClient(httpx.Client):
+        def get(self, url: object, **kwargs: object) -> httpx.Response:
+            # Simulate a caller client that ignores the observer's per-request
+            # redirect prohibition while still using an isolated mock transport.
+            kwargs["follow_redirects"] = True
+            return super().get(url, **kwargs)  # type: ignore[arg-type]
+
+    observer._client = RedirectFollowingClient(
+        transport=httpx.MockTransport(redirect),
+        follow_redirects=True,
+    )
+    try:
+        with pytest.raises(OpenCodeObserverError, match="redirected|origin changed"):
+            observer.read(request, descriptor)
+    finally:
+        observer.close()
+    assert request_hosts == ["127.0.0.1", "outside.example"]
 
 
 def test_missing_alias_fails_closed_without_session(

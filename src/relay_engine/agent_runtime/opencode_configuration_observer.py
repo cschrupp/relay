@@ -6,6 +6,8 @@ import fnmatch
 import hashlib
 import json
 import os
+import shutil
+import stat
 import subprocess
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -167,10 +169,12 @@ class OpenCodeConfigurationSourceObservation(DomainModel):
 
     precedence_index: int
     layer: str
-    state: Literal["PRESENT", "ABSENT"]
+    state: Literal["PRESENT", "ABSENT", "UNOBSERVABLE"]
     identity: str
     observation_method: str
     files: tuple[OpenCodeObservedFile, ...] = ()
+    probe_paths: tuple[str, ...] = ()
+    directory_members: tuple[str, ...] = ()
     sanitized_content_digest: ContentDigest | None = None
 
     @model_validator(mode="after")
@@ -183,13 +187,31 @@ class OpenCodeConfigurationSourceObservation(DomainModel):
             or not self.observation_method.strip()
         ):
             raise ValueError("source observation identity must be explicit")
-        if self.state == "ABSENT" and self.files:
-            raise ValueError("absent source observation cannot bind files")
-        if self.state == "PRESENT" and not self.files and self.sanitized_content_digest is None:
+        if self.state == "ABSENT" and (self.files or not self.probe_paths):
+            raise ValueError("absent source observation must bind concrete absence probes")
+        if self.state == "UNOBSERVABLE" and (
+            self.files or self.probe_paths or self.directory_members
+        ):
+            raise ValueError("unobservable source observation cannot claim local probes")
+        if (
+            self.state == "PRESENT"
+            and not self.files
+            and not self.directory_members
+            and self.sanitized_content_digest is None
+            and self.layer != "config-directories"
+        ):
             raise ValueError("present source observation needs files or sanitized content digest")
         paths = tuple(item.path for item in self.files)
         if paths != tuple(sorted(set(paths))):
             raise ValueError("source observation files must be unique and canonically ordered")
+        for path_values, label in (
+            (self.probe_paths, "probe paths"),
+            (self.directory_members, "directory members"),
+        ):
+            if path_values != tuple(sorted(set(path_values))):
+                raise ValueError(f"source observation {label} must be unique and ordered")
+            if any(not Path(path).is_absolute() for path in path_values):
+                raise ValueError(f"source observation {label} must be absolute")
         return self
 
     def canonical_ref(self) -> str:
@@ -203,7 +225,7 @@ class OpenCodeConfigurationSourceObservation(DomainModel):
 
 
 class OpenCodeServerStartupContext(DomainModel):
-    """Immutable non-secret startup context for the exact OpenCode server being observed."""
+    """Caller-supplied startup claim; it is not proof of the server's actual environment."""
 
     runtime_version: str
     runtime_api_generation: str
@@ -330,7 +352,11 @@ class OpenCodeV11823ConfigurationObserver:
         self._profile = permission_profile
         self._qualification = qualification_ref
         self._startup = startup_context
-        self._executable = executable
+        located_executable = shutil.which(executable)
+        if located_executable is None:
+            raise ValueError("qualified OpenCode CLI executable is unavailable")
+        self._executable = Path(located_executable).resolve(strict=True)
+        self._executable_identity = self._read_executable_identity()
         self._owns_client = client is None
         self._client = client or httpx.Client(
             timeout=httpx.Timeout(10.0),
@@ -367,6 +393,14 @@ class OpenCodeV11823ConfigurationObserver:
         if request.basis.workspace.root != self._startup.workspace_root:
             raise OpenCodeObserverError(
                 "request workspace does not match bound server startup context"
+            )
+        selection = request.basis.runtime_selection
+        if (
+            selection.requested_provider_id != "openrouter"
+            or selection.requested_model_id != "~deepseek/deepseek-flash-latest"
+        ):
+            raise OpenCodeObserverError(
+                "requested provider/model does not match the exact qualified OpenRouter route"
             )
         self._validate_observer_environment()
 
@@ -452,12 +486,15 @@ class OpenCodeV11823ConfigurationObserver:
             plugin_exposure=plugins,
             mcp_exposure=mcp,
             subagent_exposure=subagents,
-            precedence_complete=True,
-            observation_source="opencode-v1.18.23-running-server+local-cli",
-            trust_basis="version-qualified-trusted-local-observer",
+            # A caller-supplied context cannot establish how an independently
+            # running server was started. No accepted process-bound evidence
+            # source exists, so startup-dependent completeness stays unknown.
+            precedence_complete=False,
+            observation_source="opencode-v1.18.23-observer-process+server-state",
+            trust_basis="server-startup-environment-not-independently-established",
             provenance_digest=provenance_digest,
             observed_at=self._clock(),
-            status=RequirementStatus.SATISFIED,
+            status=RequirementStatus.INDETERMINATE,
         )
 
     def _validate_descriptor(self, descriptor: RuntimeDescriptor) -> None:
@@ -491,13 +528,29 @@ class OpenCodeV11823ConfigurationObserver:
     def _source_refs(self) -> tuple[str, ...]:
         refs: list[str] = []
         for observation in self._startup.source_observations:
+            if observation.state == "ABSENT":
+                for probe_path in observation.probe_paths:
+                    if os.path.lexists(probe_path):
+                        raise OpenCodeObserverError(
+                            f"configuration source previously absent is now present: {probe_path}"
+                        )
             for item in observation.files:
                 path = Path(item.path)
                 if observation.state == "PRESENT" and (
-                    not path.is_file() or _digest_bytes(path.read_bytes()) != item.content_digest
+                    not _is_regular_non_symlink(path)
+                    or _digest_bytes(path.read_bytes()) != item.content_digest
                 ):
                     raise OpenCodeObserverError(
                         f"configuration source changed or disappeared: {item.path}"
+                    )
+            if observation.layer == "config-directories" and observation.state == "PRESENT":
+                files, directories = _directory_census(Path(observation.identity))
+                expected_files = tuple(
+                    (item.path, item.content_digest) for item in observation.files
+                )
+                if files != expected_files or directories != observation.directory_members:
+                    raise OpenCodeObserverError(
+                        "configuration directory membership or content changed"
                     )
             refs.append(observation.canonical_ref())
         return tuple(refs)
@@ -512,7 +565,7 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError("bound OpenCode model catalog digest changed")
         return (str(path), digest, stat.st_size, stat.st_mtime_ns)
 
-    def _diagnostic_tree_state(self) -> tuple[tuple[str, int, int], ...]:
+    def _diagnostic_tree_state(self) -> tuple[tuple[str, str, ContentDigest | None], ...]:
         roots: set[Path] = {
             Path(self._startup.config_root),
             Path(self._startup.home) / ".opencode",
@@ -529,19 +582,9 @@ class OpenCodeV11823ConfigurationObserver:
                 break
             current = current.parent
 
-        state: list[tuple[str, int, int]] = []
+        state: list[tuple[str, str, ContentDigest | None]] = []
         for root in sorted(roots):
-            if not root.exists():
-                state.append((str(root), -1, -1))
-                continue
-            for item in sorted(root.rglob("*")):
-                try:
-                    stat = item.stat()
-                except OSError as exc:
-                    raise OpenCodeObserverError(
-                        "cannot census diagnostic configuration tree"
-                    ) from exc
-                state.append((str(item), stat.st_size, stat.st_mtime_ns))
+            state.extend(_tree_snapshot(root))
         return tuple(state)
 
     def _server_snapshot(self, directory: str) -> _ServerSnapshot:
@@ -571,9 +614,21 @@ class OpenCodeV11823ConfigurationObserver:
             response = self._client.get(
                 self._endpoint + route,
                 params={"directory": directory},
+                follow_redirects=False,
             )
         except httpx.RequestError as exc:
             raise OpenCodeObserverError(f"OpenCode observation request failed for {route}") from exc
+        endpoint = httpx.URL(self._endpoint)
+        if response.history or response.is_redirect:
+            raise OpenCodeObserverError(f"OpenCode observation redirected for {route}")
+        observed_urls = (response.url, response.request.url)
+        if any(
+            observed.scheme != endpoint.scheme
+            or observed.host != endpoint.host
+            or observed.port != endpoint.port
+            for observed in observed_urls
+        ):
+            raise OpenCodeObserverError(f"OpenCode observation response origin changed for {route}")
         if response.status_code != 200:
             raise OpenCodeObserverError(f"OpenCode observation request rejected for {route}")
         try:
@@ -625,9 +680,10 @@ class OpenCodeV11823ConfigurationObserver:
     def _run_cli(self, args: tuple[str, ...], directory: str) -> str:
         if "--verbose" in args or "--refresh" in args or "--tool" in args:
             raise OpenCodeObserverError("forbidden OpenCode diagnostic option")
+        self._verify_cli_executable()
         try:
             completed = subprocess.run(
-                (self._executable, *args),
+                (str(self._executable), *args),
                 cwd=directory,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
@@ -642,7 +698,29 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError("OpenCode diagnostic command failed") from exc
         if completed.returncode != 0:
             raise OpenCodeObserverError("OpenCode diagnostic command was rejected")
+        self._verify_cli_executable()
         return completed.stdout
+
+    def _read_executable_identity(self) -> tuple[str, int, int, int, int, ContentDigest]:
+        try:
+            executable_stat = self._executable.stat()
+            if not stat.S_ISREG(executable_stat.st_mode):
+                raise OpenCodeObserverError("OpenCode CLI is not a regular file")
+            digest = _digest_bytes(self._executable.read_bytes())
+        except OSError as exc:
+            raise OpenCodeObserverError("OpenCode CLI identity cannot be established") from exc
+        return (
+            str(self._executable),
+            executable_stat.st_dev,
+            executable_stat.st_ino,
+            executable_stat.st_size,
+            executable_stat.st_mode,
+            digest,
+        )
+
+    def _verify_cli_executable(self) -> None:
+        if self._read_executable_identity() != self._executable_identity:
+            raise OpenCodeObserverError("OpenCode CLI executable changed during observation")
 
     def _selected_agent(self, agents: list[_ProjectedAgent]) -> _ProjectedAgent:
         matches = [agent for agent in agents if agent["name"] == self._profile.agent_id]
@@ -655,7 +733,9 @@ class OpenCodeV11823ConfigurationObserver:
     def _normalize_debug_agent(self, value: _DebugAgent) -> _DebugAgent:
         return value
 
-    def _agent_identity(self, agent: _ProjectedAgent) -> tuple[str, str, str, str]:
+    def _agent_identity(
+        self, agent: _ProjectedAgent
+    ) -> tuple[str, str, bool | None, str, str, str]:
         model = agent["model"]
         if model is None:
             raise OpenCodeObserverError("configured agent lacks explicit model identity")
@@ -665,7 +745,20 @@ class OpenCodeV11823ConfigurationObserver:
             raise OpenCodeObserverError(
                 "configured agent does not bind the selected OpenRouter alias"
             )
-        return (agent["name"], provider, model_id, _digest_json(agent["permission"]))
+        if agent["mode"] != self._profile.expected_agent_mode:
+            raise OpenCodeObserverError("configured agent mode differs from accepted profile")
+        if agent["hidden"] is not self._profile.expected_agent_hidden:
+            raise OpenCodeObserverError(
+                "configured agent hidden state differs from accepted profile"
+            )
+        return (
+            agent["name"],
+            agent["mode"],
+            agent["hidden"],
+            provider,
+            model_id,
+            _digest_json(agent["permission"]),
+        )
 
     def _normalize_permissions(
         self, agent: _ProjectedAgent
@@ -931,6 +1024,82 @@ def _coerce_json(value: object) -> JsonValue:
 
 def _digest_bytes(value: bytes) -> ContentDigest:
     return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def _is_regular_non_symlink(path: Path) -> bool:
+    try:
+        file_stat = path.lstat()
+    except OSError:
+        return False
+    return stat.S_ISREG(file_stat.st_mode)
+
+
+def _stable_file_digest(path: Path) -> ContentDigest:
+    try:
+        before = path.lstat()
+        if not stat.S_ISREG(before.st_mode):
+            raise OpenCodeObserverError("diagnostic tree contains an unsupported entry")
+        digest = _digest_bytes(path.read_bytes())
+        after = path.lstat()
+    except OSError as exc:
+        raise OpenCodeObserverError("cannot read diagnostic tree file") from exc
+    if not stat.S_ISREG(after.st_mode) or (before.st_dev, before.st_ino, before.st_size) != (
+        after.st_dev,
+        after.st_ino,
+        after.st_size,
+    ):
+        raise OpenCodeObserverError("diagnostic tree file changed during capture")
+    return digest
+
+
+def _tree_snapshot(root: Path) -> tuple[tuple[str, str, ContentDigest | None], ...]:
+    try:
+        root_stat = root.lstat()
+    except FileNotFoundError:
+        return ((str(root), "ABSENT", None),)
+    except OSError as exc:
+        raise OpenCodeObserverError("cannot inspect diagnostic tree root") from exc
+    if not stat.S_ISDIR(root_stat.st_mode):
+        raise OpenCodeObserverError("diagnostic tree root is not a real directory")
+
+    entries: list[tuple[str, str, ContentDigest | None]] = [(str(root), "DIRECTORY", None)]
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        try:
+            with os.scandir(directory) as scan:
+                children = sorted(scan, key=lambda item: item.name)
+        except OSError as exc:
+            raise OpenCodeObserverError("cannot census diagnostic configuration tree") from exc
+        for child in children:
+            path = Path(child.path)
+            try:
+                child_stat = path.lstat()
+            except OSError as exc:
+                raise OpenCodeObserverError("cannot inspect diagnostic tree entry") from exc
+            if stat.S_ISDIR(child_stat.st_mode):
+                entries.append((str(path), "DIRECTORY", None))
+                pending.append(path)
+            elif stat.S_ISREG(child_stat.st_mode):
+                entries.append((str(path), "FILE", _stable_file_digest(path)))
+            else:
+                raise OpenCodeObserverError("diagnostic tree contains a special entry")
+    return tuple(sorted(entries))
+
+
+def _directory_census(
+    directory: Path,
+) -> tuple[tuple[tuple[str, ContentDigest], ...], tuple[str, ...]]:
+    snapshot = _tree_snapshot(directory)
+    if snapshot[0][1] == "ABSENT":
+        raise OpenCodeObserverError("configuration directory disappeared")
+    files = tuple(
+        (path, digest) for path, kind, digest in snapshot if kind == "FILE" and digest is not None
+    )
+    directories = tuple(
+        path for path, kind, _digest in snapshot if kind == "DIRECTORY" and path != str(directory)
+    )
+    return files, directories
 
 
 def _digest_json(value: object) -> ContentDigest:

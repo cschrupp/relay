@@ -116,6 +116,8 @@ class OpenCodePermissionProfile:
 
     reference: RuntimePermissionProfileRef
     agent_id: str
+    expected_agent_mode: str
+    expected_agent_hidden: bool
     allow: tuple[str, ...]
     deny: tuple[str, ...]
     ask: tuple[str, ...] = ()
@@ -127,6 +129,8 @@ class OpenCodePermissionProfile:
     def __post_init__(self) -> None:
         if not self.agent_id.strip() or len(self.agent_id) > 128:
             raise ValueError("OpenCode permission agent ID must be nonblank and bounded")
+        if not self.expected_agent_mode.strip() or len(self.expected_agent_mode) > 64:
+            raise ValueError("OpenCode agent mode must be explicit and bounded")
         all_rules = (*self.allow, *self.deny, *self.ask)
         if not self.allow or not self.deny:
             raise ValueError("OpenCode permission profile requires explicit allow and deny rules")

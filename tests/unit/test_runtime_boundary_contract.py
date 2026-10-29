@@ -221,6 +221,8 @@ def test_open_code_does_not_create_session_without_permission_attestation() -> N
         permission_profile=OpenCodePermissionProfile(
             reference=request.request.basis.permission_profile_ref,
             agent_id="relay-test-agent",
+            expected_agent_mode="primary",
+            expected_agent_hidden=False,
             allow=("read",),
             deny=("bash",),
         ),
@@ -250,6 +252,8 @@ def test_open_code_endpoint_policy_remains_loopback_only(endpoint: str) -> None:
                     content_digest=_DIGEST,
                 ),
                 agent_id="relay-test-agent",
+                expected_agent_mode="primary",
+                expected_agent_hidden=False,
                 allow=("read",),
                 deny=("bash",),
             ),
@@ -278,6 +282,8 @@ def test_open_code_permission_attestation_uses_relay_id_and_is_idempotent() -> N
         permission_profile=OpenCodePermissionProfile(
             reference=request.request.basis.permission_profile_ref,
             agent_id="relay-test-agent",
+            expected_agent_mode="primary",
+            expected_agent_hidden=False,
             allow=("read",),
             deny=("bash",),
         ),
